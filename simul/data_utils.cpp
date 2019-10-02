@@ -14,10 +14,534 @@
 #include <time.h>
 #include <ctype.h>
 #include <sys/timeb.h>
+#include <sys/stat.h>
 #include <float.h>
 
 #include <zlib.h>
 #include <unistd.h>
+
+
+/*********************************** JC **************************************/
+/*    JC performs Jukes-Cantor 69 correction */
+/* Note that beta was set such that mean substitution rate will be 1.
+ for the JC model, beta=4/3, where 12(1/4)(1/4)(4/3) = 1.      */
+void JCmodel (double Pij[4][4], double branchLength, double beta )
+{
+    int i, j;
+    
+    for (i=0; i<4; i++)
+    {
+        for (j=0; j<4; j++)
+        {
+            if (i == j)
+                Pij[i][j] = 0.25 + 0.75*exp(beta*-branchLength);
+            else
+                Pij[i][j] = 0.25 - 0.25*exp(beta*-branchLength);
+        }
+    }
+}
+
+/*********************************** HKY **************************************/
+/*    HKY performs Hasegawa-Kishino-Yano 85 correction */
+
+void HKYmodel (double Pij[4][4], double branchLength, double kappa, double freqR, double freqY, double beta, double freq[4])
+{
+    int            i, j;
+    double        AA1, t, PIj;
+    
+    t = branchLength;
+    
+    for (i=0; i<4; i++)
+    {
+        for (j=0; j<4; j++)
+        {
+            if (j == A || j == G)    /* purine */
+                PIj = freqR;
+            else
+                PIj = freqY; /* pyrimidine */
+            
+            AA1 = 1 + PIj*(kappa-1.0);
+            
+            if (i==j)
+                Pij[i][j] = freq[j] + freq[j]*(1/PIj - 1)*exp(-beta*t) + ((PIj-freq[j])/PIj)*exp(-beta*t*AA);
+            else if ((i==A && j==G) || (i==C && j==T) || (i==G && j==A) || (i==T && j==C)) /* transition */
+                Pij[i][j] = freq[j] + freq[j]*(1/PIj - 1)*exp(-beta*t) - (freq[j]/PIj)*exp(-beta*t*AA);
+            else /* transversion */
+                Pij[i][j] = freq[j]*(1-exp(-beta*t));
+        }
+    }
+}
+
+
+/*************** GTR **********************/
+void GTRmodel (double Pij[4][4], double branchLength, double Root[], double Cijk[])
+{
+    int     i, j, k;
+    double    t, expt[4];
+    
+    t = branchLength;
+    
+    /* P(t)ij = SUM Cijk * exp{Root*t} */
+    for (k=1; k<4; k++)
+        expt[k]=exp(t*Root[k]);
+    for (i=0; i<4; i++)
+        for (j=0; j<4; j++)
+        {
+            Pij[i][j]=Cijk[i*4*4+j*4+0];
+            for (k=1; k<4; k++)
+                Pij[i][j]+=Cijk[i*4*4+j*4+k]*expt[k];
+        }
+}
+
+/********************* FillSubstitutionMatrix **********************/
+/* Sets the apropriate model of nucleotide substitution   */
+void FillSubstitutionMatrix (double ch_prob[4][4], double branchLength, int doJC, int doHKY, int doGTR, int doGTnR, double beta, double kappa, double freqR, double freqY, double freq[4], double Root[], double Cijk[])
+{
+    int i, j;
+    
+    if (branchLength<1e-6)
+    {
+        for (i=0; i<4; i++)
+        {
+            for (j=0; j<4; j++)
+            {
+                if (i == j)
+                    ch_prob[i][j] = 1.0;
+                else
+                    ch_prob[i][j] = 0.0;
+            }
+        }
+    }
+    else if (doJC == YES)
+        JCmodel (ch_prob, branchLength,  beta);
+    else if (doHKY == YES)
+        HKYmodel (ch_prob, branchLength, kappa,  freqR,  freqY,  beta, freq);
+    else if (doGTR == YES)
+        GTRmodel (ch_prob, branchLength,  Root,  Cijk);
+    else if (doGTnR == YES)
+        GTRmodel (ch_prob, branchLength, Root,  Cijk);
+}
+
+/************************************* ChooseUniformState **********************************************/
+/* Chooses uniformy a random state according to a vector of state probabilities */
+
+int ChooseUniformState (double *prob, long int *seed)
+{
+    int            chosenState;
+    double        ran, cumProb;
+    
+    chosenState = 0;
+    cumProb = prob[chosenState];
+    ran = RandomUniform(seed);
+    
+    while (ran > cumProb)
+        cumProb += prob[++chosenState];
+    
+    return chosenState;
+}
+
+/************************************* SimulateFiniteDNAforSite **********************************************/
+/* Simulates JC, HKY, GTR or GTRnr for a given site */
+void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,SiteStr* allSites,  long int *seed, int rateVarAmongSites, double altModelMutationRate, int *numMU, int doJC, int doHKY, int doGTR, int doGTnR, double beta,  double kappa, double freqR, double freqY, double freq[4], double Root[], double Cijk[])
+{
+    double    branchLength, Pij[4][4];
+    int     cell, anccell, ancstate, newstate;
+    
+    if (p != NULL)
+    {
+        // if (p->isHealthyRoot == NO)
+        if (p->isOutgroup== NO)
+        {
+            cell = p->label;
+            if (p->anc1 !=NULL)
+            {
+
+                anccell = p->anc1->label;
+                if (genome == MATERNAL)
+                    ancstate = p->anc1->maternalSequence[site];
+                else
+                    ancstate = p->anc1->paternalSequence[site];
+                // }
+                // if (doUserTree == YES)
+                //branchLength = p->branchLength;
+                
+                
+                if (rateVarAmongSites == YES){
+                    // branchLength = altModelMutationRate * p->length * allSites[site].rateMultiplier;
+                    branchLength =  p->length * allSites[site].rateMultiplier;
+                }
+                else{
+                    branchLength =  p->length;
+                    // branchLength = altModelMutationRate * p->length;
+                    
+                }
+                
+                
+                FillSubstitutionMatrix (Pij, branchLength,
+                                        doJC, doHKY,  doGTR,  doGTnR, beta,  kappa,  freqR,  freqY,  freq,  Root,  Cijk);
+                if (genome ==MATERNAL)
+                    newstate =p->maternalSequence[site]=ChooseUniformState (Pij[ancstate], seed);
+                else// paternal;
+                    newstate =p->paternalSequence[site]=ChooseUniformState (Pij[ancstate], seed);
+                //newstate = data[genome][cell][site] = ChooseUniformState (Pij[ancstate], seed);
+                
+                if (newstate != ancstate)
+                {
+                    if (genome == MATERNAL)
+                    {
+                        allSites[site].numMutationsMaternal++;
+                        
+                    }
+                    else if (genome == PATERNAL){
+                        
+                        allSites[site].numMutationsPaternal++;
+                    }
+                    
+                    allSites[site].numMutations++;
+                    (*numMU)++;
+                }
+            }
+        }
+        SimulateFiniteDNAforSite (p->left,  genome, site,allSites, seed,  rateVarAmongSites, altModelMutationRate, numMU,  doJC,  doHKY, doGTR,  doGTnR,  beta,    kappa,   freqR,   freqY,   freq,  Root,  Cijk);
+        SimulateFiniteDNAforSite (p->right, genome, site,allSites, seed, rateVarAmongSites, altModelMutationRate, numMU,  doJC,  doHKY,  doGTR,  doGTnR,  beta,    kappa,   freqR,   freqY,   freq ,Root,  Cijk);
+    }
+}
+
+/************************************************************/
+/********************* CalculateH ********************/
+/* Calculate H for ProbabilityCloneiFromClonej function.
+ */
+
+double CalculateH (double t, double TOrigin, double delta)
+{
+    double  H, AboveTerm, BelowTerm, firstTerm, secondTerm;
+    double  a, b;
+    
+    AboveTerm = 0.0;
+    BelowTerm = 0.0;
+    firstTerm = 0.0;
+    secondTerm = 0.0;
+    a = 0.0;
+    b = 0.0;
+    H = 0.0;
+    
+    //printf ("\nInput(H), t=%lf T=%lf delta=%lf ", t, T, delta);
+    
+    a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
+    firstTerm = a * a;
+    secondTerm = exp(-1.0 * delta * t);
+    AboveTerm = firstTerm * secondTerm;
+    //printf ("\nAboveTerm(H) = %lf (%lf %lf %lf) / delta = %lf, T = %lf, t = %lf", AboveTerm, a, firstTerm, secondTerm, delta, T, t);
+    
+    b = 1.0 - exp(-1.0 * delta * TOrigin);
+    BelowTerm = b * b;
+    //printf ("\nBelowTerm(H) = %lf", BelowTerm);
+    
+    H = AboveTerm / BelowTerm;
+    //printf ("\nH = %lf", H);
+    
+    return H;
+}
+
+double FmodelTstandard (double t, double TOrigin, double delta)
+{
+    double  ModelTimeF, firstTerm, secondTerm, thirdTerm;
+    double  a, b, c;
+    
+    ModelTimeF = 0.0;
+    firstTerm = 0.0;
+    secondTerm = 0.0;
+    thirdTerm = 0.0;
+    a = 0.0;
+    b = 0.0;
+    c = 0.0;
+    
+    /*fprintf (stderr, "t = %lf\n", t);
+     fprintf (stderr, "T = %lf\n", T);
+     fprintf (stderr, "delta = %lf\n", delta);*/
+    
+    a = 1.0 - exp(-1.0 * delta * TOrigin);
+    firstTerm = a * a;
+    //fprintf (stderr, "firstTerm = %lf\n", firstTerm);
+    
+    secondTerm = exp(delta * TOrigin);
+    //fprintf (stderr, "secondTerm = %lf\n", secondTerm);
+    
+    b = 1.0 / (1.0 - exp(-1.0 * delta * (TOrigin - t)));
+    c = 1.0 / (1.0 - exp(-1.0 * delta * TOrigin));
+    thirdTerm = b - c;
+    //fprintf (stderr, "thirdTerm = %lf\n", thirdTerm);
+    
+    
+    ModelTimeF = firstTerm * secondTerm * thirdTerm;
+    //fprintf (stderr, "ModelTimeF = %lf\n", ModelTimeF);
+    
+    // New formula from Carsten!
+    ModelTimeF = 0.0;
+    firstTerm = 0.0;
+    secondTerm = 0.0;
+    thirdTerm = 0.0;
+    a = 0.0;
+    b = 0.0;
+    c = 0.0;
+    
+    a = exp(delta * t) - 1.0;
+    b = 1.0 - exp(-1.0 * delta * TOrigin);
+    c = 1.0 - exp(-1.0 * delta * (TOrigin - t));
+    
+    ModelTimeF = a * b / (delta * c);
+    //fprintf (stderr, "ModelTimeF = %lf\n", ModelTimeF);
+    
+    
+    return ModelTimeF;
+}
+
+
+
+/************************************************************/
+/********************* GmodelTstandard ********************/
+/* Conversion from model time t>=0 to standard time.
+ */
+
+double GstandardTmodel (double V, double TOrigin, double delta)
+{
+    double  StandardTimeG, firstTerm, secondTerm, thirdTerm;
+    double  a, b, c, d, e;
+    
+    StandardTimeG = 0.0;
+    firstTerm = 0.0;
+    secondTerm = 0.0;
+    thirdTerm = 0.0;
+    a = 0.0;
+    b = 0.0;
+    c = 0.0;
+    d = 0.0;
+    e = 0.0;
+    
+    //fprintf (stderr, "\nV = %lf, T = %lf, delta = %lf\n", V, T, delta);
+    
+    
+    firstTerm = TOrigin;
+    //fprintf (stderr, "\nfirstTerm = %lf\n", firstTerm);
+    
+    secondTerm = 1 / delta;
+    // fprintf (stderr, "secondTerm = %lf\n", secondTerm);
+    
+    
+    //a = 1.0 - exp(-1.0 * delta * T);
+    a =  exp(-1.0 * delta * TOrigin);
+    
+    //fprintf (stderr, "a = %lf\n", a);
+    //b = (a * a) * exp(delta * T);
+    b = (1 - a) * (1 - a) * (1.0 / a);
+    //fprintf (stderr, "b= %lf\n", b);
+    
+    //c = 1.0 - exp (-1.0 * delta * T);
+    c = 1 - a;
+    // fprintf (stderr, "c = %lf\n", c);
+    //d = c * exp(delta * T);
+    d = (1 - a) * (1.0 / a);
+    // fprintf (stderr, "d = %lf\n", d);
+    e = V + d;
+    //fprintf (stderr, "e = %lf\n", e);
+    thirdTerm = log(1 - b / e);
+    //fprintf (stderr, "valueOfLog = %lf\n", thirdTerm);
+    thirdTerm = log(1 - ((1 - a) * (1 - a) * (1.0 / a)) / (V * delta + (1 - a) * (1.0 / a)));
+    //fprintf (stderr, "ArgumentOfLog = %lf\n", 1 - b/e);
+    //fprintf (stderr, "valueOfLog = %lf\n", thirdTerm);
+    
+    
+    thirdTerm = log(1 + delta * V - a) - log(1 + (delta * V - 1) * a);
+    
+    //StandardTimeG = firstTerm + (secondTerm * thirdTerm);
+    StandardTimeG = secondTerm * thirdTerm;
+    //fprintf (stderr, "StandardTimeG = %lf\n", StandardTimeG);
+    
+    if ( (1 + delta * V - a) <= 0 ||   (1 + (delta * V - 1)*a ) <= 0 ) // do approximation if required
+    {
+        fprintf (stderr, "\nApplying approximation of math formula to avoid log(0)\n");
+        StandardTimeG = 0.0;
+        firstTerm = 0.0;
+        secondTerm = 0.0;
+        thirdTerm = 0.0;
+        a = 0.0;
+        b = 0.0;
+        c = 0.0;
+        d = 0.0;
+        e = 0.0;
+        
+        a = 1 / delta;
+        b = log(1 + delta * V);
+        firstTerm = a * b;
+        //fprintf (stderr, "\nfirstTerm = %lf\n", firstTerm);
+        
+        
+        d = (V * V * delta * exp(-1.0 * delta * TOrigin)) / (1 + V);
+        secondTerm =  d;
+        //fprintf (stderr, "secondTerm = %lf\n", secondTerm);
+        
+        StandardTimeG = firstTerm - secondTerm;
+        //fprintf (stderr, "StandardTimeG = %lf\n", StandardTimeG);
+    }
+    
+    return StandardTimeG;
+}
+
+
+/***************************** compare******************************/
+
+int compare (const void * a, const void * b)
+
+{
+    
+    double *p1 = (double *)a;
+    
+    double *p2 = (double *)b;
+    
+    
+    
+    if (*p1 > *p2) return 1;
+    
+    else if (*p2 > *p1 )return -1;
+    
+    else return 0;
+    
+}
+
+/********************************** SimulateTriNucFreqGenome ***********************************/
+
+/*
+ 
+ Simulate a homozygous diploid genome with the trinucleotide frequencies of the human genome
+ 
+ 
+ 
+ We simulate first a random trinucleotide.
+ 
+ Then we go site by site taking into account the last two letters  of the
+ 
+ previous trinucleotide.  if the first trinucleotide is, for example, CAT
+ 
+ then we simulate trinucleotide starting in AT_  (i.e. ATA, ATC, ATG or ATT),
+ 
+ and keep going  taking into account the last two letters of the new trinucleotide,
+ 
+ and so on.
+ 
+ */
+
+
+
+void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphabet, int doUserGenome, int numSites, SiteStr* allSites, int doGeneticSignatures, double cumfreq[4], double *triNucFreq )
+
+{
+    
+    int         chosenTriNucleotide, nextNucleotide;
+    
+    int            k, n1, n2, n3, rest, site;
+    
+    double         *prob4, sum;
+    
+    
+    
+    /* memory allocations */
+    
+    prob4 = (double *) calloc (4, sizeof(double));
+    
+    if (!prob4)
+        
+    {
+        
+        fprintf (stderr, "Could not allocate the prob4 vector\n");
+        
+        exit (-1);
+        
+    }
+    
+    
+    
+    /* choose first trinucleotide */
+    
+    chosenTriNucleotide = ChooseUniformState(triNucFreq, seed);
+    
+    
+    
+    /* find bases of the selected trinucleotide */
+    
+    n1 = chosenTriNucleotide/16;
+    
+    rest = chosenTriNucleotide%16;
+    
+    n2 = rest/4;
+    
+    n3 = rest%4;
+    
+    //fprintf (stderr, "\n%2d %c%c%c ", chosenTriNucleotide, WhichNuc(n1), WhichNuc(n2), WhichNuc(n3));
+    
+    
+    
+    site = 0;
+    
+    p->maternalSequence[site]=p->paternalSequence[site]=n1;
+    
+    //    data[MATERNAL][cell][site] = data[PATERNAL][cell][site] = allSites[site].referenceAllele = n1;
+    
+    site++;
+    
+    p->maternalSequence[site]=p->paternalSequence[site] = allSites[site].referenceAllele = n2;
+    
+    site++;
+    
+    p->maternalSequence[site]=p->paternalSequence[site]= allSites[site].referenceAllele = n3;
+    
+    
+    
+    /* fill the rest of the genome */
+    
+    /* choose next nucleotide given the last two bases of the previous trinucleotide  */
+    
+    for (site=3; site<numSites; site++)
+        
+    {
+        
+        /* normalize frequencies given the last two bases */
+        
+        sum = 0;
+        
+        for (k=0; k<4; k++)
+            
+            sum += triNucFreq[trinuc(n2,n3,k)];
+        
+        for (k=0; k<4; k++)
+            
+            prob4[k] = triNucFreq[trinuc(n2,n3,k)] / sum;
+        
+        
+        
+        nextNucleotide = ChooseUniformState(prob4, seed);
+        
+        p->maternalSequence[site]=p->paternalSequence[site]= allSites[site].referenceAllele = nextNucleotide;
+        
+        
+        
+        /* move downstream one position */
+        
+        n1 = n2;
+        
+        n2 = n3;
+        
+        n3 = nextNucleotide;
+        
+    }
+    
+    
+    
+    free(prob4);
+    
+    prob4=NULL;
+    
+}
+
 /***************************** ReadParametersFromFile *******************************/
 /* Reads parameter values from the parameter file */
 
@@ -1389,7 +1913,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                 p->label = j;
                 
                 *labelNodes = j;
-                p->class = 1;
+                p->nodeClass = 1;
                 // fprintf (stderr,"\nIn cumIndivid=%d j=%d", cumIndivid, j);
                 for (i = 1; i <= numClones; i++)
                 {
@@ -1518,7 +2042,7 @@ void ValidateParameters(ProgramOptions *programOptions,
             // r->orderCurrentClone = p->orderCurrentClone;
             r->orderCurrentClone = popI->order;
             r->effectPopSize=popI->effectPopSize;
-            r->class = 4;
+            r->nodeClass = 4;
             // link the nodes
             r->left = p;
             r->right = q;
@@ -1577,7 +2101,6 @@ void ValidateParameters(ProgramOptions *programOptions,
                        TreeNode    **nodes,
                        TreeNode   **treeTips,
                        TreeNode    **treeRootInit,
-                       //TreeNode    **treeRootInit,
                        int *nextAvailable,
                        int *newInd,
                        double *currentTime,
@@ -1728,7 +2251,7 @@ void ValidateParameters(ProgramOptions *programOptions,
             if (programOptions->thereisOutgroup == NO)
             {
                 p = *nodes + *newInd;
-                p->class = 5;
+                p->nodeClass = 5;
                 *treeRootInit = p;
                 //treeRootInit[0] = p;
                 p->anc1 = NULL;
@@ -1736,7 +2259,7 @@ void ValidateParameters(ProgramOptions *programOptions,
             if (programOptions->thereisOutgroup == YES && programOptions->outgroupSelection > 0)  /*** Root and outgroup ***/
             {
                 p = *nodes + *newInd; // MRCA
-                p->class = 4;
+                p->nodeClass = 4;
                 
                 if (programOptions->noisy > 1)
                     fprintf (stderr, "\n\n>> Attaching outgroup .. ");
@@ -1764,7 +2287,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                 p->anc1 = healthyRoot;
                 
                 healthyRoot->timePUnits = p->timePUnits * healthyRoot->effectPopSize;
-                healthyRoot->class = 5;
+                healthyRoot->nodeClass = 5;
                 //        coalTreeMRCA->length = transformingBranchLength/mutationRate;
                 p->length = 0;
                 
@@ -1821,7 +2344,7 @@ void ValidateParameters(ProgramOptions *programOptions,
             }
             
  
-            int intLabel;
+            int intLabel = 0;
             if (programOptions->noisy > 1)
                 fprintf (stderr, "\n\n>> Relabeling nodes on tree... \n\n");
             if (programOptions->thereisOutgroup == YES)
@@ -1829,7 +2352,7 @@ void ValidateParameters(ProgramOptions *programOptions,
             else
                 intLabel = programOptions->TotalNumSequences;
         
-            RelabelNodes(*treeRootInit, &treeRootInit, &intLabel );
+            RelabelNodes(*treeRootInit, treeRootInit, &intLabel );
             
         }
         /********************************** EvolveSitesOnTree ***********************************/
@@ -2639,7 +3162,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                 p->index = 0;
                 p->label = 0;
                 p->isOutgroup = NO;
-                p->class = 0;
+                p->nodeClass = 0;
                 p->indexOldClone = 0;
                 p->indexCurrentClone = 0;
                 p->orderCurrentClone = 0;
@@ -2905,7 +3428,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                         r->indexCurrentClone = popI->index;
                         r->indexCurrentClone = popI->index;
                         r->orderCurrentClone = popI->order;
-                        r->class = 4;
+                        r->nodeClass = 4;
                         
                         
                         //    p = *nodes + MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration]; // root of younger clone
@@ -3000,7 +3523,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                             r->effectPopSize=popI->effectPopSize;
                             popI->nodeIdAncesterMRCA=newInd;
                             
-                            r->class = 4;
+                            r->nodeClass = 4;
                             
                             firstInd = *nextAvailable - 1;
                             //p = nodes + activeGametes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
@@ -3442,7 +3965,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                     fprintf (fpTimes, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.4lf      %10.4lf       %10.9lf\n",
                              "tip", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
                 
-                else if (p->class == 5 || (p->anc1 == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
+                else if (p->nodeClass == 5 || (p->anc1 == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
                     fprintf (fpTimes, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.4lf      %10.4lf       %10.9lf\n",
                              "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, 0.0, 0.0);
                 
@@ -3482,7 +4005,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                 else if (p->anc1 != NULL && p->left == NULL && p->right == NULL)        /* tip */
                     fprintf (fpTimes2, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.9lf      %10.9lf       %10.9lf\n",
                              "tip", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time)*mutationRate);
-                else if (p->class == 5 || (p->anc1 == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
+                else if (p->nodeClass == 5 || (p->anc1 == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
                     fprintf (fpTimes2, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.9lf      %10.9lf       %10.9lf\n",
                              "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, 0.0, 0.0);
                 else
@@ -3495,151 +4018,6 @@ void ValidateParameters(ProgramOptions *programOptions,
             } while    ((thereisOutgroup == NO  && p->anc1  != NULL)    /* no MRCA */
                         ||  (thereisOutgroup == NO  && p->left == NULL)   /* tip */
                         ||  (thereisOutgroup == YES && p->isOutgroup == NO));
-        }
-        /********************* PrepareSeparateFilesGenotypes **********************/
-        /* Open individual genotypes files to output results */
-        void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationAssignNum,
-                                           const FilePaths *filePaths, const ProgramOptions *programOptions,Files *files)
-        {
-            char File[MAX_NAME];
-            char dir[MAX_NAME];
-            /* contains the simulated tree in Newick format
-             */
-            mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
-            //mkdir("Results",0);
-#ifdef MAC
-            strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
-#else
-            strcpy (dir, "Results/");
-#endif
-            //strcpy (resultsDir, dir);
-            
-            if (programOptions->doSimulateData == YES)
-            {
-                /* contains SNV genotypes for every cell */
-                if (programOptions->doPrintSNVgenotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths->resultsDir, filePaths->SNVgenotypesDir);
-                    mkdir(File,S_IRWXU);
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths->resultsDir, filePaths->SNVgenotypesDir, filePaths->SNVgenotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    //sprintf(File,"%s/%s/%s.%04d", resultsDir, SNVgenotypesDir, SNVgenotypesFile, replicate+1);
-                    //if ((*fpSNVgenotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files->fpSNVgenotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                
-                /* contains haplotypes for variable sites for every cell */
-                if (programOptions->doPrintSNVhaplotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths->resultsDir, filePaths->SNVhaplotypesDir);
-                    mkdir(File,S_IRWXU);
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths->resultsDir, filePaths->SNVhaplotypesDir, filePaths->SNVhaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    // sprintf(File,"%s/%s/%s.%04d", resultsDir, SNVhaplotypesDir, SNVhaplotypesFile, replicate+1);
-                    //if ((*fpSNVhaplotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files->fpSNVhaplotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                
-                /* contains reference haplotypes (before errors)  for every cell */
-                if (programOptions->doPrintTrueHaplotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths->resultsDir, filePaths->trueHaplotypesDir);
-                    mkdir(File,S_IRWXU);
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths->resultsDir, filePaths->trueHaplotypesDir, filePaths->trueHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    
-                    
-                    // sprintf(File,"%s/%s/%s.%04d", resultsDir, trueHaplotypesDir, trueHaplotypesFile, replicate+1);
-                    //if ((*fpTrueHaplotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files->fpTrueHaplotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                
-                /* contains ML haplotypes  for every cell */
-                if (programOptions->doPrintMLhaplotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths->resultsDir, filePaths->MLhaplotypesDir);
-                    mkdir(File,S_IRWXU);
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths->resultsDir, filePaths->MLhaplotypesDir, filePaths->MLhaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    // sprintf(File,"%s/%s/%s.%04d", resultsDir, MLhaplotypesDir, MLhaplotypesFile, replicate+1);
-                    // if ((*fpMLhaplotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files->fpMLhaplotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                
-                /* contains all genotypes (variable or invariable) for every cell */
-                if (programOptions->doPrintFullGenotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths->resultsDir, filePaths
-                            ->fullGenotypesDir);
-                    mkdir(File,S_IRWXU);
-                    
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths->resultsDir, filePaths->fullGenotypesDir, filePaths->fullGenotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    //sprintf(File,"%s/%s/%s.%04d", resultsDir, fullGenotypesDir, fullGenotypesFile, replicate+1);
-                    //if ((*fpFullGenotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files->fpFullGenotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                /* contains haplotypes for all sites for every cell */
-                if (programOptions->doPrintFullHaplotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths->resultsDir, filePaths->fullHaplotypesDir);
-                    mkdir(File,S_IRWXU);
-                    
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths->resultsDir, filePaths->fullHaplotypesDir, filePaths->fullHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    //sprintf(File,"%s/%s/%s.%04d", resultsDir, fullHaplotypesDir, fullHaplotypesFile, replicate+1);
-                    //if ((*fpFullHaplotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files->fpFullHaplotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                /* contains reads counts and log10 normalized genotype likelihoods for every SNV and cell */
-                if (programOptions->doSimulateReadCounts == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths->resultsDir, filePaths->VCFdir);
-                    mkdir(File,S_IRWXU);
-                    
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths->resultsDir, filePaths->VCFdir, filePaths->VCFfile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    //sprintf(File,"%s/%s/%s.%04d", resultsDir, VCFdir, VCFfile, replicate+1);
-                    //if ((*fpVCF = fopen(File, "w")) == NULL)
-                    if (openFile(&files->fpVCF, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                /* contains reads counts for every SNV and cell */
-                if (programOptions->doPrintCATG == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths->resultsDir, filePaths->CATGdir);
-                    mkdir(File,S_IRWXU);
-                    
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths->resultsDir, filePaths->CATGdir, filePaths->CATGfile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    // sprintf(File,"%s/%s/%s.%04d", resultsDir, CATGdir, CATGfile, replicate+1);
-                    //if ((*fpCATG = fopen(File, "w")) == NULL)
-                    if (openFile(&files->fpCATG, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-            }
         }
 /************************************************************/
 /********************* ProbabilityCloneiFromClonej2 ********************/
@@ -3706,6 +4084,53 @@ double RandomUniform (long int *seed)
         *seed = test + 2147483647;
     return (double)(*seed) / (double)2147483647;
 }
+
+void connectNodelets(TreeNode *node )
+{
+    if (node != NULL)
+    {
+        if (node->left == NULL && node->right== NULL)
+        {
+            char * temp;
+            node->isLeaf=YES;
+            node->nodeLeft= NULL;
+            node->nodeRight= NULL;
+            node->nodeBack->next = NULL;
+            
+            node->nodeBack->node_index= node->index;
+            if (asprintf(&temp,  "%d_back",  node->label)<0)
+                return;
+            node->nodeBack->label=temp;
+        }
+        else
+        {
+            char * temp1;
+            char * temp2;
+            char *temp3;
+            node->isLeaf=NO;
+            node->nodeBack->next=node->nodeLeft;
+            node->nodeLeft->next=node->nodeRight;
+            node->nodeRight->next =node->nodeBack;
+            
+            node->nodeLeft->node_index= node->index;
+            
+            node->nodeRight->node_index= node->index;
+            
+            node->nodeBack->node_index= node->index;
+            if (asprintf(&temp1,  "%d_back",  node->label)<0)
+                return;
+            node->nodeBack->label=temp1;
+            if (asprintf(&temp2,  "%d_left",  node->label)<0)
+                return;
+            node->nodeLeft->label= temp2;
+            if (asprintf(&temp3,  "%d_right",  node->label)<0)
+                return;
+            node->nodeRight->label= temp3;
+            
+        }
+    }
+}
+
 /********************* connectNodes **********************/
 /* connectNodes*/
 void connectNodes(TreeNode *left, TreeNode *right, TreeNode *ancester  ){
@@ -3907,6 +4332,60 @@ double RandomGamma2 (double s, long int *seed)
     return (x);
 }
 
+/************************************* SimulateMk2ForSite ***************************************/
+/* Simulates the nucleotide substitution process for a given site under Mk2 model (see Lewis 2001)
+ with equal rates. 0 is the reference (healthy) allele */
+
+void SimulateMk2forSite (TreeNode *p, int genome, int site, long int *seed, int doUserTree, int rateVarAmongSites, double altModelMutationRate, SiteStr* allSites, int ***data, int* numMU )
+{
+    double    probOfChange, uniform, branchLength;
+    int     cell, anccell;
+    
+    if (p != NULL)
+    {
+        if (p->isOutgroup == NO)
+        {
+            cell = p->label;
+            anccell = p->anc1->label;
+            
+            if (doUserTree == YES){
+                branchLength = p->lengthModelUnits;//>branchLength;
+                //                 branchLength = p->length;//>branchLength;
+                
+            }
+            else
+            {
+                if (rateVarAmongSites == YES)
+                    branchLength = altModelMutationRate * p->length * allSites[site].rateMultiplier;
+                else
+                    branchLength = altModelMutationRate * p->length;
+            }
+            
+            probOfChange = 0.5 - 0.5 * exp (-2.0 * branchLength);
+            
+            uniform = RandomUniform(seed);
+            if (uniform >= probOfChange) /* => no change */
+                data[genome][cell][site] = data[genome][anccell][site];
+            else /* => there will be change */
+            {
+                if (data[genome][anccell][site] == 0)
+                    data[genome][cell][site] = 1;
+                else
+                    data[genome][cell][site] = 0;
+                
+                if (genome == MATERNAL)
+                    allSites[site].numMutationsMaternal++;
+                else if (genome == PATERNAL)
+                    allSites[site].numMutationsPaternal++;
+                allSites[site].numMutations++;
+                numMU=numMU+1;
+            }
+        }
+        SimulateMk2forSite (p->left,  genome, site, seed,  doUserTree,  rateVarAmongSites,  altModelMutationRate, allSites, data, numMU);
+        SimulateMk2forSite (p->right, genome, site, seed,  doUserTree,  rateVarAmongSites,  altModelMutationRate, allSites, data, numMU);
+    }
+}
+
 /************************************* SimulateMk2 **********************************************/
 /* Simulates the nucleotide substitution process under the Mk2 model (see Lewis 2001),
  also called Cavender-Farris-Neyman CFN  model or Jukes-Cantor (1969) model for two alleles */
@@ -3958,33 +4437,6 @@ double RandomExponential (double lambda, long int *seed)
     return exponentialNumber;
 }
 
-/********************* WhichNucChar ************************/
-/* Returns integer representation for character nucleotudes */
-
-int WhichNucChar (char nucleotide)
-{
-    if (nucleotide == 'A')
-        return (A);
-    else if (nucleotide == 'C')
-        return (C);
-    else if (nucleotide == 'G')
-        return (G);
-    else if (nucleotide == 'T')
-        return (T);
-    else if (nucleotide == '?')
-        return (ADO);
-    else if (nucleotide == '-')
-        return (DELETION);
-    else if (nucleotide == 'N')
-        return (N);
-    else if (nucleotide == 'R')
-        return (R);
-    else
-    {
-        fprintf (stderr, "\nERROR in WhichNucChar: nucleotide = %c\n",  nucleotide);
-        exit(-1);
-    }
-}
 /********************* WhichIUPAC ************************/
 /* Returns the IUPAC representation of the genotype */
 /*
@@ -4173,7 +4625,7 @@ char WhichMut (int state)
     else
         return ('N');
 }
-********************* WhichConsensusBinary ************************/
+/********************* WhichConsensusBinary ************************/
 /* Returns a consensus representation of the binary genotype */
 /*
  0/0 => 0
@@ -4288,6 +4740,167 @@ int openFile(FILE **file, char path[MAX_NAME] )
     }
     return 0;
 }
+
+/********************************** SimulateISMDNAforSite ***********************************/
+
+/*    Simulates a ACGT mutation under an infinite sites model (ISM) for a given site. The branch
+ 
+ where this mutation is placed is chosen according to its length.
+ 
+ The reference (healthy) allele for each site will be determined by the nucleotide frequencies
+ 
+ A mutation matrix will define the probability of changing to other nucleotides given
+ 
+ the healthy alelle chose
+ 
+ */
+
+void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, double totalTreeLength, int ***data, SiteStr* allSites, int  *numMU, double cumMij[4][4],double mutationRate, double *uniform, double *cumBranchLength, double* ran )
+
+{
+    
+    //    static double    cumBranchLength, uniform, ran;
+    
+    int             j, cell, anccell, ancstate;
+    
+    
+    
+    if (p != NULL)
+        
+    {
+        
+        cell = p->label;
+        
+        
+        
+        if ( p->anc1 == NULL)
+            
+        {
+            
+            *cumBranchLength = 0;
+            
+            *uniform = RandomUniform(seed) * totalTreeLength;
+            
+        }
+        
+        else
+            
+        {
+            
+            anccell = p->anc1->label;
+            
+            if(genome == MATERNAL )
+                
+                ancstate = p->anc1->maternalSequence[site];
+            
+            else
+                
+                ancstate = p->anc1->paternalSequence[site];
+            
+            //            cumBranchLength += p->length;// ->branchLength;
+            
+            *cumBranchLength =*cumBranchLength+ p->length;
+            
+            
+            
+            if ((*cumBranchLength < *uniform) || /* => there will be no change */
+                
+                ((doISMhaploid == NO)  && (allSites[site].numMutations > 0))  ||
+                
+                ((doISMhaploid == YES) && (genome == MATERNAL) && (allSites[site].numMutationsMaternal > 0)) ||
+                
+                ((doISMhaploid == YES) && (genome == PATERNAL) && (allSites[site].numMutationsPaternal > 0)))
+                
+            {
+                
+                if(genome == MATERNAL )
+                    
+                    p->maternalSequence[site]=p->anc1->maternalSequence[site];
+                
+                else
+                    
+                    p->paternalSequence[site]=p->anc1->paternalSequence[site];
+                
+                
+                
+                p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site];
+                
+                p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site];
+                
+                p->numbersMutationsUnderSubtreePerSite[site]=p->anc1->numbersMutationsUnderSubtreePerSite[site];
+                
+            }
+            
+            else /* => there will be change */
+                
+            {
+                
+                *ran = RandomUniform(seed) * cumMij[ancstate][3];
+                
+                for (j=0; j<4; j++)
+                    
+                {
+                    
+                    if (*ran <= cumMij[ancstate][j])
+                        
+                    {
+                        
+                        //data[genome][cell][site] = j;
+                        
+                        if(genome == MATERNAL )
+                            
+                            p->maternalSequence[site]=j;
+                        
+                        else
+                            
+                            p->paternalSequence[site]=j;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                
+                if (genome == MATERNAL){
+                    
+                    allSites[site].numMutationsMaternal++;
+                    
+                    p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site]+1;
+                    
+                    p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site];
+                    
+                    p->numbersMutationsUnderSubtreePerSite[site]=p->anc1->numbersMutationsUnderSubtreePerSite[site]+1;
+                    
+                }
+                
+                else if (genome == PATERNAL){
+                    
+                    allSites[site].numMutationsPaternal++;
+                    
+                    p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site];
+                    
+                    p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site]+1;
+                    
+                    p->numbersMutationsUnderSubtreePerSite[site]=p->anc1->numbersMutationsUnderSubtreePerSite[site]+1;
+                    
+                }
+                
+                allSites[site].numMutations++;
+                
+                (*numMU)++;
+                
+            }
+            
+        }
+        
+        SimulateISMDNAforSite (p->left, genome, site, doISMhaploid, seed,  totalTreeLength, data, allSites, numMU,cumMij,  mutationRate, uniform, cumBranchLength,  ran);
+        
+        SimulateISMDNAforSite (p->right, genome, site, doISMhaploid, seed, totalTreeLength, data, allSites, numMU,cumMij,  mutationRate, uniform, cumBranchLength,  ran);
+        
+    }
+    
+}
+
 /********************************** SimulateISMForSite ***********************************/
 /*    Simulates a 0/1 mutation under an infinite sites model (ISM) for a given site. The branch
  where this mutation is placed is chosen according to its length.
@@ -4430,8 +5043,8 @@ void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int d
 {
     int     i, j;
     double beta, kappa;
-    //double Qij[16];
-    //double mr;
+    double Qij[16];
+    double mr;
     
     if (doJC == YES)
     {
@@ -4458,7 +5071,7 @@ void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int d
             Qij[i*4+i]=-(Qij[i*4]+Qij[i*4+1]+Qij[i*4+2]+Qij[i*4+3]);
             mr-=freq[i]*Qij[i*4+i];
         }
-        EigenREV(Root, Cijk);
+        EigenREV(mr, Qij, Root, Cijk);
     }
     
     for (i=0; i<numAltModelSites; i++)

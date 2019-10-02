@@ -10,10 +10,11 @@
 #define data_utils_hpp
 
 #include <stdio.h>
-#include "../pll/pll_optimize.h"
-#include "../pll/pll_tree.h"
-#include "../pll/pllmod_algorithm.h"
+#include "libpll/pll_optimize.h"
+#include "libpll/pll_tree.h"
+#include "libpll/pllmod_algorithm.h"
 #include "pllmod_common.h"
+#include "eigen.hpp"
 
 #define PROGRAM_NAME    "TumorCoal"
 #define VERSION_NUMBER    "2.0"
@@ -615,7 +616,12 @@ int RandomUniformTo (int max, long int *seed);
 char WhichConsensusBinary (int allele1, int allele2);
 int openFile(FILE **file, char path[MAX_NAME] );
 
+int ChooseUniformState (double *prob, long int *seed);
+void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphabet, int doUserGenome, int numSites, SiteStr* allSites, int doGeneticSignatures, double cumfreq[4], double *triNucFreq );
+
+void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, double totalTreeLength, int ***data, SiteStr* allSites, int  *numMU, double cumMij[4][4],double mutationRate, double *uniform, double *cumBranchLength, double* ran );
 void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, double totalTreeLength, int ***data, SiteStr* allSites, int  *numMU, double cumMij[4][4], double mutationRate, double*    cumBranchLength, double* uniform, int* mutationAdded);
+
 void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int doHKY, int doGTR, int doGTnR, double freqR, double freqY, double freqAG, double freqCT, double titv, double freq[4], double Mij[4][4], int numAltModelSites, int *AltModelSites,SiteStr* allSites,  int rateVarAmongSites, double altModelMutationRate, int *numMU, double Root[], double Cijk[]);
 int SimulateData(ProgramOptions *programOptions, int *CloneNameBegin, int *CloneSampleSizeBegin, int *ClonePopSizeBegin,
                  Population **populations,
@@ -624,6 +630,5 @@ int SimulateData(ProgramOptions *programOptions, int *CloneNameBegin, int *Clone
                  char *ObservedCellNames[]
                  
                  );
-
 
 #endif /* data_utils_hpp */

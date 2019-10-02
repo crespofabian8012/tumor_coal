@@ -1,0 +1,23 @@
+dependencies: \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/main.c \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pll_msa.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pll.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/definitions.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pll_optimize.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pll_tree.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pllmod_algorithm.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pllmod_util.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pllmod_common.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tumorcellcoal.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/likelihood.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/model.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/random.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/population.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/prior.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/mutationModel.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/util.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/fileFuntions.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/proposal.h \
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/MCMCchain.h

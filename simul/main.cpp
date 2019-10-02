@@ -30,10 +30,10 @@ int main(int argc, char *argv[])
     double   *CloneGrowthRateBegin;
     double Mij[4][4];
      double freq[4];
- 
+
     double TotalBirthRate, TotalDeathRate;
     int TotalN, i, j, k;
-    
+
     FILE    *input_file;
     size_t seed = std::stol(argv[0]);
     string output_path = argv[1];

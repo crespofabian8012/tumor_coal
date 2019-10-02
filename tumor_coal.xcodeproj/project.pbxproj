@@ -1,0 +1,414 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7943F46D234388F200BEB255 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7943F46C234388F200BEB255 /* main.cpp */; };
+		7943F47023438BD400BEB255 /* data_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7943F46E23438BD400BEB255 /* data_utils.cpp */; };
+		7943F479234393A100BEB255 /* pllmod_algorithm.c in Sources */ = {isa = PBXBuildFile; fileRef = 7943F475234393A000BEB255 /* pllmod_algorithm.c */; };
+		7943F47A234393A100BEB255 /* libpll_binary.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F476234393A000BEB255 /* libpll_binary.0.dylib */; };
+		7943F47B234393A100BEB255 /* pll_tree.c in Sources */ = {isa = PBXBuildFile; fileRef = 7943F478234393A000BEB255 /* pll_tree.c */; };
+		7943F483234398BE00BEB255 /* pll.c in Sources */ = {isa = PBXBuildFile; fileRef = 7943F482234398BE00BEB255 /* pll.c */; };
+		7943F49B234399C600BEB255 /* libpll_msa.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F484234399C400BEB255 /* libpll_msa.0.dylib */; };
+		7943F49C234399C600BEB255 /* libpll_util.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F485234399C400BEB255 /* libpll_util.0.dylib */; };
+		7943F49D234399C600BEB255 /* libpll_msa.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F487234399C500BEB255 /* libpll_msa.a */; };
+		7943F49E234399C600BEB255 /* libpll_util.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F488234399C500BEB255 /* libpll_util.a */; };
+		7943F49F234399C600BEB255 /* libpll_tree.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F48A234399C500BEB255 /* libpll_tree.0.dylib */; };
+		7943F4A0234399C600BEB255 /* libpll.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F48C234399C500BEB255 /* libpll.0.dylib */; };
+		7943F4A1234399C600BEB255 /* libpll_binary.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F48D234399C500BEB255 /* libpll_binary.0.dylib */; };
+		7943F4A2234399C600BEB255 /* libpll_optimize.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F48E234399C500BEB255 /* libpll_optimize.a */; };
+		7943F4A3234399C600BEB255 /* algo_callback.c in Sources */ = {isa = PBXBuildFile; fileRef = 7943F48F234399C500BEB255 /* algo_callback.c */; };
+		7943F4A4234399C600BEB255 /* libpll_binary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F492234399C600BEB255 /* libpll_binary.a */; };
+		7943F4A5234399C600BEB255 /* libpll_optimize.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F495234399C600BEB255 /* libpll_optimize.0.dylib */; };
+		7943F4A6234399C600BEB255 /* libpll.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F496234399C600BEB255 /* libpll.a */; };
+		7943F4A7234399C600BEB255 /* libpll_algorithm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F498234399C600BEB255 /* libpll_algorithm.a */; };
+		7943F4A8234399C600BEB255 /* libpll_tree.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F499234399C600BEB255 /* libpll_tree.a */; };
+		7943F4A9234399C600BEB255 /* libpll_algorithm.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7943F49A234399C600BEB255 /* libpll_algorithm.0.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		79E8D9512343831300787E34 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		7943F46C234388F200BEB255 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = simul/main.cpp; sourceTree = SOURCE_ROOT; };
+		7943F46E23438BD400BEB255 /* data_utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = data_utils.cpp; path = simul/data_utils.cpp; sourceTree = SOURCE_ROOT; };
+		7943F46F23438BD400BEB255 /* data_utils.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = data_utils.hpp; path = simul/data_utils.hpp; sourceTree = SOURCE_ROOT; };
+		7943F472234393A000BEB255 /* pll_optimize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pll_optimize.h; sourceTree = "<group>"; };
+		7943F473234393A000BEB255 /* pll_tree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pll_tree.h; sourceTree = "<group>"; };
+		7943F474234393A000BEB255 /* pll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pll.h; sourceTree = "<group>"; };
+		7943F475234393A000BEB255 /* pllmod_algorithm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pllmod_algorithm.c; sourceTree = "<group>"; };
+		7943F476234393A000BEB255 /* libpll_binary.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpll_binary.0.dylib; sourceTree = "<group>"; };
+		7943F477234393A000BEB255 /* pllmod_algorithm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pllmod_algorithm.h; sourceTree = "<group>"; };
+		7943F478234393A000BEB255 /* pll_tree.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pll_tree.c; sourceTree = "<group>"; };
+		7943F47C2343940000BEB255 /* pllmod_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pllmod_common.h; sourceTree = "<group>"; };
+		7943F47D2343940000BEB255 /* pllmod_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pllmod_util.h; sourceTree = "<group>"; };
+		7943F47E2343958900BEB255 /* algo_callback.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = algo_callback.h; sourceTree = "<group>"; };
+		7943F47F2343958900BEB255 /* tree_hashtable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tree_hashtable.h; sourceTree = "<group>"; };
+		7943F480234398BE00BEB255 /* pll_binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pll_binary.h; sourceTree = "<group>"; };
+		7943F481234398BE00BEB255 /* pll_msa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pll_msa.h; sourceTree = "<group>"; };
+		7943F482234398BE00BEB255 /* pll.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pll.c; sourceTree = "<group>"; };
+		7943F484234399C400BEB255 /* libpll_msa.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpll_msa.0.dylib; sourceTree = "<group>"; };
+		7943F485234399C400BEB255 /* libpll_util.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpll_util.0.dylib; sourceTree = "<group>"; };
+		7943F486234399C400BEB255 /* libpll_msa.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libpll_msa.la; sourceTree = "<group>"; };
+		7943F487234399C500BEB255 /* libpll_msa.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libpll_msa.a; sourceTree = "<group>"; };
+		7943F488234399C500BEB255 /* libpll_util.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libpll_util.a; sourceTree = "<group>"; };
+		7943F489234399C500BEB255 /* libpll_util.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libpll_util.la; sourceTree = "<group>"; };
+		7943F48A234399C500BEB255 /* libpll_tree.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpll_tree.0.dylib; sourceTree = "<group>"; };
+		7943F48B234399C500BEB255 /* libpll_tree.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libpll_tree.la; sourceTree = "<group>"; };
+		7943F48C234399C500BEB255 /* libpll.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpll.0.dylib; sourceTree = "<group>"; };
+		7943F48D234399C500BEB255 /* libpll_binary.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpll_binary.0.dylib; path = ../../GitFolder/TumorCellCoal_21Feb/TumorCellCoal/libpll_binary.0.dylib; sourceTree = "<group>"; };
+		7943F48E234399C500BEB255 /* libpll_optimize.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libpll_optimize.a; sourceTree = "<group>"; };
+		7943F48F234399C500BEB255 /* algo_callback.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = algo_callback.c; sourceTree = "<group>"; };
+		7943F490234399C500BEB255 /* pllmod_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pllmod_common.h; path = ../../GitFolder/TumorCellCoal_21Feb/TumorCellCoal/pllmod_common.h; sourceTree = "<group>"; };
+		7943F491234399C500BEB255 /* libpll_algorithm.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libpll_algorithm.la; sourceTree = "<group>"; };
+		7943F492234399C600BEB255 /* libpll_binary.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libpll_binary.a; sourceTree = "<group>"; };
+		7943F493234399C600BEB255 /* libpll_binary.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libpll_binary.la; sourceTree = "<group>"; };
+		7943F494234399C600BEB255 /* libpll_optimize.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libpll_optimize.la; sourceTree = "<group>"; };
+		7943F495234399C600BEB255 /* libpll_optimize.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpll_optimize.0.dylib; sourceTree = "<group>"; };
+		7943F496234399C600BEB255 /* libpll.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libpll.a; sourceTree = "<group>"; };
+		7943F497234399C600BEB255 /* libpll.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libpll.la; sourceTree = "<group>"; };
+		7943F498234399C600BEB255 /* libpll_algorithm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libpll_algorithm.a; sourceTree = "<group>"; };
+		7943F499234399C600BEB255 /* libpll_tree.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libpll_tree.a; sourceTree = "<group>"; };
+		7943F49A234399C600BEB255 /* libpll_algorithm.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpll_algorithm.0.dylib; sourceTree = "<group>"; };
+		79E8D9532343831300787E34 /* tumor_coal */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tumor_coal; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		79E8D9502343831300787E34 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7943F4A8234399C600BEB255 /* libpll_tree.a in Frameworks */,
+				7943F4A1234399C600BEB255 /* libpll_binary.0.dylib in Frameworks */,
+				7943F4A0234399C600BEB255 /* libpll.0.dylib in Frameworks */,
+				7943F47A234393A100BEB255 /* libpll_binary.0.dylib in Frameworks */,
+				7943F49F234399C600BEB255 /* libpll_tree.0.dylib in Frameworks */,
+				7943F49C234399C600BEB255 /* libpll_util.0.dylib in Frameworks */,
+				7943F49D234399C600BEB255 /* libpll_msa.a in Frameworks */,
+				7943F4A9234399C600BEB255 /* libpll_algorithm.0.dylib in Frameworks */,
+				7943F49E234399C600BEB255 /* libpll_util.a in Frameworks */,
+				7943F49B234399C600BEB255 /* libpll_msa.0.dylib in Frameworks */,
+				7943F4A2234399C600BEB255 /* libpll_optimize.a in Frameworks */,
+				7943F4A5234399C600BEB255 /* libpll_optimize.0.dylib in Frameworks */,
+				7943F4A7234399C600BEB255 /* libpll_algorithm.a in Frameworks */,
+				7943F4A6234399C600BEB255 /* libpll.a in Frameworks */,
+				7943F4A4234399C600BEB255 /* libpll_binary.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7943F46B234388C600BEB255 /* simul */ = {
+			isa = PBXGroup;
+			children = (
+				7943F46C234388F200BEB255 /* main.cpp */,
+				7943F46E23438BD400BEB255 /* data_utils.cpp */,
+				7943F46F23438BD400BEB255 /* data_utils.hpp */,
+			);
+			name = simul;
+			path = "New Group";
+			sourceTree = "<group>";
+		};
+		7943F4712343933400BEB255 /* pll */ = {
+			isa = PBXGroup;
+			children = (
+				7943F48F234399C500BEB255 /* algo_callback.c */,
+				7943F49A234399C600BEB255 /* libpll_algorithm.0.dylib */,
+				7943F498234399C600BEB255 /* libpll_algorithm.a */,
+				7943F491234399C500BEB255 /* libpll_algorithm.la */,
+				7943F48D234399C500BEB255 /* libpll_binary.0.dylib */,
+				7943F492234399C600BEB255 /* libpll_binary.a */,
+				7943F493234399C600BEB255 /* libpll_binary.la */,
+				7943F484234399C400BEB255 /* libpll_msa.0.dylib */,
+				7943F487234399C500BEB255 /* libpll_msa.a */,
+				7943F486234399C400BEB255 /* libpll_msa.la */,
+				7943F495234399C600BEB255 /* libpll_optimize.0.dylib */,
+				7943F48E234399C500BEB255 /* libpll_optimize.a */,
+				7943F494234399C600BEB255 /* libpll_optimize.la */,
+				7943F48A234399C500BEB255 /* libpll_tree.0.dylib */,
+				7943F499234399C600BEB255 /* libpll_tree.a */,
+				7943F48B234399C500BEB255 /* libpll_tree.la */,
+				7943F485234399C400BEB255 /* libpll_util.0.dylib */,
+				7943F488234399C500BEB255 /* libpll_util.a */,
+				7943F489234399C500BEB255 /* libpll_util.la */,
+				7943F48C234399C500BEB255 /* libpll.0.dylib */,
+				7943F496234399C600BEB255 /* libpll.a */,
+				7943F497234399C600BEB255 /* libpll.la */,
+				7943F490234399C500BEB255 /* pllmod_common.h */,
+				7943F480234398BE00BEB255 /* pll_binary.h */,
+				7943F481234398BE00BEB255 /* pll_msa.h */,
+				7943F482234398BE00BEB255 /* pll.c */,
+				7943F47E2343958900BEB255 /* algo_callback.h */,
+				7943F47F2343958900BEB255 /* tree_hashtable.h */,
+				7943F47C2343940000BEB255 /* pllmod_common.h */,
+				7943F47D2343940000BEB255 /* pllmod_util.h */,
+				7943F476234393A000BEB255 /* libpll_binary.0.dylib */,
+				7943F472234393A000BEB255 /* pll_optimize.h */,
+				7943F478234393A000BEB255 /* pll_tree.c */,
+				7943F473234393A000BEB255 /* pll_tree.h */,
+				7943F474234393A000BEB255 /* pll.h */,
+				7943F475234393A000BEB255 /* pllmod_algorithm.c */,
+				7943F477234393A000BEB255 /* pllmod_algorithm.h */,
+			);
+			path = pll;
+			sourceTree = "<group>";
+		};
+		79E8D94A2343831300787E34 = {
+			isa = PBXGroup;
+			children = (
+				7943F4712343933400BEB255 /* pll */,
+				7943F46B234388C600BEB255 /* simul */,
+				79E8D9542343831300787E34 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		79E8D9542343831300787E34 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				79E8D9532343831300787E34 /* tumor_coal */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		79E8D9522343831300787E34 /* tumor_coal */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 79E8D95A2343831300787E34 /* Build configuration list for PBXNativeTarget "tumor_coal" */;
+			buildPhases = (
+				79E8D94F2343831300787E34 /* Sources */,
+				79E8D9502343831300787E34 /* Frameworks */,
+				79E8D9512343831300787E34 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tumor_coal;
+			productName = tumor_coal;
+			productReference = 79E8D9532343831300787E34 /* tumor_coal */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		79E8D94B2343831300787E34 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1000;
+				ORGANIZATIONNAME = "Fausto Fabian Crespo Fernandez";
+				TargetAttributes = {
+					79E8D9522343831300787E34 = {
+						CreatedOnToolsVersion = 10.0;
+					};
+				};
+			};
+			buildConfigurationList = 79E8D94E2343831300787E34 /* Build configuration list for PBXProject "tumor_coal" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 79E8D94A2343831300787E34;
+			productRefGroup = 79E8D9542343831300787E34 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				79E8D9522343831300787E34 /* tumor_coal */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		79E8D94F2343831300787E34 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7943F46D234388F200BEB255 /* main.cpp in Sources */,
+				7943F4A3234399C600BEB255 /* algo_callback.c in Sources */,
+				7943F47023438BD400BEB255 /* data_utils.cpp in Sources */,
+				7943F483234398BE00BEB255 /* pll.c in Sources */,
+				7943F47B234393A100BEB255 /* pll_tree.c in Sources */,
+				7943F479234393A100BEB255 /* pllmod_algorithm.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		79E8D9582343831300787E34 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		79E8D9592343831300787E34 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		79E8D95B2343831300787E34 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/pll",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		79E8D95C2343831300787E34 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/pll",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		79E8D94E2343831300787E34 /* Build configuration list for PBXProject "tumor_coal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				79E8D9582343831300787E34 /* Debug */,
+				79E8D9592343831300787E34 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		79E8D95A2343831300787E34 /* Build configuration list for PBXNativeTarget "tumor_coal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				79E8D95B2343831300787E34 /* Debug */,
+				79E8D95C2343831300787E34 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 79E8D94B2343831300787E34 /* Project object */;
+}

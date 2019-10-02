@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "SimulatePopulation:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "UpdateListMigrants:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "pll_utree_destroy:parse_utree.y">
+         <PersistentStrings>
+            <PersistentString
+               value = "tree-&gt;tip_count">
+            </PersistentString>
+            <PersistentString
+               value = "tree-&gt;nodes[i]-&gt;label">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChooseUniformState:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "InitPopulationSampleSizes:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "ReadFastaFile:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "WhichNucChar(*t)">
+            </PersistentString>
+            <PersistentString
+               value = "*t">
+            </PersistentString>
+            <PersistentString
+               value = "(char *)temp">
+            </PersistentString>
+            <PersistentString
+               value = "seq-&gt;name.s">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "SimulateFiniteDNAforSite:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "toNewickString:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "(char *)newickString">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "AssignCurrentSequencesToPopulation:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "ObservedCellNames[j]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "SimulateFiniteDNA:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "freq[0]">
+            </PersistentString>
+            <PersistentString
+               value = "freq[2]">
+            </PersistentString>
+            <PersistentString
+               value = "freq[3]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "CountTrueVariants:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "p-&gt;maternalSequence[site]">
+            </PersistentString>
+            <PersistentString
+               value = "HEALTHY_ROOT-&gt;maternalSequence[site]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Index:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "ReadParametersFromFile:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "ch">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "LogConditionalLikelihoodSequences:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "(void *)(data+i)">
+            </PersistentString>
+            <PersistentString
+               value = "clv[index]">
+            </PersistentString>
+            <PersistentString
+               value = " data[i]">
+            </PersistentString>
+            <PersistentString
+               value = "msa-&gt;length">
+            </PersistentString>
+            <PersistentString
+               value = "i*rates*states_padded + j*states_padded + k">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "InitListClones:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "ConditionalLikelihoodTree:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "pllmod_msa_empirical_frequencies1:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "site_to_id[n]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "FillChainPopulationsFromPriors:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "mcmcOptions-&gt;totalEffectPopSizefrom">
+            </PersistentString>
+            <PersistentString
+               value = "chain-&gt;totalPopSize">
+            </PersistentString>
+            <PersistentString
+               value = "mcmcOptions-&gt;MutRatefrom">
+            </PersistentString>
+            <PersistentString
+               value = "chain-&gt;mutationRate ">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChooseFatherPopulation:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "*(populations + PopChild-&gt;order + w)">
+            </PersistentString>
+            <PersistentString
+               value = "numClones - 1 - (int)(PopChild-&gt;order)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "computeGenotypesFreq:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "GTRmodel:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "Root[0]">
+            </PersistentString>
+            <PersistentString
+               value = "Root[1]">
+            </PersistentString>
+            <PersistentString
+               value = "Root[2]">
+            </PersistentString>
+            <PersistentString
+               value = "Root[3]">
+            </PersistentString>
+            <PersistentString
+               value = "">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "RelabelNodes:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "p-&gt;label ">
+            </PersistentString>
+            <PersistentString
+               value = "p-&gt;index">
+            </PersistentString>
+            <PersistentString
+               value = "*intLabel">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GenerateEffectPopSizesFromPriors2:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "proportionsVector[0]">
+            </PersistentString>
+            <PersistentString
+               value = "chain-&gt;proportionsVector">
+            </PersistentString>
+            <PersistentString
+               value = "chain-&gt;proportionsVector[j]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "AssignObservedCellNamestoTips2:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "popI-&gt;indexFirstObservedCellName">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "pll_utree_spr:utree_moves.c">
+      </ContextState>
+      <ContextState
+         contextName = "toNewickString2:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "p-&gt;timePUnits">
+            </PersistentString>
+            <PersistentString
+               value = "p-&gt;observedCellName">
+            </PersistentString>
+            <PersistentString
+               value = "p-&gt;anc1-&gt;timePUnits">
+            </PersistentString>
+            <PersistentString
+               value = "newickString">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DensityCoalescentTimesForPopulation:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "set_tipclv1:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "map[(int)sequence[index]])">
+            </PersistentString>
+            <PersistentString
+               value = "c &amp; 1">
+            </PersistentString>
+            <PersistentString
+               value = "sequence[index]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "InitializeChains:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "mcmcOptions-&gt;numChains">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "setChainPopulationSampleSizes:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "InitListPossibleMigrations:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "ValidateParameters:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "MakeCoalescenceTree2:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "programOptions-&gt;TotalNumSequences">
+            </PersistentString>
+            <PersistentString
+               value = "treeTips[i]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "WriteTree:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "pllmod_msa_empirical_frequencies:pll_msa.c">
+      </ContextState>
+      <ContextState
+         contextName = "InitializeGenomes:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "p-&gt;cellName">
+            </PersistentString>
+            <PersistentString
+               value = "cumfreq[i]">
+            </PersistentString>
+            <PersistentString
+               value = "cellNames[cell]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "GeneratePopSizesFromPriors:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "Uvector[1]">
+            </PersistentString>
+            <PersistentString
+               value = "Uvector[2]">
+            </PersistentString>
+            <PersistentString
+               value = "Uvector[0]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "BuildTree:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "SimulateISMforSite:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "p-&gt;NumbersMaternalMutationsPerSite[site]">
+            </PersistentString>
+            <PersistentString
+               value = "allSites[site].numMutations">
+            </PersistentString>
+            <PersistentString
+               value = "p-&gt;maternalSequence[site]">
+            </PersistentString>
+            <PersistentString
+               value = "p-&gt;NumbersMutationsUnderSubtreePerSite[site]">
+            </PersistentString>
+            <PersistentString
+               value = "p-&gt;anc1-&gt;paternalSequence[site]">
+            </PersistentString>
+            <PersistentString
+               value = "p-&gt;anc1-&gt;NumbersMutationsUnderSubtreePerSite[site]">
+            </PersistentString>
+            <PersistentString
+               value = "p-&gt;anc1-&gt;maternalSequence[site]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "newTotalEffectivePopulationSizeMove:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = " mcmcOptions-&gt;slidingWindowSizeTotalEffectPopSize">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "toNewickString3:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "LogDensityCoalescentTimesForPopulation:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "popI-&gt;CoalescentEventTimes[currentCoalescentEvent] ">
+            </PersistentString>
+            <PersistentString
+               value = "popI-&gt;migrationTimes[currentMigrationEvent]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "pllmod_utree_spr:pll_tree.c">
+      </ContextState>
+      <ContextState
+         contextName = "set_partition_tips:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "found.data">
+            </PersistentString>
+            <PersistentString
+               value = "found.data[0]">
+            </PersistentString>
+            <PersistentString
+               value = "msa-&gt;sequence[i]">
+            </PersistentString>
+            <PersistentString
+               value = "found-&gt;data">
+            </PersistentString>
+            <PersistentString
+               value = "msa-&gt;sequence">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "PrintTrueFullHaplotypes:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "AssignObservedCellNamestoTips:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "ObservedCellNames[k]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "pll_utree_spr1:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "WilsonBaldingMove:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "main:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "programOptions.numClones">
+            </PersistentString>
+            <PersistentString
+               value = "programOptions.numCells">
+            </PersistentString>
+            <PersistentString
+               value = "">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "runChain:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "opt-&gt;Niterations">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "DensityTime:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "delta * term1 * exp(-1*term1/term2) /(term2 * term2)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "WriteTree2:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "cellNames[*indexCurrentCell]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "computeTajimaD:main.c">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

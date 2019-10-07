@@ -13,7 +13,6 @@
 #include "libpll/pll_optimize.h"
 #include "libpll/pll_tree.h"
 #include "libpll/pllmod_algorithm.h"
-#include "pllmod_common.h"
 #include "eigen.hpp"
 
 #define PROGRAM_NAME    "TumorCoal"
@@ -404,11 +403,11 @@ typedef struct node
     double      effectPopSize;
     char        cellName[MAX_NAME];
     char        observedCellName[MAX_NAME];
-    int*        maternalSequence;
-    int*        paternalSequence;
-    int*        numbersMutationsUnderSubtreePerSite;
-    int*        numbersMaternalMutationsPerSite;
-    int*        numbersPaternalMutationsPerSite;
+//    int*        maternalSequence;
+//    int*        paternalSequence;
+//    int*        numbersMutationsUnderSubtreePerSite;
+//    int*        numbersMaternalMutationsPerSite;
+//    int*        numbersPaternalMutationsPerSite;
     int         isLeaf;
     
 }
@@ -617,12 +616,7 @@ char WhichConsensusBinary (int allele1, int allele2);
 int openFile(FILE **file, char path[MAX_NAME] );
 
 int ChooseUniformState (double *prob, long int *seed);
-void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphabet, int doUserGenome, int numSites, SiteStr* allSites, int doGeneticSignatures, double cumfreq[4], double *triNucFreq );
 
-void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, double totalTreeLength, int ***data, SiteStr* allSites, int  *numMU, double cumMij[4][4],double mutationRate, double *uniform, double *cumBranchLength, double* ran );
-void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, double totalTreeLength, int ***data, SiteStr* allSites, int  *numMU, double cumMij[4][4], double mutationRate, double*    cumBranchLength, double* uniform, int* mutationAdded);
-
-void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int doHKY, int doGTR, int doGTnR, double freqR, double freqY, double freqAG, double freqCT, double titv, double freq[4], double Mij[4][4], int numAltModelSites, int *AltModelSites,SiteStr* allSites,  int rateVarAmongSites, double altModelMutationRate, int *numMU, double Root[], double Cijk[]);
 void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptions *programOptions );
 
 int SimulateData(ProgramOptions *programOptions, int *CloneNameBegin, int *CloneSampleSizeBegin, int *ClonePopSizeBegin,
@@ -633,5 +627,5 @@ int SimulateData(ProgramOptions *programOptions, int *CloneNameBegin, int *Clone
                  double freq[4],
                  double Mij[4][4]
                  );
-
+double GstandardTmodel (double V, double TOrigin, double delta);
 #endif /* data_utils_hpp */

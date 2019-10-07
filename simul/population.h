@@ -8,6 +8,11 @@
 
 #ifndef population_h
 #define population_h
+
+#include <vector>
+
+#include "data_utils.hpp"
+
 static void InitListClones(Population **populations, int numClones, int noisy, int *CloneNameBegin, int *CloneSampleSizeBegin, double *CloneBirthRateBegin,  double *CloneDeathRateBegin,  int *ClonePopSizeBegin, int TotalNumSequences  );
 static void InitListClonesTimes(Population  **populations, int numClones, int *doEstimateTimesOriginClones,   double *CloneTimeOriginInput);
 

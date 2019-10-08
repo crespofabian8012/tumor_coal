@@ -387,12 +387,7 @@ typedef struct {
 }Files;
 typedef struct node
 {
-    pll_unode_t     *nodeLeft;
-    pll_unode_t     *nodeRight;
-    pll_unode_t     *nodeBack;
-    pll_tree_edge_t  *edgeLeft;
-    pll_tree_edge_t  *edgeRight;
-    pll_tree_edge_t  *edgeBack;
+
     
     struct node *left, *right, *anc1, *outgroup;
     int         index, label, isOutgroup;
@@ -563,18 +558,7 @@ void SimulatePopulation( Population *popI, Population** populations,
                         double *currentTime,
                         int* eventNum
                         );
-void BuildTree(Population **populations,Population *CurrentPop,
-               long int *seed,
-               ProgramOptions *programOptions,
-               TreeNode    **nodes,
-               TreeNode   **treeTips,
-               TreeNode    **treeRootInit,
-               //TreeNode    **treeRootInit,
-               int *nextAvailable,
-               int *newInd,
-               double *currentTime,
-               int *labelNodes
-               );
+
 char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObservedCellNames);
 void WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cellNames[], int *indexCurrentCell, int doUseObservedCellNames);
 void WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObservedCellNames);
@@ -628,4 +612,5 @@ int SimulateData(ProgramOptions *programOptions, int *CloneNameBegin, int *Clone
                  double Mij[4][4]
                  );
 double GstandardTmodel (double V, double TOrigin, double delta);
+int WhichGenotypeChar (char nucleotide);
 #endif /* data_utils_hpp */

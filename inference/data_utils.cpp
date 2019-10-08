@@ -1595,269 +1595,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                 }
             }
         }
-        /********************** BuildTree************************/
-        /*  build tree */
-        void BuildTree(Population **populations,Population *CurrentPop,
-                       long int *seed,
-                       ProgramOptions *programOptions,
-                       TreeNode    **nodes,
-                       TreeNode   **treeTips,
-                       TreeNode    **treeRootInit,
-                       int *nextAvailable,
-                       int *newInd,
-                       double *currentTime,
-                       int *labelNodes
-                       )
-        {
-            int i, j, k;
-            int indexCurrentTip;
-            int  foundSuperflousNode;
-            TreeNode *p, *q, *r;
-            /********** BUILDING TREES ***********/
-            if (programOptions->noisy > 1)
-            {
-                fprintf (stderr, "\n>> Building trees ..");
-            }
-            
-            j=0;
-            indexCurrentTip=0;
-            /* get rid of superflous nodes */
-            foundSuperflousNode = YES;
-            while (foundSuperflousNode == YES)
-            {
-                foundSuperflousNode = NO;
-                for (i = 0; i < *nextAvailable; i++) // available all the nodes
-                {
-                    p = *nodes + i;
-                    
-                    //fprintf (stderr, "\n\np->index = %d", p->index);
-                    
-                    if (p->left == NULL && p->right == NULL && p->anc1 == NULL)
-                    {
-                        // nothing to do with this node because it is not connected to anything
-                        //fprintf (stderr, "\n * nothing to do with this node because it is not connected to anything");
-                    }
-                    else if (p->left == NULL && p->right == NULL && p->anc1 != NULL)
-                    {
-                        // (*treeTips)[indexCurrentTip]=p;
-                        if(indexCurrentTip <  programOptions->TotalNumSequences){
-                            treeTips[indexCurrentTip]=p;
-                            indexCurrentTip++;
-                        }
-                        connectNodes(NULL, NULL, p);
-                        // do not do anything with this node because it is a tip
-                        //fprintf (stderr, "\n * do not do anything with this node because it is a tip");
-                    }
-                    else if (p->left != NULL && p->right == NULL && p->anc1 != NULL)
-                    {
-                        // this is a superflous node and can be removed(this superfluos nodes are the MRCA nodes of the demes
-                        foundSuperflousNode = YES;
-                        q = p->left;
-                        r = p->anc1;
-                        if (p->anc1->left == p)  // p->anc up, p->left down, total: up and down for left
-                        {
-                            r->left = q;
-                            q->anc1 = r;
-                            p->left = NULL;
-                            p->anc1 = NULL;
-                            
-                            connectNodes(q, r->right, r);
-                        }
-                        else
-                        {
-                            r->right = q;
-                            q->anc1 = r;
-                            p->left = NULL;
-                            p->anc1 = NULL;
-                            connectNodes(r->left, q, r);
-                        }
-                        
-                        //fprintf (stderr, "\n - this is a superflous node and can be removed (1)");
-                    }
-                    else if (p->left == NULL && p->right != NULL && p->anc1 != NULL)
-                    {
-                        // this is a superflous node and can be removed
-                        foundSuperflousNode = YES;
-                        q = p->right;
-                        r = p->anc1;
-                        if (p->anc1->left == p)
-                        {
-                            r->left = q;
-                            q->anc1 = r;
-                            p->right = NULL;
-                            p->anc1 = NULL;
-                            connectNodes(q, r->right, r);
-                        }
-                        else
-                        {
-                            r->right = q;
-                            q->anc1 = r;
-                            p->right = NULL;
-                            p->anc1 = NULL;
-                            connectNodes(r->left, q, r);
-                        }
-                        
-                        //fprintf (stderr, "\n - this is a superflous node and can be removed (2)");
-                    }
-                    else if (p->left != NULL && p->right != NULL && p->anc1 != NULL)
-                    {
-                        connectNodes(p->left, p->right, p);
-                        // this is an internal node formed by a coalescence event, do not touch
-                        //fprintf (stderr, "\n * this is an internal node formed by a coalescence event, do not touch");
-                    }
-                    else if (p->left != NULL && p->right != NULL && p->anc1 == NULL)
-                    {
-                        connectNodes(p->left, p->right, p);
-                        // this is the last (coalescence event) in the tree, MRCA
-                        //fprintf (stderr, "\n * this is the last (coalescence event) in the tree, MRCA");
-                    }
-                    else if (p->left != NULL && p->right == NULL && p->anc1 == NULL)
-                    {
-                        // Seems to be the last coalescent event among sequences with non-ancestral material
-                        // it is not superfluous, we just remove it
-                        p->left->anc1 = NULL;
-                        //fprintf (stderr, "\n - this is a superflous node and can be removed (3)");
-                    }
-                    else if (p->left == NULL && p->right != NULL && p->anc1 == NULL)
-                    {
-                        // not clear what this node could be doing, but we will remove it anyway
-                        fprintf (stderr, "strange\n");
-                        p->left = NULL;
-                        p->right->anc1 = NULL;
-                        //fprintf (stderr, "\n - this is a superflous node and can be removed (4)");
-                    }
-                    else
-                    {
-                        fprintf (stderr, "You should not be here, I think\n");
-                        fprintf (stderr, "%d %d-- %d %d %d\n", Index(p), j, Index(p->left), Index(p->right), Index(p->anc1));
-                    }
-                    if (p->anc1 != NULL)
-                    {//update length field
-                        
-                        //   p->length = p->anc1->time- p->time;
-                        p->length = (p->anc1->timePUnits- p->timePUnits);
-                        //*mutationRate;
-                        p->lengthModelUnits = (p->anc1->time- p->time);
-                        //*mutationRate;
-                        setLength(p);
-                    }
-                }
-                //fprintf (stderr, "\n");
-            }//while
-            
-            /* about the MRCA */
-            *newInd=*nextAvailable-1;
-            p = *nodes + *newInd; /* because the last one event is the last coalescence */
-            //fprintf (stderr, "\n\n\n>> newInd = %d\n", newInd);
-            
-            if (programOptions->thereisOutgroup == NO)
-            {
-                p = *nodes + *newInd;
-                p->nodeClass = 5;
-                *treeRootInit = p;
-                //treeRootInit[0] = p;
-                p->anc1 = NULL;
-            }
-            if (programOptions->thereisOutgroup == YES && programOptions->outgroupSelection > 0)  /*** Root and outgroup ***/
-            {
-                p = *nodes + *newInd; // MRCA
-                p->nodeClass = 4;
-                
-                if (programOptions->noisy > 1)
-                    fprintf (stderr, "\n\n>> Attaching outgroup .. ");
-                
-                //fprintf (stderr, "\n>> ThisCloneNumber = %d, ListMigrationTimesInitial[ThisCloneNumber] = %lf, ClonePopSizeMeffectBegin[ThisCloneNumber] = %lf \n", ThisCloneNumber, ListMigrationTimesInitial[ThisCloneNumber], ClonePopSizeMeffectBegin[ThisCloneNumber]);
-                
-                if (programOptions->outgroupSelection == 1)  /*** Root 2 times and outgroup ***/
-                    *currentTime = CurrentPop->timeOriginSTD; // origin of the clone; // currentTime + (outgroupBranchLength_Root1Root2 / mutationRate); // set time of the new root (from which the MRCA and outgroup nodes are derived)
-                else if (programOptions->outgroupSelection == 2) { /*** Root 2 times and outgroup ***/
-                    *currentTime = CurrentPop->timeOriginSTD + (programOptions->outgroupBranchLength_Root1Root2 / CurrentPop->effectPopSize) ; // origin of the clone + time given by the user
-                    
-                }
-                else
-                {
-                    fprintf (stderr, "\n\nError simulationg the outgroup. Check input settings\n");
-                    PrintUsage();
-                }
-                TreeNode*       healthyRoot = *nodes + *nextAvailable;
-                healthyRoot->index = *nextAvailable;
-                healthyRoot->label = *labelNodes;
-                healthyRoot->effectPopSize= p->effectPopSize;
-                *labelNodes=*labelNodes+1;
-                healthyRoot->left = p;//coalTreeMRCA;
-                //        coalTreeMRCA->anc = healthyRoot;
-                p->anc1 = healthyRoot;
-                
-                healthyRoot->timePUnits = p->timePUnits * healthyRoot->effectPopSize;
-                healthyRoot->nodeClass = 5;
-                //        coalTreeMRCA->length = transformingBranchLength/mutationRate;
-                p->length = 0;
-                
-                //        coalTreeMRCA->branchLength = transformingBranchLength;
-                p->lengthModelUnits = 0;
-                
-                //        healthyRoot->time = currentTime +  transformingBranchLength/mutationRate;
-                healthyRoot->time = *currentTime  ;
-                
-                int transformingBranchLength=1.001;
-                // healthyRoot->time = p->time * transformingBranchLength ;
-                healthyRoot->timePUnits = *currentTime * healthyRoot->effectPopSize;
-                p->length = (p->anc1->timePUnits- p->timePUnits);
-                //*mutationRate;
-                p->lengthModelUnits = (p->anc1->time- p->time);
-                //*mutationRate;
-                
-                healthyRoot->length = 0;
-                //        healthyRoot->length = 0;
-                
-                //        if (noisy > 2)
-                //            fprintf (stderr, "DONE");
-                //
-                (*nextAvailable)++;
-                //
-                //        /* connect the healthy ancestral cell with the tip healthy cell*/
-                //        if (noisy > 2)
-                //            fprintf (stderr, "\n>> Adding healthy tip ... ");
-                TreeNode* healthyTip = *nodes + *nextAvailable;
-                healthyTip->left = NULL;
-                healthyTip->right = NULL;
-                healthyTip->effectPopSize= healthyRoot->effectPopSize;
-                
-                connectNodes(NULL, NULL, healthyTip);
-                
-                healthyTip->anc1 = healthyRoot;
-                healthyRoot->right = healthyTip;
-                healthyTip->time = 0;
-                healthyTip->timePUnits = 0;
-                double  healthyTipBranchLengthRatio =1;
-    
-                healthyTip->length = (healthyTip->anc1->timePUnits- healthyTip->timePUnits);
-     
-                healthyTip->lengthModelUnits = (healthyTip->anc1->time- healthyTip->time);
-    
-                healthyTip->isOutgroup= YES;
-                
-                connectNodes(p, healthyTip, healthyRoot);
-                setLength(p);
-                setLength(healthyTip);
-
-                *treeRootInit=healthyRoot;
-      
-            }
-            
- 
-            int intLabel = 0;
-            if (programOptions->noisy > 1)
-                fprintf (stderr, "\n\n>> Relabeling nodes on tree... \n\n");
-            if (programOptions->thereisOutgroup == YES)
-                intLabel = programOptions->TotalNumSequences + 1;
-            else
-                intLabel = programOptions->TotalNumSequences;
-        
-            RelabelNodes(*treeRootInit, treeRootInit, &intLabel );
-            
-        }
-      
+   
         /********************* PrepareSeparateFiles **********************/
         /* Open individual files to output results */
         
@@ -2280,9 +2018,7 @@ void ValidateParameters(ProgramOptions *programOptions,
                 p->right = NULL;
                 p->anc1 = NULL;
                 p->outgroup = NULL;
-                p->nodeRight=NULL;
-                p->nodeLeft=NULL;
-                p->nodeBack=NULL;
+             
                 p->time = 0;
                 p->timePUnits = 0;
                 p->length = 0;
@@ -2301,43 +2037,8 @@ void ValidateParameters(ProgramOptions *programOptions,
                 
                 
                 
-                p->nodeLeft=(pll_unode_t*) calloc (1 , sizeof(pll_unode_t));
-                if (!(p->nodeLeft))
-                {
-                    fprintf (stderr, "Could not allocate p->nodeLeft (%lu bytes)\n", 1* sizeof(pll_unode_t));
-                    exit (1);
-                }
-                p->nodeRight=(pll_unode_t*) calloc (1 , sizeof(pll_unode_t));
-                if (!(p->nodeRight))
-                {
-                    fprintf (stderr, "Could not allocate p->nodeRight (%lu bytes)\n",  sizeof(pll_unode_t));
-                    exit (1);
-                }
-                p->nodeBack=(pll_unode_t*) calloc (1 , sizeof(pll_unode_t));
-                if (!(p->nodeBack))
-                {
-                    fprintf (stderr, "Could not allocate p->nodeBack (%lu bytes)\n",  sizeof(pll_unode_t));
-                    exit (1);
-                }
-                
-                p->edgeBack=(pll_tree_edge_t*) calloc (1 , sizeof(pll_tree_edge_t));
-                if (!(p->edgeBack))
-                {
-                    fprintf (stderr, "Could not allocate p->edgeBack (%lu bytes)\n",  sizeof(pll_tree_edge_t));
-                    exit (1);
-                }
-                p->edgeLeft=(pll_tree_edge_t*) calloc (1 , sizeof(pll_tree_edge_t));
-                if (!(p->edgeLeft))
-                {
-                    fprintf (stderr, "Could not allocate p->edgeLeft (%lu bytes)\n",  sizeof(pll_tree_edge_t));
-                    exit (1);
-                }
-                p->edgeRight=(pll_tree_edge_t*) calloc (1 , sizeof(pll_tree_edge_t));
-                if (!(p->edgeRight))
-                {
-                    fprintf (stderr, "Could not allocate p->edgeRight (%lu bytes)\n",  sizeof(pll_tree_edge_t));
-                    exit (1);
-                }
+              
+             
             }
             AssignCurrentSequencesToPopulation(populations, nodes, programOptions, numClones, *numNodes, programOptions->noisy, programOptions->TotalNumSequences, &numActiveGametes,  &nextAvailable,
                                                &labelNodes, ObservedCellNames, programOptions->doUseObservedCellNames, sampleSizes);
@@ -2376,18 +2077,18 @@ void ValidateParameters(ProgramOptions *programOptions,
             }
             //    free (CumSamNodes);
             //   free (activeGametes);
-            BuildTree(populations,currentPop,
-                      seed,
-                      programOptions,
-                      nodes,
-                      treeTips,
-                      treeRootInit,
-                      //TreeNode    **treeRootInit,
-                      &nextAvailable,
-                      &newInd,
-                      &currentTime,
-                      &labelNodes
-                      );
+//            BuildTree(populations,currentPop,
+//                      seed,
+//                      programOptions,
+//                      nodes,
+//                      treeTips,
+//                      treeRootInit,
+//                      //TreeNode    **treeRootInit,
+//                      &nextAvailable,
+//                      &newInd,
+//                      &currentTime,
+//                      &labelNodes
+//                      );
             
             if (programOptions->noisy > 1)
                 fprintf (stderr, "\n\n>> Relabeling nodes on tree... \n\n");
@@ -3175,155 +2876,6 @@ double RandomUniform (long int *seed)
     return (double)(*seed) / (double)2147483647;
 }
 
-void connectNodelets(TreeNode *node )
-{
-    if (node != NULL)
-    {
-        if (node->left == NULL && node->right== NULL)
-        {
-            char * temp;
-            node->isLeaf=YES;
-            node->nodeLeft= NULL;
-            node->nodeRight= NULL;
-            node->nodeBack->next = NULL;
-            
-            node->nodeBack->node_index= node->index;
-            if (asprintf(&temp,  "%d_back",  node->label)<0)
-                return;
-            node->nodeBack->label=temp;
-        }
-        else
-        {
-            char * temp1;
-            char * temp2;
-            char *temp3;
-            node->isLeaf=NO;
-            node->nodeBack->next=node->nodeLeft;
-            node->nodeLeft->next=node->nodeRight;
-            node->nodeRight->next =node->nodeBack;
-            
-            node->nodeLeft->node_index= node->index;
-            
-            node->nodeRight->node_index= node->index;
-            
-            node->nodeBack->node_index= node->index;
-            if (asprintf(&temp1,  "%d_back",  node->label)<0)
-                return;
-            node->nodeBack->label=temp1;
-            if (asprintf(&temp2,  "%d_left",  node->label)<0)
-                return;
-            node->nodeLeft->label= temp2;
-            if (asprintf(&temp3,  "%d_right",  node->label)<0)
-                return;
-            node->nodeRight->label= temp3;
-            
-        }
-    }
-}
-
-/********************* connectNodes **********************/
-/* connectNodes*/
-void connectNodes(TreeNode *left, TreeNode *right, TreeNode *ancester  ){
-    if (left!=NULL && right!= NULL && ancester!=NULL )
-    {
-        connectNodelets(left);
-        connectNodelets(right);
-        connectNodelets(ancester);
-        //connect the child nodes
-        left->nodeBack->back =ancester->nodeLeft;
-        right->nodeBack->back =ancester->nodeRight;
-        
-        //connect the ancester node
-        ancester->nodeLeft->back =left->nodeBack;
-        ancester->nodeRight->back =right->nodeBack;
-        
-        //connect the edges
-        left->edgeBack->edge.utree.parent =ancester->nodeLeft;
-        right->edgeBack->edge.utree.parent=ancester->nodeRight;
-        
-        ancester->edgeLeft->edge.utree.child =left->nodeBack;
-        ancester->edgeRight->edge.utree.child=right->nodeBack;
-        
-        ancester->isLeaf=NO;
-    }
-    else if(left==NULL && right== NULL && ancester!=NULL )
-    { // the ancester node is a leaf
-        connectNodelets(ancester);
-        //connect the child nodes
-        ancester->nodeLeft =NULL;
-        ancester->nodeRight =NULL;
-        ancester->isLeaf=YES;
-        
-        ancester->edgeLeft=NULL;
-        ancester->edgeRight=NULL;
-    }
-    else if(left!=NULL && right== NULL && ancester!=NULL )
-    {
-        connectNodelets(left);
-        connectNodelets(ancester);
-        //connect the child nodes
-        left->nodeBack->back =ancester->nodeLeft;
-        //connect the ancester node
-        ancester->nodeLeft->back =left->nodeBack;
-        
-        //connect the edges
-        left->edgeBack->edge.utree.parent =ancester->nodeLeft;
-        
-        ancester->edgeLeft->edge.utree.child =left->nodeBack;
-        
-        ancester->isLeaf=NO;
-    }
-    else if(left==NULL && right!= NULL && ancester!=NULL )
-    {
-        connectNodelets(right);
-        connectNodelets(ancester);
-        
-        //connect the child nodes
-        right->nodeBack->back =ancester->nodeRight;
-        //connect the ancester node
-        ancester->nodeRight->back =right->nodeBack;
-        //connect the edges
-        right->edgeBack->edge.utree.parent=ancester->nodeRight;
-        
-        ancester->edgeRight->edge.utree.child=right->nodeBack;
-        
-        ancester->isLeaf=NO;
-    }
-}
-/********************* setLength **********************/
-/* setLength*/
-void setLength(TreeNode *node )
-{
-    double lengthEdge;
-    if(node->anc1!=NULL)
-    {
-        //node->nodeBack->length= node->lengthModelUnits;//this takes into account  the mutation rate
-        // lengthEdge = node->anc1->timePUnits - node->timePUnits; // this doesnt take into account the mutation rate
-        lengthEdge = node->anc1->timePUnits - node->timePUnits;//not in model time, already includes the effect pop size
-        node->nodeBack->length= lengthEdge;
-        
-        if (node->isLeaf==NO)
-        {
-            //node->nodeLeft->length=  node->timePUnits - node->left->timePUnits;
-            //node->nodeRight->length= node->timePUnits - node->right->timePUnits;
-            
-            node->nodeLeft->length=  node->timePUnits - node->left->timePUnits;
-            node->nodeRight->length= node->timePUnits - node->right->timePUnits;
-            
-            //node->edgeLeft->length  =node->timePUnits - node->left->timePUnits;
-            //node->edgeRight->length  =node->timePUnits - node->right->timePUnits;
-            node->edgeLeft->length  =node->timePUnits - node->left->timePUnits;
-            node->edgeRight->length  =node->timePUnits - node->right->timePUnits;
-        }
-        
-        if(node->edgeBack!=NULL)
-        {
-            node->edgeBack->length=lengthEdge;
-            
-        }
-        
-    }
-}
 /**************************** RandomGamma *************************/
 /*    Generates a gamma number using routines in Ziheng's
  Yang tools.h in PAML
@@ -3930,4 +3482,49 @@ void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptio
     programOptions->MutationAssignNum =1;
     
     
+}
+/********************* WhichGenotypeChar ************************/
+/* Returns integer representation for character nucleotudes */
+
+int WhichGenotypeChar (char nucleotide)
+{
+    if (nucleotide == 'A')
+        return (AA);
+    else if (nucleotide == 'C')
+        return (CC);
+    else if (nucleotide == 'G')
+        return (GG);
+    else if (nucleotide == 'T')
+        return (TT);
+    else if (nucleotide == '?')
+        return (__);
+    else if (nucleotide == '-')
+        return (__);
+    else if (nucleotide == 'N')
+        return (N);
+    else if (nucleotide == 'R')
+        return (AG);
+    else if (nucleotide == 'M')
+        return (AC);
+    else if (nucleotide == 'W')
+        return (AT);
+    else if (nucleotide == 'S')
+        return (CG);
+    else if (nucleotide == 'Y')
+        return (CT);
+    else if (nucleotide == 'K')
+        return (GT);
+    else if (nucleotide == 'a')
+        return (A_);
+    else if (nucleotide == 'c')
+        return (C_);
+    else if (nucleotide == 'g')
+        return (G_);
+    else if (nucleotide == 't')
+        return (T_);
+    else
+    {
+        fprintf (stderr, "\nERROR in WhichGenotypeChar: nucleotide = %c\n",  nucleotide);
+        exit(-1);
+    }
 }

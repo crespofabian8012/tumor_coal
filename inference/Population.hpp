@@ -53,29 +53,10 @@ public:
     static int compare (const void * a, const void * b);
     int   InitListPossibleMigrations( );
     int  resetMigrationsList();
-    void  UpdateListMigrants( int numClones, population *PopChild, population *PopFather  );
+    static void  UpdateListMigrants( int numClones, population *PopChild, population *PopFather  );
     
-    void SimulatePopulation(  Population** populations,
-                                        ProgramOptions *programOptions,
-                                        long int *seed,
-                                        int *numNodes,
-                                        int numClones,
-                                        double      cumNumCA,
-                                        double meanNumCA,
-                                        double cumNumMIG,
-                                        double meanNumMIG,
-                                        int  *numMIG,
-                                        int  *numCA,
-                                        double *numEventsTot,
-                                        pll_unode_t    **nodes,
-                                        int *nextAvailable,
-                                        int*  numActiveGametes,
-                                        int* labelNodes,
-                                        double *currentTime,
-                                        int* eventNum
-                                        );
+  
     void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, long *seed, int choosePairIndividuals);
-    void MakeCoalescenceEvent(pll_unode_t **nodes, int numClones, long int* seed, int noisy, int *numActiveGametes,   int* nextAvailable,
-                              int*labelNodes, double *currentTime, int *numNodes);
+    void InitCoalescentEvents(int numClones);
 };
 #endif /* Population_hpp */

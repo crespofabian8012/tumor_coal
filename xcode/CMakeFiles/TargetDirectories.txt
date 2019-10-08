@@ -1,7 +1,10 @@
-/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/CMakeFiles/install.dir
-/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/CMakeFiles/RUN_TESTS.dir
-/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/CMakeFiles/ALL_BUILD.dir
-/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/CMakeFiles/ZERO_CHECK.dir
-/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/simul/CMakeFiles/RUN_TESTS.dir
-/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/simul/CMakeFiles/install.dir
-/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/simul/CMakeFiles/simul.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/CMakeFiles/install.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/CMakeFiles/RUN_TESTS.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/CMakeFiles/ALL_BUILD.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/CMakeFiles/ZERO_CHECK.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/inference/CMakeFiles/install.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/inference/CMakeFiles/RUN_TESTS.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/inference/CMakeFiles/run.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/simul/CMakeFiles/RUN_TESTS.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/simul/CMakeFiles/install.dir
+/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/simul/CMakeFiles/simul.dir

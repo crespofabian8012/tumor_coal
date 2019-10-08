@@ -7,104 +7,120 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		1E68D77E4CDB461AA1F4E08E /* install */ = {
+		1208DA082FB5400F81020270 /* RUN_TESTS */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = F88157729FFD4286B1063F36 /* Build configuration list for PBXAggregateTarget "install" */;
+			buildConfigurationList = D476A55A3D3E43A1B3125E24 /* Build configuration list for PBXAggregateTarget "RUN_TESTS" */;
 			buildPhases = (
-				1A1C48BE70DD466FB309B16A /* CMake PostBuild Rules */,
-			);
-			dependencies = (
-				BB712C4FF6554C7388A5FC43 /* PBXTargetDependency */,
-			);
-			name = install;
-			productName = install;
-		};
-		72DD938079EA407389887733 /* ZERO_CHECK */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = 6CA13782B38F4D2988600BE6 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
-			buildPhases = (
-				72B8CDCE6BDE46E2A365A74F /* CMake Rules */,
-			);
-			dependencies = (
-			);
-			name = ZERO_CHECK;
-			productName = ZERO_CHECK;
-		};
-		B51DF6E728F1480D898212A3 /* ALL_BUILD */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = 588ACF2BD5F3444E9FF6CA6A /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
-			buildPhases = (
-				A6D8AFAE92B749E683375A89 /* CMake Rules */,
-			);
-			dependencies = (
-				6F5B6CC25F5C4392A28638F4 /* PBXTargetDependency */,
-				DAD696A3C7F34DC6A57BAC26 /* PBXTargetDependency */,
-			);
-			name = ALL_BUILD;
-			productName = ALL_BUILD;
-		};
-		FF68938B978D45238E0BB3E5 /* RUN_TESTS */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = E153AF172D4B429E92D1C7DC /* Build configuration list for PBXAggregateTarget "RUN_TESTS" */;
-			buildPhases = (
-				34528090E7A74803897F4C52 /* CMake PostBuild Rules */,
+				87A561AE6BBC4C95BA4F7169 /* CMake PostBuild Rules */,
 			);
 			dependencies = (
 			);
 			name = RUN_TESTS;
 			productName = RUN_TESTS;
 		};
+		3A5CE42304B0467793F57BBC /* install */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 0818233F6973425BAD1CF14E /* Build configuration list for PBXAggregateTarget "install" */;
+			buildPhases = (
+				AFAD2428FAC34D4581DE752C /* CMake PostBuild Rules */,
+			);
+			dependencies = (
+				38B56194EFE6465898BA5AAF /* PBXTargetDependency */,
+			);
+			name = install;
+			productName = install;
+		};
+		5DDF4FF023964771B0DC97A1 /* ZERO_CHECK */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 97CA86C276C54BD889B50B72 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+			buildPhases = (
+				47F6CF56DDDC4691862BFA5D /* CMake Rules */,
+			);
+			dependencies = (
+			);
+			name = ZERO_CHECK;
+			productName = ZERO_CHECK;
+		};
+		5E1E56FC0B7949F1941BFD34 /* ALL_BUILD */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 8C7F14BDBD83421BB18C32ED /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+			buildPhases = (
+				7888DA4692554B3CA638E1E9 /* CMake Rules */,
+			);
+			dependencies = (
+				52824E90996F420AB0B0EC57 /* PBXTargetDependency */,
+				B801E4E2352B4DC2B37E030D /* PBXTargetDependency */,
+				7B5C98D289614A5A893D987D /* PBXTargetDependency */,
+			);
+			name = ALL_BUILD;
+			productName = ALL_BUILD;
+		};
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1A3A0F2D65D34560BA599ACD /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 9AC63912BF084AD48020546F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/CMakeLists.txt */; };
-		24A2D58A52C249F58FC584A6 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/definitions.h */ = {isa = PBXBuildFile; fileRef = 0223D656DB7248B6B95D61A5 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/definitions.h */; };
-		2E6946C952124ED9A5FBCC41 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/model.h */ = {isa = PBXBuildFile; fileRef = A2F3A96B958046E09D18F873 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/model.h */; };
-		477F4428D9C846EA87185F9B /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.hpp */ = {isa = PBXBuildFile; fileRef = A7C8B9F5762E432C9B26C090 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.hpp */; };
-		5B33EA3A23C8440A92E1FC3E /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/prior.h */ = {isa = PBXBuildFile; fileRef = A9CA6E99B92143ACAD3591E2 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/prior.h */; };
-		6246363A796545D4806DBA35 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.cpp */ = {isa = PBXBuildFile; fileRef = 7A75373851C8420486216CD3 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.cpp */; };
-		78B3324F1E7549E4B06BA089 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/mutationModel.h */ = {isa = PBXBuildFile; fileRef = 29BA01D2C62A4CCF9D7C0ED7 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/mutationModel.h */; };
-		7C1FECA96AEF4E0E99A0A3DF /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tumorcellcoal.h */ = {isa = PBXBuildFile; fileRef = 91536D3304EC4F759193F3B0 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tumorcellcoal.h */; };
-		81C193ADC7954A8CA2F9EDD3 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/MCMCchain.h */ = {isa = PBXBuildFile; fileRef = 458469558CDE475EA2ED3B7B /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/MCMCchain.h */; };
-		82E4CC6B9CC142BBB3FDAA74 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pllmod_common.h */ = {isa = PBXBuildFile; fileRef = ED7D7449879A4C8A955BAF64 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pllmod_common.h */; };
-		83F874706C6846DF96BF708F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/main.cpp */ = {isa = PBXBuildFile; fileRef = 32199241B75B4D53AC389859 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/main.cpp */; };
-		89BDEFF4C34D4F1FA7524F3F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.cpp */ = {isa = PBXBuildFile; fileRef = 7B601A8743FE4541A438E07D /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.cpp */; };
-		8B2509B2EFDA49A1B86D500A /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/proposal.h */ = {isa = PBXBuildFile; fileRef = 11EA0B72809245B398651BFA /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/proposal.h */; };
-		8C9319BC663E47D685FC1C69 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree_hashtable.h */ = {isa = PBXBuildFile; fileRef = B356C0425AAE46B89B1ADAFF /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree_hashtable.h */; };
-		B1C724722C9D442585E03426 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/random.h */ = {isa = PBXBuildFile; fileRef = 1F832FB8437A48E48B6E2ECC /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/random.h */; };
-		BBC99C1440554CEBAB9AC24A /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/fileFuntions.h */ = {isa = PBXBuildFile; fileRef = E4B43240592C4B33974CEF59 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/fileFuntions.h */; };
-		C7001062E57C42ACB4C02925 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree.h */ = {isa = PBXBuildFile; fileRef = 3B1525B7FF634069BEBDAEF2 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree.h */; };
-		C777A2B816C64B4B8BE301A2 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.hpp */ = {isa = PBXBuildFile; fileRef = 100C188926D5466C90CF3B30 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.hpp */; };
-		D0CFB042389449FD8A34307E /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/population.h */ = {isa = PBXBuildFile; fileRef = D090DC41B7D4483AA0B8940F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/population.h */; };
-		D324E3546C83428AA10AE1B3 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/likelihood.h */ = {isa = PBXBuildFile; fileRef = 044F235BA00F4817AA7C3C73 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/likelihood.h */; };
-		D4ABD96B54E74EC2B0B1A83D /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/util.h */ = {isa = PBXBuildFile; fileRef = 2B9712D16E6143CC8BA89AF5 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/util.h */; };
-		DB208C0F1E05475E930BA08F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq_test.c */ = {isa = PBXBuildFile; fileRef = A36DB1F461D647CAA0C5FA8C /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq_test.c */; };
-		E4D2131E111E4EC49B460DB9 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq.h */ = {isa = PBXBuildFile; fileRef = 792F6F69624D4E15BBE14362 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq.h */; };
+		0168027192F349178CEB944E /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/likelihood.h */ = {isa = PBXBuildFile; fileRef = 1594F84A0C3747A6B6BED104 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/likelihood.h */; };
+		02AD14E95CF145BE98BE63D9 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/util.h */ = {isa = PBXBuildFile; fileRef = ABC608AD05EE4AC9AC4866B6 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/util.h */; };
+		03B3F617F5854708934B10A7 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/model.h */ = {isa = PBXBuildFile; fileRef = BF730859B0AB4CCB988E7191 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/model.h */; };
+		17E73AE5516F4078B25EF89F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq.h */ = {isa = PBXBuildFile; fileRef = F095B056FA644E0EBD29ECDB /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq.h */; };
+		1CE3CAF93ADD42A386788F2F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/mutationModel.h */ = {isa = PBXBuildFile; fileRef = 658D41D5F3394566980CB241 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/mutationModel.h */; };
+		1DCC14A6A6F7443795035EE5 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.hpp */ = {isa = PBXBuildFile; fileRef = 3A31FABF2D8344C1A386946F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.hpp */; };
+		234B39244C884F1286A16A26 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tumorcellcoal.h */ = {isa = PBXBuildFile; fileRef = 5DD3A6D6B8EE4ADBAE19B2B4 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tumorcellcoal.h */; };
+		26E1C2B870874879A021471F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.hpp */ = {isa = PBXBuildFile; fileRef = 041623092A79472AAE24299A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.hpp */; };
+		27B5656065554A0384DFDB9C /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq_test.c */ = {isa = PBXBuildFile; fileRef = 52A6F7DF2DF541C8B721FDAE /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq_test.c */; };
+		2B326CDF08934287B7190388 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.cpp */ = {isa = PBXBuildFile; fileRef = 86E0AD1B992E46939104D6AD /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.cpp */; };
+		3DAC998E2D974C3580C17727 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/proposal.h */ = {isa = PBXBuildFile; fileRef = F856631D1E1D4BAD9E013850 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/proposal.h */; };
+		422C2D03C65941968910CE49 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/definitions.h */ = {isa = PBXBuildFile; fileRef = 2AC6516E24704986BB904707 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/definitions.h */; };
+		4752204FD7184F019EBF8C0E /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq_test.c */ = {isa = PBXBuildFile; fileRef = 1DAB7CE884104A0EBF6F9B9B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq_test.c */; };
+		4C90F812C3714104B113F42A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.cpp */ = {isa = PBXBuildFile; fileRef = F5D2BEA8D30D4A65A610D570 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.cpp */; };
+		55EBAF0C16DC47B99B1D0F1D /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 48B24F3FC73F4CF1BF892DE6 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/CMakeLists.txt */; };
+		5AE5F3AADEC44F29B21FE982 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.cpp */ = {isa = PBXBuildFile; fileRef = F7570902446144FFB8D9637E /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.cpp */; };
+		5B68106E8AD24414AA47D0E0 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.hpp */ = {isa = PBXBuildFile; fileRef = ED303955C2FC415FA9B40CFF /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.hpp */; };
+		5D5394646EF34693B20A5766 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.hpp */ = {isa = PBXBuildFile; fileRef = E5CB3856030A447CA9EA7D92 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.hpp */; };
+		6B0B694CBEBD4F9891803DB7 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/fileFuntions.h */ = {isa = PBXBuildFile; fileRef = CADBAD423D54486789994E2C /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/fileFuntions.h */; };
+		6E5B85E4D85F4BB2BA08BDBC /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/definitions.h */ = {isa = PBXBuildFile; fileRef = C04E4EA9A9044372A7E4608B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/definitions.h */; };
+		76586D2CD7CA4FB5B3E7D2EA /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.hpp */ = {isa = PBXBuildFile; fileRef = FAABAA70A25E445CA65EB812 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.hpp */; };
+		7CB10985DFF141C18FB4DFE3 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/MCMCchain.h */ = {isa = PBXBuildFile; fileRef = E2512DECCF6C45FDA2CDD7CB /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/MCMCchain.h */; };
+		82F3DD21E9604068ACC62F22 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.hpp */ = {isa = PBXBuildFile; fileRef = CFE174C3ACA74FBF8020A6AC /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.hpp */; };
+		893B6E8B4EE747519D069081 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = 4B71B76E55C3496197ECD52F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/CMakeLists.txt */; };
+		8EC297FCE9664BC49A02B076 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.cpp */ = {isa = PBXBuildFile; fileRef = 6B84F5C47A1A446F88DD95C4 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.cpp */; };
+		8F74F34644904902A3C6322D /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/main.cpp */ = {isa = PBXBuildFile; fileRef = 78461251D76C421197675EAD /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/main.cpp */; };
+		9152A38C748C4BBD910500DB /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/population.h */ = {isa = PBXBuildFile; fileRef = FAD6049C979346BBB8978E3A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/population.h */; };
+		A129419774C84003B2C84FBD /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tree_hashtable.h */ = {isa = PBXBuildFile; fileRef = B96B8D7C1F1E4ABFB529855B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tree_hashtable.h */; };
+		A601F1A2D83E4824B5276966 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/pllmod_common.h */ = {isa = PBXBuildFile; fileRef = DC49A7479B0B4EF18AC08A24 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/pllmod_common.h */; };
+		A7BDA9E73A9441428E53892A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.cpp */ = {isa = PBXBuildFile; fileRef = 38993D2175B6486BA588F506 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.cpp */; };
+		AAFC2838F5A34AC7B28B334E /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/main.cpp */ = {isa = PBXBuildFile; fileRef = 5E6CFB3A519641F1B9FF6965 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/main.cpp */; };
+		B2165784ECFF44D38F8AF3FA /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.hpp */ = {isa = PBXBuildFile; fileRef = A834F627C5984AC49155F6E2 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.hpp */; };
+		B33549A2B7EC499C8FEFB16B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.cpp */ = {isa = PBXBuildFile; fileRef = AF93C0FBCACF491F82525D2D /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.cpp */; };
+		B3E18762B6B34319A2943E26 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tree.h */ = {isa = PBXBuildFile; fileRef = 7772FA09D4724980BBBEC8C5 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tree.h */; };
+		D389251BCAE748EF9D514108 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/prior.h */ = {isa = PBXBuildFile; fileRef = E9C0C0FBB8794B5EBD9D9AE9 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/prior.h */; };
+		D4197C33EA9848C9A26C8AB4 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.cpp */ = {isa = PBXBuildFile; fileRef = 51AF3672AA304171A009E498 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.cpp */; };
+		F2F778381F034C9F985BE000 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq.h */ = {isa = PBXBuildFile; fileRef = 14BE1641AA1F4420B64F804F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq.h */; };
+		FC4E085C3A0E418F99FCC072 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/random.h */ = {isa = PBXBuildFile; fileRef = 9FD7F49BD95C458EAFE9B5EA /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/random.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildStyle section */
-		26FDD1D1BAF24CD4B276D2A2 /* RelWithDebInfo */ = {
+		1EB0E4AF0EE840F3BAC6C618 /* RelWithDebInfo */ = {
 			isa = PBXBuildStyle;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 			};
 			name = RelWithDebInfo;
 		};
-		DB287F1C01814297A32344EE /* MinSizeRel */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-			};
-			name = MinSizeRel;
-		};
-		EA2D832B0913497981411DC6 /* Release */ = {
+		53BF229A3F8A489FA8B5696A /* Release */ = {
 			isa = PBXBuildStyle;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 			};
 			name = Release;
 		};
-		EF2FB801BFB745789A585771 /* Debug */ = {
+		8C98CB8074F8492CB6F31C7F /* MinSizeRel */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = MinSizeRel;
+		};
+		DDDE89D14D2541C88F788C0B /* Debug */ = {
 			isa = PBXBuildStyle;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -114,198 +130,285 @@
 /* End PBXBuildStyle section */
 
 /* Begin PBXContainerItemProxy section */
-		221CC511D9554038B48057A2 /* PBXContainerItemProxy */ = {
+		2DCD46DE90A04F94B6ED7E64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 7508E46C66C74567B12D2C52 /* Project object */;
+			containerPortal = 896233E18CF14BC4AFB4BDEE /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 72DD938079EA407389887733;
+			remoteGlobalIDString = E920EEE8032949C8858FB84B;
+			remoteInfo = simul;
+		};
+		769DA6FACFF54CFE8AC20629 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 896233E18CF14BC4AFB4BDEE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9CAF898874024929AB8ABE76;
+			remoteInfo = run;
+		};
+		A9052C42A7774241BCF0389D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 896233E18CF14BC4AFB4BDEE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5DDF4FF023964771B0DC97A1;
 			remoteInfo = ZERO_CHECK;
 		};
-		40B754D28EF540E3833DEE75 /* PBXContainerItemProxy */ = {
+		C78476105E8241439DB4ADE1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 7508E46C66C74567B12D2C52 /* Project object */;
+			containerPortal = 896233E18CF14BC4AFB4BDEE /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = B51DF6E728F1480D898212A3;
+			remoteGlobalIDString = 5E1E56FC0B7949F1941BFD34;
 			remoteInfo = ALL_BUILD;
 		};
-		912FE7D137C44E2DA9891930 /* PBXContainerItemProxy */ = {
+		E1042B0916804E908ABCB70B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 7508E46C66C74567B12D2C52 /* Project object */;
+			containerPortal = 896233E18CF14BC4AFB4BDEE /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 72DD938079EA407389887733;
+			remoteGlobalIDString = 5DDF4FF023964771B0DC97A1;
 			remoteInfo = ZERO_CHECK;
 		};
-		EF11747D9E0240198E736AE5 /* PBXContainerItemProxy */ = {
+		E36D11D4956C4BC29B3D8963 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 7508E46C66C74567B12D2C52 /* Project object */;
+			containerPortal = 896233E18CF14BC4AFB4BDEE /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = A914640470DC46FEAC252F6B;
-			remoteInfo = simul;
+			remoteGlobalIDString = 5DDF4FF023964771B0DC97A1;
+			remoteInfo = ZERO_CHECK;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0223D656DB7248B6B95D61A5 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/definitions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = definitions.h; path = simul/definitions.h; sourceTree = SOURCE_ROOT; };
-		044F235BA00F4817AA7C3C73 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/likelihood.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = likelihood.h; path = simul/likelihood.h; sourceTree = SOURCE_ROOT; };
-		100C188926D5466C90CF3B30 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = data_utils.hpp; path = simul/data_utils.hpp; sourceTree = SOURCE_ROOT; };
-		11EA0B72809245B398651BFA /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/proposal.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = proposal.h; path = simul/proposal.h; sourceTree = SOURCE_ROOT; };
-		1F832FB8437A48E48B6E2ECC /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/random.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = random.h; path = simul/random.h; sourceTree = SOURCE_ROOT; };
-		29BA01D2C62A4CCF9D7C0ED7 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/mutationModel.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = mutationModel.h; path = simul/mutationModel.h; sourceTree = SOURCE_ROOT; };
-		2B9712D16E6143CC8BA89AF5 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/util.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = util.h; path = simul/util.h; sourceTree = SOURCE_ROOT; };
-		32199241B75B4D53AC389859 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/main.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = main.cpp; path = simul/main.cpp; sourceTree = SOURCE_ROOT; };
-		3B1525B7FF634069BEBDAEF2 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = tree.h; path = simul/tree.h; sourceTree = SOURCE_ROOT; };
-		458469558CDE475EA2ED3B7B /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/MCMCchain.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = MCMCchain.h; path = simul/MCMCchain.h; sourceTree = SOURCE_ROOT; };
-		4E9C5BB3D4BC492F84153782 /* simul */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = simul; sourceTree = BUILT_PRODUCTS_DIR; };
-		792F6F69624D4E15BBE14362 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = kseq.h; path = simul/kseq.h; sourceTree = SOURCE_ROOT; };
-		7A75373851C8420486216CD3 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = eigen.cpp; path = simul/eigen.cpp; sourceTree = SOURCE_ROOT; };
-		7B601A8743FE4541A438E07D /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = data_utils.cpp; path = simul/data_utils.cpp; sourceTree = SOURCE_ROOT; };
-		91536D3304EC4F759193F3B0 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tumorcellcoal.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = tumorcellcoal.h; path = simul/tumorcellcoal.h; sourceTree = SOURCE_ROOT; };
-		9AC63912BF084AD48020546F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = simul/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
-		A2F3A96B958046E09D18F873 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/model.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = model.h; path = simul/model.h; sourceTree = SOURCE_ROOT; };
-		A36DB1F461D647CAA0C5FA8C /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq_test.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = kseq_test.c; path = simul/kseq_test.c; sourceTree = SOURCE_ROOT; };
-		A7C8B9F5762E432C9B26C090 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = eigen.hpp; path = simul/eigen.hpp; sourceTree = SOURCE_ROOT; };
-		A9CA6E99B92143ACAD3591E2 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/prior.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = prior.h; path = simul/prior.h; sourceTree = SOURCE_ROOT; };
-		B356C0425AAE46B89B1ADAFF /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree_hashtable.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = tree_hashtable.h; path = simul/tree_hashtable.h; sourceTree = SOURCE_ROOT; };
-		CF61A45DE0D4403EB11A9218 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
-		D090DC41B7D4483AA0B8940F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/population.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = population.h; path = simul/population.h; sourceTree = SOURCE_ROOT; };
-		E4B43240592C4B33974CEF59 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/fileFuntions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = fileFuntions.h; path = simul/fileFuntions.h; sourceTree = SOURCE_ROOT; };
-		ED7D7449879A4C8A955BAF64 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pllmod_common.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pllmod_common.h; path = simul/pllmod_common.h; sourceTree = SOURCE_ROOT; };
+		041623092A79472AAE24299A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = data_utils.hpp; path = inference/data_utils.hpp; sourceTree = SOURCE_ROOT; };
+		14BE1641AA1F4420B64F804F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = kseq.h; path = inference/kseq.h; sourceTree = SOURCE_ROOT; };
+		1594F84A0C3747A6B6BED104 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/likelihood.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = likelihood.h; path = simul/likelihood.h; sourceTree = SOURCE_ROOT; };
+		1DAB7CE884104A0EBF6F9B9B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq_test.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = kseq_test.c; path = inference/kseq_test.c; sourceTree = SOURCE_ROOT; };
+		2AC6516E24704986BB904707 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/definitions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = definitions.h; path = simul/definitions.h; sourceTree = SOURCE_ROOT; };
+		38993D2175B6486BA588F506 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = utils.cpp; path = inference/utils.cpp; sourceTree = SOURCE_ROOT; };
+		3A31FABF2D8344C1A386946F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = data_utils.hpp; path = simul/data_utils.hpp; sourceTree = SOURCE_ROOT; };
+		48B24F3FC73F4CF1BF892DE6 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = inference/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		4B71B76E55C3496197ECD52F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = simul/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		51AF3672AA304171A009E498 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Population.cpp; path = inference/Population.cpp; sourceTree = SOURCE_ROOT; };
+		52A6F7DF2DF541C8B721FDAE /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq_test.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = kseq_test.c; path = simul/kseq_test.c; sourceTree = SOURCE_ROOT; };
+		5DD3A6D6B8EE4ADBAE19B2B4 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tumorcellcoal.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = tumorcellcoal.h; path = simul/tumorcellcoal.h; sourceTree = SOURCE_ROOT; };
+		5E6CFB3A519641F1B9FF6965 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/main.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = main.cpp; path = simul/main.cpp; sourceTree = SOURCE_ROOT; };
+		658D41D5F3394566980CB241 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/mutationModel.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = mutationModel.h; path = simul/mutationModel.h; sourceTree = SOURCE_ROOT; };
+		6B84F5C47A1A446F88DD95C4 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = eigen.cpp; path = inference/eigen.cpp; sourceTree = SOURCE_ROOT; };
+		7772FA09D4724980BBBEC8C5 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tree.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = tree.h; path = simul/tree.h; sourceTree = SOURCE_ROOT; };
+		78461251D76C421197675EAD /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/main.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = main.cpp; path = inference/main.cpp; sourceTree = SOURCE_ROOT; };
+		86E0AD1B992E46939104D6AD /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = data_utils.cpp; path = simul/data_utils.cpp; sourceTree = SOURCE_ROOT; };
+		93F20E1D405F45B28C477C19 /* run */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = run; sourceTree = BUILT_PRODUCTS_DIR; };
+		9FD7F49BD95C458EAFE9B5EA /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/random.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = random.h; path = simul/random.h; sourceTree = SOURCE_ROOT; };
+		A834F627C5984AC49155F6E2 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = eigen.hpp; path = simul/eigen.hpp; sourceTree = SOURCE_ROOT; };
+		ABC608AD05EE4AC9AC4866B6 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/util.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = util.h; path = simul/util.h; sourceTree = SOURCE_ROOT; };
+		AC92FFC97AD7477F9FF3CCB3 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; name = CMakeLists.txt; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		AF93C0FBCACF491F82525D2D /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = eigen.cpp; path = simul/eigen.cpp; sourceTree = SOURCE_ROOT; };
+		B96B8D7C1F1E4ABFB529855B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tree_hashtable.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = tree_hashtable.h; path = simul/tree_hashtable.h; sourceTree = SOURCE_ROOT; };
+		BF730859B0AB4CCB988E7191 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/model.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = model.h; path = simul/model.h; sourceTree = SOURCE_ROOT; };
+		C04E4EA9A9044372A7E4608B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/definitions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = definitions.h; path = inference/definitions.h; sourceTree = SOURCE_ROOT; };
+		CADBAD423D54486789994E2C /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/fileFuntions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = fileFuntions.h; path = simul/fileFuntions.h; sourceTree = SOURCE_ROOT; };
+		CFE174C3ACA74FBF8020A6AC /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = eigen.hpp; path = inference/eigen.hpp; sourceTree = SOURCE_ROOT; };
+		DC49A7479B0B4EF18AC08A24 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/pllmod_common.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = pllmod_common.h; path = simul/pllmod_common.h; sourceTree = SOURCE_ROOT; };
+		DCDC2E135516490EB57A1B74 /* simul */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = simul; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2512DECCF6C45FDA2CDD7CB /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/MCMCchain.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = MCMCchain.h; path = inference/MCMCchain.h; sourceTree = SOURCE_ROOT; };
+		E5CB3856030A447CA9EA7D92 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = utils.hpp; path = inference/utils.hpp; sourceTree = SOURCE_ROOT; };
+		E9C0C0FBB8794B5EBD9D9AE9 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/prior.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = prior.h; path = simul/prior.h; sourceTree = SOURCE_ROOT; };
+		ED303955C2FC415FA9B40CFF /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = Chain.hpp; path = inference/Chain.hpp; sourceTree = SOURCE_ROOT; };
+		F095B056FA644E0EBD29ECDB /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = kseq.h; path = simul/kseq.h; sourceTree = SOURCE_ROOT; };
+		F5D2BEA8D30D4A65A610D570 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = data_utils.cpp; path = inference/data_utils.cpp; sourceTree = SOURCE_ROOT; };
+		F7570902446144FFB8D9637E /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Chain.cpp; path = inference/Chain.cpp; sourceTree = SOURCE_ROOT; };
+		F856631D1E1D4BAD9E013850 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/proposal.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = proposal.h; path = inference/proposal.h; sourceTree = SOURCE_ROOT; };
+		FAABAA70A25E445CA65EB812 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; name = Population.hpp; path = inference/Population.hpp; sourceTree = SOURCE_ROOT; };
+		FAD6049C979346BBB8978E3A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/population.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = population.h; path = simul/population.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
-		3189484CD9994D538D9FD9EA /* Products */ = {
+		26B2B16A057842FF9DEE93A5 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
-				4E9C5BB3D4BC492F84153782 /* simul */,
+				ED303955C2FC415FA9B40CFF /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.hpp */,
+				E2512DECCF6C45FDA2CDD7CB /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/MCMCchain.h */,
+				FAABAA70A25E445CA65EB812 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.hpp */,
+				041623092A79472AAE24299A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.hpp */,
+				C04E4EA9A9044372A7E4608B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/definitions.h */,
+				CFE174C3ACA74FBF8020A6AC /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.hpp */,
+				14BE1641AA1F4420B64F804F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq.h */,
+				F856631D1E1D4BAD9E013850 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/proposal.h */,
+				E5CB3856030A447CA9EA7D92 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.hpp */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		271F23FD6D804BC4859BE2A6 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				3A31FABF2D8344C1A386946F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.hpp */,
+				2AC6516E24704986BB904707 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/definitions.h */,
+				A834F627C5984AC49155F6E2 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.hpp */,
+				CADBAD423D54486789994E2C /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/fileFuntions.h */,
+				F095B056FA644E0EBD29ECDB /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq.h */,
+				1594F84A0C3747A6B6BED104 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/likelihood.h */,
+				BF730859B0AB4CCB988E7191 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/model.h */,
+				658D41D5F3394566980CB241 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/mutationModel.h */,
+				DC49A7479B0B4EF18AC08A24 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/pllmod_common.h */,
+				FAD6049C979346BBB8978E3A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/population.h */,
+				E9C0C0FBB8794B5EBD9D9AE9 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/prior.h */,
+				9FD7F49BD95C458EAFE9B5EA /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/random.h */,
+				7772FA09D4724980BBBEC8C5 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tree.h */,
+				B96B8D7C1F1E4ABFB529855B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tree_hashtable.h */,
+				5DD3A6D6B8EE4ADBAE19B2B4 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/tumorcellcoal.h */,
+				ABC608AD05EE4AC9AC4866B6 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/util.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		28531863F0DB49AAA02B11AF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				93F20E1D405F45B28C477C19 /* run */,
+				DCDC2E135516490EB57A1B74 /* simul */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		737DFB806194430D908A277F /* Source Files */ = {
+		3178403457E04513AEE97189 = {
 			isa = PBXGroup;
 			children = (
-				7B601A8743FE4541A438E07D /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.cpp */,
-				7A75373851C8420486216CD3 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.cpp */,
-				A36DB1F461D647CAA0C5FA8C /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq_test.c */,
-				32199241B75B4D53AC389859 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/main.cpp */,
+				B0D8BA230A3E469EB13DC107 /* ALL_BUILD */,
+				DB1C2195394E47CDBE741AC0 /* run */,
+				B84443963A7442AAA0C58E80 /* simul */,
+				28531863F0DB49AAA02B11AF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		34933E8524874613BAE02A0B /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				86E0AD1B992E46939104D6AD /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.cpp */,
+				AF93C0FBCACF491F82525D2D /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.cpp */,
+				52A6F7DF2DF541C8B721FDAE /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq_test.c */,
+				5E6CFB3A519641F1B9FF6965 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/main.cpp */,
 			);
 			name = "Source Files";
 			sourceTree = "<group>";
 		};
-		8230CA8BD63B46DA9A59F16A /* ALL_BUILD */ = {
+		B0D8BA230A3E469EB13DC107 /* ALL_BUILD */ = {
 			isa = PBXGroup;
 			children = (
-				D1064BA034464CE0A039D0CD /* CMake Rules */,
-				CF61A45DE0D4403EB11A9218 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/CMakeLists.txt */,
+				F4E7E2467FE8417B912266C4 /* CMake Rules */,
+				AC92FFC97AD7477F9FF3CCB3 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/CMakeLists.txt */,
 			);
 			name = ALL_BUILD;
 			sourceTree = "<group>";
 		};
-		AB3C0D08500F429D98D9690E /* simul */ = {
+		B84443963A7442AAA0C58E80 /* simul */ = {
 			isa = PBXGroup;
 			children = (
-				F939F9DD1817456B97C0BFEE /* Header Files */,
-				737DFB806194430D908A277F /* Source Files */,
-				9AC63912BF084AD48020546F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/CMakeLists.txt */,
+				34933E8524874613BAE02A0B /* Source Files */,
+				271F23FD6D804BC4859BE2A6 /* Header Files */,
+				4B71B76E55C3496197ECD52F /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/CMakeLists.txt */,
 			);
 			name = simul;
 			sourceTree = "<group>";
 		};
-		CFFC7F6E0CB7418DB29B733B = {
+		C3C85E5F3775473E89540580 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
-				8230CA8BD63B46DA9A59F16A /* ALL_BUILD */,
-				AB3C0D08500F429D98D9690E /* simul */,
-				3189484CD9994D538D9FD9EA /* Products */,
+				F7570902446144FFB8D9637E /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.cpp */,
+				51AF3672AA304171A009E498 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.cpp */,
+				F5D2BEA8D30D4A65A610D570 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.cpp */,
+				6B84F5C47A1A446F88DD95C4 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.cpp */,
+				1DAB7CE884104A0EBF6F9B9B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq_test.c */,
+				78461251D76C421197675EAD /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/main.cpp */,
+				38993D2175B6486BA588F506 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.cpp */,
 			);
+			name = "Source Files";
 			sourceTree = "<group>";
 		};
-		D1064BA034464CE0A039D0CD /* CMake Rules */ = {
+		DB1C2195394E47CDBE741AC0 /* run */ = {
+			isa = PBXGroup;
+			children = (
+				C3C85E5F3775473E89540580 /* Source Files */,
+				26B2B16A057842FF9DEE93A5 /* Header Files */,
+				48B24F3FC73F4CF1BF892DE6 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/CMakeLists.txt */,
+			);
+			name = run;
+			sourceTree = "<group>";
+		};
+		F4E7E2467FE8417B912266C4 /* CMake Rules */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			name = "CMake Rules";
-			sourceTree = "<group>";
-		};
-		F939F9DD1817456B97C0BFEE /* Header Files */ = {
-			isa = PBXGroup;
-			children = (
-				458469558CDE475EA2ED3B7B /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/MCMCchain.h */,
-				100C188926D5466C90CF3B30 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.hpp */,
-				0223D656DB7248B6B95D61A5 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/definitions.h */,
-				A7C8B9F5762E432C9B26C090 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.hpp */,
-				E4B43240592C4B33974CEF59 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/fileFuntions.h */,
-				792F6F69624D4E15BBE14362 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq.h */,
-				044F235BA00F4817AA7C3C73 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/likelihood.h */,
-				A2F3A96B958046E09D18F873 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/model.h */,
-				29BA01D2C62A4CCF9D7C0ED7 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/mutationModel.h */,
-				ED7D7449879A4C8A955BAF64 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/pllmod_common.h */,
-				D090DC41B7D4483AA0B8940F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/population.h */,
-				A9CA6E99B92143ACAD3591E2 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/prior.h */,
-				11EA0B72809245B398651BFA /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/proposal.h */,
-				1F832FB8437A48E48B6E2ECC /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/random.h */,
-				3B1525B7FF634069BEBDAEF2 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree.h */,
-				B356C0425AAE46B89B1ADAFF /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tree_hashtable.h */,
-				91536D3304EC4F759193F3B0 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/tumorcellcoal.h */,
-				2B9712D16E6143CC8BA89AF5 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/util.h */,
-			);
-			name = "Header Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A914640470DC46FEAC252F6B /* simul */ = {
+		9CAF898874024929AB8ABE76 /* run */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 996139A03DE8432E8153605D /* Build configuration list for PBXNativeTarget "simul" */;
+			buildConfigurationList = D7F960DF00E54433BD4E294B /* Build configuration list for PBXNativeTarget "run" */;
 			buildPhases = (
-				3B1D9CFABE33403BA368C23C /* Sources */,
+				6D4800FC28504350BE87D1C8 /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				72F24D90FC7049DD8590140A /* PBXTargetDependency */,
+				8561BC02F96F4F6E8EED63F7 /* PBXTargetDependency */,
+			);
+			name = run;
+			productName = run;
+			productReference = 93F20E1D405F45B28C477C19 /* run */;
+			productType = "com.apple.product-type.tool";
+		};
+		E920EEE8032949C8858FB84B /* simul */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1608BEC6BDD345E5802A5D9D /* Build configuration list for PBXNativeTarget "simul" */;
+			buildPhases = (
+				1C1586A185EA4CFEB587AE0A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				606AB1C7D3F041D4A10B5A6B /* PBXTargetDependency */,
 			);
 			name = simul;
 			productName = simul;
-			productReference = 4E9C5BB3D4BC492F84153782 /* simul */;
+			productReference = DCDC2E135516490EB57A1B74 /* simul */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		7508E46C66C74567B12D2C52 /* Project object */ = {
+		896233E18CF14BC4AFB4BDEE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 1000;
 			};
-			buildConfigurationList = FAF1178ABA6E4C6490C38F7F /* Build configuration list for PBXProject "tumor_coal" */;
+			buildConfigurationList = 80C90BE6C3814FA4B49080F2 /* Build configuration list for PBXProject "tumor_coal" */;
 			buildSettings = {
 			};
 			buildStyles = (
-				EF2FB801BFB745789A585771 /* Debug */,
-				EA2D832B0913497981411DC6 /* Release */,
-				DB287F1C01814297A32344EE /* MinSizeRel */,
-				26FDD1D1BAF24CD4B276D2A2 /* RelWithDebInfo */,
+				DDDE89D14D2541C88F788C0B /* Debug */,
+				53BF229A3F8A489FA8B5696A /* Release */,
+				8C98CB8074F8492CB6F31C7F /* MinSizeRel */,
+				1EB0E4AF0EE840F3BAC6C618 /* RelWithDebInfo */,
 			);
 			compatibilityVersion = "Xcode 3.2";
 			hasScannedForEncodings = 0;
-			mainGroup = CFFC7F6E0CB7418DB29B733B;
+			mainGroup = 3178403457E04513AEE97189;
 			projectDirPath = ../;
 			projectRoot = "";
 			targets = (
-				B51DF6E728F1480D898212A3 /* ALL_BUILD */,
-				FF68938B978D45238E0BB3E5 /* RUN_TESTS */,
-				72DD938079EA407389887733 /* ZERO_CHECK */,
-				1E68D77E4CDB461AA1F4E08E /* install */,
-				A914640470DC46FEAC252F6B /* simul */,
+				5E1E56FC0B7949F1941BFD34 /* ALL_BUILD */,
+				1208DA082FB5400F81020270 /* RUN_TESTS */,
+				5DDF4FF023964771B0DC97A1 /* ZERO_CHECK */,
+				3A5CE42304B0467793F57BBC /* install */,
+				9CAF898874024929AB8ABE76 /* run */,
+				E920EEE8032949C8858FB84B /* simul */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1362929DCC1E47119C56EAD4 = {
+		249842C10360473DB6372ED9 = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -320,29 +423,7 @@
 exit 0";
 			showEnvVarsInLog = 0;
 		};
-		1A1C48BE70DD466FB309B16A /* CMake PostBuild Rules */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "CMake PostBuild Rules";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "make -C /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode -f /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/CMakeScripts/install_postBuildPhase.make$CONFIGURATION all";
-			showEnvVarsInLog = 0;
-		};
-		34528090E7A74803897F4C52 /* CMake PostBuild Rules */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "CMake PostBuild Rules";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "make -C /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode -f /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/CMakeScripts/RUN_TESTS_postBuildPhase.make$CONFIGURATION all";
-			showEnvVarsInLog = 0;
-		};
-		72B8CDCE6BDE46E2A365A74F /* CMake Rules */ = {
+		47F6CF56DDDC4691862BFA5D /* CMake Rules */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -350,10 +431,10 @@ exit 0";
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode -f /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode -f /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION OBJDIR=$(basename \"$OBJECT_FILE_DIR_normal\") all";
 			showEnvVarsInLog = 0;
 		};
-		A6D8AFAE92B749E683375A89 /* CMake Rules */ = {
+		7888DA4692554B3CA638E1E9 /* CMake Rules */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -361,10 +442,32 @@ exit 0";
 			name = "CMake Rules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode -f /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			shellScript = "make -C /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode -f /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION OBJDIR=$(basename \"$OBJECT_FILE_DIR_normal\") all";
 			showEnvVarsInLog = 0;
 		};
-		AA6C850701EF4224BC7BC4C0 = {
+		87A561AE6BBC4C95BA4F7169 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode -f /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/CMakeScripts/RUN_TESTS_postBuildPhase.make$CONFIGURATION OBJDIR=$(basename \"$OBJECT_FILE_DIR_normal\") all";
+			showEnvVarsInLog = 0;
+		};
+		AFAD2428FAC34D4581DE752C /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode -f /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/CMakeScripts/install_postBuildPhase.make$CONFIGURATION OBJDIR=$(basename \"$OBJECT_FILE_DIR_normal\") all";
+			showEnvVarsInLog = 0;
+		};
+		B03B4430EDB2417DAD1D3BBF = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -379,7 +482,7 @@ exit 0";
 exit 0";
 			showEnvVarsInLog = 0;
 		};
-		B0508C38EF604DF0BC603C19 = {
+		E722D1B353014C74B994B4A8 = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -394,7 +497,7 @@ exit 0";
 exit 0";
 			showEnvVarsInLog = 0;
 		};
-		CB4B4BB8A02A49188E53D94F = {
+		FCEAA70F7ABD4002A09AB033 = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -412,104 +515,68 @@ exit 0";
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		3B1D9CFABE33403BA368C23C /* Sources */ = {
+		1C1586A185EA4CFEB587AE0A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				89BDEFF4C34D4F1FA7524F3F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/data_utils.cpp */,
-				6246363A796545D4806DBA35 /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/eigen.cpp */,
-				DB208C0F1E05475E930BA08F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq_test.c */,
-				83F874706C6846DF96BF708F /* /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/main.cpp */,
+				2B326CDF08934287B7190388 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/data_utils.cpp */,
+				B33549A2B7EC499C8FEFB16B /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/eigen.cpp */,
+				27B5656065554A0384DFDB9C /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq_test.c */,
+				AAFC2838F5A34AC7B28B334E /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/main.cpp */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6D4800FC28504350BE87D1C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5AE5F3AADEC44F29B21FE982 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Chain.cpp */,
+				D4197C33EA9848C9A26C8AB4 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/Population.cpp */,
+				4C90F812C3714104B113F42A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/data_utils.cpp */,
+				8EC297FCE9664BC49A02B076 /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/eigen.cpp */,
+				4752204FD7184F019EBF8C0E /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/kseq_test.c */,
+				8F74F34644904902A3C6322D /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/main.cpp */,
+				A7BDA9E73A9441428E53892A /* /Users/faustofabiancrespofernandez/Downloads/tumor_coal/inference/utils.cpp */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		6F5B6CC25F5C4392A28638F4 /* PBXTargetDependency */ = {
+		38B56194EFE6465898BA5AAF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = A914640470DC46FEAC252F6B /* simul */;
-			targetProxy = EF11747D9E0240198E736AE5 /* PBXContainerItemProxy */;
+			target = 5E1E56FC0B7949F1941BFD34 /* ALL_BUILD */;
+			targetProxy = C78476105E8241439DB4ADE1 /* PBXContainerItemProxy */;
 		};
-		72F24D90FC7049DD8590140A /* PBXTargetDependency */ = {
+		52824E90996F420AB0B0EC57 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 72DD938079EA407389887733 /* ZERO_CHECK */;
-			targetProxy = 912FE7D137C44E2DA9891930 /* PBXContainerItemProxy */;
+			target = 9CAF898874024929AB8ABE76 /* run */;
+			targetProxy = 769DA6FACFF54CFE8AC20629 /* PBXContainerItemProxy */;
 		};
-		BB712C4FF6554C7388A5FC43 /* PBXTargetDependency */ = {
+		606AB1C7D3F041D4A10B5A6B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B51DF6E728F1480D898212A3 /* ALL_BUILD */;
-			targetProxy = 40B754D28EF540E3833DEE75 /* PBXContainerItemProxy */;
+			target = 5DDF4FF023964771B0DC97A1 /* ZERO_CHECK */;
+			targetProxy = E36D11D4956C4BC29B3D8963 /* PBXContainerItemProxy */;
 		};
-		DAD696A3C7F34DC6A57BAC26 /* PBXTargetDependency */ = {
+		7B5C98D289614A5A893D987D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 72DD938079EA407389887733 /* ZERO_CHECK */;
-			targetProxy = 221CC511D9554038B48057A2 /* PBXContainerItemProxy */;
+			target = 5DDF4FF023964771B0DC97A1 /* ZERO_CHECK */;
+			targetProxy = E1042B0916804E908ABCB70B /* PBXContainerItemProxy */;
+		};
+		8561BC02F96F4F6E8EED63F7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5DDF4FF023964771B0DC97A1 /* ZERO_CHECK */;
+			targetProxy = A9052C42A7774241BCF0389D /* PBXContainerItemProxy */;
+		};
+		B801E4E2352B4DC2B37E030D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E920EEE8032949C8858FB84B /* simul */;
+			targetProxy = 2DCD46DE90A04F94B6ED7E64 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		0CA32739ED4B44CFAD918129 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = Debug;
-		};
-		0FC9D97690194FF8B5E961DA /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = RelWithDebInfo;
-		};
-		16BDD7E92EC641A89180D563 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = MinSizeRel;
-		};
-		2E70B34500994043B0175DC9 /* Release */ = {
+		0594DE9A62ED4AF28A43ED5B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
@@ -520,157 +587,23 @@ exit 0";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include);
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				OTHER_CFLAGS = "-Wall        -DNDEBUG -g  ";
 				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG   ";
-				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/lib/libgsl.dylib /usr/local/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
+				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/Cellar/gsl/2.6/lib/libgsl.dylib /usr/local/Cellar/gsl/2.6/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = simul;
+				PRODUCT_NAME = run;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/simul";
-				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/include);
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/inference;
+				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/Cellar/gsl/2.6/include);
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = Release;
 		};
-		35EB3FD0EDF2419F88BBA118 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = RUN_TESTS;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = Release;
-		};
-		47790944C3B74D34B85547A9 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/build";
-			};
-			name = MinSizeRel;
-		};
-		57FFC2DD582243E99EE71B52 /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = RUN_TESTS;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = RelWithDebInfo;
-		};
-		5FA2A0E8DA204883AE0CAE61 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = install;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = Debug;
-		};
-		82A51AE5FD474F62A50ADB25 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				EXECUTABLE_PREFIX = "";
-				EXECUTABLE_SUFFIX = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = s;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				LIBRARY_SEARCH_PATHS = "";
-				OTHER_CFLAGS = "-Wall        -DNDEBUG -g  ";
-				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG   ";
-				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/lib/libgsl.dylib /usr/local/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = simul;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/simul";
-				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/include);
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = MinSizeRel;
-		};
-		83D2CC3DB68E4EDFA43287E3 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = install;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = Release;
-		};
-		856F97D18E534C5C98BCD03E /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = install;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = MinSizeRel;
-		};
-		860E6F5DD65D40B6BA8D42AB /* Release */ = {
+		060479728F6E4C3D8AB09B0B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
@@ -684,13 +617,13 @@ exit 0";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ZERO_CHECK;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = Release;
 		};
-		86A4D5E51ADF41CE946280E2 /* MinSizeRel */ = {
+		069AEAB0FC3F4A64BEF0211E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
@@ -704,140 +637,13 @@ exit 0";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = RUN_TESTS;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = MinSizeRel;
-		};
-		999AF5FD0A134960B33B88AC /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = Debug;
-		};
-		A7F2CE004CF64963B9CE24CC /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = install;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = RelWithDebInfo;
-		};
-		B7C107432C7A4B4AB98F93D4 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/build";
-			};
-			name = Release;
-		};
-		C8196A73DA1745948551A1CB /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = RelWithDebInfo;
-		};
-		CF98FE7420DC45FAB91BA9DA /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = Release;
 		};
-		D12110DEC8E6432B937B63F6 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/build";
-			};
-			name = Debug;
-		};
-		D862A3CF27504182B56728C9 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				INSTALL_PATH = "";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = RUN_TESTS;
-				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
-			};
-			name = Debug;
-		};
-		DD7B64C64AD442F1AB937F37 /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk;
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/build";
-			};
-			name = RelWithDebInfo;
-		};
-		E428D1A56B4E4F2CA5D6E48F /* RelWithDebInfo */ = {
+		07AE34AEA1AF4390B0B15605 /* RelWithDebInfo */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
@@ -848,22 +654,214 @@ exit 0";
 				GCC_OPTIMIZATION_LEVEL = 2;
 				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include);
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				OTHER_CFLAGS = "-Wall           -DNDEBUG  ";
 				OTHER_CPLUSPLUSFLAGS = "       -DNDEBUG  ";
-				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/lib/libgsl.dylib /usr/local/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
+				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/Cellar/gsl/2.6/lib/libgsl.dylib /usr/local/Cellar/gsl/2.6/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = simul;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/simul";
-				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/include);
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/simul;
+				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/Cellar/gsl/2.6/include);
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = RelWithDebInfo;
 		};
-		F79105EF28904E4CABFF5725 /* Debug */ = {
+		0BC08FCD20D94488B1715FFE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = RUN_TESTS;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		1480BF906FA84A3CBEE5A947 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-Wall        -DNDEBUG -g  ";
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG   ";
+				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/Cellar/gsl/2.6/lib/libgsl.dylib /usr/local/Cellar/gsl/2.6/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = simul;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/simul;
+				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/Cellar/gsl/2.6/include);
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		182E0372CC844E64851A1881 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk;
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/build;
+			};
+			name = RelWithDebInfo;
+		};
+		1B79A12CEF2941B5872D36E9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
+		397C8BBA0B7B45A4B2954C10 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-Wall        -DNDEBUG -g  ";
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG   ";
+				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/Cellar/gsl/2.6/lib/libgsl.dylib /usr/local/Cellar/gsl/2.6/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = run;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/inference;
+				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/Cellar/gsl/2.6/include);
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		3B767DE915374A99BB7E07E8 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-Wall        -DNDEBUG -g  ";
+				OTHER_CPLUSPLUSFLAGS = "    -DNDEBUG   ";
+				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/Cellar/gsl/2.6/lib/libgsl.dylib /usr/local/Cellar/gsl/2.6/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = simul;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/simul;
+				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/Cellar/gsl/2.6/include);
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		47EEA69F9D104997A55A1D00 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		48E6B17B2B1649ED8EC9446E /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		57E28CF6A9DC4F85AEF1F263 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		6B914840B0464CF1BCC05A2C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
@@ -874,22 +872,63 @@ exit 0";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include);
 				INSTALL_PATH = "";
 				LIBRARY_SEARCH_PATHS = "";
 				OTHER_CFLAGS = "-Wall        ";
 				OTHER_CPLUSPLUSFLAGS = "    ";
-				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/lib/libgsl.dylib /usr/local/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
+				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/Cellar/gsl/2.6/lib/libgsl.dylib /usr/local/Cellar/gsl/2.6/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = simul;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/simul";
-				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/include);
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/simul;
+				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/Cellar/gsl/2.6/include);
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = Debug;
 		};
-		FA2BE7F52B3B4B669257F174 /* MinSizeRel */ = {
+		73066047A0C748AB9FFC9F90 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk;
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/build;
+			};
+			name = MinSizeRel;
+		};
+		734F834C48E44391B9DA6A66 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk;
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/build;
+			};
+			name = Debug;
+		};
+		737D1162868148B6AC96E904 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = RUN_TESTS;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		810276602F574EA39BA75D9C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
@@ -903,82 +942,297 @@ exit 0";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = ZERO_CHECK;
 				SECTORDER_FLAGS = "";
-				SYMROOT = "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		81BEE3D6ADBA4334AE48C998 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-Wall        ";
+				OTHER_CPLUSPLUSFLAGS = "    ";
+				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/Cellar/gsl/2.6/lib/libgsl.dylib /usr/local/Cellar/gsl/2.6/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = run;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/inference;
+				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/Cellar/gsl/2.6/include);
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		84A582FA8D6149F08AAEDE1D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		9D6273146A654165AED5BE0A /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (/usr/local/include);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-Wall           -DNDEBUG  ";
+				OTHER_CPLUSPLUSFLAGS = "       -DNDEBUG  ";
+				OTHER_LDFLAGS = "-L/usr/local/opt/llvm/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names  /usr/local/Cellar/gsl/2.6/lib/libgsl.dylib /usr/local/Cellar/gsl/2.6/lib/libgslcblas.dylib /usr/local/lib/libboost_system.a /usr/local/lib/libboost_filesystem.a /usr/local/lib/libboost_program_options.a /usr/local/lib/libpll.a /usr/local/lib/libpll_algorithm.a /usr/local/lib/libpll_tree.a /usr/local/lib/libpll_util.a /usr/local/lib/libpll_optimize.a /usr/local/lib/libpll_msa.a /usr/local/lib/libpll_binary.a";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = run;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/inference;
+				SYSTEM_HEADER_SEARCH_PATHS = (/usr/local/Cellar/gsl/2.6/include);
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		C0B5B1EE8CE74C34BF60EF74 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
 				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
 			};
 			name = MinSizeRel;
 		};
+		C9F8E1EA245341AA994B30A4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk;
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/build;
+			};
+			name = Release;
+		};
+		DB983486198D4360A17CAC7A /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = RUN_TESTS;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		DDEE83C55169446594ACE193 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = RelWithDebInfo;
+		};
+		E37C29E2AD7049DCA106D512 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = MinSizeRel;
+		};
+		FB6EC47A6C624E34AB736C6F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Debug;
+		};
+		FED067D990DF4DE2923099AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'");
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				INSTALL_PATH = "";
+				OTHER_LDFLAGS = " ";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = ("-Wmost","-Wno-four-char-constants","-Wno-unknown-pragmas","$(inherited)");
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		588ACF2BD5F3444E9FF6CA6A /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
+		0818233F6973425BAD1CF14E /* Build configuration list for PBXAggregateTarget "install" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				999AF5FD0A134960B33B88AC /* Debug */,
-				CF98FE7420DC45FAB91BA9DA /* Release */,
-				16BDD7E92EC641A89180D563 /* MinSizeRel */,
-				C8196A73DA1745948551A1CB /* RelWithDebInfo */,
+				FB6EC47A6C624E34AB736C6F /* Debug */,
+				FED067D990DF4DE2923099AD /* Release */,
+				E37C29E2AD7049DCA106D512 /* MinSizeRel */,
+				47EEA69F9D104997A55A1D00 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		6CA13782B38F4D2988600BE6 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+		1608BEC6BDD345E5802A5D9D /* Build configuration list for PBXNativeTarget "simul" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0CA32739ED4B44CFAD918129 /* Debug */,
-				860E6F5DD65D40B6BA8D42AB /* Release */,
-				FA2BE7F52B3B4B669257F174 /* MinSizeRel */,
-				0FC9D97690194FF8B5E961DA /* RelWithDebInfo */,
+				6B914840B0464CF1BCC05A2C /* Debug */,
+				1480BF906FA84A3CBEE5A947 /* Release */,
+				3B767DE915374A99BB7E07E8 /* MinSizeRel */,
+				07AE34AEA1AF4390B0B15605 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		996139A03DE8432E8153605D /* Build configuration list for PBXNativeTarget "simul" */ = {
+		80C90BE6C3814FA4B49080F2 /* Build configuration list for PBXProject "tumor_coal" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				F79105EF28904E4CABFF5725 /* Debug */,
-				2E70B34500994043B0175DC9 /* Release */,
-				82A51AE5FD474F62A50ADB25 /* MinSizeRel */,
-				E428D1A56B4E4F2CA5D6E48F /* RelWithDebInfo */,
+				734F834C48E44391B9DA6A66 /* Debug */,
+				C9F8E1EA245341AA994B30A4 /* Release */,
+				73066047A0C748AB9FFC9F90 /* MinSizeRel */,
+				182E0372CC844E64851A1881 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		E153AF172D4B429E92D1C7DC /* Build configuration list for PBXAggregateTarget "RUN_TESTS" */ = {
+		8C7F14BDBD83421BB18C32ED /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D862A3CF27504182B56728C9 /* Debug */,
-				35EB3FD0EDF2419F88BBA118 /* Release */,
-				86A4D5E51ADF41CE946280E2 /* MinSizeRel */,
-				57FFC2DD582243E99EE71B52 /* RelWithDebInfo */,
+				84A582FA8D6149F08AAEDE1D /* Debug */,
+				1B79A12CEF2941B5872D36E9 /* Release */,
+				48E6B17B2B1649ED8EC9446E /* MinSizeRel */,
+				57E28CF6A9DC4F85AEF1F263 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		F88157729FFD4286B1063F36 /* Build configuration list for PBXAggregateTarget "install" */ = {
+		97CA86C276C54BD889B50B72 /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5FA2A0E8DA204883AE0CAE61 /* Debug */,
-				83D2CC3DB68E4EDFA43287E3 /* Release */,
-				856F97D18E534C5C98BCD03E /* MinSizeRel */,
-				A7F2CE004CF64963B9CE24CC /* RelWithDebInfo */,
+				810276602F574EA39BA75D9C /* Debug */,
+				060479728F6E4C3D8AB09B0B /* Release */,
+				C0B5B1EE8CE74C34BF60EF74 /* MinSizeRel */,
+				DDEE83C55169446594ACE193 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		FAF1178ABA6E4C6490C38F7F /* Build configuration list for PBXProject "tumor_coal" */ = {
+		D476A55A3D3E43A1B3125E24 /* Build configuration list for PBXAggregateTarget "RUN_TESTS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D12110DEC8E6432B937B63F6 /* Debug */,
-				B7C107432C7A4B4AB98F93D4 /* Release */,
-				47790944C3B74D34B85547A9 /* MinSizeRel */,
-				DD7B64C64AD442F1AB937F37 /* RelWithDebInfo */,
+				0BC08FCD20D94488B1715FFE /* Debug */,
+				069AEAB0FC3F4A64BEF0211E /* Release */,
+				DB983486198D4360A17CAC7A /* MinSizeRel */,
+				737D1162868148B6AC96E904 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D7F960DF00E54433BD4E294B /* Build configuration list for PBXNativeTarget "run" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				81BEE3D6ADBA4334AE48C998 /* Debug */,
+				0594DE9A62ED4AF28A43ED5B /* Release */,
+				397C8BBA0B7B45A4B2954C10 /* MinSizeRel */,
+				9D6273146A654165AED5BE0A /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 7508E46C66C74567B12D2C52 /* Project object */;
+	rootObject = 896233E18CF14BC4AFB4BDEE /* Project object */;
 }

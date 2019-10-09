@@ -410,32 +410,32 @@ TreeNode;
 
 typedef TreeNode* pTreeNode;
 
-typedef struct Population
-{
-    int                 index, order;
-    double          timeOriginSTD, delta, effectPopSize, oldeffectPopSize, olddelta;
-    double              birthRate, deathRate, growthRate, oldbirthRate, olddeathRate, oldgrowthRate;
-    double              timeOriginInput, oldtimeOriginInput;
-    int           sampleSize, popSize, numActiveGametes, oldsampleSize, oldpopSize, numGametes;
-    int                 numCompletedCoalescences;
-    int           nextAvailableIdInmigrant;
-    int                 numIncomingMigrations, numPossibleMigrations;
-    int                 doEstimateTimeOrigin;
-    int                 isAlive, CellAssignationCompleted;
-    double              timeMigrationSTDCurrentPop;
-    double             *migrationTimes;
-    int                *idsActiveGametes;
-    int                *idsGametes;
-    int                 indexFirstObservedCellName;
-    int                 nodeIdAncesterMRCA;
-    TreeNode            *MRCA;
-    struct Population                *FatherPop;
-    struct Population                *oldFatherPop;
-    double            *CoalescentEventTimes;
-    double            *oldCoalescentEventTimes;
-    struct Population  **immigrantsPopOrderedModelTime;
-    
-} Population;
+//typedef struct Population
+//{
+//    int                 index, order;
+//    double          timeOriginSTD, delta, effectPopSize, oldeffectPopSize, olddelta;
+//    double              birthRate, deathRate, growthRate, oldbirthRate, olddeathRate, oldgrowthRate;
+//    double              timeOriginInput, oldtimeOriginInput;
+//    int           sampleSize, popSize, numActiveGametes, oldsampleSize, oldpopSize, numGametes;
+//    int                 numCompletedCoalescences;
+//    int           nextAvailableIdInmigrant;
+//    int                 numIncomingMigrations, numPossibleMigrations;
+//    int                 doEstimateTimeOrigin;
+//    int                 isAlive, CellAssignationCompleted;
+//    double              timeMigrationSTDCurrentPop;
+//    double             *migrationTimes;
+//    int                *idsActiveGametes;
+//    int                *idsGametes;
+//    int                 indexFirstObservedCellName;
+//    int                 nodeIdAncesterMRCA;
+//    TreeNode            *MRCA;
+//    struct Population                *FatherPop;
+//    struct Population                *oldFatherPop;
+//    double            *CoalescentEventTimes;
+//    double            *oldCoalescentEventTimes;
+//    struct Population  **immigrantsPopOrderedModelTime;
+//    
+//} Population;
 
 void ReadParametersFromFile(ProgramOptions *programOptions, FilePaths *filePaths,
                             int **CloneNameBegin,

@@ -12,5 +12,5 @@ set( CMAKE_C_FLAGS "-Wall -g" )
 
 enable_testing()
 
-add_subdirectory(inference)
+#add_subdirectory(inference)
 add_subdirectory(simul)

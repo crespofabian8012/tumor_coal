@@ -1,8 +1,7 @@
 # CMake generated Testfile for 
-# Source directory: /Users/faustofabiancrespofernandez/Downloads/tumor_coal
-# Build directory: /Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode
+# Source directory: /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal
+# Build directory: /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode
 # 
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
-subdirs("inference")
 subdirs("simul")

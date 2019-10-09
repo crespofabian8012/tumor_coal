@@ -1,2 +1,2 @@
 dependencies: \
-  /Users/faustofabiancrespofernandez/Downloads/tumor_coal/simul/kseq_test.c
+  /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/simul/kseq_test.c

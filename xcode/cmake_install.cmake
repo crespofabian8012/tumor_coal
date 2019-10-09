@@ -1,4 +1,4 @@
-# Install script for directory: /Users/faustofabiancrespofernandez/Downloads/tumor_coal
+# Install script for directory: /Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,8 +34,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/inference/cmake_install.cmake")
-  include("/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/simul/cmake_install.cmake")
+  include("/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/simul/cmake_install.cmake")
 
 endif()
 
@@ -47,5 +46,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/faustofabiancrespofernandez/Downloads/tumor_coal/xcode/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/seonghwanjun/Dropbox/Research/single-cell-research/repos/tumor_coal/xcode/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

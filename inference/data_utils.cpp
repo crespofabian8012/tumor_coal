@@ -3241,15 +3241,6 @@ char WhichIUPAC (int allele1, int allele2)
     else
         return ('N');
 }
-/********************* getHealthyTip **********************/
-/* getHealthyTip*/
-TreeNode *getHealthyTip(TreeNode *treeRootInit)
-{
-    if (treeRootInit !=NULL && treeRootInit->right!=NULL)
-        return treeRootInit->right;
-    else
-        return NULL;
-}
 
 /********************* WhichMut ************************/
 /* Returns character representation for binary data */

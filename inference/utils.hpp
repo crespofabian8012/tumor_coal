@@ -15,7 +15,7 @@
 #include "libpll/pll_tree.h"
 #include "libpll/pllmod_algorithm.h"
 #include "libpll/pll_msa.h"
-#include "libpll/pllmod_common.h"
+#include "pllmod_common.h"
 #include "definitions.h"
 
 #include <stdarg.h>

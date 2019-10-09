@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <ftw.h>
 
-#include "definitions.h"
+#include "definitions.hpp"
 
 extern double   Qij[16], mr;
 extern double   ***selectedSignature;

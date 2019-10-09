@@ -9,11 +9,15 @@
 #ifndef util_h
 #define util_h
 
+#include "data_types.hpp"
+#include "poppulation.hpp"
+#include "tree_node.hpp"
+
 int CheckMatrixSymmetry(double matrix[4][4]);
 int WhichNucChar (char nucleotide);
 int ChooseUniformState (double *prob, long int *seed);
 char WhichIUPAC (int allele1, int allele2);
-char *  WhichGenotypeFromIUPAC (int  iupac);
+char *WhichGenotypeFromIUPAC (int  iupac);
 char WhichNuc (int nucleotide);
 char WhichConsensusBinary (int allele1, int allele2);
 char WhichMut (int state);

@@ -330,7 +330,7 @@ void PrintTrueFullHaplotypes (FILE *fp, vector<TreeNode *> &nodes, TreeNode* tre
                 /* print IUPAC haplotype */
                 if (p !=NULL){
                     
-                    if (p->left==NULL && p->right ==NULL){
+                    if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                         if (doUseObservedCellName == YES)
                             temp=p->observedCellName;
                         else
@@ -356,7 +356,7 @@ void PrintTrueFullHaplotypes (FILE *fp, vector<TreeNode *> &nodes, TreeNode* tre
                 p = nodes[i];
                 if (p !=NULL){
                     
-                    if (p->left==NULL && p->right ==NULL){
+                    if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                         if (doUseObservedCellName == YES)
                             temp=p->observedCellName;
                         else
@@ -399,7 +399,7 @@ void PrintTrueFullHaplotypes (FILE *fp, vector<TreeNode *> &nodes, TreeNode* tre
             {
                 p = nodes[i];
                 
-                if (p->left==NULL && p->right ==NULL){
+                if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                     if (doUseObservedCellName == YES)
                         temp=p->observedCellName;
                     else
@@ -422,7 +422,7 @@ void PrintTrueFullHaplotypes (FILE *fp, vector<TreeNode *> &nodes, TreeNode* tre
                 p = nodes[i];
                 if (p !=NULL){
                     
-                    if (p->left==NULL && p->right ==NULL){
+                    if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                         if (doUseObservedCellName == YES)
                             temp=p->observedCellName;
                         else

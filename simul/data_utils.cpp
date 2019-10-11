@@ -454,14 +454,14 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 }
                 programOptions.sequencingError= argumentDouble;
                 break;
-            case 'S':
-                if (fscanf(stdin, "%f", &argument) !=1 || argument < 0 || argument > 1)
-                {
-                    fprintf (stderr, "PARAMETER ERROR: Bad alternative  do simulated data or not (%d)\n\n", (int) argument);
-                    PrintUsage();
-                }
-                programOptions.doSimulateData= (int)argument;
-                break;
+//            case 'S':
+//                if (fscanf(stdin, "%f", &argument) !=1 || argument < 0 || argument > 1)
+//                {
+//                    fprintf (stderr, "PARAMETER ERROR: Bad alternative  do simulated data or not (%d)\n\n", (int) argument);
+//                    PrintUsage();
+//                }
+//                programOptions.doSimulateData= (int)argument;
+//                break;
             case 'K':
                 ch = fgetc(stdin);
                 if (isspace(ch))
@@ -904,7 +904,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         /*************** output files *************/
         newickString2=NULL;
         newickString2 = toNewickString2 ( root, programOptions.mutationRate,     programOptions.doUseObservedCellNames);
-       // printf("\n newick = %s  \n", newickString2);
+        printf("\n newick = %s  \n", newickString2);
       
         if (programOptions.doPrintTrees == YES)
         {
@@ -1254,6 +1254,7 @@ void AssignCurrentSequencesToPopulation(vector<Population *> &populations, vecto
                 p->indexCurrentClone = currentPopIndex;
                 p->effectPopSize= pop->effectPopSize;
                 p->orderCurrentClone = pop->order;
+                p->isLeaf = YES;
                 
                 if (programOptions.doUseObservedCellNames)
                     strcpy(p->observedCellName, ObservedCellNames[indexFirstObservedCellName + pop->numActiveGametes ]);
@@ -1338,8 +1339,11 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             ChooseRandomIndividual(&firstInd, numClones, popI,  &secondInd, seed, choosePairIndividuals);
             
             newInd = nextAvailable;
-            if (noisy > 1)
-                fprintf (stderr, "Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
+            //if (noisy > 1)
+                fprintf (stderr, "\n Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
+            
+            
+     
             /*  set pointers between nodes */
             p = nodes[popI->idsActiveGametes[firstInd]];
             q = nodes[popI->idsActiveGametes[secondInd]];
@@ -1370,8 +1374,12 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             popI->idsActiveGametes[secondInd] = popI->idsActiveGametes[popI->numActiveGametes - 1];;
             numActiveGametes = numActiveGametes - 1; /* less 1 active node */
             
+            
+            
+            
+            
             //update list ids nodes
-            popI->idsGametes[popI->numGametes] = newInd;
+           // popI->idsGametes[popI->numGametes] = newInd;
             popI->numGametes = popI->numGametes +1;
             
             nextAvailable=nextAvailable+1; /* 1 node more is available */
@@ -1381,6 +1389,11 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
                                                                   has 1 less node */
             
             popI->numCompletedCoalescences= popI->numCompletedCoalescences+1;
+            
+            fprintf (stderr, "\n pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
+            
+            for(int i=0; i < popI->idsActiveGametes.size();i++)
+                fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
             /* memory for number of nodes */
             if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
             {
@@ -1458,7 +1471,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
                     // do not do anything with this node because it is a tip
                     //fprintf (stderr, "\n * do not do anything with this node because it is a tip");
                 }
-                else if (p->left != NULL && p->right == NULL && p->anc1 != NULL)
+                else if (p->left != NULL && p->right == NULL && p->anc1 != NULL )
                 {
                     // this is a superflous node and can be removed(this superfluos nodes are the MRCA nodes of the demes
                     foundSuperflousNode = YES;
@@ -1484,7 +1497,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
                     
                     //fprintf (stderr, "\n - this is a superflous node and can be removed (1)");
                 }
-                else if (p->left == NULL && p->right != NULL && p->anc1 != NULL)
+                else if (p->left == NULL && p->right != NULL && p->anc1 != NULL )
                 {
                     // this is a superflous node and can be removed
                     foundSuperflousNode = YES;
@@ -1617,6 +1630,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             int transformingBranchLength=1.001;
             // healthyRoot->time = p->time * transformingBranchLength ;
             healthyRoot->timePUnits = currentTime * healthyRoot->effectPopSize;
+            
             p->length = (p->anc1->timePUnits- p->timePUnits);
             //*mutationRate;
             p->lengthModelUnits = (p->anc1->time- p->time);
@@ -2123,7 +2137,7 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &population
         p = new TreeNode();
         nodes.push_back(p);
     }
-    AssignCurrentSequencesToPopulation(populations, nodes, programOptions, numClones, numNodes, programOptions.noisy, programOptions.TotalNumSequences, numActiveGametes,  nextAvailable,
+     AssignCurrentSequencesToPopulation(populations, nodes, programOptions, numClones, numNodes, programOptions.noisy, programOptions.TotalNumSequences, numActiveGametes,  nextAvailable,
                                        labelNodes, NULL, NO);
     Population *currentPop;
     Population *fatherPop;
@@ -2253,6 +2267,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                 else
                 {
                     ThisTimeCA_V2 = timeNextMigration + 1.0; // it reached a "provisional" MRCA
+                    fprintf (stderr, "\n Only 1 active gamete and %d true migrations out of %d true migrations \n", indexNextMigration, numMigrations - 1);
                 }
                 if ( ThisTimeCA_V2 < timeNextMigration)
                 {
@@ -2291,18 +2306,17 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                         }
                         if (programOptions.noisy == 4)
                         {fprintf (stderr, "* Migration *\n");}
-                        newInd = nextAvailable;
+                       // newInd = nextAvailable;
                         
-                        r = nodes[newInd];   /* new ancestor */
-                        r->index = nextAvailable;
-                        r->label = labelNodes;
-                        labelNodes = labelNodes+1;
+                       // r = nodes[newInd];   /* new ancestor */
+                      //  r->index = nextAvailable;
+                       // r->label = labelNodes;
+                       // labelNodes = labelNodes+1;
                         
-                        r->indexCurrentClone = popI->index;
-                        r->indexCurrentClone = popI->index;
-                        r->orderCurrentClone = popI->order;
-                        r->nodeClass = 4;
-                        
+                       // r->indexCurrentClone = popI->index;
+                       
+                       // r->orderCurrentClone = popI->order;
+                        //r->nodeClass = 4;
                         
                         //    p = *nodes + MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration]; // root of younger clone
                         //incommingPop = *((popI->immigrantsPopOrderedModelTime) + indexNextMigration );
@@ -2311,10 +2325,14 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
 //                            fprintf (stderr, "\nError. The incoming population to  poulation %d is empty \n", popI->index);
 //                            exit (-1);
 //                        }
+                        
                         incomingPop = popI->immigrantsPopOrderedByModelTime[indexNextMigration].second;
 
                         //r->indexOldClone = incommingPop->index;
                         p = nodes[incomingPop->nodeIdAncestorMRCA];
+                        
+                        printf( "\n The incoming population %d to  population %d with node %d and time %lf", incomingPop->order, popI->order, p->index, p->timePUnits );
+                        
                         //p = incomingPop->MRCA;
                         //p = *nodes + (incommingPop->nodeIdAncesterMRCA); // root of younger clone
                         indexNextMigration = indexNextMigration + 1;
@@ -2322,32 +2340,37 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                         p->indexOldClone = incomingPop->index;
                         p->orderCurrentClone = popI->order;
                         // link the nodes
-                        r->left = p;
+                       // r->left = p;
 
-                        r->right = NULL;
+                       // r->right = NULL;
                         //choosePairIndividuals = NO;
                         
                         //ChooseRandomIndividual(&firstInd, numClones, popI,  &secondInd, seed, choosePairIndividuals);
                         //q=*nodes + firstInd;
                         //r->right = q;//choose another random living individual of the population
                         
-                        p->anc1 = r;
+                        //p->anc1 = r;
                         //q->anc1 = r;
                         
                         //connectNodes(p, NULL, r);
                         //p->time = *currentTime;
                         // p->timePUnits = *currentTime * (popI->effectPopSize);
                         
-                        r->time = currentTime;// this is equal to the time of the migration
-                        r->timePUnits = currentTime * (popI->effectPopSize);
-                        nextAvailable=nextAvailable+1; /* 1 node more is available */
+                        //r->time = currentTime;// this is equal to the time of the migration
+                        //r->timePUnits = currentTime * (popI->effectPopSize);
+                       // nextAvailable=nextAvailable+1; /* 1 node more is available */
                         
                         k = p->indexCurrentClone;
                         incomingPop->numActiveGametes = incomingPop->numActiveGametes - 1; /* now the other clone has 1 less node */
                         // remove node from old clone in list of active gametes and add the new node of the current clone
-                        //popI->idsActiveGametes[popI->numActiveGametes]=r->index;//adding the superfluos node
-                        popI->idsActiveGametes[popI->numActiveGametes]=p->index;//adding the superfluos node
+                      // popI->idsActiveGametes[popI->numActiveGametes]=r->index;//adding the superfluos node
+                      popI->idsActiveGametes[popI->numActiveGametes]=p->index;//adding the superfluos node
                         popI->numActiveGametes = popI->numActiveGametes + 1; /* now this clone has 1 more node */
+                        
+                        fprintf (stderr, "\n After inmigration. pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
+                        
+                        for(int i=0; i < popI->idsActiveGametes.size();i++)
+                            fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
                         //                if (noisy > 1)
                         //                    fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, popI->index, incommingPop->nodeIdAncesterMRCA, k);
                         //fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, ThisCloneNumber, MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration], k);
@@ -2449,6 +2472,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                             r->indexOldClone = r->indexCurrentClone = popI->index;
                             r->orderCurrentClone = popI->order;
                             popI->MRCA= r;
+                            fprintf (stderr, "\n origin of the oldest population  %d", popI->nodeIdAncestorMRCA);
                         }
                     }
                 }
@@ -2857,7 +2881,7 @@ void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptio
     programOptions.doPrintAncestors = NO;          /* whether to print data for ancestral cells */
     programOptions.doSimulateReadCounts = NO;      /* do not produce reads by default */
     programOptions.doPrintCATG = NO;                /* whether to print read counts for SNVs in CATG format*/
-    programOptions.doSimulateData = NO;            /* whether to simulate any data or do inference from real data */
+    programOptions.doSimulateData = YES;            /* whether to simulate any data or do inference from real data */
     programOptions.doPrintSeparateReplicates = YES; /* whether to put every replica in its own file */
     
     programOptions.doPrintIUPAChaplotypes = YES;    /* whether to print IUPAC halotypes */

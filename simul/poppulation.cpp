@@ -323,6 +323,7 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
         exit (-1);
     }
     int updatedNumIncomingMigrations = PopFather->numIncomingMigrations;
+     int lengthMigrationsArray = (int)(PopFather->order) + 1;
     // printf ( "\n lengthMigrationsArray= %d \n", lengthMigrationsArray );
 
     double updatedMigrationTime = (PopChild->timeOriginSTD) * (PopChild->effectPopSize) / (PopFather->effectPopSize);
@@ -332,7 +333,12 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
         PopFather->immigrantsPopOrderedByModelTime.push_back(make_pair(updatedMigrationTime, PopChild));
     }
 
-    sort(PopFather->immigrantsPopOrderedByModelTime.begin(), PopFather->immigrantsPopOrderedByModelTime.end(), comparePopulationsPairByTimeOrigin);
+      sort(PopFather->immigrantsPopOrderedByModelTime.begin(), PopFather->immigrantsPopOrderedByModelTime.end(), comparePopulationsPairByTimeOrigin);
+ 
+     printf("\n pop order  %d choose pop father of order %d \n", PopChild->order, PopFather->order);
+    for (int i = 0; i < PopFather->immigrantsPopOrderedByModelTime.size(); ++i)
+        printf("\n ordered migrations: time : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
+   
 
     //  fprintf (stderr ,"\n updatedNumIncomingMigrations %d \n",PopFather->numIncomingMigrations);
     //PopFather->immigrantsPopOrderedModelTime[j-1] = PopChild;
@@ -345,6 +351,8 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
 
 bool Population::comparePopulationsPairByTimeOrigin(const pair<double, Population *> s1, const pair<double, Population *> s2)
 {
+    //printf("\n s1: %lf ", s1.first);
+    // printf("\n s2: %lf \n", s2.first);
     return (s1.first < s2.first);
 }
 

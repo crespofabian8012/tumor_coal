@@ -9,6 +9,29 @@
 
 #include "utils.hpp"
 
+/***************************** PrintUsage *******************************/
+/* Prints a short description of program usage */
+void PrintUsage()
+{
+    fprintf (stderr, "\n\nUsage: %s%s [-n# -x# -c# (# # # # # #) -u# -o# -ttrees.tre -ktimes.txt -## -y# -? -h]", PROGRAM_NAME, VERSION_NUMBER);
+    fprintf (stderr, "\n-n: number of replicates (e.g. -n1000)");
+    fprintf (stderr, "\n-x: haploid/diploid (1 for haploid, 2 for diploid) (e.g. -x2)");
+    fprintf (stderr, "\n-c: number of clones; for each clone: ID number, sample size, population size, birth rate, death rate, time to origin (e.g. -c5\n\t1 4 70000 0.3 0.1 56\n\t2 5 60000 0.4 0.3 110\n\t3 5 95000 0.4 0.3 117\n\t4 4 15000 0.5 0.4 95\n\t5 3 44000 0.3 0.1 53)");
+    fprintf (stderr, "\n-u: mutation rate (e.g. -u9.1e-6)");
+    fprintf (stderr, "\n-o: branch length to the outgroup (root-outgroup) (e.g. -o0.0325) (default is no outgroup)");
+    
+    /* outputs */
+    fprintf (stderr, "\n-t: tree file name (e.g. -ttrees.tre)");
+    fprintf (stderr, "\n-k: times file name (e.g. -ktimes.txt)");
+    
+    /* other settings */
+    fprintf (stderr, "\n-#: seed (e.g. -#37864287)");
+    fprintf (stderr, "\n-y: noisy (amount of information printed on the screen) (e.g. -y2)");
+    fprintf (stderr, "\n-? -h: Print help\n");
+    
+    exit(-1);
+}
+
 /**************** PrintTrees ***************/
 /*  Print unrooted trees to treefile in Newick format */
 void PrintTrees(int replicate, TreeNode *treeRootInit,   FILE  *fpTrees, double mutationRate, int doUseObservedCellNames)

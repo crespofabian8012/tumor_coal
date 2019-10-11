@@ -1,5 +1,5 @@
 # code relating to tree structured stick breaking process
-include_directories(/usr/local/include/)
+include_directories(/usr/local/include/ ${CMAKE_SOURCE_DIR}/inference/)
 
 file( GLOB SRCS *.cpp *.hpp *.c *.h)
 add_executable(simul ${SRCS}) # create the executable file

@@ -10,13 +10,18 @@
 
 #include <stdio.h>
 #include "data_utils.hpp"
-#include "Chain.hpp"
+#include "chain.hpp"
 #include "Population.hpp"
+
 #include "libpll/pll_optimize.h"
 #include "libpll/pll_tree.h"
 #include "libpll/pllmod_algorithm.h"
+#include "pllmod_common.h"
+#include "libpll/pll.h"
+#include "libpll/pllmod_util.h"
+#include "libpll/pll_msa.h"
 #include "utils.hpp"
-#include "definitions.h"
+#include "definitions.hpp"
 class chain{
 public:
     int chainNumber;
@@ -40,7 +45,7 @@ public:
     double seqErrorRate;
     double dropoutRate;
     double oldmutationRate;
-    population **populations;
+    Population **Populations;
     
     double *proportionsVector;
     double *oldproportionsVector;
@@ -62,10 +67,10 @@ public:
           double dropoutRate
           );
     
-    void MakeCoalescenceEvent(population *population,pll_unode_t **nodes, int numClones, long int* seed, int noisy, int *numActiveGametes,   int* nextAvailable,
+    void MakeCoalescenceEvent(Population *Population,pll_unode_t **nodes, int numClones, long int* seed, int noisy, int *numActiveGametes,   int* nextAvailable,
                               int*labelNodes, double *currentTime, int *numNodes);
     
-    void SimulatePopulation(population *population, ProgramOptions *programOptions,
+    void SimulatePopulation(Population *Population, ProgramOptions *programOptions,
                             long int *seed,
                             int *numNodes,
                             int numClones,
@@ -87,7 +92,7 @@ public:
     
     int setIntitialTree(char * NewickString);
 
-    void BuildTree(population *olderPopulation, long int *seed,
+    void BuildTree(Population *olderPopulation, long int *seed,
                           ProgramOptions *programOptions,
                           pll_unode_t    **nodes,
                           pll_unode_t   **treeTips,
@@ -113,7 +118,7 @@ public:
                                      int *sampleSizes
                               ) ;
     
-    population* ChooseFatherPopulation( int numClones, population  *PopChild,  long int *seed, int noisy);
+    Population* ChooseFatherPopulation( int numClones, Population  *PopChild,  long int *seed, int noisy);
     
     void AssignSequencesToPopulations( ProgramOptions* programOptions,
                                              int numNodes, int noisy,  int TotalNumSequences, int *numActiveGametes, int* nextAvailable,

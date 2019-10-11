@@ -6,34 +6,16 @@
 //
 
 #include "utils.hpp"
-#include "data_utils.hpp"
-#include "definitions.h"
-#include "kseq.h"
-#include <zlib.h>
+
 #include <unistd.h>
-#include "Population.hpp"
-#include "Chain.hpp"
-#include "libpll/pll_optimize.h"
-#include "libpll/pll_tree.h"
-#include "libpll/pllmod_algorithm.h"
-#include "libpll/pll_msa.h"
-#include "libpll/pllmod_common.h"
 
-
-#include <stdarg.h>
-#include <search.h>
-#include <time.h>
-
-#define GT_MODEL "GTGTR4"
-//#define GT_MODEL "GTJC"
-#define RATE_CATS 1
-#define BRLEN_MIN 1e-6
-#define BRLEN_MAX 1e+2
+#include "kseq.h"
+#include "output_functions.hpp"
 KSEQ_INIT(int, read);
 
 /************************ ReadParametersFromFastaFile ***********************/
 /*  ReadParametersFromFastaFile */
-void ReadParametersFromFastaFile(char *fileName, ProgramOptions *programOptions){
+void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions){
     //read fasta
     FILE *fastaFile;
     kseq_t *seq;
@@ -46,7 +28,7 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions *programOptions)
     int index,i;
     int max_length=0.0;
     int numberSeq;
-  
+    
     
     if ((fastaFile = freopen(fileName, "r", stdin)) != NULL)
     {
@@ -64,15 +46,15 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions *programOptions)
             }
         }
         //*numSites=max_length;
-        programOptions->numSites=max_length;
+        programOptions.numSites=max_length;
         if (numberSeq >=1){
             // *numCells =numberSeq;//not counting the healthy cell
-            programOptions->numCells=numberSeq;
+            programOptions.numCells=numberSeq;
         }
         else{
             //   *numCells =0;
-            programOptions->numCells=numberSeq;
-            programOptions->TotalNumSequences=numberSeq;
+            programOptions.numCells=numberSeq;
+            programOptions.TotalNumSequences=numberSeq;
         }
         kseq_destroy(seq);
         fclose(fastaFile);
@@ -86,7 +68,7 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions *programOptions)
 }
 /************************ ReadFastaFile ***********************/
 /*  ReadFastaFile */
-void ReadFastaFile(char *fileName, int** ObservedData,  char **ObservedCellNames, ProgramOptions *programOptions){
+void ReadFastaFile(char *fileName, int** ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions){
     FILE *fastaFile;
     kseq_t *seq;
     int l1;
@@ -120,7 +102,7 @@ void ReadFastaFile(char *fileName, int** ObservedData,  char **ObservedCellNames
             // for ( t= currentSeq; *t != '\0'; t++) {
             for ( index= 0; index < l1; index++) {
                 t= currentSeq+index;
-                if (programOptions->doUseGenotypes == NO) // use sequences
+                if (programOptions.doUseGenotypes == NO) // use sequences
                     ObservedData[current][index]= WhichNucChar(*t);
                 else // use genotypypes
                     ObservedData[current][index]= WhichGenotypeChar(*t);
@@ -142,698 +124,367 @@ void ReadFastaFile(char *fileName, int** ObservedData,  char **ObservedCellNames
         fclose(fastaFile);
     }
 }
-/************************ LogConditionalLikelihoodTree ***********************/
-/*  LogConditionalLikelihoodTree */
-double LogConditionalLikelihoodTree(pll_unode_t  *tree, pll_unode_t *nodes, population **populations, int numClones)
-{
-    population* popI;
-    population* popJ;
-    population* fatherPop;
-    double product=0;
-    int i, j;
-    double temp;
-    for ( i = 0; i < numClones; i++)
-    {
-        popI=*(populations + i );
-        product = product + log( DensityTime(popI->delta, popI->timeOriginSTD));
-    }
-    for ( j = 0; j < numClones - 1; j++)
-    {
-        popJ = *(populations + j );
-        product = product + log( popJ->popSize);
-        fatherPop = popJ -> FatherPop;
-        temp=popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize;
-        temp=population::CalculateH(popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize, fatherPop->timeOriginSTD, fatherPop->delta);
-        product = product  + log( temp);
-    }
-    //for ( i = 0; i < numClones; i++)
-    //  {
-    //     popI=*(populations + i );
-    product = product + LogDensityCoalescentTimesForPopulation(tree, nodes, populations, numClones);
-    //}
-    return product;
-}
-/************************ LogDensityCoalescentTimesForPopulation ***********************/
-/*  LogDensityCoalescentTimesForPopulation */
-double LogDensityCoalescentTimesForPopulation(pll_unode_t  *tree, pll_unode_t *nodes,  population **populations, int numClones)
-{
-    double result =0;
-    int i, k;
-    population *popI;
-    int numberLeftCoalescences;
-    int numberLeftMigrations;
-    int numberAliveCells;
-    int currentCoalescentEvent=0;
-    int currentMigrationEvent=0;
-    double temp;
-    for ( i = 0; i < numClones; i++){
-        popI = *(populations + i );
-        currentCoalescentEvent=0;
-        currentMigrationEvent=0;
-        numberAliveCells= popI->sampleSize;
-        // numberLeftCoalescences =  popI->numCompletedCoalescences; //in the numCompletedCoalescences we are considering also the migrations
-        numberLeftCoalescences =  popI->numCompletedCoalescences - (popI->numIncomingMigrations-1);
-        numberLeftMigrations = popI->numIncomingMigrations-1;
-        //we are not counting time of origin as a migration
-        if (numberLeftCoalescences ==0)
-            return  result;
-        while(numberLeftMigrations > 0)
-        {
-            while(popI->CoalescentEventTimes[currentCoalescentEvent] < popI->migrationTimes[currentMigrationEvent] && numberAliveCells > 1)
-            {
-                temp=log(numberAliveCells * (numberAliveCells-1)/2);
-                result= result + temp;
-                temp = log(1/population::CalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta));
-                result= result + temp;
-                temp =  (numberAliveCells/2)* (numberAliveCells-1)*(population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent+1], popI->timeOriginSTD, popI->delta));
-                result= result -temp;
-                currentCoalescentEvent++;
-                numberLeftCoalescences--;
-                numberAliveCells--;
-            }
-            //if (numberLeftMigrations > 0 && numberAliveCells > 1)// if there are migrations
-            if (numberLeftMigrations > 0 )// if there are migrations
-            {  temp= LogProbNoCoalescentEventBetweenTimes(popI,popI->CoalescentEventTimes[currentCoalescentEvent],popI-> migrationTimes[currentMigrationEvent], numberAliveCells );
-                result= result+ temp;
-                numberLeftMigrations--;
-                currentMigrationEvent++;
-            }
-        }
-        //here there are only coalescents events left(al least one event)
-        while(numberLeftCoalescences > 0 && numberAliveCells > 1)
-        {   temp = log(numberAliveCells * (numberAliveCells-1)/2);
-            result= result + temp;
-            temp = log(1/population::CalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta));
-            result= result + temp;
-            temp=( numberAliveCells/2)* (numberAliveCells-1)*(population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent+1], popI->timeOriginSTD, popI->delta));
-            result= result -  temp;
-            currentCoalescentEvent++;
-            numberLeftCoalescences--;
-            numberAliveCells--;
-        }
-    }
-    
-    return result;
-}
-double DensityTime(double delta, double u){
-    double term1=delta * exp(-1*delta*u);
-    double term2=1-exp(-1*delta*u);
-    return delta * term1 * exp(-1*term1/term2) /(term2 * term2);
-}
-double LogProbNoCoalescentEventBetweenTimes(population *popI,double from, double to, int numberActiveInd)
-{   int j=numberActiveInd;
-    double result=0.0;
 
-    result=  -1 * j* (j-1)*(population::FmodelTstandard(to,popI->timeOriginSTD, popI->delta)-population::FmodelTstandard(from, popI->timeOriginSTD, popI->delta))/2;
-    return result;
-}
 
-void InitializeChains( chain **chains,  ProgramOptions *programOptions,  MCMCoptions *mcmcOptions,int * sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t * msa, pll_utree_t * initialTree)
-{
-    int chainNumber;
-    chain *currentChain=NULL;
-    double totalTreeLength;
-    int        numCA, numMIG;
-    double      cumNumCA, meanNumCA, cumNumMIG, meanNumMIG, numEventsTot;
-    char *newickString2;
-    for(chainNumber=0; chainNumber< mcmcOptions->numChains;chainNumber++)
-    {
-        
-        chains[chainNumber] = (chain*)malloc(sizeof(chain));
-        
-        chains[chainNumber]->chainNumber = chainNumber;
-        chains[chainNumber]->currentNumberIerations=0;
-        chains[chainNumber]->numClones = programOptions->numClones;
-        chains[chainNumber]->mutationRate =programOptions->mutationRate;
-        chains[chainNumber]->gammaParam=1;
-        chains[chainNumber]->seqErrorRate= programOptions->seqErrorRate;
-        chains[chainNumber]->dropoutRate =programOptions->dropoutRate;
-        if (programOptions->numberClonesKnown)
-        {
-            chains[chainNumber]->numNodes = programOptions->numNodes;
-            
-            
-        }
-        
-        chains[chainNumber]->proportionsVector = (double *) calloc((programOptions->numClones), (long) sizeof(double));
-        if (!(chains[chainNumber]->proportionsVector))
-        {
-            fprintf (stderr, "Could not allocate proportions vector (%lu bytes)\n", (programOptions->numClones ) * (long) sizeof(double));
-            exit (-1);
-        }
-        chains[chainNumber]->oldproportionsVector = (double *) calloc((programOptions->numClones), (long) sizeof(double));
-        if (!(chains[chainNumber]->oldproportionsVector))
-        {
-            fprintf (stderr, "Could not allocate proportions vector (%lu bytes)\n", (programOptions->numClones ) * (long) sizeof(double));
-            exit (-1);
-        }
-        chains[chainNumber]->populations = (population**)malloc (sizeof(struct Population*)  * programOptions->numClones);
-        if (!(chains[chainNumber]->populations))
-        {
-            fprintf (stderr, "Could not allocate populations (%lu bytes)\n", (programOptions->numClones)  * (long) sizeof(Population*));
-            exit (1);
-        }
-        
-        
-        
-        chains[chainNumber]->treeTips =(pll_unode_t**)  malloc (programOptions->TotalNumSequences* sizeof(pll_unode_t*));
-        if (!(chains[chainNumber]->treeTips))
-        {
-            fprintf (stderr, "Could not allocate the treeTips array\n");
-            exit (-1);
-        }
-        chains[chainNumber]->oldtreeTips =(pll_unode_t**) malloc (programOptions->TotalNumSequences* sizeof(pll_unode_t*));
-        if (!(chains[chainNumber]->oldtreeTips))
-        {
-            fprintf (stderr, "Could not allocate the treeTips array\n");
-            exit (-1);
-        }
-        chains[chainNumber]->InitChainPopulations( programOptions->noisy, programOptions->TotalNumSequences );
-       chains[chainNumber]->FillChainPopulationsFromPriors( programOptions,mcmcOptions, sampleSizes, seed );
-        
-        if (programOptions-> doUseFixedTree)
-            chains[chainNumber]->initialTree=initialTree;
-        else
-        {
-                                 
-            chains[chainNumber]->MakeCoalescenceTree (seed,
-                                 &(chains[chainNumber]->numNodes),
-                                 chains[chainNumber]->numClones,
-                                 programOptions,
-                                 cumNumCA,
-                                 meanNumCA,
-                                 cumNumMIG,
-                                 meanNumMIG,
-                                 &numMIG,
-                                 &numCA,
-                                 &numEventsTot,
-                                 ObservedCellNames, sampleSizes
-                                 ) ;
-        }
-        //        cumNumCA += numCA;
-        //        cumNumMIG += numMIG;
-        //        countTMRCA = treeRootInit[0]->timePUnits;
-        //
-        //        varTimeGMRCA[currentIteration] = countTMRCA;
-        
-        // totalTreeLength = SumBranches(chains[chainNumber]->root, chains[chainNumber]->mutationRate);
-        //        cumNumMUperTree=0;
-        
-        newickString2=NULL;
-//        newickString2 = toNewickString2 ( chains[chainNumber]->root, chains[chainNumber]->mutationRate,     programOptions->doUseObservedCellNames);
-//        printf("\n newick = %s  \n", newickString2);
-        
-        
-        chains[chainNumber]->currentlogConditionalLikelihoodTree= LogConditionalLikelihoodTree(chains[chainNumber]->root, chains[chainNumber]->nodes, chains[chainNumber]->populations,  chains[chainNumber]->numClones);
-        printf ( "Initial likelihood of the tree of chain %d is:  %lf \n",chainNumber, chains[chainNumber]->currentlogConditionalLikelihoodTree );
-        
-        chains[chainNumber]->currentlogConditionalLikelihoodSequences= LogConditionalLikelihoodSequences( msa,  newickString2, programOptions,  chains[chainNumber]->seqErrorRate,
-                                                                    chains[chainNumber]->dropoutRate);
-        
-        fprintf (stderr, "Initial likelihood of the sequences of chain %d  is = %lf  \n", chainNumber,chains[chainNumber]->currentlogConditionalLikelihoodSequences );
-        
-        free(newickString2);
-        newickString2=NULL;
-        
-    }
-}
-double  LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions *programOptions, double seqError,double dropoutError)
-{
-    
-    FILE    *outputShell;
-    char script[80];
-    char buf[1000];
-    
-    //pll_state_t pll_map_gt10_2[256];
-    if (NewickString == NULL)
-    {
-        fprintf (stderr, "\nERROR: The newick representation of the tree cannot be empty\n\n");
-        PrintUsage();
-        return 0;
-    }
-    
-    unsigned int i;
-    unsigned int tip_nodes_count, inner_nodes_count, nodes_count, branch_count;
-    pll_partition_t * partition;
-  
-    pll_utree_t *unrootedTree = pll_utree_parse_newick_string_unroot(NewickString);
-    
-    /* compute node count information */
-    tip_nodes_count = unrootedTree->tip_count;
-    inner_nodes_count = unrootedTree->inner_count;
-    nodes_count = inner_nodes_count + tip_nodes_count;
-    branch_count = unrootedTree->edge_count;
-    
-    pllmod_treeinfo_t * treeinfo = pllmod_treeinfo_create(unrootedTree->vroot,
-                                                          tip_nodes_count,
-                                                          1,
-                                                          PLLMOD_COMMON_BRLEN_LINKED);
-    pll_unode_t ** tipnodes = unrootedTree->nodes;
-    
-    /* create a libc hash table of size tip_nodes_count */
-    hcreate(tip_nodes_count);
-    
-    /* populate a libc hash table with tree tip labels */
-    unsigned int * data = (unsigned int *)malloc(tip_nodes_count *
-                                                 sizeof(unsigned int));
-    char *label;
-    for (i = 0; i < tip_nodes_count; ++i)
-    {
-        data[i] = tipnodes[i]->clv_index;
-        ENTRY entry;
-        label= tipnodes[i]->label;
-        entry.key = tipnodes[i]->label;
-        entry.data = (void *)(data+i);
-        hsearch(entry, ENTER);
-    }
-    
-    
-    if (msa !=NULL)
-        printf("Original sequence (alignment) length : %d\n", msa->length);
-    else{
-        fprintf (stderr, "\nERROR: The multiple sequence alignment is empty\n\n");
-        PrintUsage();
-        return 0;
-    }
-    
-    
-    
-    pllmod_subst_model_t * model = pllmod_util_model_info_genotype(GT_MODEL);
-    
-    /* create the PLL partition instance
-     
-     tip_nodes_count : the number of tip sequences we want to have
-     inner_nodes_count : the number of CLV buffers to be allocated for inner nodes
-     model->states : the number of states that our data have
-     1 : number of different substitution models (or eigen decomposition)
-     to use concurrently (i.e. 4 for LG4)
-     branch_count: number of probability matrices to be allocated
-     RATE_CATS : number of rate categories we will use
-     inner_nodes_count : how many scale buffers to use
-     PLL_ATTRIB_ARCH_AVX : list of flags for hardware acceleration
-     */
-    partition = pll_partition_create(tip_nodes_count,
-                                     inner_nodes_count,
-                                     model->states,
-                                     (unsigned int)(msa->length),
-                                     1,
-                                     branch_count,
-                                     RATE_CATS,
-                                     inner_nodes_count,
-                                     PLL_ATTRIB_ARCH_AVX);
-    
-    set_partition_tips( partition, msa, programOptions,  seqError, dropoutError);
-    
-    treeinfo = pllmod_treeinfo_create(unrootedTree->vroot,
-                                      tip_nodes_count,
-                                      1,
-                                      PLLMOD_COMMON_BRLEN_LINKED);
-    int params_to_optimize = 0;
-    unsigned int params_indices[RATE_CATS] = {0};
-    
-    int retval = pllmod_treeinfo_init_partition(treeinfo,
-                                                0,
-                                                partition,
-                                                params_to_optimize,
-                                                PLL_GAMMA_RATES_MEAN,
-                                                1.0, /* alpha*/
-                                                params_indices, /* param_indices */
-                                                model->rate_sym /* subst matrix symmetries*/
-                                                );
-    
-    double * empirical_frequencies = pllmod_msa_empirical_frequencies(partition);
-    
-    unsigned int * weight = pll_compress_site_patterns(msa->sequence,
-                                                       pll_map_gt10,
-                                                       tip_nodes_count,
-                                                       &(msa->length));
-    printf("Number of unique site patterns: %d\n\n", msa->length);
-    
-    /* initialize the array of base frequencies  AA CC GG TT AC/CA AG/GA AT/TA CG/GC CT/TC GT/TG  */
-    double user_freqs[10] = { 0.254504, 0.157238, 0.073667, 0.287452, 0.027336,
-        0.058670, 0.041628, 0.024572, 0.064522, 0.010412 };
-    
-    //computeGenotypesFreq(user_freqs,  msa);
-    
-    
-    /* substitution rates: for GTR4 model those are 6 "regular" DNA susbt. rates + 1 rate
-     * for "unlikely" double substitutions (eg A/A -> C/T) */
-    double unique_subst_rates[7] = { 0.001000, 0.101223, 0.001000, 0.001000, 1.000000,
-        0.001000, 0.447050 };
-    
-    /* get full above-diagonal half-matrix */
-    double * user_subst_rates = expand_uniq_rates(model->states, unique_subst_rates,
-                                                  model->rate_sym);
-    
-    double rate_cats[RATE_CATS] = {0};
-    
-    /* compute the discretized category rates from a gamma distribution
-     with alpha shape 1 and store them in rate_cats  */
-    pll_compute_gamma_cats(1, RATE_CATS, rate_cats, PLL_GAMMA_RATES_MEAN);
-    
-    /* set frequencies at model with index 0 (we currently have only one model) */
-    //pll_set_frequencies(partition, 0, model->freqs ? model->freqs : user_freqs);
-    pll_set_frequencies(partition, 0, model->freqs ? model->freqs : empirical_frequencies);
-    
-    /* set substitution parameters at model with index 0 */
-    pll_set_subst_params(partition, 0, model->rates ? model->rates : user_subst_rates);
-    free(user_subst_rates);
-    
-    /* set rate categories */
-    pll_set_category_rates(partition, rate_cats);
-    
-    /* set pattern weights and free the weights array */
-    pll_set_pattern_weights(partition, weight);
-    free(weight);
-    
-    //set_partition_tips(chain, partition, msa, programOptions);
-    
-    // pll_msa_destroy(msa);
-    
-    /* destroy hash table */
-    hdestroy();
-    /* we no longer need these two arrays (keys and values of hash table... */
-    free(data);
-    
-    if (!retval)
-        fprintf(stderr, "Error initializing partition!");
-    /* Compute initial LH of the starting tree */
-    double loglh = pllmod_treeinfo_compute_loglh(treeinfo, 1);
-    pllmod_treeinfo_destroy(treeinfo);
-    double * clv ;
-    int s, clv_index, j, k;
-    int scaler_index = PLL_SCALE_BUFFER_NONE;
-    unsigned int * scaler = (scaler_index == PLL_SCALE_BUFFER_NONE) ?
-    NULL : partition->scale_buffer[scaler_index];
-    unsigned int states = partition->states;
-    unsigned int states_padded = partition->states_padded;
-    unsigned int rates = partition->rate_cats;
-    double prob;
-    unsigned int *site_id = 0;
-    int index;
-    unsigned int float_precision;
+/********************* WhichIUPAC ************************/
+/* Returns the IUPAC representation of the genotype */
+/*
+ UPAC nucleotide code    Base
+ A    Adenine
+ C    Cytosine
+ G    Guanine
+ T (or U)    Thymine (or Uracil)
+ R    A or G
+ Y    C or T
+ S    G or C
+ W    A or T
+ K    G or T
+ M    A or C
+ B    C or G or T
+ D    A or G or T
+ H    A or C or T
+ V    A or C or G
+ N    unknown state
+ . or -    gap
  
-    pll_partition_destroy(partition);
-    /* we will no longer need the tree structure */
-    //pll_utree_destroy(unrootedTree, NULL);
-    destroyTree(unrootedTree, NULL);
-    pllmod_util_model_destroy(model);
-  
-    return loglh;
-}
-void set_partition_tips( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions *programOptions, double seqError, double dropoutError)
+ This is what we do:
+ 
+ A/A => A
+ A/C => M
+ A/G => R
+ A/T => W
+ A/_ => a
+ 
+ C/A => M
+ C/C => C
+ C/G => S
+ C/T => Y
+ C/_ => c
+ 
+ G/A => R
+ G/C => S
+ G/G => G
+ G/T => K
+ G/_ => g
+ 
+ T/A => W
+ T/C => Y
+ T/G => K
+ T/T => T
+ T/_ => t
+ 
+ _/A => a
+ _/C => c
+ _/G => g
+ _/T => t
+ _/_ => -
+ 
+ */
+
+char WhichIUPAC (int allele1, int allele2)
 {
-    //pll_state_t pll_map_gt10_2[256];
-    int states =10;
-    int i, currentState;
-    int from, to;
-    
-    
-    unsigned int state;
-    //double * _freqs;
-    
-    /* find sequences in hash table and link them with the corresponding taxa */
-    for (i = 0; i < msa->count; ++i)
+    if (allele1 == 0)
     {
-        ENTRY query;
-        query.key = msa->label[i];
-        ENTRY * found = NULL;
-        
-        found = hsearch(query,FIND);
-        
-        if (!found)
-            fprintf(stderr,"Sequence with header %s does not appear in the tree", msa->label[i]);
-        
-        unsigned int tip_clv_index = *((unsigned int *)(found->data));
-        
-        if (programOptions->doUseGenotypes == NO)
-        {
-            pll_set_tip_states(partition, tip_clv_index, pll_map_gt10, msa->sequence[i]);
-        }
+        if (allele2 == 0)        //AA
+            return ('A');
+        else if (allele2 == 1)    //AC
+            return ('M');
+        else if (allele2 == 2)    //AG
+            return ('R');
+        else if (allele2 == 3)    //AT
+            return ('W');
+        else if (allele2 == ADO)    //A?
+            return ('a');
+        else if (allele2 == DELETION)    //A–
+            return ('a');
         else
-        {
-            
-            //            for ( currentState = 0; currentState < states; currentState++)
-            //            {
-            //                from=1;
-            //                to=1;
-            set_tipclv1( partition,
-                        tip_clv_index,
-                        pll_map_gt10,
-                        msa->sequence[i],seqError,dropoutError);
-            //                 compute_state_probs( msa->sequence[i],  &(partition->clv[tip_clv_index]),  states, from, to,
-            //                                chain->seqErrorRate,
-            //                                 chain->dropoutRate);
-            //      }
-            
-            //pll_set_tip_clv(partition, tip_clv_index, tipCLV, PLL_FALSE);
-            
-            
-        }
+            return ('N');
     }
-    
-}
-/********************* expand_uniq_rates **********************/
-/* expand_uniq_rates(Function that uses code from genotype.c from pll-modules/examples) */
-double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym)
-{
-    unsigned int i;
-    unsigned int num_rates = states * (states-1) / 2;
-    double * subst_rates =(double *) calloc(num_rates, sizeof(double));
-    for (i = 0; i < num_rates; ++i)
-        subst_rates[i] = rate_sym ? uniq_rates[rate_sym[i]] : uniq_rates[i];
-    return subst_rates;
-}
-int set_tipclv1(pll_partition_t * partition,
-                       unsigned int tip_index,
-                       const pll_state_t * map,
-                       const char * sequence,
-                       double _seq_error_rate,
-                       double _dropout_rate
-                       )
-{
-    pll_state_t c;
-    unsigned int i,j;
-    double * tipclv = partition->clv[tip_index];
-    unsigned int state_id ;
-    
-    pll_repeats_t * repeats = partition->repeats;
-    unsigned int use_repeats = pll_repeats_enabled(partition);
-    unsigned int ids = use_repeats ?
-    repeats->pernode_ids[tip_index] : partition->sites;
-    
-    static const double one_3 = 1. / 3.;
-    static const double one_6 = 1. / 6.;
-    static const double one_8 = 1. / 8.;
-    static const double three_8 = 3. / 8.;
-    static const double one_12 = 1. / 12.;
-    
-    // TODO: move it out of here
-    unsigned int undef_state = (unsigned int) (pow(2, partition->states)) - 1;
-    
-    double sum_lh = 0.;
-    
-    /* iterate through sites */
-    for (i = 0; i < ids; ++i)
+    else if (allele1 == 1)
     {
-        unsigned int index = use_repeats ?
-        repeats->pernode_id_site[tip_index][i] : i;
-        if ((c = map[(int)sequence[index]]) == 0)
-        {
-            pll_errno = PLL_ERROR_TIPDATA_ILLEGALSTATE;
-            snprintf(pll_errmsg, 200, "Illegal state code in tip \"%c\"", sequence[index]);
-            return PLL_FAILURE;
-        }
-        
-        /* decompose basecall into the encoded residues and set the appropriate
-         positions in the tip vector */
-        state_id = __builtin_ctz(c);
-        for (j = 0; j < partition->states; ++j)
-        {
-            if (c == undef_state)
-                tipclv[j] = 1.;
-            else
-            {
-                if (j == state_id)
-                {
-                    /* 0 letters away */
-                    if (HOMO(state_id))
-                        tipclv[j] = 1. - _seq_error_rate + 0.5 * _seq_error_rate * _dropout_rate;
-                    else
-                        tipclv[j] =  (1. - _dropout_rate ) * (1. - _seq_error_rate) + one_12 * _seq_error_rate * _dropout_rate;
-                }
-                else if (mut_dist[state_id][j] == 1)
-                {
-                    /* 1 letter away */
-                    if (HOMO(j))
-                    {
-                        tipclv[j] = one_12 * _seq_error_rate * _dropout_rate +
-                        one_3  * (1. - _dropout_rate) * _seq_error_rate;
-                    }
-                    else
-                    {
-                        if (HOMO(state_id))
-                        {
-                            tipclv[j] = 0.5 * _dropout_rate + one_6 * _seq_error_rate -
-                            three_8 * _seq_error_rate * _dropout_rate;
-                        }
-                        else
-                        {
-                            tipclv[j]= one_6 * _seq_error_rate -
-                            one_8 * _seq_error_rate * _dropout_rate;
-                        }
-                    }
-                }
-                else
-                {
-                    /* 2 letters away */
-                    if (HOMO(state_id))
-                        tipclv[j] = one_12 * _seq_error_rate * _dropout_rate;
-                    else
-                        tipclv[j] = 0.;
-                }
-                sum_lh += tipclv[j];
-            }
-            // tipclv[j] = c & 1;
-            //  c >>= 1;
-        }
-        
-        /* fill in the entries for the other gamma values */
-        tipclv += partition->states_padded;
-        for (j = 0; j < partition->rate_cats - 1; ++j)
-        {
-            memcpy(tipclv, tipclv - partition->states_padded,
-                   partition->states * sizeof(double));
-            tipclv += partition->states_padded;
-        }
+        if (allele2 == 0)        //CA
+            return ('M');
+        else if (allele2 == 1)    //CC
+            return ('C');
+        else if (allele2 == 2)    //CG
+            return ('S');
+        else if (allele2 == 3)    //CT
+            return ('Y');
+        else if (allele2 == ADO)    //C?
+            return ('c');
+        else if (allele2 == DELETION)    //C–
+            return ('c');
+        else
+            return ('N');
     }
-    
-    /* if asc_bias is set, we initialize the additional positions */
-    if (partition->asc_bias_alloc)
+    else if (allele1 == 2)
     {
-        for (i = 0; i < partition->states; ++i)
-        {
-            for (j = 0; j < partition->states; ++j)
-            {
-                tipclv[j] = j==i;
-            }
-            
-            /* fill in the entries for the other gamma values */
-            tipclv += partition->states_padded;
-            for (j = 0; j < partition->rate_cats - 1; ++j)
-            {
-                memcpy(tipclv, tipclv - partition->states_padded,
-                       partition->states * sizeof(double));
-                tipclv += partition->states_padded;
-            }
-        }
+        if (allele2 == 0)        //GA
+            return ('R');
+        else if (allele2 == 1)    //GC
+            return ('S');
+        else if (allele2 == 2)    //GG
+            return ('G');
+        else if (allele2 == 3)    //GT
+            return ('K');
+        else if (allele2 == ADO)    //G?
+            return ('g');
+        else if (allele2 == DELETION)    //G–
+            return ('g');
+        else
+            return ('N');
     }
-    
-    return PLL_SUCCESS;
-}
-/************************ destroyTree ***********************/
-/*  destroyTree */
-void  destroyTree(pll_utree_t * tree, void (*cb_destroy)(void *))
-{
-    
-    unsigned int i;
-    
-    /* deallocate tip nodes */
-    for (i = 0; i < tree->tip_count; ++i)
+    else if (allele1 == 3)
     {
-        dealloc_data(tree->nodes[i], cb_destroy);
-        
-        free(tree->nodes[i]);
+        if (allele2 == 0)        //TA
+            return ('W');
+        else if (allele2 == 1)    //TC
+            return ('Y');
+        else if (allele2 == 2)    //TG
+            return ('K');
+        else if (allele2 == 3)    //TT
+            return ('T');
+        else if (allele2 == ADO)    //T?
+            return ('t');
+        else if (allele2 == DELETION)    //T–
+            return ('t');
+        else
+            return ('N');
     }
-    /* deallocate inner nodes */
-    for (i = tree->tip_count; i < tree->tip_count + tree->inner_count; ++i)
+    else if (allele1 == ADO)
     {
-        pll_unode_t * first = tree->nodes[i];
-        assert(first);
-        if (first->label)
-            free(first->label);
-        
-        pll_unode_t * node = first;
-        do
-        {
-            pll_unode_t * next = node->next;
-            dealloc_data(node, cb_destroy);
-            free(node);
-            node = next;
-        }
-        while(node && node != first);
+        if (allele2 == 0)        //?A
+            return ('a');
+        else if (allele2 == 1)    //?C
+            return ('c');
+        else if (allele2 == 2)    //?G
+            return ('g');
+        else if (allele2 == 3)    //?T
+            return ('t');
+        else if (allele2 == ADO)    //??
+            return ('-');
+        else if (allele2 == DELETION)    //?-
+            return ('-');
+        else
+            return ('N');
     }
-    
-    /* deallocate tree structure */
-    free(tree->nodes);
-    free(tree);
-    
-}
-void dealloc_data(pll_unode_t * node, void (*cb_destroy)(void *))
-{
-    if (node->data)
+    else if (allele1 == DELETION)
     {
-        if (cb_destroy)
-            cb_destroy(node->data);
+        if (allele2 == 0)        //-A
+            return ('a');
+        else if (allele2 == 1)    //-C
+            return ('c');
+        else if (allele2 == 2)    //-G
+            return ('g');
+        else if (allele2 == 3)    //-T
+            return ('t');
+        else if (allele2 == ADO)    //-?
+            return ('-');
+        else if (allele2 == DELETION)    //--
+            return ('-');
+        else
+            return ('N');
     }
+    else
+        return ('N');
 }
 
+/********************* WhichMut ************************/
+/* Returns character representation for binary data */
 
+char WhichMut (int state)
+{
+    if (state == 0)
+        return ('0');
+    else if (state == 1)
+        return ('1');
+    else if (state == ADO)
+        return ('?');
+    else if (state == DELETION)
+        return ('-');
+    else
+        return ('N');
+}
+/********************* WhichConsensusBinary ************************/
+/* Returns a consensus representation of the binary genotype */
+/*
+ 0/0 => 0
+ 0/1 => 1
+ 1/0 => 1
+ 1/1 => 2
+ 
+ 0/_ => 0
+ _/0 => 0
+ 
+ 1/_ => 2
+ _/1 => 2
+ 
+ _/_ => -
+ */
 
-double RandomLogUniform( double from, double to, long int *seed){
-    
-    return(exp(from + RandomUniform(seed)*(to -from)));
-}
-void  RandomDirichlet (double s, int vectorSize, double **outputVector, long int *seed)
-{   int i;
-    double sum=0.0;
-    double current;
-    // *outputVector = malloc(vectorSize * sizeof(double));
-    // if (*outputVector == NULL)
-    //     return;
-    for (i=0; i < vectorSize; i++){
-        current = RandomGamma(s, seed);
-        (*outputVector)[i] = current;
-        //*(*outputVector + i)=current;
-        sum=sum+current;
+char WhichConsensusBinary (int allele1, int allele2)
+{
+    if (allele1 == 0)
+    {
+        if (allele2 == 0)        //00
+            return ('0');
+        else if (allele2 == 1)    //01
+            return ('1');
+        else if (allele2 == ADO)    //0?
+            return ('0');
+        else if (allele2 == DELETION)    //0-
+            return ('0');
+        else
+            return ('N');
     }
-    for (i=0; i < vectorSize; i++){
-        (*outputVector)[i] =  (*outputVector)[i] / sum;
-        // *(*outputVector + i)= *(*outputVector + i)/sum;
+    else if (allele1 == 1)
+    {
+        if (allele2 == 0)        //10
+            return ('1');
+        else if (allele2 == 1)    //11
+            return ('2');
+        else if (allele2 == ADO)    //1?
+            return ('2');
+        else if (allele2 == DELETION)    //0-
+            return ('2');
+        else
+            return ('N');
     }
+    else if (allele1 == ADO)
+    {
+        if (allele2 == 0)        //?0
+            return ('0');
+        else if (allele2 == 1)    //?1
+            return ('2');
+        else if (allele2 == ADO)    //??
+            return ('-');
+        else if (allele2 == DELETION)    //?-
+            return ('-');
+        else
+            return ('N');
+    }
+    else if (allele1 == DELETION)
+    {
+        if (allele2 == 0)        //-0
+            return ('0');
+        else if (allele2 == 1)    //-1
+            return ('2');
+        else if (allele2 == ADO)    //-?
+            return ('-');
+        else if (allele2 == DELETION)    //--
+            return ('-');
+        else
+            return ('N');
+    }
+    else
+        return ('N');
 }
-void InitPopulationSampleSizes(population **populations, int TotalSampleSize, int numClones, double *proportionsVector, long int *seed)
+
+/********************* WhichNuc ************************/
+/* Returns character representation for nucleotides */
+
+char WhichNuc (int nucleotide)
+{
+    if (nucleotide == A)
+        return ('A');
+    else if (nucleotide == C)
+        return ('C');
+    else if (nucleotide == G)
+        return ('G');
+    else if (nucleotide == T)
+        return ('T');
+    else if (nucleotide == ADO)
+        return ('?');
+    else if (nucleotide == DELETION)
+        return ('-');
+    else
+        return ('N');
+}
+
+/************************ CheckMatrixSymmetry **************************/
+/* Checks whether a given matrix is symmetric */
+
+int CheckMatrixSymmetry(double matrix[4][4])
 {
     int i,j;
-    population *popI, *popJ;
-    double rand;
-    double    *cumSum = (double *) calloc((numClones +1), (long) sizeof(double));
-    if (!cumSum)
+    
+    for(i=0; i<4; i++)
+        for(j=0; j<4; j++)
+            if(matrix[i][j] != matrix[j][i])
+                return NO;
+    return YES;
+}
+
+/********************* WhichNucChar ************************/
+/* Returns integer representation for character nucleotudes */
+
+int WhichNucChar (char nucleotide)
+{
+    if (nucleotide == 'A')
+        return (A);
+    else if (nucleotide == 'C')
+        return (C);
+    else if (nucleotide == 'G')
+        return (G);
+    else if (nucleotide == 'T')
+        return (T);
+    else if (nucleotide == '?')
+        return (ADO);
+    else if (nucleotide == '-')
+        return (DELETION);
+    else if (nucleotide == 'N')
+        return (N);
+    else if (nucleotide == 'R')
+        return (R);
+    else
     {
-        fprintf (stderr, "Could not allocate Xvector (%lu bytes)\n", (numClones +1 ) * (long) sizeof(double));
-        exit (-1);
+        fprintf (stderr, "\nERROR in WhichNucChar: nucleotide = %c\n",  nucleotide);
+        exit(-1);
     }
-    cumSum[0]=0.0;
-    for (j = 1; j <= numClones; j++)
+}
+
+/********************* WhichGenotypeChar ************************/
+/* Returns integer representation for character nucleotudes */
+
+int WhichGenotypeChar (char nucleotide)
+{
+    if (nucleotide == 'A')
+        return (AA);
+    else if (nucleotide == 'C')
+        return (CC);
+    else if (nucleotide == 'G')
+        return (GG);
+    else if (nucleotide == 'T')
+        return (TT);
+    else if (nucleotide == '?')
+        return (__);
+    else if (nucleotide == '-')
+        return (__);
+    else if (nucleotide == 'N')
+        return (N);
+    else if (nucleotide == 'R')
+        return (AG);
+    else if (nucleotide == 'M')
+        return (AC);
+    else if (nucleotide == 'W')
+        return (AT);
+    else if (nucleotide == 'S')
+        return (CG);
+    else if (nucleotide == 'Y')
+        return (CT);
+    else if (nucleotide == 'K')
+        return (GT);
+    else if (nucleotide == 'a')
+        return (A_);
+    else if (nucleotide == 'c')
+        return (C_);
+    else if (nucleotide == 'g')
+        return (G_);
+    else if (nucleotide == 't')
+        return (T_);
+    else
     {
-        cumSum[j]=0;
-        cumSum[j]=cumSum[j-1]+proportionsVector[j-1];
-        popJ = *(populations + j - 1);
-        popJ->sampleSize=0;
+        fprintf (stderr, "\nERROR in WhichGenotypeChar: nucleotide = %c\n",  nucleotide);
+        exit(-1);
     }
-    for (i = 0; i < TotalSampleSize; i++)
-    {
-        rand=RandomUniform(seed);
-        for (j = 1; j <= numClones;j ++)
-        {
-            popJ = *(populations + j - 1);
-            if (rand <= cumSum[j] && rand > cumSum[j - 1])
-            {
-                popJ->sampleSize=popJ->sampleSize +1;
-                break;
-            }
-        }
-    }
-    free(cumSum);
-    cumSum=NULL;
 }

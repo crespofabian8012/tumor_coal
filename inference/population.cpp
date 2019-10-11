@@ -5,7 +5,7 @@
 //  Created by Fausto Fabian Crespo Fernandez on 4/10/19.
 //
 
-#include "poppulation.hpp"
+#include "population.hpp"
 #include "definitions.hpp"
 
 using namespace std;

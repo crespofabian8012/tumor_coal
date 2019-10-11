@@ -1,0 +1,109 @@
+[PARAMETERS FILE FOR TumourCoalCC2.0]
+[options and comments within brackets are ignored]
+
+
+[*** GLOBAL SETTINGS ***]
+[simulate data or do inference (mandatory. 1= do simulation, 0 = do inference)]	s1
+[number of replicates (mandatory)]	n10
+
+
+[*** POPULATION GENETICS SETTINGS ***]
+[Haploid - Diploid (0-1) (mandatory)]	x2
+
+[number of clones; clone number, sample size, population size (not effective), birth rate, death rate, time to origin (days, months, years; All clones with 0 = estimated) (mandatory)]
+[c1
+	1 100 1000  0.1  0.0999 50000]
+[c1
+	1 20 1000  1  0.99999999 10000000]
+[c1
+	1 20 1000 0.1 0.0999 1000000]
+[c1
+	1 20 1000 1 0.09999999 10000000]
+[c2
+	1 99 1000 0.1 0.0999 30000
+	2 99 1000 0.1 0.09991 10000]
+[c2
+	1 2 1000 0.1 0.0999  30000
+	2 3 1000 0.1 0.0996 25000]
+c3
+	1 4 1000 0.1 0.0999 50000
+	2 5 1000 0.1 0.0991 12500
+	3 3 1000 0.1 0.0985 13067
+[c4
+	1 99 1000 0.1 0.0999 50000
+	2 99 1000 0.2 0.1996  10000
+	3 99 1000 0.25 0.2496 30000
+	4 99 1000 0.15 0.1497 40000]
+[c5
+	1 4 90000 0.3 0.1 0
+	2 5 60000 0.4 0.3 0
+	3 5 95000 0.4 0.2 0
+	4 4 15000 0.5 0.4 0
+	5 4 90000 0.4 0.1 0]
+[c3
+	1 3 90000 0.3 0.1 1889
+	2 5 70000 0.4 0.3 3617
+	3 3 15000 0.3 0.1 1511]
+[c5
+	1 4 70000 0.3 0.1 56
+	2 5 60000 0.4 0.3 110
+	3 5 95000 0.4 0.3 117
+	4 4 15000 0.5 0.4 95
+	5 3 44000 0.3 0.1 53]
+[c5
+	1 4 90000 0.3 0.1 120
+	2 5 60000 0.4 0.3 110
+	3 5 95000 0.4 0.2 127
+	4 4 15000 0.5 0.4 45
+	5 4 90000 0.4 0.1 29]
+[outgroup: No (0), one branch ((1) root-outgroup), two branches ((2) root1-root2, root2-outgroup)] [o0] [o1 0.01] o1
+
+
+[*** OUTPUTS ***]
+[name of output file with trees (optional)] 	ttrees.tre
+[name of output file with times (optional)] 	ktimes.txt
+
+
+[*** OTHER SETTINGS ***]
+[seed (optional)]	#111111
+[noisy, amount of info on the screen (0-4) (optional)]	y1
+
+[MUTATION MODEL]
+[alphabet 0:binary 1:DNA] b1
+[substitution rate (mandatory)] u9.1e-8
+[deletion rate] [d1e-6]
+[CN_LOH rate] [H1e-5]
+[fixed number of true SNVs - ISM] [j100]
+[trinucleotide genetic signature - ISM] [S1 1 1.0] [S2 11 0.3 22 0.7]
+[alternative mutation model 0:ISMhap 1:Mk2 2:finiteDNA] m2
+[default mutation model is ISM diploid]
+[proportion of alternative model sites] p1
+[alternative/default model relative mutation rate] [w1]
+[germline SNP rate] [z0.00001]
+   [base frequencies]	f0.3 0.2 0.2 0.3
+[transition/transversion ratio] [t1.7]
+[rate variation among sites] [a1]
+[mutation matrix ACGT x ACGT]                                  r0 1 1 1
+    							 	1 0 1 1
+    							 	1 1 0 1
+    							 	1 1 1 0
+
+    							   [r0 1 2 3
+    							 	1 0 4 5
+    							 	2 4 0 1
+    							 	3 5 1 0]
+
+[NGS PARAMETERS]
+[genotyping error; no reads] [G0.00]
+[sequencing coverage; reads simulated] h100
+[coverage overdispersion] V5
+[mat/pat allelic imbalance] [I0.5]
+[allelic dropout] D0.1
+[haploid coverage] [R0.5]
+[amplification error] A0.2 0.01 0
+[sequencing error] E0.1
+[doublet rate per cell] [B0.1][esto hay que cambiar la B que ya esta en uso]
+[error matrix ACGT x ACGT] 	                                [X0 1 1 1
+    							 	 1 0 1 1
+    							 	 1 1 0 1
+    							 	 1 1 1 0]

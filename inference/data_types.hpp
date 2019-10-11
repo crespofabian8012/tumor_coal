@@ -162,6 +162,29 @@ public:
     int MutationAssignNum = 0;
 };
 
+class MCMCoptions {
+public:
+    double numChains;
+    double Niterations;
+    double thinning;
+    double Deltafrom;
+    double Deltato;
+    double MutRatefrom;
+    double MutRateto;
+    double totalEffectPopSizefrom;
+    double totalEffectPopSizeto;
+    double lambdafrom;
+    double lambdato;
+    double tuningParameterDirichlet;
+    int    startChainsRandomTree;
+    int    doTopologicalMoves;
+    double slidingWindowSizeTotalEffectPopSize;
+    double meanGrowthRate;
+    double dispersion;
+    double tuningParameter;
+};
+
+
 typedef struct {
     char  SNVgenotypesFile[MAX_NAME];
     char  SNVhaplotypesFile[MAX_NAME];

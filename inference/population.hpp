@@ -26,6 +26,7 @@ public:
     double timeOriginInput; // time of origin
     double delta; // growth rate * effectPopSize
     double effectPopSize;
+    double oldeffectPopSize;
     double birthRate, deathRate, growthRate;
     int sampleSize; // number of cells in the population
     int popSize; // total number of cells (unknown at inference)
@@ -46,6 +47,9 @@ public:
     int nodeIdAncestorMRCA;
     //pll_unode_t *MRCA;
     TreeNode *MRCA;
+    
+    pll_unode_t * nodeletMRCA;
+    
     Population *FatherPop;
     vector<double> CoalescentEventTimes;
 
@@ -68,5 +72,8 @@ public:
     void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, long *seed, int choosePairIndividuals);
     void InitCoalescentEvents(int numClones);
     void resetActiveGametes();
+    static int bbinClones (double dat, double *v, int n);
+    double DensityTime( double u);
+    double LogProbNoCoalescentEventBetweenTimes(double from, double to, int numberActiveInd);
 };
 #endif /* Population_hpp */

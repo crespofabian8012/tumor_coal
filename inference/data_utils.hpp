@@ -13,21 +13,26 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include <libpll/pll_optimize.h>
-#include <libpll/pll_tree.h>
-#include <libpll/pllmod_algorithm.h>
+//#include <libpll/pll_optimize.h>
+//#include <libpll/pll_tree.h>
+//#include <libpll/pllmod_algorithm.h>
 #include <libpll/pll_msa.h>
+//#include <libpll/pllmod_common.h>
+#include <stdarg.h>
+#include <search.h>
+#include <time.h>
 
 #include "data_types.hpp"
 #include "definitions.hpp"
-#include "pllmod_common.h"
+//#include "pllmod_common.h"
 #include "eigen.hpp"
 #include "population.hpp"
 #include "tree_node.hpp"
+#include "chain.hpp"
 
 using namespace std;
 
-pll_msa_t * pll_phylip_load(const char * fname, pll_bool_t interleaved);
+//pll_msa_t * pll_phylip_load(const char * fname, pll_bool_t interleaved);
 
 void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptions &programOptions );
 
@@ -145,6 +150,15 @@ double ProbabilityCloneiFromClonej2 (Population *PopI, Population* PopJ, vector<
 
 TreeNode *getHealthyTip(TreeNode *treeRootInit);
 int openFile(FILE **file, char path[MAX_NAME] );
+double  LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, double seqError,double dropoutError);
 
-
+void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError);
+void  destroyTree(pll_utree_t * tree, void (*cb_destroy)(void *));
+void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *));
+int set_tipclv_custom_error_model(pll_partition_t * partition,
+                                  unsigned int tip_index,
+                                  const pll_state_t * map,
+                                  const char * sequence,
+                                  double _seq_error_rate,
+                                  double _dropout_rate);
 #endif /* data_utils_hpp */

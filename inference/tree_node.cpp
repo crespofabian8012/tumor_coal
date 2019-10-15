@@ -2,7 +2,7 @@
 //  tree_node.cpp
 //  simul
 //
-//  Created by Seong-Hwan Jun on 2019-10-08.
+//  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
 //
 
 #include "tree_node.hpp"

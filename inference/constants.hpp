@@ -2,7 +2,7 @@
 //  constants.h
 //  tumor_coal
 //
-//  Created by Seong-Hwan Jun on 2019-10-08.
+//  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
 //
 
 #ifndef constants_h

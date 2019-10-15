@@ -2888,3 +2888,432 @@ void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptio
     
     
 }
+double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym)
+{
+    unsigned int i;
+    
+    unsigned int num_rates = states * (states-1) / 2;
+    //double * subst_rates = calloc(num_rates, sizeof(double));
+    double * subst_rates =(double *) calloc(num_rates, sizeof(double));
+    for (i = 0; i < num_rates; ++i)
+        subst_rates[i] = rate_sym ? uniq_rates[rate_sym[i]] : uniq_rates[i];
+    
+    return subst_rates;
+}
+
+//double  LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, double seqError,double dropoutError)
+//{
+//    
+//    FILE    *outputShell;
+//    char script[80];
+//    char buf[1000];
+//    
+//    //pll_state_t pll_map_gt10_2[256];
+//    if (NewickString == NULL)
+//    {
+//        fprintf (stderr, "\nERROR: The newick representation of the tree cannot be empty\n\n");
+//        PrintUsage();
+//        return 0;
+//    }
+//    
+//    unsigned int i;
+//    unsigned int tip_nodes_count, inner_nodes_count, nodes_count, branch_count;
+//    pll_partition_t * partition;
+//    
+//    pll_utree_t *unrootedTree = pll_utree_parse_newick_string_unroot(NewickString);
+//    
+//    /* compute node count information */
+//    tip_nodes_count = unrootedTree->tip_count;
+//    inner_nodes_count = unrootedTree->inner_count;
+//    nodes_count = inner_nodes_count + tip_nodes_count;
+//    branch_count = unrootedTree->edge_count;
+//    
+//    //    pllmod_treeinfo_t * treeinfo = pllmod_treeinfo_create((pll_unode_s*)unrootedTree->vroot,
+//    //                                                          tip_nodes_count,
+//    //                                                          1,
+//    //                                                          PLLMOD_COMMON_BRLEN_LINKED);
+//    pllmod_treeinfo_t * treeinfo = pllmod_treeinfo_create(unrootedTree->vroot,
+//                                                          tip_nodes_count,
+//                                                          1, PLLMOD_COMMON_BRLEN_LINKED);
+//    
+//    pll_unode_t ** tipnodes = unrootedTree->nodes;
+//    
+//    /* create a libc hash table of size tip_nodes_count */
+//    hcreate(tip_nodes_count);
+//    
+//    /* populate a libc hash table with tree tip labels */
+//    unsigned int * data = (unsigned int *)malloc(tip_nodes_count *
+//                                                 sizeof(unsigned int));
+//    char *label;
+//    for (i = 0; i < tip_nodes_count; ++i)
+//    {
+//        data[i] = tipnodes[i]->clv_index;
+//        ENTRY entry;
+//        label= tipnodes[i]->label;
+//        entry.key = tipnodes[i]->label;
+//        entry.data = (void *)(data+i);
+//        hsearch(entry, ENTER);
+//    }
+//    
+//    
+//    if (msa !=NULL)
+//        printf("Original sequence (alignment) length : %d\n", msa->length);
+//    else{
+//        fprintf (stderr, "\nERROR: The multiple sequence alignment is empty\n\n");
+//        PrintUsage();
+//        return 0;
+//    }
+//    
+//    
+//    
+//    pllmod_subst_model_t * model = pllmod_util_model_info_genotype(GT_MODEL);
+//    
+//    /* create the PLL partition instance
+//     
+//     tip_nodes_count : the number of tip sequences we want to have
+//     inner_nodes_count : the number of CLV buffers to be allocated for inner nodes
+//     model->states : the number of states that our data have
+//     1 : number of different substitution models (or eigen decomposition)
+//     to use concurrently (i.e. 4 for LG4)
+//     branch_count: number of probability matrices to be allocated
+//     RATE_CATS : number of rate categories we will use
+//     inner_nodes_count : how many scale buffers to use
+//     PLL_ATTRIB_ARCH_AVX : list of flags for hardware acceleration
+//     */
+//    partition = pll_partition_create(tip_nodes_count,
+//                                     inner_nodes_count,
+//                                     model->states,
+//                                     (unsigned int)(msa->length),
+//                                     1,
+//                                     branch_count,
+//                                     RATE_CATS,
+//                                     inner_nodes_count,
+//                                     PLL_ATTRIB_ARCH_AVX);
+//    
+//    set_partition_tips_costum( partition, msa, programOptions,  seqError, dropoutError);
+//    
+//    treeinfo = pllmod_treeinfo_create(unrootedTree->vroot,
+//                                      tip_nodes_count,
+//                                      1,
+//                                      PLLMOD_COMMON_BRLEN_LINKED);
+//    int params_to_optimize = 0;
+//    unsigned int params_indices[RATE_CATS] = {0};
+//    
+//    int retval = pllmod_treeinfo_init_partition(treeinfo,
+//                                                0,
+//                                                partition,
+//                                                params_to_optimize,
+//                                                PLL_GAMMA_RATES_MEAN,
+//                                                1.0, /* alpha*/
+//                                                params_indices, /* param_indices */
+//                                                model->rate_sym /* subst matrix symmetries*/
+//                                                );
+//    
+//    double * empirical_frequencies;
+//    empirical_frequencies = pllmod_msa_empirical_frequencies(partition);
+//    
+//    double * empirical_subst_rates = pllmod_msa_empirical_subst_rates( partition);
+//    
+//    unsigned int * weight = pll_compress_site_patterns(msa->sequence,
+//                                                       pll_map_gt10,
+//                                                       tip_nodes_count,
+//                                                       &(msa->length));
+//    printf("Number of unique site patterns: %d\n\n", msa->length);
+//    
+//    /* initialize the array of base frequencies  AA CC GG TT AC/CA AG/GA AT/TA CG/GC CT/TC GT/TG  */
+//    //    double user_freqs[10] = { 0.254504, 0.157238, 0.073667, 0.287452, 0.027336,
+//    //        0.058670, 0.041628, 0.024572, 0.064522, 0.010412 };
+//    
+//    
+//    /* substitution rates: for GTR4 model those are 6 "regular" DNA susbt. rates + 1 rate
+//     * for "unlikely" double substitutions (eg A/A -> C/T) */
+//    double unique_subst_rates[7] = { 0.001000, 0.101223, 0.001000, 0.001000, 1.000000,
+//        0.001000, 0.447050 };
+//    
+//    /* get full above-diagonal half-matrix */
+//    double * user_subst_rates = expand_uniq_rates(model->states, unique_subst_rates,
+//                                                  model->rate_sym);
+//    
+//    double rate_cats[RATE_CATS] = {0};
+//    
+//    /* compute the discretized category rates from a gamma distribution
+//     with alpha shape 1 and store them in rate_cats  */
+//    pll_compute_gamma_cats(1, RATE_CATS, rate_cats, PLL_GAMMA_RATES_MEAN);
+//    
+//    /* set frequencies at model with index 0 (we currently have only one model) */
+//    //pll_set_frequencies(partition, 0, model->freqs ? model->freqs : user_freqs);
+//    pll_set_frequencies(partition, 0, model->freqs ? model->freqs : empirical_frequencies);
+//    
+//    /* set substitution parameters at model with index 0 */
+//    // pll_set_subst_params(partition, 0, model->rates ? model->rates : user_subst_rates);
+//    pll_set_subst_params(partition, 0, model->rates ? model->rates : empirical_subst_rates);
+//    free(user_subst_rates);
+//    
+//    /* set rate categories */
+//    pll_set_category_rates(partition, rate_cats);
+//    
+//    /* set pattern weights and free the weights array */
+//    pll_set_pattern_weights(partition, weight);
+//    free(weight);
+//    
+//    //set_partition_tips(chain, partition, msa, programOptions);
+//    
+//    // pll_msa_destroy(msa);
+//    
+//    /* destroy hash table */
+//    hdestroy();
+//    /* we no longer need these two arrays (keys and values of hash table... */
+//    free(data);
+//    
+//    if (!retval)
+//        fprintf(stderr, "Error initializing partition!");
+//    /* Compute initial LH of the starting tree */
+//    double loglh = pllmod_treeinfo_compute_loglh(treeinfo, 1);
+//    pllmod_treeinfo_destroy(treeinfo);
+//    double * clv ;
+//    int s, clv_index, j, k;
+//    int scaler_index = PLL_SCALE_BUFFER_NONE;
+//    unsigned int * scaler = (scaler_index == PLL_SCALE_BUFFER_NONE) ?
+//    NULL : partition->scale_buffer[scaler_index];
+//    unsigned int states = partition->states;
+//    unsigned int states_padded = partition->states_padded;
+//    unsigned int rates = partition->rate_cats;
+//    double prob;
+//    unsigned int *site_id = 0;
+//    int index;
+//    unsigned int float_precision;
+//    
+//    pll_partition_destroy(partition);
+//    /* we will no longer need the tree structure */
+//    //pll_utree_destroy(unrootedTree, NULL);
+//    destroyTree(unrootedTree, NULL);
+//    pllmod_util_model_destroy(model);
+//    
+//    return loglh;
+//}
+void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError)
+{
+    //pll_state_t pll_map_gt10_2[256];
+    int states =10;
+    int i, currentState;
+    int from, to;
+    
+    
+    unsigned int state;
+    //double * _freqs;
+    
+    /* find sequences in hash table and link them with the corresponding taxa */
+    for (i = 0; i < msa->count; ++i)
+    {
+        ENTRY query;
+        query.key = msa->label[i];
+        ENTRY * found = NULL;
+        
+        found = hsearch(query,FIND);
+        
+        if (!found)
+            fprintf(stderr,"Sequence with header %s does not appear in the tree", msa->label[i]);
+        
+        unsigned int tip_clv_index = *((unsigned int *)(found->data));
+        
+        if (programOptions.doUseGenotypes == NO)
+        {
+            pll_set_tip_states(partition, tip_clv_index, pll_map_gt10, msa->sequence[i]);
+        }
+        else
+        {
+            
+            //            for ( currentState = 0; currentState < states; currentState++)
+            //            {
+            //                from=1;
+            //                to=1;
+            set_tipclv_custom_error_model( partition,
+                                          tip_clv_index,
+                                          pll_map_gt10,
+                                          msa->sequence[i],seqError,dropoutError);
+            //                 compute_state_probs( msa->sequence[i],  &(partition->clv[tip_clv_index]),  states, from, to,
+            //                                chain->seqErrorRate,
+            //                                 chain->dropoutRate);
+            //      }
+            
+            //pll_set_tip_clv(partition, tip_clv_index, tipCLV, PLL_FALSE);
+            
+            
+        }
+    }
+    
+}
+int set_tipclv_custom_error_model(pll_partition_t * partition,
+                                  unsigned int tip_index,
+                                  const pll_state_t * map,
+                                  const char * sequence,
+                                  double _seq_error_rate,
+                                  double _dropout_rate
+                                  )
+{
+    
+    pll_state_t c;
+    unsigned int i,j;
+    double * tipclv = partition->clv[tip_index];
+    unsigned int state_id ;
+    
+    pll_repeats_t * repeats = partition->repeats;
+    unsigned int use_repeats = pll_repeats_enabled(partition);
+    unsigned int ids = use_repeats ?
+    repeats->pernode_ids[tip_index] : partition->sites;
+    
+    static const double one_3 = 1. / 3.;
+    static const double one_6 = 1. / 6.;
+    static const double one_8 = 1. / 8.;
+    static const double three_8 = 3. / 8.;
+    static const double one_12 = 1. / 12.;
+    
+    // TODO: move it out of here
+    unsigned int undef_state = (unsigned int) (pow(2, partition->states)) - 1;
+    
+    double sum_lh = 0.;
+    
+    /* iterate through sites */
+    for (i = 0; i < ids; ++i)
+    {
+        unsigned int index = use_repeats ?
+        repeats->pernode_id_site[tip_index][i] : i;
+        if ((c = map[(int)sequence[index]]) == 0)
+        {
+            pll_errno = PLL_ERROR_TIPDATA_ILLEGALSTATE;
+            snprintf(pll_errmsg, 200, "Illegal state code in tip \"%c\"", sequence[index]);
+            return PLL_FAILURE;
+        }
+        
+        /* decompose basecall into the encoded residues and set the appropriate
+         positions in the tip vector */
+        state_id = __builtin_ctz(c);
+        for (j = 0; j < partition->states; ++j)
+        {
+            if (c == undef_state)
+                tipclv[j] = 1.;
+            else
+            {
+                if (j == state_id)
+                {
+                    /* 0 letters away */
+                    if (HOMO(state_id))
+                        tipclv[j] = 1. - _seq_error_rate + 0.5 * _seq_error_rate * _dropout_rate;
+                    else
+                        tipclv[j] =  (1. - _dropout_rate ) * (1. - _seq_error_rate) + one_12 * _seq_error_rate * _dropout_rate;
+                }
+                else if (mut_dist[state_id][j] == 1)
+                {
+                    /* 1 letter away */
+                    if (HOMO(j))
+                    {
+                        tipclv[j] = one_12 * _seq_error_rate * _dropout_rate +
+                        one_3  * (1. - _dropout_rate) * _seq_error_rate;
+                    }
+                    else
+                    {
+                        if (HOMO(state_id))
+                        {
+                            tipclv[j] = 0.5 * _dropout_rate + one_6 * _seq_error_rate -
+                            three_8 * _seq_error_rate * _dropout_rate;
+                        }
+                        else
+                        {
+                            tipclv[j]= one_6 * _seq_error_rate -
+                            one_8 * _seq_error_rate * _dropout_rate;
+                        }
+                    }
+                }
+                else
+                {
+                    /* 2 letters away */
+                    if (HOMO(state_id))
+                        tipclv[j] = one_12 * _seq_error_rate * _dropout_rate;
+                    else
+                        tipclv[j] = 0.;
+                }
+                sum_lh += tipclv[j];
+            }
+            // tipclv[j] = c & 1;
+            //  c >>= 1;
+        }
+        
+        /* fill in the entries for the other gamma values */
+        tipclv += partition->states_padded;
+        for (j = 0; j < partition->rate_cats - 1; ++j)
+        {
+            memcpy(tipclv, tipclv - partition->states_padded,
+                   partition->states * sizeof(double));
+            tipclv += partition->states_padded;
+        }
+    }
+    
+    /* if asc_bias is set, we initialize the additional positions */
+    if (partition->asc_bias_alloc)
+    {
+        for (i = 0; i < partition->states; ++i)
+        {
+            for (j = 0; j < partition->states; ++j)
+            {
+                tipclv[j] = j==i;
+            }
+            
+            /* fill in the entries for the other gamma values */
+            tipclv += partition->states_padded;
+            for (j = 0; j < partition->rate_cats - 1; ++j)
+            {
+                memcpy(tipclv, tipclv - partition->states_padded,
+                       partition->states * sizeof(double));
+                tipclv += partition->states_padded;
+            }
+        }
+    }
+    
+    return PLL_SUCCESS;
+}
+/************************ destroyTree ***********************/
+/*  destroyTree */
+void  destroyTree(pll_utree_t * tree, void (*cb_destroy)(void *))
+{
+    
+    unsigned int i;
+    
+    /* deallocate tip nodes */
+    for (i = 0; i < tree->tip_count; ++i)
+    {
+        dealloc_data_costum(tree->nodes[i], cb_destroy);
+        
+        free(tree->nodes[i]);
+    }
+    /* deallocate inner nodes */
+    for (i = tree->tip_count; i < tree->tip_count + tree->inner_count; ++i)
+    {
+        pll_unode_t * first = tree->nodes[i];
+        assert(first);
+        if (first->label)
+            free(first->label);
+        
+        pll_unode_t * node = first;
+        do
+        {
+            pll_unode_t * next = node->next;
+            dealloc_data_costum(node, cb_destroy);
+            free(node);
+            node = next;
+        }
+        while(node && node != first);
+    }
+    
+    /* deallocate tree structure */
+    free(tree->nodes);
+    free(tree);
+    
+}
+void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
+{
+    if (node->data)
+    {
+        if (cb_destroy)
+            cb_destroy(node->data);
+    }
+}

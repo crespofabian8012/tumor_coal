@@ -7,7 +7,8 @@
 
 #include "population.hpp"
 #include "definitions.hpp"
-
+#include "random.h"
+//#include "data_utils.hpp"
 using namespace std;
 
 //Parametrized Constructor
@@ -63,8 +64,8 @@ Population::Population(int ind, int ord, double timeOriginInput,
         }
         else
             fprintf (stderr, "\n ERROR: Population time of origin   cannot be negative \n");
-        
-        effectPopSize = popSize / birthRate;
+        if (birthRate >=0)
+           effectPopSize = popSize / birthRate;
         
         delta= growthRate * effectPopSize;
         
@@ -397,4 +398,95 @@ void Population::resetActiveGametes()
     numGametes=0;
     idsActiveGametes.clear();
     idsGametes.clear();
+}
+void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, long *seed, int choosePairIndividuals)
+{
+    double random;
+    int k, w;
+    double *cumPopulPart = (double *) malloc((numActiveGametes + 1)* (long) sizeof(double));
+    if (!cumPopulPart)
+    {
+        fprintf (stderr, "Could not allocate cumPopulPart (%lu bytes)\n", (numActiveGametes + 1) * (long) sizeof(double));
+        exit (-1);
+    }
+    cumPopulPart[0] = 0;
+    for (k = 1; k <= numActiveGametes; k++)
+        cumPopulPart[k] = 0;
+    for (k = 1; k <= numActiveGametes; k++)
+        cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (numActiveGametes);
+    
+    w = 0;
+    //    for (k = 0; k < numClones; k++)
+    //    {
+    //        pop = *(populations + k);
+    //        w = w + (pop->numActiveGametes);
+    //        //fprintf (stderr, "\nClone %d with %d gametes. w=%d ", k, pop->numActiveGametes, w);
+    //    }
+    //    if (w != numActiveGametes)
+    //    {
+    //        fprintf (stderr, "\nError. The sum of partial active gametes is different to the total number of gametes, w %d != numActiveGametes %d. In Coalescence.", w, numActiveGametes);
+    //        exit (-1);
+    //    }
+    random = RandomUniform(seed);
+    //fprintf (stderr, "\nran = %lf ", ran);
+    *firstInd = Population::bbinClones(random, cumPopulPart, numActiveGametes)-1;
+    w = 0;
+    
+    if (*firstInd >= numActiveGametes || *firstInd < 0 ) /* checking */
+    {
+        fprintf (stderr, "\n\nERROR: firstInd out of range!\n");
+        exit (-1);
+    }
+    
+    if (choosePairIndividuals== YES && numActiveGametes > 1) {
+        
+        do//choose randomly another individual to coalesce
+        {
+            random = RandomUniform(seed);
+            *secondInd = Population::bbinClones(random, cumPopulPart, numActiveGametes)-1;
+            
+        } while (*firstInd == *secondInd  );
+    }
+    free (cumPopulPart);
+    cumPopulPart=NULL;
+}
+/***************** bbinClones *****************/
+/* binary search in the probabilities with clones */
+int Population::bbinClones (double dat, double *v, int n)
+{
+    int init, end, middle;
+    
+    if (dat >= 0 && dat <= v[1])
+        return (1); /* first population */
+    
+    init = 1;
+    end = n;
+    
+    while (init <= end)
+    {
+        middle = (init + end) / 2;
+        
+        if (dat > v[middle - 1] && dat <= v[middle])
+            return (middle);
+        else if (dat > v[middle])
+            init = middle + 1;
+        else
+            end = middle - 1;
+    }
+    fprintf (stderr, "\n Warning in bbinClones function");
+    exit (-1);
+    return -1;
+}
+double Population::DensityTime(double u){
+    double term1=delta * exp(-1*delta*u);
+    double term2=1-exp(-1*delta*u);
+    return delta * term1 * exp(-1*term1/term2) /(term2 * term2);
+}
+double Population::LogProbNoCoalescentEventBetweenTimes(double from, double to, int numberActiveInd)
+{
+    int j=numberActiveInd;
+    double result=0.0;
+    
+    result=  -1 * j* (j-1)*(Population::FmodelTstandard(to,timeOriginSTD, delta)-Population::FmodelTstandard(from, timeOriginSTD, delta))/2;
+    return result;
 }

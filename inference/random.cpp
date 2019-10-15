@@ -2,7 +2,7 @@
 //  random.cpp
 //  simul
 //
-//  Created by Seong-Hwan Jun on 2019-10-08.
+//  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
 //
 
 #include <cmath>
@@ -196,3 +196,28 @@ int ChooseUniformState (double *prob, long int *seed)
 }
 
 
+/*************** RandomDirichlet ***************/
+//first generates random samples from a gamma and then divide each value by the sum
+void  RandomDirichlet (double s, int vectorSize, vector<double> &outputVector, long int *seed)
+{   int i;
+    double sum=0.0;
+    double current;
+    // *outputVector = malloc(vectorSize * sizeof(double));
+    // if (*outputVector == NULL)
+    //     return;
+    for (i=0; i < vectorSize; i++){
+        current = RandomGamma(s, seed);
+        outputVector.push_back(current) ;
+        //outputVector[i] = current;
+        //*(*outputVector + i)=current;
+        sum=sum+current;
+    }
+    for (i=0; i < vectorSize; i++){
+        outputVector[i]=  outputVector[i]/ sum;
+        // *(*outputVector + i)= *(*outputVector + i)/sum;
+    }
+}
+double RandomLogUniform( double from, double to, long int *seed){
+    
+    return(exp(from + RandomUniform(seed)*(to -from)));
+}

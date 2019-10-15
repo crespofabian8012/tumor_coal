@@ -30,7 +30,7 @@ int RandomUniformTo (int max, long int *seed);
 
 double RandomLogUniform( double from, double to, long int *seed);
 
-void  RandomDirichlet (double s, int vectorSize, double **outputVector, long int *seed);
+void  RandomDirichlet (double s, int vectorSize, vector<double> &outputVector, long int *seed);
 double LogUniformDensity(double value, double from, double to);
 
 int ChooseUniformState (double *prob, long int *seed);

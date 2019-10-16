@@ -1,1 +1,4 @@
-/xcode
+xcode/
+bin/
+.DS_Store
+inference_backup/

@@ -11,7 +11,14 @@
 #include <stdio.h>
 #include <vector>
 
-#include <libpll/pll_tree.h>
+extern "C"
+{
+#include "libpll/pll.h"
+#include "libpll/pll_tree.h"
+#include "libpll/pll_optimize.h"
+#include "libpll/pllmod_algorithm.h"
+#include "libpll/pllmod_common.h"
+}
 
 #include "tree_node.hpp"
 

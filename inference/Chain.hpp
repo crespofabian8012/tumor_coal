@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include "data_utils.hpp"
-#include "chain.hpp"
+#include "Chain.hpp"
 //#include "population.hpp"
 
 

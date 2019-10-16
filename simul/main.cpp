@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include <libpll/pll_tree.h>
+
 #include "data_types.hpp"
 #include "data_utils.hpp"
 
@@ -11,7 +13,6 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     // default evolution model: JC
-    
     ProgramOptions programOptions;
     Files files;
     FilePaths filePaths;

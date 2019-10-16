@@ -1,8 +1,12 @@
 
-#include <libpll/pll_optimize.h>
-#include <libpll/pll_tree.h>
-#include <libpll/pllmod_algorithm.h>
-#include "pllmod_common.h"
+extern "C"
+{
+#include "libpll/pll.h"
+#include "libpll/pll_tree.h"
+#include "libpll/pll_optimize.h"
+#include "libpll/pllmod_algorithm.h"
+#include "libpll/pllmod_common.h"
+}
 
 #ifndef macros_h
 #define macros_h

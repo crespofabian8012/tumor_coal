@@ -13,11 +13,6 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
-//#include <libpll/pll_optimize.h>
-//#include <libpll/pll_tree.h>
-//#include <libpll/pllmod_algorithm.h>
-#include <libpll/pll_msa.h>
-//#include <libpll/pllmod_common.h>
 #include <stdarg.h>
 #include <search.h>
 #include <time.h>
@@ -28,7 +23,16 @@
 #include "eigen.hpp"
 #include "population.hpp"
 #include "tree_node.hpp"
-#include "chain.hpp"
+#include "Chain.hpp"
+
+extern "C"
+{
+#include "libpll/pll.h"
+#include "libpll/pll_tree.h"
+#include "libpll/pll_optimize.h"
+#include "libpll/pllmod_algorithm.h"
+#include "libpll/pllmod_common.h"
+}
 
 using namespace std;
 

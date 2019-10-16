@@ -5,7 +5,7 @@
 //  Created by Fausto Fabian Crespo Fernandez on 7/10/19.
 //
 
-#include "chain.hpp"
+#include "Chain.hpp"
 using namespace std;
 
 #include "data_utils.hpp"
@@ -14,9 +14,17 @@ using namespace std;
 #include "random.h"
 #include "constants.hpp"
 
-#include <libpll/pll_msa.h> //for pllmod_msa_empirical_frequencies
+extern "C"
+{
+#include "libpll/pll.h"
+#include "libpll/pllmod_algorithm.h"
+#include "libpll/pllmod_common.h"
+#include "libpll/pll_msa.h"
+#include "libpll/pll_optimize.h"
+#include "libpll/pll_tree.h"
+}
+
 #include "eigen.hpp"
-//#include "libpll/pllmod_common.h"
 
 
 
@@ -1708,196 +1716,196 @@ double Chain::LogDensityCoalescentTimesForPopulation(pll_unode_t  *tree)
     
     return result;
 }
-//double  Chain::LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, double seqError,double dropoutError)
-//{
-//
-//    FILE    *outputShell;
-//    char script[80];
-//    char buf[1000];
-//
-//    //pll_state_t pll_map_gt10_2[256];
-//    if (NewickString == NULL)
-//    {
-//        fprintf (stderr, "\nERROR: The newick representation of the tree cannot be empty\n\n");
-//        PrintUsage();
-//        return 0;
-//    }
-//
-//    unsigned int i;
-//    unsigned int tip_nodes_count, inner_nodes_count, nodes_count, branch_count;
-//    pll_partition_t * partition;
-//
-//    pll_utree_t *unrootedTree = pll_utree_parse_newick_string_unroot(NewickString);
-//
-//    /* compute node count information */
-//    tip_nodes_count = unrootedTree->tip_count;
-//    inner_nodes_count = unrootedTree->inner_count;
-//    nodes_count = inner_nodes_count + tip_nodes_count;
-//    branch_count = unrootedTree->edge_count;
-//
-////    pllmod_treeinfo_t * treeinfo = pllmod_treeinfo_create((pll_unode_s*)unrootedTree->vroot,
-////                                                          tip_nodes_count,
-////                                                          1,
-////                                                          PLLMOD_COMMON_BRLEN_LINKED);
-//    pllmod_treeinfo_t * treeinfo = pllmod_treeinfo_create(unrootedTree->vroot,
+double  Chain::LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, double seqError,double dropoutError)
+{
+
+    FILE    *outputShell;
+    char script[80];
+    char buf[1000];
+
+    //pll_state_t pll_map_gt10_2[256];
+    if (NewickString == NULL)
+    {
+        fprintf (stderr, "\nERROR: The newick representation of the tree cannot be empty\n\n");
+        PrintUsage();
+        return 0;
+    }
+
+    unsigned int i;
+    unsigned int tip_nodes_count, inner_nodes_count, nodes_count, branch_count;
+    pll_partition_t * partition;
+
+    pll_utree_t *unrootedTree = pll_utree_parse_newick_string_unroot(NewickString);
+
+    /* compute node count information */
+    tip_nodes_count = unrootedTree->tip_count;
+    inner_nodes_count = unrootedTree->inner_count;
+    nodes_count = inner_nodes_count + tip_nodes_count;
+    branch_count = unrootedTree->edge_count;
+
+//    pllmod_treeinfo_t * treeinfo = pllmod_treeinfo_create((pll_unode_s*)unrootedTree->vroot,
 //                                                          tip_nodes_count,
-//                                                          1, PLLMOD_COMMON_BRLEN_LINKED);
-//
-//    pll_unode_t ** tipnodes = unrootedTree->nodes;
-//
-//    /* create a libc hash table of size tip_nodes_count */
-//    hcreate(tip_nodes_count);
-//
-//    /* populate a libc hash table with tree tip labels */
-//    unsigned int * data = (unsigned int *)malloc(tip_nodes_count *
-//                                                 sizeof(unsigned int));
-//    char *label;
-//    for (i = 0; i < tip_nodes_count; ++i)
-//    {
-//        data[i] = tipnodes[i]->clv_index;
-//        ENTRY entry;
-//        label= tipnodes[i]->label;
-//        entry.key = tipnodes[i]->label;
-//        entry.data = (void *)(data+i);
-//        hsearch(entry, ENTER);
-//    }
-//
-//
-//    if (msa !=NULL)
-//        printf("Original sequence (alignment) length : %d\n", msa->length);
-//    else{
-//        fprintf (stderr, "\nERROR: The multiple sequence alignment is empty\n\n");
-//        PrintUsage();
-//        return 0;
-//    }
-//
-//
-//
-//    pllmod_subst_model_t * model = pllmod_util_model_info_genotype(GT_MODEL);
-//
-//    /* create the PLL partition instance
-//
-//     tip_nodes_count : the number of tip sequences we want to have
-//     inner_nodes_count : the number of CLV buffers to be allocated for inner nodes
-//     model->states : the number of states that our data have
-//     1 : number of different substitution models (or eigen decomposition)
-//     to use concurrently (i.e. 4 for LG4)
-//     branch_count: number of probability matrices to be allocated
-//     RATE_CATS : number of rate categories we will use
-//     inner_nodes_count : how many scale buffers to use
-//     PLL_ATTRIB_ARCH_AVX : list of flags for hardware acceleration
-//     */
-//    partition = pll_partition_create(tip_nodes_count,
-//                                     inner_nodes_count,
-//                                     model->states,
-//                                     (unsigned int)(msa->length),
-//                                     1,
-//                                     branch_count,
-//                                     RATE_CATS,
-//                                     inner_nodes_count,
-//                                     PLL_ATTRIB_ARCH_AVX);
-//
-//    set_partition_tips_costum( partition, msa, programOptions,  seqError, dropoutError);
-//
-//    treeinfo = pllmod_treeinfo_create(unrootedTree->vroot,
-//                                      tip_nodes_count,
-//                                      1,
-//                                      PLLMOD_COMMON_BRLEN_LINKED);
-//    int params_to_optimize = 0;
-//    unsigned int params_indices[RATE_CATS] = {0};
-//
-//    int retval = pllmod_treeinfo_init_partition(treeinfo,
-//                                                0,
-//                                                partition,
-//                                                params_to_optimize,
-//                                                PLL_GAMMA_RATES_MEAN,
-//                                                1.0, /* alpha*/
-//                                                params_indices, /* param_indices */
-//                                                model->rate_sym /* subst matrix symmetries*/
-//                                                );
-//
-//    double * empirical_frequencies;
-//     empirical_frequencies = pllmod_msa_empirical_frequencies(partition);
-//    
-//     double * empirical_subst_rates = pllmod_msa_empirical_subst_rates( partition);
-//
-//    unsigned int * weight = pll_compress_site_patterns(msa->sequence,
-//                                                       pll_map_gt10,
-//                                                       tip_nodes_count,
-//                                                       &(msa->length));
-//    printf("Number of unique site patterns: %d\n\n", msa->length);
-//
-//    /* initialize the array of base frequencies  AA CC GG TT AC/CA AG/GA AT/TA CG/GC CT/TC GT/TG  */
-////    double user_freqs[10] = { 0.254504, 0.157238, 0.073667, 0.287452, 0.027336,
-////        0.058670, 0.041628, 0.024572, 0.064522, 0.010412 };
-//
-//
-//    /* substitution rates: for GTR4 model those are 6 "regular" DNA susbt. rates + 1 rate
-//     * for "unlikely" double substitutions (eg A/A -> C/T) */
-//    double unique_subst_rates[7] = { 0.001000, 0.101223, 0.001000, 0.001000, 1.000000,
-//        0.001000, 0.447050 };
-//
-//    /* get full above-diagonal half-matrix */
-//    double * user_subst_rates = expand_uniq_rates(model->states, unique_subst_rates,
-//                                                  model->rate_sym);
-//
-//    double rate_cats[RATE_CATS] = {0};
-//
-//    /* compute the discretized category rates from a gamma distribution
-//     with alpha shape 1 and store them in rate_cats  */
-//    pll_compute_gamma_cats(1, RATE_CATS, rate_cats, PLL_GAMMA_RATES_MEAN);
-//
-//    /* set frequencies at model with index 0 (we currently have only one model) */
-//    //pll_set_frequencies(partition, 0, model->freqs ? model->freqs : user_freqs);
-//    pll_set_frequencies(partition, 0, model->freqs ? model->freqs : empirical_frequencies);
-//
-//    /* set substitution parameters at model with index 0 */
-//   // pll_set_subst_params(partition, 0, model->rates ? model->rates : user_subst_rates);
-//     pll_set_subst_params(partition, 0, model->rates ? model->rates : empirical_subst_rates);
-//    free(user_subst_rates);
-//
-//    /* set rate categories */
-//    pll_set_category_rates(partition, rate_cats);
-//
-//    /* set pattern weights and free the weights array */
-//    pll_set_pattern_weights(partition, weight);
-//    free(weight);
-//
-//    //set_partition_tips(chain, partition, msa, programOptions);
-//
-//    // pll_msa_destroy(msa);
-//
-//    /* destroy hash table */
-//    hdestroy();
-//    /* we no longer need these two arrays (keys and values of hash table... */
-//    free(data);
-//
-//    if (!retval)
-//        fprintf(stderr, "Error initializing partition!");
-//    /* Compute initial LH of the starting tree */
-//    double loglh = pllmod_treeinfo_compute_loglh(treeinfo, 1);
-//    pllmod_treeinfo_destroy(treeinfo);
-//    double * clv ;
-//    int s, clv_index, j, k;
-//    int scaler_index = PLL_SCALE_BUFFER_NONE;
-//    unsigned int * scaler = (scaler_index == PLL_SCALE_BUFFER_NONE) ?
-//    NULL : partition->scale_buffer[scaler_index];
-//    unsigned int states = partition->states;
-//    unsigned int states_padded = partition->states_padded;
-//    unsigned int rates = partition->rate_cats;
-//    double prob;
-//    unsigned int *site_id = 0;
-//    int index;
-//    unsigned int float_precision;
-//
-//    pll_partition_destroy(partition);
-//    /* we will no longer need the tree structure */
-//    //pll_utree_destroy(unrootedTree, NULL);
-//    destroyTree(unrootedTree, NULL);
-//    pllmod_util_model_destroy(model);
-//
-//    return loglh;
-//}
+//                                                          1,
+//                                                          PLLMOD_COMMON_BRLEN_LINKED);
+    pllmod_treeinfo_t * treeinfo = pllmod_treeinfo_create(unrootedTree->vroot,
+                                                          tip_nodes_count,
+                                                          1, PLLMOD_COMMON_BRLEN_LINKED);
+
+    pll_unode_t ** tipnodes = unrootedTree->nodes;
+
+    /* create a libc hash table of size tip_nodes_count */
+    hcreate(tip_nodes_count);
+
+    /* populate a libc hash table with tree tip labels */
+    unsigned int * data = (unsigned int *)malloc(tip_nodes_count *
+                                                 sizeof(unsigned int));
+    char *label;
+    for (i = 0; i < tip_nodes_count; ++i)
+    {
+        data[i] = tipnodes[i]->clv_index;
+        ENTRY entry;
+        label= tipnodes[i]->label;
+        entry.key = tipnodes[i]->label;
+        entry.data = (void *)(data+i);
+        hsearch(entry, ENTER);
+    }
+
+
+    if (msa !=NULL)
+        printf("Original sequence (alignment) length : %d\n", msa->length);
+    else{
+        fprintf (stderr, "\nERROR: The multiple sequence alignment is empty\n\n");
+        PrintUsage();
+        return 0;
+    }
+
+
+
+    pllmod_subst_model_t * model = pllmod_util_model_info_genotype(GT_MODEL);
+
+    /* create the PLL partition instance
+
+     tip_nodes_count : the number of tip sequences we want to have
+     inner_nodes_count : the number of CLV buffers to be allocated for inner nodes
+     model->states : the number of states that our data have
+     1 : number of different substitution models (or eigen decomposition)
+     to use concurrently (i.e. 4 for LG4)
+     branch_count: number of probability matrices to be allocated
+     RATE_CATS : number of rate categories we will use
+     inner_nodes_count : how many scale buffers to use
+     PLL_ATTRIB_ARCH_AVX : list of flags for hardware acceleration
+     */
+    partition = pll_partition_create(tip_nodes_count,
+                                     inner_nodes_count,
+                                     model->states,
+                                     (unsigned int)(msa->length),
+                                     1,
+                                     branch_count,
+                                     RATE_CATS,
+                                     inner_nodes_count,
+                                     PLL_ATTRIB_ARCH_AVX);
+
+    set_partition_tips_costum( partition, msa, programOptions,  seqError, dropoutError);
+
+    treeinfo = pllmod_treeinfo_create(unrootedTree->vroot,
+                                      tip_nodes_count,
+                                      1,
+                                      PLLMOD_COMMON_BRLEN_LINKED);
+    int params_to_optimize = 0;
+    unsigned int params_indices[RATE_CATS] = {0};
+
+    int retval = pllmod_treeinfo_init_partition(treeinfo,
+                                                0,
+                                                partition,
+                                                params_to_optimize,
+                                                PLL_GAMMA_RATES_MEAN,
+                                                1.0, /* alpha*/
+                                                params_indices, /* param_indices */
+                                                model->rate_sym /* subst matrix symmetries*/
+                                                );
+
+    double * empirical_frequencies;
+     empirical_frequencies = pllmod_msa_empirical_frequencies(partition);
+    
+     double * empirical_subst_rates = pllmod_msa_empirical_subst_rates( partition);
+
+    unsigned int * weight = pll_compress_site_patterns(msa->sequence,
+                                                       pll_map_gt10,
+                                                       tip_nodes_count,
+                                                       &(msa->length));
+    printf("Number of unique site patterns: %d\n\n", msa->length);
+
+    /* initialize the array of base frequencies  AA CC GG TT AC/CA AG/GA AT/TA CG/GC CT/TC GT/TG  */
+//    double user_freqs[10] = { 0.254504, 0.157238, 0.073667, 0.287452, 0.027336,
+//        0.058670, 0.041628, 0.024572, 0.064522, 0.010412 };
+
+
+    /* substitution rates: for GTR4 model those are 6 "regular" DNA susbt. rates + 1 rate
+     * for "unlikely" double substitutions (eg A/A -> C/T) */
+    double unique_subst_rates[7] = { 0.001000, 0.101223, 0.001000, 0.001000, 1.000000,
+        0.001000, 0.447050 };
+
+    /* get full above-diagonal half-matrix */
+    double * user_subst_rates = expand_uniq_rates(model->states, unique_subst_rates,
+                                                  model->rate_sym);
+
+    double rate_cats[RATE_CATS] = {0};
+
+    /* compute the discretized category rates from a gamma distribution
+     with alpha shape 1 and store them in rate_cats  */
+    pll_compute_gamma_cats(1, RATE_CATS, rate_cats, PLL_GAMMA_RATES_MEAN);
+
+    /* set frequencies at model with index 0 (we currently have only one model) */
+    //pll_set_frequencies(partition, 0, model->freqs ? model->freqs : user_freqs);
+    pll_set_frequencies(partition, 0, model->freqs ? model->freqs : empirical_frequencies);
+
+    /* set substitution parameters at model with index 0 */
+   // pll_set_subst_params(partition, 0, model->rates ? model->rates : user_subst_rates);
+     pll_set_subst_params(partition, 0, model->rates ? model->rates : empirical_subst_rates);
+    free(user_subst_rates);
+
+    /* set rate categories */
+    pll_set_category_rates(partition, rate_cats);
+
+    /* set pattern weights and free the weights array */
+    pll_set_pattern_weights(partition, weight);
+    free(weight);
+
+    //set_partition_tips(chain, partition, msa, programOptions);
+
+    // pll_msa_destroy(msa);
+
+    /* destroy hash table */
+    hdestroy();
+    /* we no longer need these two arrays (keys and values of hash table... */
+    free(data);
+
+    if (!retval)
+        fprintf(stderr, "Error initializing partition!");
+    /* Compute initial LH of the starting tree */
+    double loglh = pllmod_treeinfo_compute_loglh(treeinfo, 1);
+    pllmod_treeinfo_destroy(treeinfo);
+    double * clv ;
+    int s, clv_index, j, k;
+    int scaler_index = PLL_SCALE_BUFFER_NONE;
+    unsigned int * scaler = (scaler_index == PLL_SCALE_BUFFER_NONE) ?
+    NULL : partition->scale_buffer[scaler_index];
+    unsigned int states = partition->states;
+    unsigned int states_padded = partition->states_padded;
+    unsigned int rates = partition->rate_cats;
+    double prob;
+    unsigned int *site_id = 0;
+    int index;
+    unsigned int float_precision;
+
+    pll_partition_destroy(partition);
+    /* we will no longer need the tree structure */
+    //pll_utree_destroy(unrootedTree, NULL);
+    destroyTree(unrootedTree, NULL);
+    pllmod_util_model_destroy(model);
+
+    return loglh;
+}
 void Chain::set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError)
 {
     //pll_state_t pll_map_gt10_2[256];

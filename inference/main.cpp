@@ -8,7 +8,7 @@
 #include <string>
 #include "data_utils.hpp"
 #include "population.hpp"
-#include "chain.hpp"
+#include "mcmc_chain.hpp"
 #include "definitions.hpp"
 #include "utils.hpp"
 #include "constants.hpp"

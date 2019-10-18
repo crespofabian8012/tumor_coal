@@ -16,7 +16,7 @@ extern "C"
 #include <libpll/pllmod_algorithm.h>
 }
 
-#include "chain.hpp"
+#include "mcmc_chain.hpp"
 #include "data_utils.hpp"
 #include "definitions.hpp"
 #include "eigen.hpp"

@@ -8,14 +8,24 @@
 #ifndef Chain_hpp
 #define Chain_hpp
 
+#include <unordered_map>
 #include <stdio.h>
+
+
+
 #include "data_utils.hpp"
-#include "Chain.hpp"
+
+
 //#include "population.hpp"
 
 
 #include "utils.hpp"
 #include "definitions.hpp"
+
+
+
+//using Assignment = std::map<std::string, int>;
+
 class Chain{
 public:
     int chainNumber;
@@ -25,6 +35,7 @@ public:
     int currentNumberIerations;
 
     pll_unode_t *root;
+    pll_rnode_t *rootRootedTree;
     vector<pll_unode_t*> nodes;
     vector<pll_unode_t*> treeTips;
     
@@ -49,8 +60,11 @@ public:
     double currentlogConditionalLikelihoodTree;
     double currentlogConditionalLikelihoodSequences;
     
-    pll_utree_t *initialTree;
+    pll_utree_t *initialUnrootedTree;
+    pll_rtree_t *initialRootedTree;
     
+    std::unordered_map<pll_unode_t*, Population*> tipsAssign;
+    std::unordered_map<std::string, pll_unode_t*> labelsAssign;
 public:
     Chain( int chainNumber,
           int numClones,
@@ -86,7 +100,9 @@ public:
     
     
     
-    int setIntitialTree(char * NewickString);
+    int setInitialTreeFromNewick(char * NewickString);
+
+    int setInitialTreeUnrootedTree(pll_utree_t *unrootedTree);
     
     pll_unode_t* BuildTree(vector<Population* > &populations,
                                   Population *CurrentPop,
@@ -150,7 +166,14 @@ public:
     void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError);
     void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *));
     void  destroyTree(pll_utree_t * tree, void (*cb_destroy)(void *));
-   static void InitializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree);
+   static void initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree);
+    void runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
+                         char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes
+                  );
+    void newScaledGrowthRateMoveforPopulation( Population *popI, long int *seed,  ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions & mcmcOptions, vector<int> &sampleSizes);
+    void initializeCoalescentEventTimes(pll_utree_t *utree, vector<int > &sampleSizes);
+    void initializeMapPopulationAssignFromTree();
+    Population * getPopulationbyIndex(int indexPopulation);
 };
 
 #endif /* Chain_hpp */

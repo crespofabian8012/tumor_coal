@@ -3,16 +3,16 @@
 
 
 [*** GLOBAL SETTINGS ***]
-[simulate data or do inference (mandatory. 1= do simulation, 0 = do inference)]	s1
-[number of replicates (mandatory)]	n10
+[simulate data or do inference (mandatory. 1= do simulation, 0 = do inference) s1]
+[number of replicates (mandatory)]	n1
 
 
 [*** POPULATION GENETICS SETTINGS ***]
 [Haploid - Diploid (0-1) (mandatory)]	x2
 
 [number of clones; clone number, sample size, population size (not effective), birth rate, death rate, time to origin (days, months, years; All clones with 0 = estimated) (mandatory)]
-[c1
-	1 100 1000  0.1  0.0999 50000]
+c1
+	1 8 1000  0.1  0.0999 50000
 [c1
 	1 20 1000  1  0.99999999 10000000]
 [c1
@@ -25,10 +25,10 @@
 [c2
 	1 2 1000 0.1 0.0999  30000
 	2 3 1000 0.1 0.0996 25000]
-c3
+[c3
 	1 4 1000 0.1 0.0999 50000
 	2 5 1000 0.1 0.0991 12500
-	3 3 1000 0.1 0.0985 13067
+	3 3 1000 0.1 0.0985 13067]
 [c4
 	1 99 1000 0.1 0.0999 50000
 	2 99 1000 0.2 0.1996  10000

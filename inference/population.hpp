@@ -9,7 +9,9 @@
 #define Population_hpp
 
 #include <stdio.h>
+
 #include <vector>
+
 
 extern "C"
 {
@@ -22,8 +24,6 @@ extern "C"
 
 #include "tree_node.hpp"
 
-using namespace std;
-
 class Population
 {
 public:
@@ -32,6 +32,7 @@ public:
     double timeOriginSTD; // standardized time of origin
     double timeOriginInput; // time of origin
     double delta; // growth rate * effectPopSize
+    double olddelta;
     double effectPopSize;
     double oldeffectPopSize;
     double birthRate, deathRate, growthRate;
@@ -59,6 +60,8 @@ public:
     
     Population *FatherPop;
     vector<double> CoalescentEventTimes;
+    
+     
 
 public:
     Population(int ind, int ord, double timeOriginInput,

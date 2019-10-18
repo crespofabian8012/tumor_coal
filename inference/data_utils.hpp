@@ -23,7 +23,6 @@
 #include "eigen.hpp"
 #include "population.hpp"
 #include "tree_node.hpp"
-#include "Chain.hpp"
 
 extern "C"
 {
@@ -165,4 +164,5 @@ int set_tipclv_custom_error_model(pll_partition_t * partition,
                                   const char * sequence,
                                   double _seq_error_rate,
                                   double _dropout_rate);
+double LogUniformDensity(double value, double from, double to);
 #endif /* data_utils_hpp */

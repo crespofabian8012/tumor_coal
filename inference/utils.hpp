@@ -14,7 +14,7 @@
 #include "tree_node.hpp"
 
 void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions);
-void ReadFastaFile(char *fileName, int** ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions);
+void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions);
 
 int CheckMatrixSymmetry(double matrix[4][4]);
 int WhichNucChar (char nucleotide);

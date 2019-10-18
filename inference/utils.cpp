@@ -68,7 +68,7 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
 }
 /************************ ReadFastaFile ***********************/
 /*  ReadFastaFile */
-void ReadFastaFile(char *fileName, int** ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions){
+void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions){
     FILE *fastaFile;
     kseq_t *seq;
     int l1;
@@ -80,7 +80,7 @@ void ReadFastaFile(char *fileName, int** ObservedData,  char **ObservedCellNames
     int index,i;
     int max_length=0.0;
     int numberSeq;
-    
+    vector<int> v;
     if ((fastaFile = freopen(fileName, "r", stdin)) != NULL){
         seq = kseq_init(fileno(fastaFile));
         while ((l1 = kseq_read(seq)) >= 0 ) {
@@ -100,18 +100,22 @@ void ReadFastaFile(char *fileName, int** ObservedData,  char **ObservedCellNames
             //if(current < *numSites){
             currentSeq=seq->seq.s;
             // for ( t= currentSeq; *t != '\0'; t++) {
+            vector<int> v;
             for ( index= 0; index < l1; index++) {
                 t= currentSeq+index;
                 if (programOptions.doUseGenotypes == NO) // use sequences
-                    ObservedData[current][index]= WhichNucChar(*t);
+                    v.push_back( WhichNucChar(*t));
+                //ObservedData[current][index]= WhichNucChar(*t);
                 else // use genotypypes
-                    ObservedData[current][index]= WhichGenotypeChar(*t);
+                    v.push_back(WhichGenotypeChar(*t));
+                //ObservedData[current][index]= WhichGenotypeChar(*t);
                 
                 seqlength++;
                 //   }
                 //seqlength= sizeof( seq->seq.s) / sizeof(char);
                 //dataFromFile[current++]= WhichNucChar(*temp);
             }
+            ObservedData.push_back(v);
             current++;
             if (seq->qual.l){
                 // printf("qual: %s\n", seq->qual.s);

@@ -1609,6 +1609,8 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             // healthyRoot->time = p->time * transformingBranchLength ;
             healthyRoot->timePUnits = currentTime * healthyRoot->effectPopSize;
             
+            fprintf (stderr, "\n Time of the healthy root %lf\n",  healthyRoot->timePUnits);
+            
             p->length = (p->anc1->timePUnits- p->timePUnits);
             //*mutationRate;
             p->lengthModelUnits = (p->anc1->time- p->time);
@@ -1634,20 +1636,27 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             
             healthyTip->anc1 = healthyRoot;
             healthyRoot->right = healthyTip;
-            healthyTip->time = 0;
-            healthyTip->timePUnits = 0;
+            
             double  healthyTipBranchLengthRatio =1;
+            
+            //this is to put healthy tip at the same level than the other tips
+//            healthyTip->time = 0;
+//            healthyTip->timePUnits = 0;
+//            healthyTip->length = (healthyTip->anc1->timePUnits- healthyTip->timePUnits);
+//
+//            healthyTip->lengthModelUnits = (healthyTip->anc1->time- healthyTip->time);
 
-            healthyTip->length = (healthyTip->anc1->timePUnits- healthyTip->timePUnits);
- 
-            healthyTip->lengthModelUnits = (healthyTip->anc1->time- healthyTip->time);
-
+            //for now we put the healthy tip at the same time than the healthy root
+             healthyTip->time = healthyRoot->time;
+             healthyTip->timePUnits = healthyRoot->timePUnits;
+            healthyTip->length = 0;
+            healthyTip->lengthModelUnits = 0;
+            
             healthyTip->isOutgroup= YES;
             
             //connectNodes(p, healthyTip, healthyRoot);
             //setLength(p);
             //setLength(healthyTip);
-
             //*treeRootInit=healthyRoot;
             treeRootInit=healthyRoot;
   
@@ -3315,5 +3324,19 @@ void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
     {
         if (cb_destroy)
             cb_destroy(node->data);
+    }
+}
+double LogUniformDensity(double value, double from, double to)
+{
+    double result;
+    if (value >= exp(from) && value<= exp(to) )
+    {
+        result = 1 / (value * (to-from));
+        return log(result);
+    }
+    else
+    {
+        result=0;
+        return result;
     }
 }

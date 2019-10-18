@@ -7,6 +7,9 @@
 
 #include <map>
 #include <string>
+#include <queue>
+#include <unordered_set>
+
 extern "C"
 {
 #include <libpll/pll_msa.h> //for pllmod_msa_empirical_frequencies
@@ -15,6 +18,8 @@ extern "C"
 #include <libpll/pllmod_common.h>
 #include <libpll/pllmod_algorithm.h>
 }
+
+#include <boost/algorithm/string.hpp>
 
 #include "mcmc_chain.hpp"
 #include "data_utils.hpp"
@@ -1189,7 +1194,8 @@ void Chain::GenerateEffectPopSizesFromPriors2( int noisy,   long int *seed,  int
     {
         for (j = 0; j < numClones; j++)
         {
-            oldproportionsVector[j]=proportionsVector[j] ;
+            proportionsVector.push_back(0);
+            oldproportionsVector.push_back(0);
         }
         
         RandomDirichlet(gammaParam,  numClones, proportionsVector, seed );
@@ -1212,16 +1218,21 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
 {
     Population* popI;
     int i;
-  
-  
-        double randomDelta;
-        mutationRate = RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, seed);
+    
+    double randomDelta;
+    mutationRate = RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, seed);
+
+    totalPopSize= RandomLogUniform(mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto, seed);
+    
+    for (size_t i = 0; i < programOptions.numClones; i++) {
+        proportionsVector.push_back(0);
+    }
+    RandomDirichlet(1, proportionsVector.size(), proportionsVector, seed);
+    
         
-        totalPopSize= RandomLogUniform(mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto, seed);
+        //double lambda = 1;
         
-        double lambda = 1;
-        
-        SetPopulationsBirthRate(  lambda);
+        SetPopulationsBirthRate(1);
         
         
         GenerateEffectPopSizesFromPriors2( programOptions.noisy,   seed, YES);
@@ -1239,6 +1250,7 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
         {
             popI=populations[i];
             popI->InitCoalescentEvents(numClones);
+            popI->effectPopSize = totalPopSize * proportionsVector[i];
         }
         if (programOptions.populationSampleSizesKnown ==YES)
         {
@@ -2155,99 +2167,142 @@ void Chain::dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
     }
 }
 
-void Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree)
+Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree)
 {
-    int chainNumber;
-    Chain *currentChain=NULL;
     double totalTreeLength;
     int        numCA, numMIG;
     double      cumNumCA, meanNumCA, cumNumMIG, meanNumMIG, numEventsTot;
     char *newickString2;
-    for(chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
+    
+    Chain *chain=new Chain(0, programOptions.numClones, 1, programOptions.mutationRate, programOptions.seqErrorRate, programOptions.dropoutRate);
+    
+    if (programOptions.numberClonesKnown)
     {
-        
-        //chains[chainNumber] = (Chain *)malloc(sizeof(Chain));
-        auto chain= new Chain(  chainNumber,
-                              programOptions.numClones,
-                              1,
-                              programOptions.mutationRate,
-                              programOptions.seqErrorRate,
-                              programOptions.dropoutRate
-                              );
-        
-        if (programOptions.numberClonesKnown)
-        {
-            chain->numNodes = programOptions.numNodes;
-            
-            
-        }
-        
-        chain->InitChainPopulations( programOptions.noisy, programOptions.TotalNumSequences );
-        
-        
-        chain->FillChainPopulationsFromPriors( programOptions,mcmcOptions, sampleSizes, seed );
-        
-        if (programOptions.doUseFixedTree == NO)
-        {
-            chain->root = chain->MakeCoalescenceTree (seed,
-                                                      chain->numNodes,
-                                                      chain->numClones,
-                                                      programOptions,
-                                                      cumNumCA,
-                                                      meanNumCA,
-                                                      cumNumMIG,
-                                                      meanNumMIG,
-                                                      numMIG,
-                                                      numCA,
-                                                      numEventsTot,
-                                                      ObservedCellNames, sampleSizes
-                                                      ) ;
-            
-        }
-        else
-        {
-            chain->initialUnrootedTree = initialTree;
-            chain->initialRootedTree = initialRootedTree;
-            //chain->root = initialRootedTree->root;
-            chain->rootRootedTree = initialRootedTree->root;
-           chain->root =  chain->initialUnrootedTree->nodes[chain->initialUnrootedTree->tip_count + chain->initialUnrootedTree->inner_count - 1];
-            
-            for (unsigned int i = 0; i < chain->initialUnrootedTree->inner_count + chain->initialUnrootedTree->tip_count; ++i)
-            {
-                auto node = chain->initialUnrootedTree->nodes[i];
-                chain->nodes.push_back(chain->initialUnrootedTree->nodes[i]);
-                if (node->back ==NULL && node->next!=NULL && node->next->back ==NULL && node->next->next!=NULL
-                    && node->next->next->back!=NULL)
-                { // first nodelet of a tip!
-                    chain->treeTips.push_back(node->next->next);
-                    
-                    // node->clv_index = tipsLabelling[node->label];
-                }
-            }
-            
-        }
-        totalTreeLength = chain->SumBranches(chain->root, chain->mutationRate);
-        //        cumNumMUperTree=0;
-        
-        newickString2=NULL;
-        newickString2 = chain->toNewickString ( chain->root, chain->mutationRate,     programOptions.doUseObservedCellNames);
-        printf("\n newick = %s  \n", newickString2);
-        
-        
-        chain->currentlogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(chain->root, programOptions);
-        printf ( "Initial likelihood of the tree of chain %d is:  %lf \n",chainNumber, chain->currentlogConditionalLikelihoodTree );
-        
-       //chain->currentlogConditionalLikelihoodSequences= chain->LogConditionalLikelihoodSequences( msa,  newickString2, programOptions, chain->seqErrorRate, chain->dropoutRate);
-        
-        
-        fprintf (stderr, "Initial likelihood of the sequences of chain %d  is = %lf  \n", chainNumber,chain->currentlogConditionalLikelihoodSequences );
-        
-        free(newickString2);
-        newickString2=NULL;
-        
-        chains.push_back(chain);
+        chain->numNodes = programOptions.numNodes;
+    }
+    
+    chain->InitChainPopulations( programOptions.noisy, programOptions.TotalNumSequences );
+    chain->FillChainPopulationsFromPriors( programOptions,mcmcOptions, sampleSizes, seed );
+    
+    if (programOptions.doUseFixedTree == NO)
+    {
+        chain->root = chain->MakeCoalescenceTree (seed,
+                                                  chain->numNodes,
+                                                  chain->numClones,
+                                                  programOptions,
+                                                  cumNumCA,
+                                                  meanNumCA,
+                                                  cumNumMIG,
+                                                  meanNumMIG,
+                                                  numMIG,
+                                                  numCA,
+                                                  numEventsTot,
+                                                  ObservedCellNames, sampleSizes
+                                                  ) ;
         
     }
+    else
+    {
+        chain->initialUnrootedTree = initialTree;
+        chain->initialRootedTree = initialRootedTree;
+        //chain->root = initialRootedTree->root;
+        chain->rootRootedTree = initialRootedTree->root;
+        chain->root =  chain->initialUnrootedTree->nodes[chain->initialUnrootedTree->tip_count + chain->initialUnrootedTree->inner_count - 1];
+        
+        chain->initializeCoalescentEventTimes(chain->initialUnrootedTree, sampleSizes);
+    }
+    totalTreeLength = chain->SumBranches(chain->root, chain->mutationRate);
+    //        cumNumMUperTree=0;
+    
+    newickString2=NULL;
+    newickString2 = chain->toNewickString ( chain->root, chain->mutationRate,     programOptions.doUseObservedCellNames);
+    printf("\n newick = %s  \n", newickString2);
+    
+    
+    chain->currentlogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(chain->root, programOptions);
+    printf ( "Initial likelihood of the tree of chain %d is:  %lf \n",0, chain->currentlogConditionalLikelihoodTree );
+    
+    //chain->currentlogConditionalLikelihoodSequences= chain->LogConditionalLikelihoodSequences( msa,  newickString2, programOptions, chain->seqErrorRate, chain->dropoutRate);
+    
+    
+    fprintf (stderr, "Initial likelihood of the sequences of chain %d  is = %lf  \n", 0,chain->currentlogConditionalLikelihoodSequences );
+    
+    free(newickString2);
+    newickString2=NULL;
+
+    return chain;
+
+//    for(chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
+//    {
+//        auto chain= new Chain(chainNumber,
+//                              programOptions.numClones,
+//                              1,
+//                              programOptions.mutationRate,
+//                              programOptions.seqErrorRate,
+//                              programOptions.dropoutRate
+//                              );
+    
+//        if (programOptions.numberClonesKnown)
+//        {
+//            chain->numNodes = programOptions.numNodes;
+//
+//
+//        }
+//
+//        chain->InitChainPopulations( programOptions.noisy, programOptions.TotalNumSequences );
+//
+//
+//        chain->FillChainPopulationsFromPriors( programOptions,mcmcOptions, sampleSizes, seed );
+//
+//        if (programOptions.doUseFixedTree == NO)
+//        {
+//            chain->root = chain->MakeCoalescenceTree (seed,
+//                                                      chain->numNodes,
+//                                                      chain->numClones,
+//                                                      programOptions,
+//                                                      cumNumCA,
+//                                                      meanNumCA,
+//                                                      cumNumMIG,
+//                                                      meanNumMIG,
+//                                                      numMIG,
+//                                                      numCA,
+//                                                      numEventsTot,
+//                                                      ObservedCellNames, sampleSizes
+//                                                      ) ;
+//
+//        }
+//        else
+//        {
+//            chain->initialUnrootedTree = initialTree;
+//            chain->initialRootedTree = initialRootedTree;
+//            //chain->root = initialRootedTree->root;
+//            chain->rootRootedTree = initialRootedTree->root;
+//            chain->root =  chain->initialUnrootedTree->nodes[chain->initialUnrootedTree->tip_count + chain->initialUnrootedTree->inner_count - 1];
+//
+//            chain->initializeCoalescentEventTimes(chain->initialUnrootedTree, sampleSizes);
+//        }
+//        totalTreeLength = chain->SumBranches(chain->root, chain->mutationRate);
+//        //        cumNumMUperTree=0;
+//
+//        newickString2=NULL;
+//        newickString2 = chain->toNewickString ( chain->root, chain->mutationRate,     programOptions.doUseObservedCellNames);
+//        printf("\n newick = %s  \n", newickString2);
+//
+//
+//        chain->currentlogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(chain->root, programOptions);
+//        printf ( "Initial likelihood of the tree of chain %d is:  %lf \n",chainNumber, chain->currentlogConditionalLikelihoodTree );
+//
+//       //chain->currentlogConditionalLikelihoodSequences= chain->LogConditionalLikelihoodSequences( msa,  newickString2, programOptions, chain->seqErrorRate, chain->dropoutRate);
+//
+//
+//        fprintf (stderr, "Initial likelihood of the sequences of chain %d  is = %lf  \n", chainNumber,chain->currentlogConditionalLikelihoodSequences );
+//
+//        free(newickString2);
+//        newickString2=NULL;
+//
+//        chains.push_back(chain);
+//
+//    }
 }
 void Chain::runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
               char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes
@@ -2605,43 +2660,88 @@ void Chain::newScaledGrowthRateMoveforPopulation( Population *popI, long int *se
         popI->olddelta= popI->delta;
     }
 }
+
+int getPopulationIndex(pll_unode_t *leaf_node)
+{
+    string nodeLabelString = std::string(leaf_node->label);
+    vector<string> strs;
+    boost::split(strs,nodeLabelString,boost::is_any_of("_"));
+    if (strs.size() == 4) {
+        int indexPopulation = stoi(strs[2].substr(1, strs[2].size()));
+        return indexPopulation;
+    }
+    
+    return -1;
+}
+bool is_leaf(pll_unode_t *node)
+{
+    // not complete -- should handle all cases
+    if (node->back == NULL && node->next !=NULL && node->next->back == NULL && node->next->next!=NULL
+        && node->next->next->back!=NULL) {
+        return true;
+    }
+    return false;
+}
+
+void updateCoalTimes(Population *pop)
+{
+    vector<pll_unode_t *> tips = pop->tips;
+    deque<pll_unode_t *> q(tips.begin(), tips.end());
+    unordered_map<pll_unode_t *, double> nodes_visited;
+    for (auto it = tips.begin(); it != tips.end(); ++it) {
+        nodes_visited[*it] = 0;
+    }
+    while (q.size() != 0) {
+        pll_unode_t *node = q.front();
+        q.pop_front();
+        double time = nodes_visited[node];
+        double length = node->length;
+        double coal_time = time + length;
+        
+        pll_unode_t *parent = node->back;
+        if (nodes_visited.count(parent) == 0) {
+            nodes_visited[parent] = coal_time;
+            q.push_back(parent);
+        }
+        
+        pop->CoalescentEventTimes.push_back(coal_time);
+    }
+}
+
 void Chain::initializeCoalescentEventTimes(pll_utree_t *utree, vector<int > &sampleSizes )
 {
     int totalSampleSize=0;
-    for (unsigned int i = 0; i <sampleSizes.size(); ++i)
+    for (unsigned int i = 0; i < sampleSizes.size(); ++i)
     {
-        totalSampleSize+=sampleSizes[i];
-        
+        totalSampleSize += sampleSizes[i];
     }
-    if ( utree->inner_count + utree->tip_count !=totalSampleSize )
+    if ( utree->tip_count - 1 != totalSampleSize )
     {
         
         printf("\n The number of tips have to be equal to the total sample size\n");
         exit(1);
     }
-        
+    
     for (unsigned int i = 0; i < utree->inner_count + utree->tip_count; ++i)
     {
         auto node = utree->nodes[i];
         
-        //if (!node->next) { // tip!
-        if (node->back ==NULL && node->next!=NULL && node->next->back ==NULL && node->next->next!=NULL
-            && node->next->next->back!=NULL)
-        { // first nodelet of a tip!
-            treeTips.push_back(node->next->next);
-            
-           // node->clv_index = tipsLabelling[node->label];
+        if (node->label != 0) // only the tips have labels
+        {
+            //cout << node->label << ": " << node->node_index << ", " << node->back << ", " << node->next << endl;
+            treeTips.push_back(node);
+            int popIdx = getPopulationIndex(node);
+            populations[popIdx]->tips.push_back(node);
         }
     }
-
+    
     for (unsigned int i = 0; i < numClones; ++i)
     {
         auto pop = populations[i];
-        //pop->CoalescentEventTimes.push_back();
-     
-        //sort CoalescentEventTimes
+        updateCoalTimes(pop);
     }
 }
+
 void Chain::initializeMapPopulationAssignFromTree()
 {
     if (initialUnrootedTree)

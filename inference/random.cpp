@@ -207,7 +207,7 @@ void  RandomDirichlet (double s, int vectorSize, vector<double> &outputVector, l
     //     return;
     for (i=0; i < vectorSize; i++){
         current = RandomGamma(s, seed);
-        outputVector.push_back(current) ;
+        outputVector[i] = current;
         //outputVector[i] = current;
         //*(*outputVector + i)=current;
         sum=sum+current;

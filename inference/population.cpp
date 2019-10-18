@@ -58,7 +58,7 @@ Population::Population(int ind, int ord, double timeOriginInput,
         else
             fprintf (stderr, "\n ERROR: Population growth rate cannot be negative \n");
         
-        if (timeOriginInput > 0)
+        if (timeOriginInput >= 0)
         {
             this->timeOriginInput = timeOriginInput;
         }

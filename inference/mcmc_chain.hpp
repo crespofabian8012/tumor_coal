@@ -56,7 +56,7 @@ public:
     vector<double > oldproportionsVector;
     int totalPopSize;
     int oldtotalPopSize;
-    double lambda ;
+    //double lambda ;
     double currentlogConditionalLikelihoodTree;
     double currentlogConditionalLikelihoodSequences;
     
@@ -166,7 +166,7 @@ public:
     void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError);
     void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *));
     void  destroyTree(pll_utree_t * tree, void (*cb_destroy)(void *));
-   static void initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree);
+   static Chain *initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree);
     void runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
                          char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes
                   );

@@ -55,6 +55,7 @@ public:
     int nodeIdAncestorMRCA;
     //pll_unode_t *MRCA;
     TreeNode *MRCA;
+    vector<pll_unode_t *> tips;
     
     pll_unode_t * nodeletMRCA;
     

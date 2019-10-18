@@ -71,6 +71,12 @@ int main(int argc, char* argv[] )
     
     mcmcOptions.tuningParameter = 1;
     mcmcOptions.thinning  = 1000;
+    mcmcOptions.totalEffectPopSizefrom = 7;
+    mcmcOptions.totalEffectPopSizeto = 13;
+    mcmcOptions.MutRatefrom = -13;
+    mcmcOptions.MutRateto = -8;
+    mcmcOptions.Deltafrom = -4;
+    mcmcOptions.Deltato = 1;
     
     programOptions.seqErrorRate=programOptions.sequencingError;
     programOptions.dropoutRate=programOptions.ADOrate;
@@ -90,6 +96,7 @@ int main(int argc, char* argv[] )
     
     programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
     programOptions.numCells = programOptions.TotalNumSequences;
+    programOptions.doUseFixedTree = YES;
     
     if (programOptions.numberClonesKnown==YES)
     {
@@ -151,7 +158,7 @@ int main(int argc, char* argv[] )
     
     free(newick);
     
-      Chain::initializeChains(chains, programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree);
+    Chain::initializeChains(chains, programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree);
 
     Chain *currentChain;
     int currentIteration;

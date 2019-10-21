@@ -146,8 +146,8 @@ int main(int argc, char* argv[] )
         exit(1);
     }
      //pllmod_utree_set_length_recursive(initialUnrootedTree, BRLEN_MIN, 1);
-    pll_unode_t *root = initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
-    pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
+   pll_unode_t *root = initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
+   // pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
        char * newick = pll_utree_export_newick(initialUnrootedTree->vroot,NULL);
        char * rootedNewick = pll_utree_export_newick_rooted(initialUnrootedTree->vroot, 6.13);
       printf("%s\n", newick);

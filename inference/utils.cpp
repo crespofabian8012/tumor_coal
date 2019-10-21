@@ -61,7 +61,7 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
     }
     else{
         
-        fprintf (stderr, "\nERROR: Can't read parameters file.");
+        fprintf (stderr, "\nERROR: Can't read fasta file.");
         PrintUsage();
         
     }
@@ -492,3 +492,4 @@ int WhichGenotypeChar (char nucleotide)
         exit(-1);
     }
 }
+

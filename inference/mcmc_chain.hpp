@@ -1,14 +1,16 @@
 //
-//  Chain.hpp
+//  mcmc_chain.hpp
 //  run
 //
 //  Created by Fausto Fabian Crespo Fernandez on 7/10/19.
 //
 
-#ifndef Chain_hpp
-#define Chain_hpp
+#ifndef mcmc_chain_hpp
+#define mcmc_chain_hpp
+
 
 #include <unordered_map>
+//#include <unordered_set>
 #include <stdio.h>
 
 
@@ -65,6 +67,8 @@ public:
     
     std::unordered_map<pll_unode_t*, Population*> tipsAssign;
     std::unordered_map<std::string, pll_unode_t*> labelsAssign;
+
+    //vector<pll_edge_node_t*> edges;
 public:
     Chain( int chainNumber,
           int numClones,
@@ -174,6 +178,12 @@ public:
     void initializeCoalescentEventTimes(pll_utree_t *utree, vector<int > &sampleSizes);
     void initializeMapPopulationAssignFromTree();
     Population * getPopulationbyIndex(int indexPopulation);
+    int getPopulationIndex(pll_unode_t *leaf_node);
+    void chooseTimeOfOriginsOnTree(int numberPoints, long int *seed);
+    void initNodeDataFromTree();
+    void initPopulationFromRootNodeOnTree(pll_unode_t *p, Population *population);
+
+   
 };
 
 #endif /* Chain_hpp */

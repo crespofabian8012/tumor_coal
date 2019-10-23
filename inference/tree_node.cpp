@@ -4,7 +4,7 @@
 //
 //  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
 //
-
+#include <vector>
 #include "tree_node.hpp"
 
 void init_to_empty_str(char str[MAX_NAME])
@@ -38,5 +38,12 @@ TreeNode::TreeNode()
     isLeaf = NO;
     init_to_empty_str(cellName);
     init_to_empty_str(observedCellName);
+    numberOfTipsSubTree=0;
     
+}
+void TreeNode::initNumberTipsVector(int numberClones)
+{
+    for (size_t i = 0; i < numberClones; i++) {
+        numberTipsByPopulation.push_back(0);
+    }
 }

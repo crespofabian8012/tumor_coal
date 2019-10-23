@@ -56,8 +56,10 @@ public:
     //pll_unode_t *MRCA;
     TreeNode *MRCA;
     vector<pll_unode_t *> tips;
+    vector<pll_rnode_t *> rtips;
     
     pll_unode_t * nodeletMRCA;
+    pll_rnode_t * rMRCA;
     
     Population *FatherPop;
     vector<double> CoalescentEventTimes;

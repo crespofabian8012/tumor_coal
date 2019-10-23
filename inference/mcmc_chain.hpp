@@ -41,6 +41,9 @@ public:
     vector<pll_unode_t*> nodes;
     vector<pll_unode_t*> treeTips;
     
+    vector<pll_rnode_t*> rnodes;
+    vector<pll_rnode_t*> rtreeTips;
+    
     pll_unode_t *oldroot;
     vector<pll_unode_t *>oldnodes;
     vector<pll_unode_t*>  oldtreeTips;
@@ -175,15 +178,33 @@ public:
                          char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes
                   );
     void newScaledGrowthRateMoveforPopulation( Population *popI, long int *seed,  ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions & mcmcOptions, vector<int> &sampleSizes);
-    void initializeCoalescentEventTimes(pll_utree_t *utree, vector<int > &sampleSizes);
+    void initializeCoalescentEventTimesFormSampleSizes(pll_utree_t *utree, vector<int > &sampleSizes);
     void initializeMapPopulationAssignFromTree();
     Population * getPopulationbyIndex(int indexPopulation);
-    int getPopulationIndex(pll_unode_t *leaf_node);
-    void chooseTimeOfOriginsOnTree(int numberPoints, long int *seed);
+    int getPopulationIndex(char * label);
+    std::map<pll_unode_t*, Population*> chooseTimeOfOriginsOnTree( long int *seed);
+    std::map<pll_rnode_t*, Population*>  chooseTimeOfOriginsOnRootedTree( long int *seed);
     void initNodeDataFromTree();
-    void initPopulationFromRootNodeOnTree(pll_unode_t *p, Population *population);
+  
 
-   
+    void initPopulationSampleSizesFromRootNodeOnTree(pll_unode_t *p, Population *population );
+    void initPopulationsSampleSizes(std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation);
+    void initPopulationsCoalescentAndMigrationEvents(std::map<pll_unode_t*, Population*> mrcaOfPopulation );
+    void initPopulationCoalescentAndMigrationEventsFromRootNodeOnTree(pll_unode_t *p, Population *population, std::map<pll_unode_t*, Population*> mrcaOfPopulation );
+    void initProportionsVector();
+    void generateProportionsVectorFromDirichlet(double alpha[]);
+    void initPopulationMigration();
+    void initTotalEffectivePopulationSize(MCMCoptions &mcmcOptions, long int *seed);
+    void initPopulationsCoalTimes();
+    void initEffectPopulationSizesFromProportionsVector();
+    void initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnown);
+    static int *computeNumberTipsSubTree(pll_unode_t *node, void *data);
+    void initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignationKnown );
+    void initNodeDataFromRootedTree();
+    void initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation );
+    void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, Population*> rmrcaOfPopulation);
+    void initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *population, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation);
+    void  initNumberTipsSubTree(pll_rnode_t *node);
 };
 
 #endif /* Chain_hpp */

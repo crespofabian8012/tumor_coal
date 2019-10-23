@@ -34,8 +34,10 @@ public:
     vector<int>        numbersMaternalMutationsPerSite;
     vector<int>        numbersPaternalMutationsPerSite;
     bool         isLeaf;
-    
+    int numberOfTipsSubTree;
+    vector<int> numberTipsByPopulation;
     TreeNode();
+    void initNumberTipsVector(int numberClones);
 };
 
 typedef TreeNode* pTreeNode;

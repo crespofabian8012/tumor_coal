@@ -20,6 +20,7 @@ extern "C"
 #include <libpll/pllmod_util.h>
 #include <libpll/pllmod_common.h>
 #include <libpll/pllmod_algorithm.h>
+#include <libpll/pll.h>
 }
 #include <stdarg.h>
 #include <search.h>
@@ -147,11 +148,15 @@ int main(int argc, char* argv[] )
     }
      //pllmod_utree_set_length_recursive(initialUnrootedTree, BRLEN_MIN, 1);
    pll_unode_t *root = initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
-   // pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
+    
+     pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
        char * newick = pll_utree_export_newick(initialUnrootedTree->vroot,NULL);
        char * rootedNewick = pll_utree_export_newick_rooted(initialUnrootedTree->vroot, 6.13);
+       char * rootedNewick2 =  pll_rtree_export_newick(initialRootedTree->root,NULL);
+
       printf("%s\n", newick);
       printf("%s\n", rootedNewick);
+      printf("%s\n", rootedNewick2);
     
     Chain *chain;
     double loglh =  chain->LogConditionalLikelihoodSequences( msa,  newick, programOptions, 0, 0);

@@ -3366,7 +3366,8 @@ void Chain::initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_r
              { // in this branch we have  migration
              
                currentPopulation->UpdateListMigrants(numClones, rmrcaOfPopulation[p->left], currentPopulation);
-            initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(p->left, rmrcaOfPopulation[p->left], rmrcaOfPopulation, healthyTipLabel);
+                 rmrcaOfPopulation[p->left]->FatherPop=currentPopulation;
+                 initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(p->left, rmrcaOfPopulation[p->left], rmrcaOfPopulation, healthyTipLabel);
              }
             else{
                 initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(p->left, currentPopulation, rmrcaOfPopulation, healthyTipLabel);
@@ -3374,7 +3375,9 @@ void Chain::initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_r
             if(p->right !=NULL && rmrcaOfPopulation.count(p->right) != 0 )
              { // in this branch we have  migration
               currentPopulation->UpdateListMigrants(numClones,  rmrcaOfPopulation[p->right], currentPopulation);
-            initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(p->right, rmrcaOfPopulation[p->right], rmrcaOfPopulation, healthyTipLabel);
+           
+                rmrcaOfPopulation[p->right]->FatherPop=currentPopulation;
+                 initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(p->right, rmrcaOfPopulation[p->right], rmrcaOfPopulation, healthyTipLabel);
               }
             else{
            initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(p->right, currentPopulation, rmrcaOfPopulation, healthyTipLabel);

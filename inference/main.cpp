@@ -80,8 +80,9 @@ int main(int argc, char* argv[] )
     mcmcOptions.Deltafrom = -4;
     mcmcOptions.Deltato = 1;
     
-    programOptions.seqErrorRate=programOptions.sequencingError;
-    programOptions.dropoutRate=programOptions.ADOrate;
+   
+    programOptions.seqErrorRate=programOptions.sequencingError=0;
+    programOptions.dropoutRate=programOptions.ADOrate=0;
     
     vector<int> sampleSizes(programOptions.numClones);
     
@@ -125,12 +126,10 @@ int main(int argc, char* argv[] )
     mcmcOptions.numChains=2;
     
     vector<Chain*> chains;
-    
 
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
     pll_utree_t * initialUnrootedTree = pll_utree_parse_newick(treefileName);
    
-
     if (!initialRootedTree)
     {
         fprintf (stderr, "Error reading newick representation of initial rooted tree \n");
@@ -151,18 +150,18 @@ int main(int argc, char* argv[] )
    pll_unode_t *root = initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
     
      pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
-       char * newick = pll_utree_export_newick(initialUnrootedTree->vroot,NULL);
-       char * rootedNewick = pll_utree_export_newick_rooted(initialUnrootedTree->vroot, 6.13);
-       char * rootedNewick2 =  pll_rtree_export_newick(initialRootedTree->root,NULL);
-
-      printf("%s\n", newick);
-      printf("%s\n", rootedNewick);
-      printf("%s\n", rootedNewick2);
+//       char * newick = pll_utree_export_newick(initialUnrootedTree->vroot,NULL);
+//       char * rootedNewick = pll_utree_export_newick_rooted(initialUnrootedTree->vroot, 6.13);
+//       char * rootedNewick2 =  pll_rtree_export_newick(initialRootedTree->root,NULL);
+//
+//      printf("%s\n", newick);
+//      printf("%s\n", rootedNewick);
+//      printf("%s\n", rootedNewick2);
+//    
+//    Chain *chain;
+//    double loglh =  chain->LogConditionalLikelihoodSequences( msa,  newick, programOptions, 0, 0);
     
-    Chain *chain;
-    double loglh =  chain->LogConditionalLikelihoodSequences( msa,  newick, programOptions, 0, 0);
-    
-    free(newick);
+    //free(newick);
     string healthyTipLabel = "healthycell";
     Chain::initializeChains(chains, programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
 

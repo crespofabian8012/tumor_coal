@@ -161,8 +161,8 @@ public:
     double SumBranches(pll_unode_t *root, double mutationRate);
     char * toNewickString ( pll_unode_t *p, double mutationRate,     int doUseObservedCellNames);
     
-    double LogDensityCoalescentTimesForPopulation(pll_unode_t  *tree);
-    double LogConditionalLikelihoodTree(pll_unode_t  *tree, ProgramOptions &programOptions  );
+    double LogDensityCoalescentTimesForPopulation();
+    double LogConditionalLikelihoodTree( ProgramOptions &programOptions  );
     double  LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, double seqError,double dropoutError);
     int set_tipclv_custom_error_model(pll_partition_t * partition,
                            unsigned int tip_index,
@@ -173,7 +173,7 @@ public:
     void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError);
     void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *));
     void  destroyTree(pll_utree_t * tree, void (*cb_destroy)(void *));
-   static Chain *initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree);
+   static Chain *initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree, string& healthyTipLabel);
     void runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
                          char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes
                   );
@@ -183,7 +183,7 @@ public:
     Population * getPopulationbyIndex(int indexPopulation);
     int getPopulationIndex(char * label);
     std::map<pll_unode_t*, Population*> chooseTimeOfOriginsOnTree( long int *seed);
-    std::map<pll_rnode_t*, Population*>  chooseTimeOfOriginsOnRootedTree( long int *seed);
+    std::map<pll_rnode_t*, Population*>  chooseTimeOfOriginsOnRootedTree( long int *seed, string &healthyCellLabel);
     void initNodeDataFromTree();
   
 
@@ -201,10 +201,13 @@ public:
     static int *computeNumberTipsSubTree(pll_unode_t *node, void *data);
     void initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignationKnown );
     void initNodeDataFromRootedTree();
-    void initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation );
-    void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, Population*> rmrcaOfPopulation);
+    void initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation,  string& healthyTipLabel);
+    void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, Population*> rmrcaOfPopulation, string& healthyTipLabel);
     void initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *population, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation);
     void  initNumberTipsSubTree(pll_rnode_t *node);
+    void computeCandidateBranches(string& healthyCellLabel,vector<double> &branchLengths, vector<pll_tree_edge_t *> &edges);
+    void initTimeOriginSTD();
+    double SumBranches2(pll_rnode_t *p, double mutationRate);
 };
 
 #endif /* Chain_hpp */

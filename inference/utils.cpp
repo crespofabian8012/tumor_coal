@@ -36,16 +36,14 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
         numberSeq=0;
         while ((l1 = kseq_read(seq)) >= 0 )
         {
-            //printf("name: %s\n", seq->name.s);
-            //if (seq->comment.l) printf("comment: %s\n", seq->comment.s);
-            //printf("seq: %s\n", seq->seq.s);
+ 
             numberSeq=numberSeq+1;
             if ( l1 > max_length)
             {
                 max_length=l1;
             }
         }
-        //*numSites=max_length;
+
         programOptions.numSites=max_length;
         if (numberSeq >=1){
             // *numCells =numberSeq;//not counting the healthy cell
@@ -84,20 +82,14 @@ void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **O
     if ((fastaFile = freopen(fileName, "r", stdin)) != NULL){
         seq = kseq_init(fileno(fastaFile));
         while ((l1 = kseq_read(seq)) >= 0 ) {
-            //printf("name: %s\n", seq->name.s);
-            //strcpy( cellNames[current] , seq->name.s);
             ObservedCellNames[current] = (char*) malloc(MAX_NAME);
             if (ObservedCellNames[current] != NULL)
             {
                 strcpy(ObservedCellNames[current], seq->name.s);
-                //memcpy(ObservedCellNames[current], seq->name.s, sizeof(seq->name.s));
-                
+
             }
-            
-            //if (seq->comment.l) printf("comment: %s\n", seq->comment.s);
-            //printf("seq: %s\n", seq->seq.s);
+
             seqlength=0;
-            //if(current < *numSites){
             currentSeq=seq->seq.s;
             // for ( t= currentSeq; *t != '\0'; t++) {
             vector<int> v;
@@ -108,12 +100,7 @@ void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **O
                 //ObservedData[current][index]= WhichNucChar(*t);
                 else // use genotypypes
                     v.push_back(WhichGenotypeChar(*t));
-                //ObservedData[current][index]= WhichGenotypeChar(*t);
-                
                 seqlength++;
-                //   }
-                //seqlength= sizeof( seq->seq.s) / sizeof(char);
-                //dataFromFile[current++]= WhichNucChar(*temp);
             }
             ObservedData.push_back(v);
             current++;

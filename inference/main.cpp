@@ -46,6 +46,7 @@ int main(int argc, char* argv[] )
     Files files;
     FilePaths filePaths;
     MCMCoptions mcmcOptions;
+    vector<double> varTimeGMRCA;
     // 1. call function to parse the input file
     //
     if (argc <= 2)
@@ -162,8 +163,8 @@ int main(int argc, char* argv[] )
     double loglh =  chain->LogConditionalLikelihoodSequences( msa,  newick, programOptions, 0, 0);
     
     free(newick);
-    
-    Chain::initializeChains(chains, programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree);
+    string healthyTipLabel = "healthycell";
+    Chain::initializeChains(chains, programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
 
     Chain *currentChain;
     int currentIteration;
@@ -174,8 +175,9 @@ int main(int argc, char* argv[] )
    {
        for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
      {
-////            runChain(&(chains[chainNumber]),    &mcmcOptions,  &(programOptions.seed),  &filePaths, &files, &programOptions,
-////                     varTimeGMRCA, ObservedCellNames, msa, sampleSizes);
+//            runChain(&(chains[chainNumber]),    &mcmcOptions,  &(programOptions.seed),  &filePaths, &files, &programOptions,
+//                   varTimeGMRCA, ObservedCellNames, msa, sampleSizes);
+         
 ////
 //           if (currentIteration % sampleEvery == 0 )
 //           {

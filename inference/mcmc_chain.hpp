@@ -208,6 +208,10 @@ public:
     void computeCandidateBranches(string& healthyCellLabel,vector<double> &branchLengths, vector<pll_tree_edge_t *> &edges);
     void initTimeOriginSTD();
     double SumBranches2(pll_rnode_t *p, double mutationRate);
+    void filterSortPopulationsCoalescentEvents();
+    void samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *seed );
+    void rescaleRootedTreeBranchLengths(double mutationRate);
+    
 };
 
 #endif /* Chain_hpp */

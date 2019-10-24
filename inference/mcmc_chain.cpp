@@ -1215,7 +1215,7 @@ void Chain::generateProportionsVectorFromDirichlet(double alpha[]){
     for (unsigned int i = 0; i < numClones; ++i){
         theta[i]=0;
     }
-    const gsl_rng *r = gsl_rng_alloc(gsl_rng_mt19937);
+   gsl_rng * r = gsl_rng_alloc (gsl_rng_ranlux389);
     gsl_ran_dirichlet( r,  numClones, alpha, theta);
     for (int i=0; i< numClones; i++)
     {
@@ -1237,7 +1237,7 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
     initTotalEffectivePopulationSize(mcmcOptions, seed);
     initProportionsVector();
     //double lambda = 1;
-    SetPopulationsBirthRate(1);
+    SetPopulationsBirthRate(mcmcOptions.fixedLambda);
     
        // GenerateEffectPopSizesFromPriors2( programOptions.noisy,   seed, YES);
     if (programOptions.doUseFixedTree ==NO)
@@ -2240,6 +2240,7 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
     {
         chain->initialUnrootedTree = initialTree;
         chain->initialRootedTree = initialRootedTree;
+        chain->rescaleRootedTreeBranchLengths(chain->mutationRate);
         //chain->root = initialRootedTree->root;
         chain->rootRootedTree = initialRootedTree->root;
         chain->root =  chain->initialUnrootedTree->nodes[chain->initialUnrootedTree->tip_count + chain->initialUnrootedTree->inner_count - 1];
@@ -2267,6 +2268,9 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
         chain->initTimeOriginSTD();
         chain->initPopulationMigration();//after setting the timeSTD
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(rmrcaOfPopulation, healthyTipLabel);
+        chain->filterSortPopulationsCoalescentEvents();
+        chain->SetPopulationsBirthRate(mcmcOptions.fixedLambda);
+        chain->samplePopulationDeltaFromPriors(mcmcOptions, seed );
         //chain->initPopulationsCoalescentAndMigrationEvents(mrcaOfPopulation);
         
         //chain->initializeCoalescentEventTimes(chain->initialUnrootedTree, sampleSizes);
@@ -3469,4 +3473,44 @@ Population * Chain::getPopulationbyIndex(int indexPopulation)
             return pop;
     }
     return NULL;
+}
+void Chain::filterSortPopulationsCoalescentEvents()
+{
+     Population *pop;
+    for (unsigned int i = 0; i < numClones; ++i){
+        pop = populations[i];
+        pop->filterAndSortCoalescentEvents();
+    }
+}
+void Chain::samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *seed )
+{
+    int i;
+    Population *popI;
+    double randomDelta;
+    for( i = 0 ; i < numClones; i++)
+    {
+            popI=populations[i];
+            randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato, seed);
+            //popI->delta = chain->proportionsVector[i] * randomDelta;
+            popI->delta =  randomDelta;
+            popI->growthRate =popI->delta  / popI->effectPopSize;
+            popI->popSize=popI->effectPopSize * popI->birthRate;
+            popI->deathRate= popI->birthRate - popI->growthRate;
+    }
+}
+void Chain::rescaleRootedTreeBranchLengths(double mutationRate)
+{
+    if (mutationRate <=0)
+        printf("Error, the mutation rate must be positive \n");
+    if (initialRootedTree !=NULL )
+    {
+        for (unsigned int i = 0; i < initialRootedTree->inner_count + initialRootedTree->tip_count; ++i)
+        {
+            auto node = initialRootedTree->nodes[i];
+            if (node->parent!=NULL)
+            {
+                node->length = node->length / mutationRate;
+            }
+        }
+    }
 }

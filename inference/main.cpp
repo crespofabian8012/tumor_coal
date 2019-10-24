@@ -67,6 +67,7 @@ int main(int argc, char* argv[] )
     programOptions.doUseFixedTree =NO;
     programOptions.seed = 1248697;
     programOptions.numClones=3;
+    programOptions.mutationRate= 9.1e-8;
     
     std::map<std::string,int> tipsLabelling;
     std::map<pll_unode_t, Population> tipsAssign;
@@ -79,6 +80,7 @@ int main(int argc, char* argv[] )
     mcmcOptions.MutRateto = -8;
     mcmcOptions.Deltafrom = -4;
     mcmcOptions.Deltato = 1;
+    mcmcOptions.fixedLambda=1;
     
    
     programOptions.seqErrorRate=programOptions.sequencingError=0;

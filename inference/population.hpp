@@ -46,8 +46,6 @@ public:
     bool doEstimateTimeOrigin;
     bool isAlive, CellAssignationCompleted;
 //    double timeMigrationSTDCurrentPop; // TODO: check
-//    vector<double> migrationTimes;
-//    vector<Population *> immigrantsPopOrderedModelTime;
     vector<pair<double, Population *> > immigrantsPopOrderedByModelTime; // migrationTime, Population
     vector<int> idsActiveGametes;
     vector<int> idsGametes;
@@ -64,8 +62,6 @@ public:
     Population *FatherPop;
     vector<double> CoalescentEventTimes;
     
-     
-
 public:
     Population(int ind, int ord, double timeOriginInput,
                int sampleSize, int popSize, double birthRate,
@@ -88,5 +84,8 @@ public:
     static int bbinClones (double dat, double *v, int n);
     double DensityTime( double u);
     double LogProbNoCoalescentEventBetweenTimes(double from, double to, int numberActiveInd);
+    void filterAndSortCoalescentEvents();
+private:
+    static bool isNotPositive(double d);
 };
 #endif /* Population_hpp */

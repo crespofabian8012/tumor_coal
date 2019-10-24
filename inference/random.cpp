@@ -7,7 +7,9 @@
 
 #include <cmath>
 #include <stdio.h>
-
+#include <gsl/gsl_sf_bessel.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_cdf.h>
 #include "random.h"
 
 /***************************** RandomUniform **********************************/
@@ -218,6 +220,6 @@ void  RandomDirichlet (double s, int vectorSize, vector<double> &outputVector, l
     }
 }
 double RandomLogUniform( double from, double to, long int *seed){
-    
-    return(exp(from + RandomUniform(seed)*(to -from)));
+     gsl_rng * r = gsl_rng_alloc (gsl_rng_ranlux389);
+    return(exp(from + gsl_rng_uniform(r)*(to -from)));
 }

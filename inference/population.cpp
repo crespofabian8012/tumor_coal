@@ -8,6 +8,11 @@
 #include "population.hpp"
 #include "definitions.hpp"
 #include "random.h"
+#include <algorithm>
+#include <vector>
+#include <iterator>
+using namespace std;
+
 //#include "data_utils.hpp"
 using namespace std;
 
@@ -480,7 +485,8 @@ int Population::bbinClones (double dat, double *v, int n)
 double Population::DensityTime(double u){
     double term1=delta * exp(-1*delta*u);
     double term2=1-exp(-1*delta*u);
-    return delta * term1 * exp(-1*term1/term2) /(term2 * term2);
+    double result=delta * term1 * exp(-1*term1/term2) /(term2 * term2);
+    return result;
 }
 double Population::LogProbNoCoalescentEventBetweenTimes(double from, double to, int numberActiveInd)
 {
@@ -489,4 +495,17 @@ double Population::LogProbNoCoalescentEventBetweenTimes(double from, double to, 
     
     result=  -1 * j* (j-1)*(Population::FmodelTstandard(to,timeOriginSTD, delta)-Population::FmodelTstandard(from, timeOriginSTD, delta))/2;
     return result;
+}
+void Population::filterAndSortCoalescentEvents(){
+    
+    auto it = remove_if(CoalescentEventTimes.begin(), CoalescentEventTimes.end(), Population::isNotPositive);
+    
+    if (it != CoalescentEventTimes.end())
+        CoalescentEventTimes.erase(it);
+    
+    sort(CoalescentEventTimes.begin(), CoalescentEventTimes.end());
+}
+bool Population::isNotPositive(double d) //test condition for remove_if algo.
+{
+    return d <= 0;
 }

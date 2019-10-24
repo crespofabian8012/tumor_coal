@@ -182,6 +182,7 @@ public:
     double meanGrowthRate;
     double dispersion;
     double tuningParameter;
+    double fixedLambda;
 };
 
 

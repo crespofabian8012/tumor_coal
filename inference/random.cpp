@@ -11,7 +11,7 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
 #include "random.h"
-
+#include <sys/time.h>
 /***************************** RandomUniform **********************************/
 /* It returns a random uniform variate in range 0..1. It is described in
  Park, S. K. and K. W. Miller. 1988. Random number generators: good
@@ -56,7 +56,7 @@ double    RandomGamma (double shape, long int *seed)
     else if (shape > 1)
         gammaNumber = RandomGamma2 (shape, seed);
     else
-        gammaNumber = -log (RandomUniform(seed));
+        gammaNumber = -log (randomUniformFromGsl());
     return (gammaNumber);
 }
 /*************** RandomGamma1 ***************/
@@ -78,7 +78,7 @@ double RandomGamma1 (double s, long int *seed)
     }
     for (;;)
     {
-        r = RandomUniform(seed);
+        r = randomUniformFromGsl();
         if (r > p)
         {
             x = a-log((1.0-r)/(1.0-p));
@@ -91,7 +91,7 @@ double RandomGamma1 (double s, long int *seed)
         }
         else
             return (0.0);
-        r = RandomUniform(seed);
+        r = randomUniformFromGsl();
         if (1.0-r <= w && r > 0.0)
             if (r*(w+1.0) >= 1.0 || -log(r) <= w)
                 continue;
@@ -116,13 +116,13 @@ double RandomGamma2 (double s, long int *seed)
     }
     for (;;)
     {
-        r = RandomUniform(seed);
+        r = randomUniformFromGsl();
         g = r-r*r;
         f = (r-0.5)*h/sqrt(g);
         x = b+f;
         if (x <= 0.0)
             continue;
-        r = RandomUniform(seed);
+        r = randomUniformFromGsl();
         d = 64*r*r*g*g*g;
         if (d*x < x-2.0*f*f || log(d) < 2*(b*log(x/b)-f))
             break;
@@ -162,7 +162,7 @@ double RandomExponential (double lambda, long int *seed)
     double  exponentialNumber, U;
     
     do
-        U = RandomUniform (seed);
+        U = randomUniformFromGsl();
     while (U == 0);
     
     exponentialNumber = -log (U) / lambda;
@@ -176,7 +176,7 @@ double RandomExponential (double lambda, long int *seed)
 int RandomUniformTo (int max, long int *seed)
 {
     double    rd;
-    rd = RandomUniform (seed);
+    rd = randomUniformFromGsl();
     return (floor(rd*max));
 }
 
@@ -219,7 +219,41 @@ void  RandomDirichlet (double s, int vectorSize, vector<double> &outputVector, l
         // *(*outputVector + i)= *(*outputVector + i)/sum;
     }
 }
+void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta)
+{
+    //double theta[vectorSize];
+    for (unsigned int i = 0; i < vectorSize; ++i){
+        theta[i]=0;
+    }
+    const gsl_rng_type * T;
+    gsl_rng * r;
+    gsl_rng_env_setup();
+    struct timeval tv; // Seed generation based on time
+    gettimeofday(&tv,0);
+    unsigned long mySeed = tv.tv_sec + tv.tv_usec;
+    T = gsl_rng_ranlux389; // Generator setup
+    r = gsl_rng_alloc (T);
+    gsl_rng_set(r, mySeed);
+     gsl_ran_dirichlet( r,  vectorSize, alpha, theta); // Generate it!
+    gsl_rng_free (r);
+
+}
 double RandomLogUniform( double from, double to, long int *seed){
-     gsl_rng * r = gsl_rng_alloc (gsl_rng_ranlux389);
-    return(exp(from + gsl_rng_uniform(r)*(to -from)));
+  
+    return(exp(from + randomUniformFromGsl()*(to -from)));
+}
+// from https://stackoverflow.com/questions/9768519/gsl-uniform-random-number-generator
+double randomUniformFromGsl(){
+    const gsl_rng_type * T;
+    gsl_rng * r;
+    gsl_rng_env_setup();
+    struct timeval tv; // Seed generation based on time
+    gettimeofday(&tv,0);
+    unsigned long mySeed = tv.tv_sec + tv.tv_usec;
+    T = gsl_rng_ranlux389; // Generator setup
+    r = gsl_rng_alloc (T);
+    gsl_rng_set(r, mySeed);
+    double u = gsl_rng_uniform(r); // Generate it!
+    gsl_rng_free (r);
+    return (float)u;
 }

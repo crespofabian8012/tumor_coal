@@ -1182,7 +1182,7 @@ void Chain::SetPopulationsBirthRate( double lambda){
             popI->birthRate = lambda;
     }
 }
-void Chain::GenerateEffectPopSizesFromPriors2( int noisy,   long int *seed,  int doGenerateProportionsVector){
+void Chain::GenerateEffectPopSizesFromPriors2( int noisy, int doGenerateProportionsVector){
     int i, j;
     Population  *popJ;
  
@@ -1212,11 +1212,10 @@ void Chain::initProportionsVector(){
 void Chain::generateProportionsVectorFromDirichlet(double alpha[]){
     
     double theta[numClones];
-    for (unsigned int i = 0; i < numClones; ++i){
-        theta[i]=0;
-    }
-   gsl_rng * r = gsl_rng_alloc (gsl_rng_ranlux389);
-    gsl_ran_dirichlet( r,  numClones, alpha, theta);
+//    for (unsigned int i = 0; i < numClones; ++i){
+//        theta[i]=0;
+//    }
+    randomDirichletFromGsl(numClones, alpha, theta);
     for (int i=0; i< numClones; i++)
     {
         proportionsVector.at(i)=theta[i];
@@ -1239,7 +1238,7 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
     //double lambda = 1;
     SetPopulationsBirthRate(mcmcOptions.fixedLambda);
     
-       // GenerateEffectPopSizesFromPriors2( programOptions.noisy,   seed, YES);
+       // GenerateEffectPopSizesFromPriors2( programOptions.noisy,    YES);
     if (programOptions.doUseFixedTree ==NO)
     {
         double alpha[numClones];
@@ -2440,19 +2439,17 @@ void Chain::runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths
 //        WilsonBaldingMove( seed,  chain->currentlogConditionalLikelihoodSequences, programOptions,  ObservedCellNames,  msa);
     
     //2- Update M_T
-    //newTotalEffectivePopulationSizeMove( seed,  programOptions, ObservedCellNames,  msa,  opt, sampleSizes);
+    newTotalEffectivePopulationSizeMove(programOptions, ObservedCellNames,  msa,  opt, sampleSizes);
     
     //3-Update the vector of proportions \theta(this will change M_i)
     
-    //newProportionsVectorMove( seed,  programOptions, ObservedCellNames, msa, opt, sampleSizes);
+  newProportionsVectorMove(  programOptions, ObservedCellNames, msa, opt, sampleSizes);
     
     //        4- Update the Delta_i
     for( i = 0 ; i < numClones; i++)
     {
-        
         popI=populations[i];
         newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
-        
     }
     //        5-Update T_i conditional on Delta_i
     //this move will update the time of origin of a population of order i. Is like sliding window between the
@@ -3026,7 +3023,7 @@ void Chain::initNodeDataFromRootedTree()
 }
 std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int *seed)
 {
-    gsl_rng * r = gsl_rng_alloc (gsl_rng_ranlux389);
+   
     int numberPoints= numClones -1;
     std::unordered_set<pll_unode_t *>  ancestorsOfTimeOfOrigins(numberPoints);
     TreeNode *u, *v;
@@ -3093,7 +3090,7 @@ std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int 
         int  nextEvent;
         do{
             //random = RandomUniform(seed);
-            random =gsl_rng_uniform(r);
+            random =randomUniformFromGsl();
             nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
             pll_unode_t * ancestorMRCA;
             if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
@@ -3127,7 +3124,7 @@ std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int 
             mrcaOfPopulation[ancestorMRCA->back]=pop;
             u= (TreeNode *)(ancestorMRCA->data);
             v= (TreeNode *)(ancestorMRCA->back->data);
-            double proposedTime= v->timePUnits+ (u->timePUnits- v->timePUnits)*gsl_rng_uniform(r);
+            double proposedTime= v->timePUnits+ (u->timePUnits- v->timePUnits)*randomUniformFromGsl();
             if (proposedTime<=0)
                 printf( "time of origin is positive");
             pop->timeOriginInput =proposedTime;
@@ -3185,7 +3182,7 @@ void Chain::computeCandidateBranches(string& healthyCellLabel,vector<double> &br
 }
 std::map<pll_rnode_t*, Population*>  Chain::chooseTimeOfOriginsOnRootedTree( long int *seed, string &healthyCellLabel)
 {
-    gsl_rng * r = gsl_rng_alloc (gsl_rng_ranlux389);
+   
     int numberPoints= numClones -1;
     std::unordered_set<pll_rnode_t *>  ancestorsOfTimeOfOrigins(numberPoints);
     std::unordered_set<pll_rnode_t *>  MRCAs(numberPoints);
@@ -3228,7 +3225,7 @@ std::map<pll_rnode_t*, Population*>  Chain::chooseTimeOfOriginsOnRootedTree( lon
         do{
             //random = RandomUniform(seed);
             do{
-            random =gsl_rng_uniform(r);
+            random =randomUniformFromGsl();
             nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
             }
             while(std::find(eventIds.begin(), eventIds.end(), nextEvent) != eventIds.end());
@@ -3265,7 +3262,7 @@ std::map<pll_rnode_t*, Population*>  Chain::chooseTimeOfOriginsOnRootedTree( lon
             mrcaOfPopulation[MRCA]=pop;
             u= (TreeNode *)(MRCA->data);
             v= (TreeNode *)(MRCA->parent->data);
-            double proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*gsl_rng_uniform(r);
+            double proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*randomUniformFromGsl();
             if (proposedTime<=0)
                 printf( "time of origin is positive");
             pop->timeOriginInput =proposedTime;
@@ -3513,4 +3510,189 @@ void Chain::rescaleRootedTreeBranchLengths(double mutationRate)
             }
         }
     }
+}
+void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, vector<int> &sampleSizes)
+{
+    int i,j;
+    Population *popJ;
+    double totalTreeLength;
+    int        numCA, numMIG;
+    double      cumNumCA, meanNumCA, cumNumMIG, meanNumMIG, numEventsTot;
+    double newlogLikelihoodTree;
+    Population *popI;
+    // save the current values of
+    oldtotalPopSize = totalPopSize;
+    double newTotalPopulationSize= proposalSlidingWindow(oldtotalPopSize,  mcmcOptions.slidingWindowSizeTotalEffectPopSize);
+    
+    totalPopSize = (int)newTotalPopulationSize;
+    // RandomLogUniform(mcmcOptions->totalEffectPopSizefrom,mcmcOptions->totalEffectPopSizeto, seed);
+    // chain->totalPopSize= RandomLogUniform(7,13, seed);
+    GenerateEffectPopSizesFromPriors2(programOptions.noisy, NO);
+    
+    //setChainPopulationSampleSizes(chain, sampleSizes, programOptions);
+    InitPopulationsCoalescentEvents( numClones,  populations) ;
+    
+    if (programOptions.populationSampleSizesKnown ==YES)
+    {
+        for( i = 0 ; i < numClones; i++)
+        {
+            popI=populations[i];
+            do {
+                popI->growthRate =popI->delta  / popI->effectPopSize;
+                popI->popSize=popI->effectPopSize * popI->birthRate;
+                popI->deathRate= popI->birthRate - popI->growthRate;
+            }
+            while(popI->popSize < popI->sampleSize);
+        }
+    }
+    ListClonesAccordingTimeToOrigin(populations);
+    
+    double newLogConditionalLikelihoodTree= LogConditionalLikelihoodTree(programOptions);
+    
+    fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total effective population size,  of the chain %d is = %lf  \n", chainNumber,newLogConditionalLikelihoodTree );
+//    char *newickString2;
+//    newickString2=NULL;
+//    newickString2 = toNewickString2 ( oldroot, programOptions.mutationRate,     programOptions.doUseObservedCellNames);
+//    printf("\n newick after move= %s  \n", newickString2);
+//    newickString2 = toNewickString4 ( oldroot, programOptions.mutationRate,     programOptions.doUseObservedCellNames);
+//    printf("\n newick after move= %s  \n", newickString2);
+//    free(newickString2);
+//    newickString2=NULL;
+    double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(newTotalPopulationSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(oldtotalPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    
+    double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewTotalEffectivePopulationSize;
+    
+    double sumLogDenominators=currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
+    
+    double randomNumber= randomUniformFromGsl();
+    
+    double LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+    if (log(randomNumber) < LogAcceptanceRate )
+    {//accept the move
+        printf("\n Accepted new total effective population size move\n");
+    }
+    else
+    {
+        //reject the move
+        printf("\n Rejected new total effective population size move\n");
+        totalPopSize = oldtotalPopSize;
+        for (j = 0; j < numClones; j++)
+        {
+            popJ = populations[j];
+            popJ->effectPopSize = popJ->oldeffectPopSize;
+        }
+    }
+}
+/********************* proposalSlidingWindow **********************/
+/* proposalSlidingWindow*/
+double  Chain::proposalSlidingWindow( double oldvalue,  double windowSize)
+{
+    double newvalue =0;
+    newvalue = oldvalue + randomUniformFromGsl() * windowSize ;
+    if (newvalue <0)
+        newvalue = -  newvalue;
+    return newvalue;
+}
+void Chain::newProportionsVectorMove(ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, vector<int> &sampleSizes)
+{
+    int i,j,k;
+    Population *popJ;
+    double totalTreeLength;
+    int        numCA, numMIG;
+    double      cumNumCA, meanNumCA, cumNumMIG, meanNumMIG, numEventsTot;
+    double newlogLikelihoodTree;
+    Population *popI;
+    proposalProportionsVector(oldproportionsVector, mcmcOptions.tuningParameter);
+    
+   // GenerateEffectPopSizesFromPriors2(chain, programOptions->noisy,  chain->numClones, chain->populations,  seed,  chain->gammaParam, chain->totalPopSize, YES);
+    if (programOptions.populationSampleSizesKnown == NO)
+    {
+        //InitPopulationSampleSizes(populations, programOptions.numCells, programOptions.numClones, proportionsVector, seed);
+    }
+    //else fill the sample  sizes
+    else{
+        setChainPopulationSampleSizes(sampleSizes, programOptions);
+    }
+    if (programOptions.populationSampleSizesKnown ==YES)
+    {
+        for( i = 0 ; i < numClones; i++)
+        {
+            popI=populations [i];
+            do {
+                popI->growthRate =popI->delta  / popI->effectPopSize;
+                popI->popSize=popI->effectPopSize * popI->birthRate;
+                popI->deathRate= popI->birthRate - popI->growthRate;
+            }
+            while(popI->popSize < popI->sampleSize);
+        }
+    }
+    ListClonesAccordingTimeToOrigin(populations);
+    double newLogConditionalLikelihoodTree= LogConditionalLikelihoodTree(programOptions);
+    fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total effective population size,  of the chain %d is = %lf  \n", chainNumber,newLogConditionalLikelihoodTree );
+//    char *newickString2;
+//    newickString2=NULL;
+//    newickString2 = toNewickString2 ( chain->oldroot, programOptions->mutationRate,     programOptions->doUseObservedCellNames);
+//    printf("\n newick after move= %s  \n", newickString2);
+//    newickString2 = toNewickString4 ( chain->oldroot, programOptions->mutationRate,     programOptions->doUseObservedCellNames);
+//    printf("\n newick after move= %s  \n", newickString2);
+//    free(newickString2);
+//    newickString2=NULL;
+    double priorDensityNewProportionsVector =  DirichletDensity( proportionsVector, oldproportionsVector , numClones);
+    
+    double priorDensityCurrentProportionsVector = DirichletDensity(oldproportionsVector, proportionsVector, numClones);
+    
+    double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewProportionsVector;
+    
+    double sumLogDenominators=currentlogConditionalLikelihoodTree +priorDensityCurrentProportionsVector;
+    
+    double randomNumber= randomUniformFromGsl();
+    
+    double LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+    
+    if (log(randomNumber) < LogAcceptanceRate )
+    {//accept the move
+        printf("\n Accepted new proportions vector move\n");
+//        nodes = oldnodes;
+//        root = oldroot;
+        currentlogConditionalLikelihoodTree =newLogConditionalLikelihoodTree;
+    }
+    else
+    {
+        //reject the move
+        printf("\n Rejected new proportions vector move\n");
+       totalPopSize = oldtotalPopSize;
+        for (j = 0; j <numClones; j++)
+        {
+            popJ =populations[j];
+            popJ->effectPopSize = popJ->oldeffectPopSize;
+        }
+    }
+}
+void Chain::proposalProportionsVector(vector<double > &newProportionsvector, double tuningParameter )
+{
+    int i=0;
+    double vectorForGamma[numClones];
+    for( i = 0 ; i < numClones; i++)
+    {
+        vectorForGamma[i]= tuningParameter * proportionsVector[i];
+    }
+    double *proportionsVectorArray=&proportionsVector[0];
+ randomDirichletFromGsl(numClones, proportionsVectorArray, &newProportionsvector[0]);
+
+}
+double Chain::DirichletDensity(vector<double> &proportionsVector,  vector<double> &concentrationVector, int sizeVector)
+{
+    int i;
+    double sum=0;
+    double logResult=0;
+    Population *popI;
+    for( i = 0 ; i < sizeVector; i++)
+    {
+        sum = sum +concentrationVector[i];
+        logResult= logResult+(concentrationVector[i]-1)*log(proportionsVector[i]);
+        logResult= logResult-lgamma(concentrationVector[i]);
+    }
+    logResult = logResult+lgamma(concentrationVector[i]);
+    return logResult;
 }

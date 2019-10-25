@@ -35,4 +35,7 @@ double LogUniformDensity(double value, double from, double to);
 
 int ChooseUniformState (double *prob, long int *seed);
 
+double randomUniformFromGsl();
+void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta);
+
 #endif /* random_h */

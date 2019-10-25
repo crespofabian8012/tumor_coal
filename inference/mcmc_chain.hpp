@@ -13,8 +13,6 @@
 //#include <unordered_set>
 #include <stdio.h>
 
-
-
 #include "data_utils.hpp"
 
 
@@ -148,7 +146,7 @@ public:
                                              int &labelNodes, char* SimulatePopulationObservedCellNames[], int doUseObservedCellNames, vector<int> &sampleSizes);
     
     void SetPopulationsBirthRate( double lambda);
-    void GenerateEffectPopSizesFromPriors2( int noisy,   long int *seed,  int doGenerateProportionsVector);
+    void GenerateEffectPopSizesFromPriors2( int noisy,     int doGenerateProportionsVector);
   
     void FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed);
  
@@ -211,6 +209,13 @@ public:
     void filterSortPopulationsCoalescentEvents();
     void samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *seed );
     void rescaleRootedTreeBranchLengths(double mutationRate);
+    void newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, vector<int> &sampleSizes);
+    void newProportionsVectorMove(ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, vector<int> &sampleSizes);
+    
+private:
+    double  proposalSlidingWindow( double oldvalue,  double windowSize);
+    void proposalProportionsVector(vector<double > &newProportionsvector, double tuningParameter );
+    double DirichletDensity(vector<double> &proportionsVector,  vector<double> &concentrationVector, int sizeVector);
     
 };
 

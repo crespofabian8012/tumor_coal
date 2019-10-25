@@ -174,20 +174,21 @@ int main(int argc, char* argv[] )
 
      for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
    {
+       
+       currentChain = chains[chainNumber];
        for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
      {
-//            runChain(&(chains[chainNumber]),    &mcmcOptions,  &(programOptions.seed),  &filePaths, &files, &programOptions,
-//                   varTimeGMRCA, ObservedCellNames, msa, sampleSizes);
          
-////
-//           if (currentIteration % sampleEvery == 0 )
-//           {
+         currentChain->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes);
+         
+       if (currentIteration % sampleEvery == 0 )
+          {
 //
 ////                PrintTrees(currentIteration, &(chains[chainNumber].root), files.fpTrees, programOptions.mutationRate, programOptions.doUseObservedCellNames);
 ////                PrintTrees2(currentIteration, &(chains[chainNumber].root), files.fpTrees2, programOptions.mutationRate,  ObservedCellNames, programOptions.doUseObservedCellNames);
 ////                PrintTimes(currentIteration, files.fpTimes, programOptions.mutationRate, chains[chainNumber].nodes, programOptions.thereisOutgroup);
 ////                PrintTimes2(currentIteration, files.fpTimes2, programOptions.mutationRate, chains[chainNumber].nodes, programOptions.thereisOutgroup);
-//           }
+           }
       }
   }
    pll_msa_destroy(msa);

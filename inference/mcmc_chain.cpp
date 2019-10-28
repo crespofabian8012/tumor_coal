@@ -1188,12 +1188,18 @@ void Chain::GenerateEffectPopSizesFromPriors2( int noisy, int doGenerateProporti
  
     if (doGenerateProportionsVector == YES)
     {
-      
         initProportionsVector();
         double alpha[numClones];
-        std::fill_n(alpha, numClones, 1.0);
+        if (proportionsVector.size()==0)
+           std::fill_n(alpha, numClones, 1.0);
+        
         generateProportionsVectorFromDirichlet(alpha);
     }
+    updateEffectPopSizesCurrentProportionsVector();
+}
+void Chain::updateEffectPopSizesCurrentProportionsVector(){
+    int j=0;
+    Population  *popJ;
     for (j = 0; j < numClones; j++)
     {
         popJ = populations [j];
@@ -1902,7 +1908,7 @@ double  Chain::LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickSt
         0.001000, 0.447050 };
 
     /* get full above-diagonal half-matrix */
-    double * user_subst_rates = expand_uniq_rates(model->states, unique_subst_rates,
+    double * user_subst_rates = Chain::expand_uniq_rates(model->states, unique_subst_rates,
                                                   model->rate_sym);
 
     double rate_cats[RATE_CATS] = {0};
@@ -3527,17 +3533,20 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
     totalPopSize = (int)newTotalPopulationSize;
     // RandomLogUniform(mcmcOptions->totalEffectPopSizefrom,mcmcOptions->totalEffectPopSizeto, seed);
     // chain->totalPopSize= RandomLogUniform(7,13, seed);
-    GenerateEffectPopSizesFromPriors2(programOptions.noisy, NO);
+   // GenerateEffectPopSizesFromPriors2(programOptions.noisy, NO);
     
+    updateEffectPopSizesCurrentProportionsVector();
+  
     //setChainPopulationSampleSizes(chain, sampleSizes, programOptions);
-    InitPopulationsCoalescentEvents( numClones,  populations) ;
+    //InitPopulationsCoalescentEvents( numClones,  populations) ;
     
     if (programOptions.populationSampleSizesKnown ==YES)
     {
         for( i = 0 ; i < numClones; i++)
         {
             popI=populations[i];
-            do {
+            do
+            {
                 popI->growthRate =popI->delta  / popI->effectPopSize;
                 popI->popSize=popI->effectPopSize * popI->birthRate;
                 popI->deathRate= popI->birthRate - popI->growthRate;
@@ -3695,4 +3704,16 @@ double Chain::DirichletDensity(vector<double> &proportionsVector,  vector<double
     }
     logResult = logResult+lgamma(concentrationVector[i]);
     return logResult;
+}
+double * Chain::expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym)
+{
+    unsigned int i;
+    
+    unsigned int num_rates = states * (states-1) / 2;
+    //double * subst_rates = calloc(num_rates, sizeof(double));
+    double * subst_rates =(double *) calloc(num_rates, sizeof(double));
+    for (i = 0; i < num_rates; ++i)
+        subst_rates[i] = rate_sym ? uniq_rates[rate_sym[i]] : uniq_rates[i];
+    
+    return subst_rates;
 }

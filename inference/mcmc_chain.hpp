@@ -8,21 +8,17 @@
 #ifndef mcmc_chain_hpp
 #define mcmc_chain_hpp
 
-
+#include <map>
 #include <unordered_map>
 //#include <unordered_set>
-#include <stdio.h>
+//#include <stdio.h>
 
 #include "data_utils.hpp"
 
-
 //#include "population.hpp"
 
-
-#include "utils.hpp"
-#include "definitions.hpp"
-
-
+//#include "utils.hpp"
+//#include "definitions.hpp"
 
 //using Assignment = std::map<std::string, int>;
 
@@ -33,7 +29,6 @@ public:
     int oldnumClones;
     int gammaParam;
     int currentNumberIerations;
-
     pll_unode_t *root;
     pll_rnode_t *rootRootedTree;
     vector<pll_unode_t*> nodes;
@@ -102,9 +97,6 @@ public:
                             double &currentTime,
                             int &eventNum);
     
-    
-    
-    
     int setInitialTreeFromNewick(char * NewickString);
 
     int setInitialTreeUnrootedTree(pll_utree_t *unrootedTree);
@@ -121,9 +113,6 @@ public:
                                   double &currentTime,
                                   int &labelNodes);
     
-  
-
-
     pll_unode_t * MakeCoalescenceTree (long int *seed,
                                               int &numNodes,
                                               int numClones,
@@ -212,10 +201,14 @@ public:
     void newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, vector<int> &sampleSizes);
     void newProportionsVectorMove(ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, vector<int> &sampleSizes);
     
-private:
+
     double  proposalSlidingWindow( double oldvalue,  double windowSize);
     void proposalProportionsVector(vector<double > &newProportionsvector, double tuningParameter );
     double DirichletDensity(vector<double> &proportionsVector,  vector<double> &concentrationVector, int sizeVector);
+    void updateEffectPopSizesCurrentProportionsVector();
+    
+private:
+    static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
     
 };
 

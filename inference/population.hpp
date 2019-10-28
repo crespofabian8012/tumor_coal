@@ -36,8 +36,10 @@ public:
     double effectPopSize;
     double oldeffectPopSize;
     double birthRate, deathRate, growthRate;
+    double oldDeathRate, oldGrowthRate;
     int sampleSize; // number of cells in the population
     int popSize; // total number of cells (unknown at inference)
+    int oldPopSize;
     int numActiveGametes; // number of (currently) living cells
     int numGametes; // ???
     int numCompletedCoalescences;

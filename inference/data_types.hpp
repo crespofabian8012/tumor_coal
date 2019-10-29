@@ -9,7 +9,9 @@
 #define data_types_h
 
 #include <vector>
-
+#include <string>
+#include <sstream>
+#include <iostream>
 #include "definitions.hpp"
 
 using namespace std;
@@ -161,6 +163,7 @@ public:
     int assignationKnown = 0;
     int numberClonesKnown = 0;
     int MutationAssignNum = 0;
+    string healthyTipLabel;
 };
 
 class MCMCoptions {

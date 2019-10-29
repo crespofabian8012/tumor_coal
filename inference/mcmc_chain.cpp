@@ -2277,6 +2277,7 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
                 if (pop->sampleSize == 0)
                     existsZeroSampleSizePop=true;
             }
+            existsZeroSampleSizePop=false;
         }
         while(existsZeroSampleSizePop);
             

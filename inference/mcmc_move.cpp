@@ -382,12 +382,37 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     //then select at random an edge
     //recompute the sample sizes
     //recompute the proportions vector
-    // recompute the 
+    // recompute the coalescent and migration events
+    bool existsZeroSampleSizePop=false;
+    double alpha[chain->numClones];
+    int numberPoints = chain->numClones -1;
+    std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation;
+    do {
+        rmrcaOfPopulation.clear();
+       // rmrcaOfPopulation = chain->chooseTimeOfOriginsOnRootedTree(numberPoints,  programOptions.healthyTipLabel);
+        
+        chain->initPopulationsSampleSizes( rmrcaOfPopulation);
+        
+        for (unsigned int i = 0; i < chain->numClones; ++i){
+            auto pop =  chain->populations[i];
+            alpha[i]= pop->sampleSize;
+            if (pop->sampleSize == 0)
+                existsZeroSampleSizePop=true;
+        }
+        existsZeroSampleSizePop=false;
+    }
+    while(existsZeroSampleSizePop);
     
-    
-    
-    
-    
+    int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
+    std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
+    chain->initProportionsVector();
+    chain->generateProportionsVectorFromDirichlet(alpha);
+    chain->initEffectPopulationSizesFromProportionsVector();
+    chain->initTimeOriginSTD();
+    chain->initPopulationMigration();//after setting the timeSTD
+    chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(rmrcaOfPopulation, programOptions.healthyTipLabel);
+    chain->filterSortPopulationsCoalescentEvents();
+
 }
 double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {

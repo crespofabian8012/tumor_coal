@@ -166,6 +166,7 @@ int main(int argc, char* argv[] )
     
     //free(newick);
     string healthyTipLabel = "healthycell";
+    programOptions.healthyTipLabel ="healthycell";
     Chain::initializeChains(chains, programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
 
     Chain *currentChain;

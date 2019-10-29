@@ -72,6 +72,7 @@ CellStr;
 class ProgramOptions 
 {
 public:
+    int doUsefixedMutationRate= 1;
     int doUseGenotypes = 0;
     int doUseFixedTree = 0;
     int doPrintTrees = 1;

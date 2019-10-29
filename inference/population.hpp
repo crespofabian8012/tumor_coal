@@ -38,6 +38,7 @@ public:
     double birthRate, deathRate, growthRate;
     double oldDeathRate, oldGrowthRate;
     int sampleSize; // number of cells in the population
+    int oldSampleSize; // number of cells in the population
     int popSize; // total number of cells (unknown at inference)
     int oldPopSize;
     int numActiveGametes; // number of (currently) living cells
@@ -49,6 +50,8 @@ public:
     bool isAlive, CellAssignationCompleted;
 //    double timeMigrationSTDCurrentPop; // TODO: check
     vector<pair<double, Population *> > immigrantsPopOrderedByModelTime; // migrationTime, Population
+    
+    vector<pair<double, Population *> > oldimmigrantsPopOrderedByModelTime; // migrationTime, Population
     vector<int> idsActiveGametes;
     vector<int> idsGametes;
     int indexFirstObservedCellName;
@@ -57,12 +60,16 @@ public:
     TreeNode *MRCA;
     vector<pll_unode_t *> tips;
     vector<pll_rnode_t *> rtips;
+    vector<pll_rnode_t *> oldrtips;
     
     pll_unode_t * nodeletMRCA;
     pll_rnode_t * rMRCA;
+    pll_rnode_t * oldrMRCA;
     
     Population *FatherPop;
+    Population *oldFatherPop;
     vector<double> CoalescentEventTimes;
+    vector<double> oldCoalescentEventTimes;
     
 public:
     Population(int ind, int ord, double timeOriginInput,

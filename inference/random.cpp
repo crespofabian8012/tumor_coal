@@ -238,7 +238,7 @@ void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta)
     gsl_rng_free (r);
 
 }
-double RandomLogUniform( double from, double to, long int *seed){
+double RandomLogUniform( double from, double to){
   
     return(exp(from + randomUniformFromGsl()*(to -from)));
 }

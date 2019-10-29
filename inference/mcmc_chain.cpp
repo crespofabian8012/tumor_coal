@@ -32,6 +32,7 @@ extern "C"
 #include "tree_node.hpp"
 #include "random.h"
 #include "constants.hpp"
+#include "mcmc_move.hpp"
 
 using namespace std;
 
@@ -1205,7 +1206,7 @@ void Chain::updateEffectPopSizesCurrentProportionsVector(){
         popJ = populations [j];
         //temp=*(outputVector + i);
         popJ->oldeffectPopSize = popJ->effectPopSize;
-        popJ->effectPopSize = proportionsVector[j] * totalPopSize;
+        popJ->effectPopSize = proportionsVector[j] * totalEffectPopSize;
     }
 }
 void Chain::initProportionsVector(){
@@ -1231,14 +1232,14 @@ void Chain::generateProportionsVectorFromDirichlet(double alpha[]){
 }
 void Chain::initTotalEffectivePopulationSize(MCMCoptions &mcmcOptions, long int *seed)
 {
-    totalPopSize= RandomLogUniform(mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto, seed);
+    totalEffectPopSize= RandomLogUniform(mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
 }
 void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed)
 {
     Population* popI;
     int i;
     double randomDelta;
-    mutationRate = RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, seed);
+    mutationRate = RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto);
     initTotalEffectivePopulationSize(mcmcOptions, seed);
     initProportionsVector();
     //double lambda = 1;
@@ -1268,7 +1269,7 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
             {
                 popI=populations[i];
                 do {
-                    randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato, seed);
+                    randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato);
                     //popI->delta = chain->proportionsVector[i] * randomDelta;
                     popI->delta =  randomDelta;
                     popI->growthRate =popI->delta  / popI->effectPopSize;
@@ -1292,7 +1293,7 @@ void Chain::initEffectPopulationSizesFromProportionsVector(){
     for( i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
-        popI->effectPopSize = totalPopSize * proportionsVector[i];
+        popI->effectPopSize = totalEffectPopSize * proportionsVector[i];
     }
 }
 void Chain::initTimeOriginSTD(){
@@ -2220,7 +2221,10 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
         chain->numNodes = programOptions.numNodes;
     }
     chain->InitChainPopulations( programOptions.noisy, programOptions.TotalNumSequences );
-    chain->mutationRate = RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, seed);
+    if (programOptions.doUsefixedMutationRate)
+        chain->mutationRate = programOptions.mutationRate;
+    else
+       chain->mutationRate = RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto);
     chain->initTotalEffectivePopulationSize(mcmcOptions, seed);
     chain->SetPopulationsBirthRate(1);
     //chain->FillChainPopulationsFromPriors( programOptions,mcmcOptions, sampleSizes, seed );
@@ -2257,15 +2261,26 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
        // pll_utree_traverse_apply(chain->initialUnrootedTree->vroot, NULL, Chain::computeNumberTipsSubTree, chain->root->data);
         
         //std::map<pll_unode_t*, Population*> mrcaOfPopulation=chain->chooseTimeOfOriginsOnTree( seed);
-        std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation = chain->chooseTimeOfOriginsOnRootedTree(seed,  healthyTipLabel);
-        
-        chain->initPopulationsSampleSizes( rmrcaOfPopulation);
+        bool existsZeroSampleSizePop=false;
         double alpha[chain->numClones];
-        int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
-        for (unsigned int i = 0; i < chain->numClones; ++i){
-            auto pop =  chain->populations[i];
-            alpha[i]= pop->sampleSize;
+        int numberPoints = chain->numClones -1;
+        std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation;
+        do {
+            rmrcaOfPopulation.clear();
+            rmrcaOfPopulation = chain->chooseTimeOfOriginsOnRootedTree(numberPoints,  healthyTipLabel);
+            
+            chain->initPopulationsSampleSizes( rmrcaOfPopulation);
+           
+            for (unsigned int i = 0; i < chain->numClones; ++i){
+                auto pop =  chain->populations[i];
+                alpha[i]= pop->sampleSize;
+                if (pop->sampleSize == 0)
+                    existsZeroSampleSizePop=true;
+            }
         }
+        while(existsZeroSampleSizePop);
+            
+         int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
         std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
         chain->initProportionsVector();
         chain->generateProportionsVectorFromDirichlet(alpha);
@@ -2391,7 +2406,7 @@ void  Chain::initNumberTipsSubTree(pll_rnode_t *node)
           treeNode->numberOfTipsSubTree = treeNodeLeft->numberOfTipsSubTree + treeNodeRight->numberOfTipsSubTree;
       }
 }
-void Chain::runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
+void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
               char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes
               ){
     
@@ -2425,10 +2440,6 @@ void Chain::runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths
     meanNumMIG=0;
     int numNodes=0;
     
-    /* Computations per iteration in the chain */
-    // for (currentIteration = 0; currentIteration < opt->Niterations; currentIteration++)
-    // {
-    //generate proposals for the variables
     
     if (programOptions.doPrintSeparateReplicates == YES)
         PrepareSeparateFiles(chainNumber, currentIteration, 1,  filePaths, programOptions, files);
@@ -2445,17 +2456,23 @@ void Chain::runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths
 //        WilsonBaldingMove( seed,  chain->currentlogConditionalLikelihoodSequences, programOptions,  ObservedCellNames,  msa);
     
     //2- Update M_T
-    newTotalEffectivePopulationSizeMove(programOptions, ObservedCellNames,  msa,  opt, sampleSizes);
+    NewTotalEffectPopSizeMove *newTotalEffectPopSizeMove= new NewTotalEffectPopSizeMove(this, "new Total Effect Pop Size Move");
+    newTotalEffectPopSizeMove->move(programOptions, mcmcOptions);
+//    newTotalEffectivePopulationSizeMove(programOptions, ObservedCellNames,  msa,  opt, sampleSizes);
     
     //3-Update the vector of proportions \theta(this will change M_i)
     
-  newProportionsVectorMove(  programOptions, ObservedCellNames, msa, opt, sampleSizes);
+    NewProportionsVectorMove *newProportionsVector= new NewProportionsVectorMove(this, "new Proportions Vector Move");
+    newProportionsVector->move(programOptions, mcmcOptions);
+  //newProportionsVectorMove(  programOptions, ObservedCellNames, msa, opt, sampleSizes);
     
     //        4- Update the Delta_i
     for( i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
-        newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
+        NewGrowthRateMoveForPopulation *newrowthRateMoveForPopulation= new NewGrowthRateMoveForPopulation(this, "new Growth Rate Move for population", popI);
+        newProportionsVector->move(programOptions, mcmcOptions);
+        //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
     }
     //        5-Update T_i conditional on Delta_i
     //this move will update the time of origin of a population of order i. Is like sliding window between the
@@ -2693,7 +2710,7 @@ void Chain::newScaledGrowthRateMoveforPopulation( Population *popI, long int *se
     double newlogLikelihoodTree;
     
     //popI=*(populations + index);
-    double randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato, seed);
+    double randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato);
     //popI->delta = chain->proportionsVector[i] * randomDelta;
     popI->olddelta= popI->delta;
     popI->delta =  randomDelta;
@@ -3143,7 +3160,7 @@ std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int 
     }
    return(mrcaOfPopulation);
 }
-void Chain::computeCandidateBranches(string& healthyCellLabel,vector<double> &branchLengths, vector<pll_tree_edge_t *> &edges)
+void Chain::initBranches(string& healthyCellLabel,vector<double> &branchLengths, vector<pll_tree_edge_t *> &edges)
 {
     TreeNode *u, *v;
     vector<double> cumulativeBranchLengths;
@@ -3186,23 +3203,21 @@ void Chain::computeCandidateBranches(string& healthyCellLabel,vector<double> &br
         visitedNodes.insert(node);
     }
 }
-std::map<pll_rnode_t*, Population*>  Chain::chooseTimeOfOriginsOnRootedTree( long int *seed, string &healthyCellLabel)
+std::map<pll_rnode_t*, Population*>  Chain::chooseTimeOfOriginsOnRootedTree( int numberPoints, string &healthyCellLabel)
 {
-   
-    int numberPoints= numClones -1;
     std::unordered_set<pll_rnode_t *>  ancestorsOfTimeOfOrigins(numberPoints);
     std::unordered_set<pll_rnode_t *>  MRCAs(numberPoints);
     TreeNode *u, *v;
     //vector<double> cumulativeBranchLengths;
     vector<double> branchLengths;
-    vector<pll_tree_edge_t *> edges;
+    //vector<pll_tree_edge_t *> edges;
     set<pll_tree_edge_t *> visitedEdges;
     set<pll_rnode_t *> visitedNodes;
     //cumulativeBranchLengths.push_back(0);
     double random;
     std::map<pll_rnode_t*, Population*> mrcaOfPopulation;
     
-     computeCandidateBranches(healthyCellLabel, branchLengths, edges);
+     initBranches(healthyCellLabel, branchLengths, edges);
     
     if (branchLengths.size()>0)
     {
@@ -3236,9 +3251,8 @@ std::map<pll_rnode_t*, Population*>  Chain::chooseTimeOfOriginsOnRootedTree( lon
             }
             while(std::find(eventIds.begin(), eventIds.end(), nextEvent) != eventIds.end());
             
-           
             if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
-                printf( "the lengths of the branches does not match");
+                printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent, edges.at(nextEvent)->length, branchLengths.at(nextEvent -1));
             
             ancestorMRCA =edges.at(nextEvent)->edge.rtree.parent;
             MRCA =edges.at(nextEvent)->edge.rtree.child;
@@ -3272,7 +3286,7 @@ std::map<pll_rnode_t*, Population*>  Chain::chooseTimeOfOriginsOnRootedTree( lon
             if (proposedTime<=0)
                 printf( "time of origin is positive");
             pop->timeOriginInput =proposedTime;
-            printf( "MRCA node id %d with time %lf anf parent with time %lf was assigned to pop %d and time of origin %lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput  );
+            printf( "\n MRCA node id %d with time %lf anf parent with time %lf was assigned to pop %d and time of origin %lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput  );
             k++;
         }
         Population* pop=getPopulationbyIndex(k);
@@ -3493,7 +3507,7 @@ void Chain::samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *
     for( i = 0 ; i < numClones; i++)
     {
             popI=populations[i];
-            randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato, seed);
+            randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato);
             //popI->delta = chain->proportionsVector[i] * randomDelta;
             popI->delta =  randomDelta;
             popI->growthRate =popI->delta  / popI->effectPopSize;
@@ -3527,11 +3541,11 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
     double newlogLikelihoodTree;
     Population *popI;
     // save the current values of
-    oldtotalPopSize = totalPopSize;
-    double newTotalPopulationSize= proposalSlidingWindow(oldtotalPopSize,  mcmcOptions.slidingWindowSizeTotalEffectPopSize);
+    oldTotalEffectPopSize = totalEffectPopSize;
+    double newTotalEffectPopulationSize= proposalSlidingWindow(oldTotalEffectPopSize,  mcmcOptions.slidingWindowSizeTotalEffectPopSize);
     
-    totalPopSize = (int)newTotalPopulationSize;
-    // RandomLogUniform(mcmcOptions->totalEffectPopSizefrom,mcmcOptions->totalEffectPopSizeto, seed);
+    totalEffectPopSize = (int)newTotalEffectPopulationSize;
+    // RandomLogUniform(mcmcOptions->totalEffectPopSizefrom,mcmcOptions->totalEffectPopSizeto);
     // chain->totalPopSize= RandomLogUniform(7,13, seed);
    // GenerateEffectPopSizesFromPriors2(programOptions.noisy, NO);
     
@@ -3567,8 +3581,8 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
 //    printf("\n newick after move= %s  \n", newickString2);
 //    free(newickString2);
 //    newickString2=NULL;
-    double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(newTotalPopulationSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
-    double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(oldtotalPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(newTotalEffectPopulationSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
     double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewTotalEffectivePopulationSize;
     
@@ -3585,7 +3599,7 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
     {
         //reject the move
         printf("\n Rejected new total effective population size move\n");
-        totalPopSize = oldtotalPopSize;
+        totalEffectPopSize = oldTotalEffectPopSize;
         for (j = 0; j < numClones; j++)
         {
             popJ = populations[j];
@@ -3598,7 +3612,7 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
 double  Chain::proposalSlidingWindow( double oldvalue,  double windowSize)
 {
     double newvalue =0;
-    newvalue = oldvalue + randomUniformFromGsl() * windowSize ;
+    newvalue = oldvalue + (randomUniformFromGsl()-0.5) * windowSize ;
     if (newvalue <0)
         newvalue = -  newvalue;
     return newvalue;
@@ -3670,7 +3684,7 @@ void Chain::newProportionsVectorMove(ProgramOptions &programOptions, char *Obser
     {
         //reject the move
         printf("\n Rejected new proportions vector move\n");
-       totalPopSize = oldtotalPopSize;
+       totalEffectPopSize = oldTotalEffectPopSize;
         for (j = 0; j <numClones; j++)
         {
             popJ =populations[j];
@@ -3716,4 +3730,14 @@ double * Chain::expand_uniq_rates(int states, const double * uniq_rates, const i
         subst_rates[i] = rate_sym ? uniq_rates[rate_sym[i]] : uniq_rates[i];
     
     return subst_rates;
+}
+int Chain::totalSampleSize()
+{    int i;
+    Population *popI;
+    int totalSampleSize=0;
+    for( i = 0 ; i < numClones; i++){
+        popI = populations[i];
+        totalSampleSize+=popI->sampleSize;
+    }
+    return totalSampleSize;
 }

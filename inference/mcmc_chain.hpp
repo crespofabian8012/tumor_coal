@@ -52,8 +52,8 @@ public:
     
     vector<double > proportionsVector;
     vector<double > oldproportionsVector;
-    int totalPopSize;
-    int oldtotalPopSize;
+    int totalEffectPopSize;//total effect population size
+    int oldTotalEffectPopSize;
     //double lambda ;
     double currentlogConditionalLikelihoodTree;
     double currentlogConditionalLikelihoodSequences;
@@ -63,6 +63,8 @@ public:
     
     std::unordered_map<pll_unode_t*, Population*> tipsAssign;
     std::unordered_map<std::string, pll_unode_t*> labelsAssign;
+    
+    vector<pll_tree_edge_t *> edges;
 
     //vector<pll_edge_node_t*> edges;
 public:
@@ -170,7 +172,7 @@ public:
     Population * getPopulationbyIndex(int indexPopulation);
     int getPopulationIndex(char * label);
     std::map<pll_unode_t*, Population*> chooseTimeOfOriginsOnTree( long int *seed);
-    std::map<pll_rnode_t*, Population*>  chooseTimeOfOriginsOnRootedTree( long int *seed, string &healthyCellLabel);
+    std::map<pll_rnode_t*, Population*>  chooseTimeOfOriginsOnRootedTree( int numberPoints, string &healthyCellLabel);
     void initNodeDataFromTree();
   
 
@@ -192,7 +194,7 @@ public:
     void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, Population*> rmrcaOfPopulation, string& healthyTipLabel);
     void initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *population, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation);
     void  initNumberTipsSubTree(pll_rnode_t *node);
-    void computeCandidateBranches(string& healthyCellLabel,vector<double> &branchLengths, vector<pll_tree_edge_t *> &edges);
+    void initBranches(string& healthyCellLabel,vector<double> &branchLengths, vector<pll_tree_edge_t *> &edges);
     void initTimeOriginSTD();
     double SumBranches2(pll_rnode_t *p, double mutationRate);
     void filterSortPopulationsCoalescentEvents();
@@ -206,6 +208,7 @@ public:
     void proposalProportionsVector(vector<double > &newProportionsvector, double tuningParameter );
     double DirichletDensity(vector<double> &proportionsVector,  vector<double> &concentrationVector, int sizeVector);
     void updateEffectPopSizesCurrentProportionsVector();
+    int totalSampleSize();
     
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);

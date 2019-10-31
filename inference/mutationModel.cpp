@@ -608,7 +608,7 @@ void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr>
     double    branchLength, Pij[4][4];
     int     cell, anccell, ancstate, newstate;
     
-    int i,j;
+  
     
     if (p != NULL)
     {

@@ -735,7 +735,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
                  double freq[4],
                  double Mij[4][4])
 {
-    int i,j,k,z;
+    int i,j,z;
     vector<TreeNode *> nodes;
     char *newickString2;
     double totalTreeLength;
@@ -748,7 +748,6 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     double cumMij[4][4];
     double Eij[4][4];
     double cumEij[4][4];
-    char **cellNames;
 
     double    kappa = 0.0, beta = 0.0, freqR = 0.0, freqY = 0.0, freqAG = 0.0, freqCT = 0.0;
     double    Rmat[6], NRmat[12], Cijk[256], Root[4];
@@ -1130,10 +1129,9 @@ void resetMigrationsList(vector<Population*> &populations, int numClones){
 /* choose probabilistically  the father population of a  population  */
 Population* ChooseFatherPopulation(vector<Population*> &populations, int numClones, Population  *PopChild,  long int *seed, int noisy) {
     
-    Population *pOrigin, *pTarget, *p;
+    Population  *p;
     double pij, ran;
-    double *ptr;
-    int i, j, k;
+    int  j, k;
     double cumProb[numClones  - (int)(PopChild->order)];
     cumProb[0] = 0.0;
     for (j = PopChild->order + 1; j < numClones; j++)
@@ -1308,10 +1306,10 @@ void AssignCurrentSequencesToPopulation(vector<Population *> &populations, vecto
 void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, vector<TreeNode *> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
                           int &labelNodes, double &currentTime, int &numNodes)
         {
-            int k, w;
-            double rand, ran;
+
+         
             TreeNode  *p, *q, *r;
-            int firstInd, i, j, secondInd=0, newInd=0;
+            int firstInd, secondInd=0, newInd=0;
             int choosePairIndividuals = YES;
             
             ChooseRandomIndividual(&firstInd, numClones, popI,  &secondInd, seed, choosePairIndividuals);
@@ -1320,8 +1318,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             //if (noisy > 1)
                 fprintf (stderr, "\n Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
             
-            
-     
+
             /*  set pointers between nodes */
             p = nodes[popI->idsActiveGametes[firstInd]];
             q = nodes[popI->idsActiveGametes[secondInd]];
@@ -3103,12 +3100,9 @@ double * expand_uniq_rates(int states, const double * uniq_rates, const int * ra
 void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError)
 {
     //pll_state_t pll_map_gt10_2[256];
-    int states =10;
-    int i, currentState;
-    int from, to;
-    
-    
-    unsigned int state;
+
+    int i;
+ 
     //double * _freqs;
     
     /* find sequences in hash table and link them with the corresponding taxa */

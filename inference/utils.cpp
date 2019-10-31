@@ -20,12 +20,9 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
     FILE *fastaFile;
     kseq_t *seq;
     int l1;
-    int current=0;
-    char *currentSeq;
-    char *currentQual;
+
     int  seqlength=0;
-    char *t;
-    int index,i;
+    int index;
     int max_length=0.0;
     int numberSeq;
     

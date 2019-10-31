@@ -32,7 +32,6 @@ int main(int argc, char* argv[] )
     // default evolution model: JC
     
     FILE *input_file;
-    int i;
     
     char* input_path;
     

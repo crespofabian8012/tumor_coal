@@ -172,9 +172,8 @@ public:
     Population * getPopulationbyIndex(int indexPopulation);
     int getPopulationIndex(char * label);
     std::map<pll_unode_t*, Population*> chooseTimeOfOriginsOnTree( long int *seed);
-    std::map<pll_rnode_t*, Population*>  chooseTimeOfOriginsOnRootedTree( int numberPoints, string &healthyCellLabel);
+    std::map<pll_rnode_t*, Population*>  initTimeOfOriginsOnRootedTree( int numberPoints, string &healthyCellLabel);
     void initNodeDataFromTree();
-  
 
     void initPopulationSampleSizesFromRootNodeOnTree(pll_unode_t *p, Population *population );
     void initPopulationsSampleSizes(std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation);
@@ -203,16 +202,14 @@ public:
     void newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, vector<int> &sampleSizes);
     void newProportionsVectorMove(ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, vector<int> &sampleSizes);
     
-
     double  proposalSlidingWindow( double oldvalue,  double windowSize);
     void proposalProportionsVector(vector<double > &newProportionsvector, double tuningParameter );
     double DirichletDensity(vector<double> &proportionsVector,  vector<double> &concentrationVector, int sizeVector);
     void updateEffectPopSizesCurrentProportionsVector();
     int totalSampleSize();
-    
+    std::map<pll_rnode_t*, Population*> chooseAvailableEdgeOnRootedTreeForPopulation(Population *pop, std::map<pll_rnode_t*, Population*> &mrcaOfPopulation, string &healthyCellLabel);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
-    
 };
 
 #endif /* Chain_hpp */

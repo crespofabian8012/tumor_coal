@@ -329,7 +329,7 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
         exit (-1);
     }
     int updatedNumIncomingMigrations = PopFather->numIncomingMigrations;
-     int lengthMigrationsArray = (int)(PopFather->order) + 1;
+    // int lengthMigrationsArray = (int)(PopFather->order) + 1;
     // printf ( "\n lengthMigrationsArray= %d \n", lengthMigrationsArray );
 
     double updatedMigrationTime = (PopChild->timeOriginSTD) * (PopChild->effectPopSize) / (PopFather->effectPopSize);

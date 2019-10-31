@@ -369,7 +369,6 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove()
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
-        
          pop->FatherPop = pop->oldFatherPop ;
         pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
         pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
@@ -387,21 +386,14 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     double alpha[chain->numClones];
     int numberPoints = chain->numClones -1;
     std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation;
-    do {
-        rmrcaOfPopulation.clear();
-       // rmrcaOfPopulation = chain->chooseTimeOfOriginsOnRootedTree(numberPoints,  programOptions.healthyTipLabel);
-        
-        chain->initPopulationsSampleSizes( rmrcaOfPopulation);
-        
-        for (unsigned int i = 0; i < chain->numClones; ++i){
-            auto pop =  chain->populations[i];
-            alpha[i]= pop->sampleSize;
-            if (pop->sampleSize == 0)
-                existsZeroSampleSizePop=true;
-        }
-        existsZeroSampleSizePop=false;
+
+    rmrcaOfPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, rmrcaOfPopulation, programOptions.healthyTipLabel);
+    
+    for (unsigned int i = 0; i < chain->numClones; ++i){
+        auto pop =  chain->populations[i];
+        alpha[i]= pop->sampleSize;
     }
-    while(existsZeroSampleSizePop);
+    
     
     int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
     std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
@@ -412,7 +404,6 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     chain->initPopulationMigration();//after setting the timeSTD
     chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(rmrcaOfPopulation, programOptions.healthyTipLabel);
     chain->filterSortPopulationsCoalescentEvents();
-
 }
 double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {

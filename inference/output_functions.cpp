@@ -141,9 +141,7 @@ void WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObs
 /* Writes a given (unrooted) tree from PrintTrees */
 void WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cellNames[], int *indexCurrentCell, int doUseObservedCellNames)
 {
-    char *currentNewick = NULL;
     //asprintf(&currentNewick, *newickString);
-    char *temp = NULL;
     if (p != NULL)
     {
         if (p->isOutgroup == YES)     /* Outgroup */

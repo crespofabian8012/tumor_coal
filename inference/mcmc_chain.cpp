@@ -2260,12 +2260,12 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
         bool existsZeroSampleSizePop=false;
         double alpha[chain->numClones];
         int numberPoints = chain->numClones -1;
-        std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation;
+        //std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation;
         do {
-            rmrcaOfPopulation.clear();
-            rmrcaOfPopulation = chain->initTimeOfOriginsOnRootedTree(numberPoints,  healthyTipLabel);
+            chain->rMRCAPopulation.clear();
+            chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree(numberPoints,  healthyTipLabel);
             
-            chain->initPopulationsSampleSizes( rmrcaOfPopulation);
+            chain->initPopulationsSampleSizes( chain->rMRCAPopulation);
            
             for (unsigned int i = 0; i < chain->numClones; ++i){
                 auto pop =  chain->populations[i];
@@ -2284,7 +2284,7 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
         chain->initEffectPopulationSizesFromProportionsVector();
         chain->initTimeOriginSTD();
         chain->initPopulationMigration();//after setting the timeSTD
-        chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(rmrcaOfPopulation, healthyTipLabel);
+        chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         chain->SetPopulationsBirthRate(mcmcOptions.fixedLambda);
         chain->samplePopulationDeltaFromPriors(mcmcOptions, seed );
@@ -2464,15 +2464,28 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
   //newProportionsVectorMove(  programOptions, ObservedCellNames, msa, opt, sampleSizes);
     
     //        4- Update the Delta_i
+    NewGrowthRateMoveForPopulation *newGrowthRateMoveForPopulation;
     for( i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
-        NewGrowthRateMoveForPopulation *newrowthRateMoveForPopulation= new NewGrowthRateMoveForPopulation(this, "new Growth Rate Move for population", popI);
-        newProportionsVector->move(programOptions, mcmcOptions);
+        newGrowthRateMoveForPopulation= new NewGrowthRateMoveForPopulation(this, "new Growth Rate Move for population", popI);
+        newGrowthRateMoveForPopulation->move(programOptions, mcmcOptions);
         //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
     }
-    //        5-Update T_i conditional on Delta_i
-    //this move will update the time of origin of a population of order i. Is like sliding window between the
+    //        5A-Update  T_i
+    //this move will update the time of origin of a population of order i. For a fixed tree, the move will try to choose another available edge
+    NewTimeOriginOnTreeforPopulationMove *newTimeOriginOnTreeforPopulationMove ;
+    for( i = 0 ; i < numClones; i++)
+    {
+        popI=populations[i];
+        newTimeOriginOnTreeforPopulationMove= new NewTimeOriginOnTreeforPopulationMove(this, "new Time of Origin Move for population", popI);
+        newTimeOriginOnTreeforPopulationMove->move(programOptions, mcmcOptions);
+        //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
+    }
+    //        5B-Update  T_i
+    //this move will update the time of origin of a population of order i. For a fixed tree, the move will try to change the time of origin within the same edge
+    
+    
     
     //        6-Update the sub tree_i for sub population i by changing the topology of the sub tree of the time of some internal nodes.
     
@@ -3816,4 +3829,19 @@ int Chain::totalSampleSize()
             printf( "\n MRCA node id %d with time %lf anf parent with time %lf was assigned to pop %d and time of origin %lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput  );
     }
     return copyMRCAOfPopulation;
+}
+double Chain::sumAvailableBranchLengths(std::map<pll_rnode_t*, Population*> currentMRCAPopulation)
+{
+    double result=0.0;
+    for (unsigned int i = 0; i < edges.size(); ++i)
+    {
+        auto edge =edges.at(i);
+        auto parent = edge->edge.rtree.parent ;
+        auto child = edge->edge.rtree.child;
+        if (parent !=NULL && edge->length >0 && currentMRCAPopulation.count(child) != 0  )
+        {
+            result+= result;
+        }
+    }
+    return result;
 }

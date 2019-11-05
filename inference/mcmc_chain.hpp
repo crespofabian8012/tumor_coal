@@ -64,6 +64,9 @@ public:
     std::unordered_map<pll_unode_t*, Population*> tipsAssign;
     std::unordered_map<std::string, pll_unode_t*> labelsAssign;
     
+    std::map<pll_rnode_t*, Population*> rMRCAPopulation;
+    std::map<pll_rnode_t*, Population*> proposedrMRCAPopulation;
+    
     vector<pll_tree_edge_t *> edges;
 
     //vector<pll_edge_node_t*> edges;
@@ -208,6 +211,7 @@ public:
     void updateEffectPopSizesCurrentProportionsVector();
     int totalSampleSize();
     std::map<pll_rnode_t*, Population*> chooseAvailableEdgeOnRootedTreeForPopulation(Population *pop, std::map<pll_rnode_t*, Population*> &mrcaOfPopulation, string &healthyCellLabel);
+    double sumAvailableBranchLengths(std::map<pll_rnode_t*, Population*> currentMRCAPopulation);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

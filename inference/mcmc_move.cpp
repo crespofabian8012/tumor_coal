@@ -385,9 +385,9 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     bool existsZeroSampleSizePop=false;
     double alpha[chain->numClones];
     int numberPoints = chain->numClones -1;
-    std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation;
+    std::map<pll_rnode_t*, Population*>  newrmrcaOfPopulation;
 
-    rmrcaOfPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, rmrcaOfPopulation, programOptions.healthyTipLabel);
+    chain->proposedrMRCAPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, chain->rMRCAPopulation, programOptions.healthyTipLabel);
     
     for (unsigned int i = 0; i < chain->numClones; ++i){
         auto pop =  chain->populations[i];
@@ -402,7 +402,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     chain->initEffectPopulationSizesFromProportionsVector();
     chain->initTimeOriginSTD();
     chain->initPopulationMigration();//after setting the timeSTD
-    chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(rmrcaOfPopulation, programOptions.healthyTipLabel);
+    chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
     chain->filterSortPopulationsCoalescentEvents();
 }
 double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
@@ -410,19 +410,17 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
     Chain *chain=getChain();
     
     double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
-    
-    double priorDensityNewTotalEffectivePopulationSize=0;
+    double currentSumAvailBranchLengths = chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
+      double newSumAvailBranchLengths = chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
+    double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);
 //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
-    double priorDensityCurrentTotalEffectivePopulationSize=0;
+    double denominatorQ= log(pop->rMRCA->length) + log(currentSumAvailBranchLengths);
 //    priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
-    double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewTotalEffectivePopulationSize;
+    double sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ;
     
-    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
+    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ;
     
     double LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
-    
     return LogAcceptanceRate;
-    
-    
 }

@@ -261,12 +261,12 @@ void NewEffectPopSizeMoveForPopulation::rollbackMove()
 void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     int i;
-    Population *popI;
+ 
     Chain *chain=getChain();
     safeCurrentValue();
     bool populationPopSizesSet=false;
     double newEffectPopulationSize;
-    int totalSampleSize = chain->totalSampleSize();
+    //int totalSampleSize = chain->totalSampleSize();
     
     double slidingWindowSize= 2* (pop->oldeffectPopSize - pop->birthRate * pop->sampleSize);
     do {
@@ -293,7 +293,7 @@ double NewEffectPopSizeMoveForPopulation::computeLogAcceptanceProb(ProgramOption
     Chain *chain=getChain();
     double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     
-     double slidingWindowSize= 2* (pop->oldeffectPopSize - pop->birthRate * pop->sampleSize);
+    // double slidingWindowSize= 2* (pop->oldeffectPopSize - pop->birthRate * pop->sampleSize);
     
     double priorDensityNewEffectivePopulationSize= LogUniformDensity(pop->effectPopSize,  mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
@@ -327,7 +327,15 @@ void NewTimeOriginOnTreeforPopulationMove::move(ProgramOptions &programOptions, 
 {
     MCMCmove::move(programOptions,mcmcOptions);
 }
+void NewTimeOriginOnEdgeforPopulationMove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    MCMCmove::move(programOptions,mcmcOptions);
+}
 NewTimeOriginOnTreeforPopulationMove::NewTimeOriginOnTreeforPopulationMove(Chain *chain,string nameMove,  Population *pop):MCMCmove(chain, nameMove)
+{
+    this->pop =pop;
+}
+NewTimeOriginOnEdgeforPopulationMove::NewTimeOriginOnEdgeforPopulationMove(Chain *chain,string nameMove,  Population *pop):MCMCmove(chain, nameMove)
 {
     this->pop =pop;
 }
@@ -416,6 +424,82 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
 //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     double denominatorQ= log(pop->rMRCA->length) + log(currentSumAvailBranchLengths);
 //    priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    
+    double sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ;
+    
+    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ;
+    
+    double LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+    return LogAcceptanceRate;
+}
+void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue()
+{
+    Chain *chain=getChain();
+    int i=0;
+    Population *popI;
+    //save information for the population
+    
+    pop->oldFatherPop =  pop->FatherPop;
+    pop->oldCoalescentEventTimes = pop->CoalescentEventTimes;
+    pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
+    pop->oldSampleSize = pop->sampleSize;
+    
+    //save information for the other populations
+    for( i = 0 ; i < chain->numClones; i++)
+    {
+        popI=chain->populations[i];
+        
+        pop->oldFatherPop =  pop->FatherPop;
+        pop->oldCoalescentEventTimes = pop->CoalescentEventTimes;
+        pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
+    }
+}
+void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
+{
+    Chain *chain=getChain();
+    int i=0;
+    Population *popI;
+    //save information for the population
+    //pop->rMRCA = pop->oldrMRCA ;
+    pop->FatherPop = pop->oldFatherPop ;
+    pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
+    pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+    pop->sampleSize = pop->oldSampleSize;
+    
+    //save information for the other populations
+    for( i = 0 ; i < chain->numClones; i++)
+    {
+        popI=chain->populations[i];
+        pop->FatherPop = pop->oldFatherPop ;
+        pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
+        pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+    }
+}
+void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    Chain *chain=getChain();
+    
+    std::map<pll_rnode_t*, Population*>  newrmrcaOfPopulation;
+    
+    chain->chooseNewTimeofOriginOnEdge(pop);
+
+    chain->initPopulationMigration();//after setting the timeSTD
+    chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
+    chain->filterSortPopulationsCoalescentEvents();
+}
+double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    Chain *chain=getChain();
+    
+    double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+    double currentSumAvailBranchLengths;// chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
+    double newSumAvailBranchLengths ;// chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
+   // double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);
+    double numeratorQ =0;
+    //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    //double denominatorQ= log(pop->rMRCA->length) + log(currentSumAvailBranchLengths);
+    double denominatorQ= 0;
+    //    priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
     double sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ;
     

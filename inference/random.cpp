@@ -233,7 +233,7 @@ void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta)
     unsigned long mySeed = tv.tv_sec + tv.tv_usec;
     T = gsl_rng_ranlux389; // Generator setup
     r = gsl_rng_alloc (T);
-    gsl_rng_set(r, mySeed);
+    //gsl_rng_set(r, mySeed);
      gsl_ran_dirichlet( r,  vectorSize, alpha, theta); // Generate it!
     gsl_rng_free (r);
 

@@ -1302,6 +1302,7 @@ void Chain::initTimeOriginSTD(){
     {
         popI=populations[i];
         popI->timeOriginSTD = popI->timeOriginInput /  popI->effectPopSize;
+        printf("\n population %d has  time origin std of: %lf  \n", popI->index, popI->timeOriginSTD );
     }
 }
 void Chain::initPopulationsCoalTimes(){
@@ -1536,8 +1537,7 @@ double Chain::SumBranches(pll_unode_t *p, double mutationRate){
     
     if (p != NULL)
     {
-       // if (p->back  == NULL && p->next !=NULL && p->next->back !=NULL)
-        if (p->next  == NULL )
+      if (p->back  == NULL && p->next !=NULL && p->next->back !=NULL)
             sum = 0;
         else{
             //sum += (p->anc1->time- p->time)* mutationRate;//p->lengthModelUnits;
@@ -1558,7 +1558,7 @@ double Chain::SumBranches2(pll_rnode_t *p, double mutationRate){
     if (p != NULL)
     {
         // if (p->back  == NULL && p->next !=NULL && p->next->back !=NULL)
-        if (p->left  == NULL )
+        if (p->parent  == NULL )
             sum = 0;
         else{
             //sum += (p->anc1->time- p->time)* mutationRate;//p->lengthModelUnits;
@@ -2260,27 +2260,36 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
         bool existsZeroSampleSizePop=false;
         double alpha[chain->numClones];
         int numberPoints = chain->numClones -1;
+        vector<double> branchLengths;
+        chain->initBranches(healthyTipLabel, branchLengths, chain->edges);
         //std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation;
         do {
+             existsZeroSampleSizePop=false; 
             chain->rMRCAPopulation.clear();
-            chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree(numberPoints,  healthyTipLabel);
+            chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree(branchLengths, numberPoints,  healthyTipLabel);
             
             chain->initPopulationsSampleSizes( chain->rMRCAPopulation);
            
             for (unsigned int i = 0; i < chain->numClones; ++i){
                 auto pop =  chain->populations[i];
                 alpha[i]= pop->sampleSize;
+                printf("\n population %d with sample size %d \n", pop->index,pop->sampleSize);
                 if (pop->sampleSize == 0)
                     existsZeroSampleSizePop=true;
             }
-            existsZeroSampleSizePop=false;
+           
         }
         while(existsZeroSampleSizePop);
             
          int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
         std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
         chain->initProportionsVector();
-        chain->generateProportionsVectorFromDirichlet(alpha);
+        for (int i=0; i< chain->numClones; i++)
+        {
+            chain->proportionsVector.at(i)=alpha[i];
+            chain->oldproportionsVector.at(i)=alpha[i];
+        }
+        //chain->generateProportionsVectorFromDirichlet(alpha);
         chain->initEffectPopulationSizesFromProportionsVector();
         chain->initTimeOriginSTD();
         chain->initPopulationMigration();//after setting the timeSTD
@@ -2300,12 +2309,13 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
     printf("\n newick = %s  \n", rootedNewick2);
     
     chain->currentlogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree( programOptions);
-    printf ( "Initial likelihood of the tree of chain %d is:  %lf \n",0, chain->currentlogConditionalLikelihoodTree );
+    printf ( "Initial log likelihood of the tree of chain %d is:  %lf \n",0, chain->currentlogConditionalLikelihoodTree );
     
     chain->currentlogConditionalLikelihoodSequences= chain->LogConditionalLikelihoodSequences( msa,  rootedNewick2, programOptions, chain->seqErrorRate, chain->dropoutRate);
-    fprintf (stderr, "Initial likelihood of the sequences of chain %d  is = %lf  \n", 0,chain->currentlogConditionalLikelihoodSequences );
+    fprintf (stderr, "Initial log likelihood of the sequences of chain %d  is = %lf  \n", 0,chain->currentlogConditionalLikelihoodSequences );
     free(rootedNewick2);
     rootedNewick2=NULL;
+    chains.push_back(chain);
     return chain;
 //    for(chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
 //    {
@@ -2379,7 +2389,7 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
 //
 //    }
 }
-int* Chain::computeNumberTipsSubTree(pll_unode_t *node, void *data)
+void Chain::computeNumberTipsSubTree(pll_unode_t *node, void *data)
 {
     TreeNode * treeNode= (TreeNode *) data;
     if (node->next ==NULL)//tip
@@ -2389,6 +2399,7 @@ int* Chain::computeNumberTipsSubTree(pll_unode_t *node, void *data)
          TreeNode * treeNodeNextNext= (TreeNode *) (node->next->next->back->data);
         treeNode->numberOfTipsSubTree = treeNodeNext->numberOfTipsSubTree + treeNodeNextNext->numberOfTipsSubTree;
         }
+
 }
 void  Chain::initNumberTipsSubTree(pll_rnode_t *node)
 {
@@ -2404,7 +2415,7 @@ void  Chain::initNumberTipsSubTree(pll_rnode_t *node)
       }
 }
 void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
-              char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes
+              char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes, int currentIteration
               ){
     
     vector<double>  varTimeGMRCA;
@@ -2422,7 +2433,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     int i, j, k;
     double    *proportionsVector;
     long numCells;
-    int currentIteration;
+
     double randomDelta;
     double meanNumSNVs, meanNumMU, meanNumDEL, meanNumCNLOH;
     double   cumNumSNVs, cumNumMU, cumNumDEL, cumNumCNLOH, cumCountMLgenotypeErrors;
@@ -2445,7 +2456,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     numEventsTot=0;
     countTMRCA = 0.0;
     
-    // order of proposals:
+    // order of proposals: the order should be random
     fprintf (stderr, "\n>> Current log conditional Likelihood tree of the chain %d is = %lf  \n", chainNumber,currentlogConditionalLikelihoodTree );
     
     // 1- Update the topology using Wilson Balding move
@@ -2484,7 +2495,14 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     }
     //        5B-Update  T_i
     //this move will update the time of origin of a population of order i. For a fixed tree, the move will try to change the time of origin within the same edge
-    
+    NewTimeOriginOnEdgeforPopulationMove *newTimeOriginOnEdgeforPopulationMove ;
+    for( i = 0 ; i < numClones; i++)
+    {
+        popI=populations[i];
+        newTimeOriginOnEdgeforPopulationMove= new NewTimeOriginOnEdgeforPopulationMove(this, "new Time of Origin Move for population", popI);
+        newTimeOriginOnEdgeforPopulationMove->move(programOptions, mcmcOptions);
+        //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
+    }
     
     
     //        6-Update the sub tree_i for sub population i by changing the topology of the sub tree of the time of some internal nodes.
@@ -3179,6 +3197,7 @@ void Chain::initBranches(string& healthyCellLabel,vector<double> &branchLengths,
     double cumBranchLength=0;
     double totalBranchLength1=0;
     int totalNumberNodes  =initialRootedTree->tip_count+ initialRootedTree->inner_count;
+    branchLengths.clear();
     for (unsigned int i = 0; i < totalNumberNodes; ++i)
     {
         auto node =initialRootedTree->nodes[i];
@@ -3210,13 +3229,13 @@ void Chain::initBranches(string& healthyCellLabel,vector<double> &branchLengths,
         visitedNodes.insert(node);
     }
 }
-std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( int numberPoints, string &healthyCellLabel)
+std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vector<double> branchLengths, int numberPoints, string &healthyCellLabel)
 {
     std::unordered_set<pll_rnode_t *>  ancestorsOfTimeOfOrigins(numberPoints);
     std::unordered_set<pll_rnode_t *>  MRCAs(numberPoints);
     TreeNode *u, *v;
     //vector<double> cumulativeBranchLengths;
-    vector<double> branchLengths;
+    
     //vector<pll_tree_edge_t *> edges;
     set<pll_tree_edge_t *> visitedEdges;
     set<pll_rnode_t *> visitedNodes;
@@ -3224,7 +3243,7 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( int n
     double random;
     std::map<pll_rnode_t*, Population*> mrcaOfPopulation;
     
-     initBranches(healthyCellLabel, branchLengths, edges);
+   
     
     if (branchLengths.size()>0)
     {
@@ -3257,6 +3276,8 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( int n
             nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
             }
             while(std::find(eventIds.begin(), eventIds.end(), nextEvent) != eventIds.end());
+            
+             printf( "\n edge id: %d out of  %lu ",nextEvent, cumBranchLengths.size()-1 );
             
             if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
                 printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent, edges.at(nextEvent)->length, branchLengths.at(nextEvent -1));
@@ -3844,4 +3865,16 @@ double Chain::sumAvailableBranchLengths(std::map<pll_rnode_t*, Population*> curr
         }
     }
     return result;
+}
+void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
+{
+    TreeNode * u, *v;
+    u= (TreeNode *)( pop->rMRCA->data);
+    v= (TreeNode *)( pop->rMRCA->parent->data);
+    double proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*randomUniformFromGsl();
+    if (proposedTime<=0)
+        printf( "time of origin must be positive");
+    pop->timeOriginInput =proposedTime;
+    printf( "\n MRCA node id %d with time %lf anf parent with time %lf was assigned to pop %d and time of origin %lf \n", pop->rMRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput  );
+    
 }

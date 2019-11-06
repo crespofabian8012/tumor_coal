@@ -180,7 +180,7 @@ int main(int argc, char* argv[] )
        for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
      {
          
-         currentChain->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes);
+         currentChain->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
          
        if (currentIteration % sampleEvery == 0 )
           {

@@ -67,10 +67,20 @@ public:
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 
-class NewTimeOriginOnTreeforPopulationMove:MCMCmove{//this is not used since we can change the total effective population size and the proportions vector to achieve the same
+class NewTimeOriginOnTreeforPopulationMove:MCMCmove{
     Population *pop;
 public:
     NewTimeOriginOnTreeforPopulationMove(Chain *chain, string nameMove, Population *pop);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void rollbackMove();
+    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void safeCurrentValue();
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+};
+class NewTimeOriginOnEdgeforPopulationMove:MCMCmove{
+    Population *pop;
+public:
+    NewTimeOriginOnEdgeforPopulationMove(Chain *chain, string nameMove, Population *pop);
     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void rollbackMove();
     double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);

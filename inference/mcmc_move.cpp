@@ -99,7 +99,7 @@ double NewTotalEffectPopSizeMove::computeLogAcceptanceProb(ProgramOptions &progr
 
     double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     
-    fprintf (stderr, "\n>> log conditional Likelihood tree for proposal new total effective population size,  of the chain %d is = %lf  \n", chain->chainNumber,newLogConditionalLikelihoodTree );
+    fprintf (stderr, "\n>> log conditional Likelihood tree for the new total effective population size %d(old %d),  of the chain %d is = %lf  \n",chain->totalEffectPopSize, chain->oldTotalEffectPopSize,chain->chainNumber,newLogConditionalLikelihoodTree );
   
     double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);

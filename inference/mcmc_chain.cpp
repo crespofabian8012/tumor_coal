@@ -14,6 +14,8 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
 
+#include <sys/stat.h>
+
 extern "C"
 {
 #include <libpll/pll_msa.h> //for pllmod_msa_empirical_frequencies
@@ -2449,8 +2451,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
    
     
     
-    if (programOptions.doPrintSeparateReplicates == YES)
-        PrepareSeparateFiles(chainNumber, currentIteration, 1,  filePaths, programOptions, files);
+    
     
     numCA = numMIG = 0;
     numEventsTot=0;
@@ -3175,7 +3176,7 @@ std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int 
             double proposedTime= v->timePUnits+ (u->timePUnits- v->timePUnits)*randomUniformFromGsl();
             if (proposedTime<=0)
                 printf( "time of origin is positive");
-            pop->timeOriginInput =proposedTime;
+            pop->timeOriginInput = proposedTime;
             k++;
             
         }
@@ -3285,20 +3286,20 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vecto
             ancestorMRCA =edges.at(nextEvent)->edge.rtree.parent;
             MRCA =edges.at(nextEvent)->edge.rtree.child;
            // if (ancestorsOfTimeOfOrigins.count(ancestorMRCA)==0)
-             if (ancestorsOfTimeOfOrigins.count(ancestorMRCA)==0)//the parents of the 2 events are differents
-            {
+         //    if (ancestorsOfTimeOfOrigins.count(ancestorMRCA)==0)//the parents of the 2 events are differents
+          //  {
                 eventIds.push_back(nextEvent);
                 ancestorsOfTimeOfOrigins.insert(ancestorMRCA);
                 MRCAs.insert(MRCA);
-            }
-            else if(ancestorsOfTimeOfOrigins.count(ancestorMRCA)>0 && ancestorMRCA->parent->parent!= NULL)//the parents of the 2 events are igual, but this same parent is not the left child of the root
-            {
-                eventIds.push_back(nextEvent);
-                ancestorsOfTimeOfOrigins.insert(ancestorMRCA);
-                 MRCAs.insert(MRCA);
-            }
+           // }
+          //  else if(ancestorsOfTimeOfOrigins.count(ancestorMRCA)>0 && ancestorMRCA->parent->parent!= NULL)//the parents of the 2 events are igual, but this same parent is not the left child of the root
+           // {
+//                eventIds.push_back(nextEvent);
+//                ancestorsOfTimeOfOrigins.insert(ancestorMRCA);
+//                 MRCAs.insert(MRCA);
+           // }
         }
-        while(ancestorsOfTimeOfOrigins.size() < numberPoints);
+        while(MRCAs.size() < numberPoints);
         
         int k=0;
         
@@ -3317,7 +3318,7 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vecto
             printf( "\n MRCA node id %d with time %lf anf parent with time %lf was assigned to pop %d and time of origin %lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput  );
             k++;
         }
-        Population* pop=getPopulationbyIndex(k);
+        Population* pop=getPopulationbyIndex(numClones -1);
         pop->rMRCA =initialRootedTree->root;//the last population has MRCA node the root  of the tree
         u= (TreeNode *)(initialRootedTree->root->data);
         pop->timeOriginInput=u->timePUnits;
@@ -3871,10 +3872,115 @@ void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
     TreeNode * u, *v;
     u= (TreeNode *)( pop->rMRCA->data);
     v= (TreeNode *)( pop->rMRCA->parent->data);
-    double proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*randomUniformFromGsl();
+   // double proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*randomUniformFromGsl();
+    double windowSize = min(v->timePUnits - pop->timeOriginInput, pop->timeOriginInput - u->timePUnits);
+    double proposedTime= proposalSlidingWindow(pop->timeOriginInput, windowSize);
     if (proposedTime<=0)
         printf( "time of origin must be positive");
     pop->timeOriginInput =proposedTime;
     printf( "\n MRCA node id %d with time %lf anf parent with time %lf was assigned to pop %d and time of origin %lf \n", pop->rMRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput  );
     
 }
+void Chain::PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)
+{
+    char File[MAX_NAME];
+    char dir[MAX_NAME];
+    /* contains the simulated tree in Newick format
+     */
+    mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
+    //mkdir("Results",0);
+#ifdef MAC
+    strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
+#else
+    strcpy (dir, "Results/");
+#endif
+    sprintf(File,"%s/Chain%d", filePaths.resultsDir,  chainNumber );
+    mkdir(File,S_IRWXU);
+    //strcpy (resultsDir, dir);
+    if (programOptions.doPrintTrees == YES)
+    {
+        sprintf(File,"%s/Chain%d/%s", filePaths.resultsDir,  chainNumber ,filePaths.treeDir);
+        mkdir(File,S_IRWXU);
+        sprintf(File,"%s/Chain%d/%s/%s.trees", filePaths.resultsDir, chainNumber, filePaths.treeDir,filePaths.treeFile);
+        if (openFile(&files.fpTrees, File) == -1)
+        {
+            fprintf (stderr, "Can't open \"%s\"\n", File);
+            exit(-1);
+        }
+        sprintf(File,"%s/Chain%d/%s/%s_2.trees", filePaths.resultsDir,chainNumber,  filePaths.treeDir, filePaths.treeFile);
+        if (openFile(&files.fpTrees2, File) == -1)
+        {
+            fprintf(stderr, "Can't open %s.\n", File);
+            exit(-1);
+        }
+    }
+    if (programOptions.doPrintTimes == YES)
+    {
+        sprintf(File,"%s/Chain%d/%s", filePaths.resultsDir,chainNumber, filePaths.timesDir );
+        mkdir(File,S_IRWXU);
+        sprintf(File,"%s/Chain%d/%s/%s.txt", filePaths.resultsDir, chainNumber, filePaths.timesDir ,filePaths.timesFile);
+        if (openFile(&files.fpTimes, File) == -1)
+        {
+            fprintf (stderr, "Can't open \"%s\"\n", File);
+            exit(-1);
+        }
+        sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.timesDir);
+      
+        sprintf(File,"%s/Chain%d/%s/%s_2.txt", filePaths.resultsDir,chainNumber, filePaths.timesDir, filePaths.timesFile);
+        
+        if (openFile(&files.fpTimes2, File) == -1)
+        {
+            fprintf(stderr, "Can't open %s.\n", File);
+            exit(-1);
+        }
+    }
+    //log file
+    sprintf(File,"%s/Chain%d/%s.log", filePaths.resultsDir, chainNumber,  filePaths.logFile);
+    if (openFile(&files.fplog, File) == -1)
+    {
+        fprintf (stderr, "Can't open \"%s\"\n", File);
+        exit(-1);
+    }
+}
+void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files )
+{
+//    fprintf (files.fplog, "%d  %lf %lf %lf effect_pop_size(pop1) effect_pop_size(pop2) effect_pop_size(pop3) sample_size(pop1)  sample_size(pop2) sample_size(pop3) time_origin(pop1)  time_origin(pop2) time_origin(pop3) \n", pop);
+    string paramName;
+    Population *pop;
+    fprintf (files.fplog, "%d  ", currentIteration);
+    for (unsigned int i = 0; i < populations.size(); ++i){
+        pop =populations[i];
+        fprintf (files.fplog, "  %lf  ", pop->growthRate);
+        fprintf (files.fplog, "  %lf  ", pop->effectPopSize);
+        fprintf (files.fplog, "  %d  ", pop->popSize);
+        fprintf (files.fplog, "  %d  ", pop->sampleSize);
+        fprintf (files.fplog, "  %lf  ", pop->timeOriginInput);
+         fprintf (files.fplog, "  %lf  ", pop->timeOriginSTD);
+    }
+    fprintf (files.fplog, "\n");
+
+}
+void Chain::writeHeaderOutputChain(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files )
+{
+    std::time_t timeNow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    fprintf (files.fplog, "#tumor_coal 1.0 \n ");
+    fprintf (files.fplog, "# Generated %s \n ", std::ctime(&timeNow));
+    fprintf (files.fplog, "state");
+    string paramName;
+    for (unsigned int i = 0; i < populations.size(); ++i){
+        paramName =  "growth_rate(pop" + std::to_string(i) + ")";
+        fprintf (files.fplog, "  %s  ", paramName.c_str());
+        paramName =  "effect_pop_size(pop" + std::to_string(i) + ")";
+        fprintf (files.fplog, "  %s  ", paramName.c_str());
+        paramName =  "pop_size(pop" + std::to_string(i) + ")";
+        fprintf (files.fplog, "  %s  ", paramName.c_str());
+        paramName =  "sample_size(pop" + std::to_string(i) + ")";
+        fprintf (files.fplog, "  %s  ", paramName.c_str());
+        paramName =  "time_origin_input(pop" + std::to_string(i) + ")";
+        fprintf (files.fplog, "  %s", paramName.c_str());
+        paramName =  "time_origin_std(pop" + std::to_string(i) + ")";
+        fprintf (files.fplog, "  %s", paramName.c_str());
+    }
+    fprintf (files.fplog, "\n");
+}
+

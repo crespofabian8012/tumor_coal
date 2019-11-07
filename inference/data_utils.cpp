@@ -1318,7 +1318,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             //if (noisy > 1)
                 fprintf (stderr, "\n Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
             
-
+    
             /*  set pointers between nodes */
             p = nodes[popI->idsActiveGametes[firstInd]];
             q = nodes[popI->idsActiveGametes[secondInd]];

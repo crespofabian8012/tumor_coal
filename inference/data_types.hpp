@@ -233,6 +233,7 @@ typedef struct {
     FILE *fpVCF;
     FILE *fpCATG;
     FILE *fpMLhaplotypes;
+    FILE *fplog;
 }Files;
 
 #endif /* data_types_h */

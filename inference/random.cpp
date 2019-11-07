@@ -12,6 +12,8 @@
 #include <gsl/gsl_cdf.h>
 #include "random.h"
 #include <sys/time.h>
+#include <chrono>
+#include <ctime>  
 /***************************** RandomUniform **********************************/
 /* It returns a random uniform variate in range 0..1. It is described in
  Park, S. K. and K. W. Miller. 1988. Random number generators: good

@@ -68,6 +68,7 @@ int main(int argc, char* argv[] )
     programOptions.numClones=3;
     programOptions.mutationRate= 9.1e-8;
     programOptions.doUsefixedMutationRate=1;
+    programOptions.doSimulateData=NO;
     
     std::map<std::string,int> tipsLabelling;
     std::map<pll_unode_t, Population> tipsAssign;
@@ -172,26 +173,28 @@ int main(int argc, char* argv[] )
     int currentIteration;
     int sampleEvery = mcmcOptions.thinning;
 
-
      for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
    {
-       
        currentChain = chains[chainNumber];
+       currentChain->PrepareFiles(filePaths, programOptions, files);
+       currentChain->writeHeaderOutputChain(filePaths, programOptions,
+                                            files );
        for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
      {
-         
          currentChain->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
          
        if (currentIteration % sampleEvery == 0 )
           {
-//
+              currentChain->writeMCMCState(  currentIteration, filePaths, programOptions,files );
 ////                PrintTrees(currentIteration, &(chains[chainNumber].root), files.fpTrees, programOptions.mutationRate, programOptions.doUseObservedCellNames);
 ////                PrintTrees2(currentIteration, &(chains[chainNumber].root), files.fpTrees2, programOptions.mutationRate,  ObservedCellNames, programOptions.doUseObservedCellNames);
 ////                PrintTimes(currentIteration, files.fpTimes, programOptions.mutationRate, chains[chainNumber].nodes, programOptions.thereisOutgroup);
 ////                PrintTimes2(currentIteration, files.fpTimes2, programOptions.mutationRate, chains[chainNumber].nodes, programOptions.thereisOutgroup);
            }
       }
+       currentChain->currentNumberIerations =currentIteration;
   }
+    //close files
    pll_msa_destroy(msa);
 
   return 0;

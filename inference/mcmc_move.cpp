@@ -8,10 +8,13 @@
 #include "mcmc_move.hpp"
 #include "data_utils.hpp"
 #include "random.h"
+using namespace std;
 MCMCmove::MCMCmove(Chain *chain,  string nameMove)
 {
     this->chain = chain;
     this->nameMove = nameMove;
+    this->numberAccept=0;
+    this->numberReject=0;
 }
 Chain * MCMCmove::getChain()
 {
@@ -52,11 +55,11 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
     safeCurrentValue();
     double newTotalPopulationSize;
 
-  
-    mcmcOptions.slidingWindowSizeTotalEffectPopSize= 2* (chain->totalEffectPopSize - mcmcOptions.fixedLambda * chain->totalSampleSize());
+    mcmcOptions.slidingWindowSizeTotalEffectPopSize= 2 * (chain->totalEffectPopSize - (chain->totalSampleSize() / mcmcOptions.fixedLambda));
     
     bool allPopulationPopSizesSet=false;
     do {
+        allPopulationPopSizesSet=true;
         newTotalPopulationSize= chain->proposalSlidingWindow(chain->oldTotalEffectPopSize,  mcmcOptions.slidingWindowSizeTotalEffectPopSize);
         chain->totalEffectPopSize= newTotalPopulationSize;
         chain->updateEffectPopSizesCurrentProportionsVector();
@@ -72,7 +75,7 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
                 break;
             }
         }
-        allPopulationPopSizesSet=true;
+        
     }
     while(!allPopulationPopSizesSet);
 }
@@ -108,7 +111,7 @@ double NewTotalEffectPopSizeMove::computeLogAcceptanceProb(ProgramOptions &progr
     
     double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
     
-    double LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
   
     return LogAcceptanceRate;
 }
@@ -119,13 +122,17 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
     makeProposal(programOptions, mcmcOptions);
     double logAcceptanceRate =computeLogAcceptanceProb(programOptions, mcmcOptions);
     double randomNumber= randomUniformFromGsl();
-    if (log(randomNumber) < logAcceptanceRate )
+    double logRandom=log(randomNumber);
+    if (logRandom < logAcceptanceRate )
     {//accept the move
-        printf("\n Accepted new move %s", nameMove.c_str());
+        printf("\n Accepted new move %s \n", nameMove.c_str());
+        this->numberAccept++;
     }
     else
     {
         rollbackMove();
+        this->numberReject++;
+         printf("\n Rejected new move %s \n", nameMove.c_str());
     }
 }
 //////////////////////////////////////////////
@@ -155,6 +162,7 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     
     bool allPopulationPopSizesSet=false;
     do {
+        allPopulationPopSizesSet=true;
         proportionsVectorArray=&(chain->oldproportionsVector[0]);
          //init array with the current proportions vector
         randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
@@ -172,7 +180,7 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
                 break;
             }
         }
-        allPopulationPopSizesSet=true;
+        
     }
     while(!allPopulationPopSizesSet);
 }
@@ -204,7 +212,7 @@ double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &progra
     
     double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentProportionsVector;
     
-    double logAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+    double logAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
     
     return(logAcceptanceRate);
 }
@@ -244,7 +252,7 @@ double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &
     double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensitScaledGrowthRate;
     
     
-    double logAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+    double logAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
    
     return logAcceptanceRate;
 }
@@ -303,7 +311,7 @@ double NewEffectPopSizeMoveForPopulation::computeLogAcceptanceProb(ProgramOption
     
     double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
     
-    double LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
     
     return LogAcceptanceRate;
 }
@@ -429,7 +437,7 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
     
     double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ;
     
-    double LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
     return LogAcceptanceRate;
 }
 void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue()
@@ -505,6 +513,6 @@ double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOp
     
     double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ;
     
-    double LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
+   double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
     return LogAcceptanceRate;
 }

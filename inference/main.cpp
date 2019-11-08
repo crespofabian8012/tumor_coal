@@ -167,21 +167,23 @@ int main(int argc, char* argv[] )
     //free(newick);
     string healthyTipLabel = "healthycell";
     programOptions.healthyTipLabel ="healthycell";
-    Chain::initializeChains(chains, programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
+//    Chain *chain =Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
 
     Chain *currentChain;
     int currentIteration;
     int sampleEvery = mcmcOptions.thinning;
+    mcmcOptions.Niterations = 1000000;
 
      for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
    {
-       currentChain = chains[chainNumber];
+       currentChain = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
+       chains.push_back(currentChain);
        currentChain->PrepareFiles(filePaths, programOptions, files);
        currentChain->writeHeaderOutputChain(filePaths, programOptions,
                                             files );
        for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
      {
-         currentChain->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
+        currentChain->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
          
        if (currentIteration % sampleEvery == 0 )
           {
@@ -192,9 +194,11 @@ int main(int argc, char* argv[] )
 ////                PrintTimes2(currentIteration, files.fpTimes2, programOptions.mutationRate, chains[chainNumber].nodes, programOptions.thereisOutgroup);
            }
       }
-       currentChain->currentNumberIerations =currentIteration;
+      currentChain->currentNumberIerations =currentIteration;
   }
     //close files
+    fclose(files.fplog);
+    
    pll_msa_destroy(msa);
 
   return 0;

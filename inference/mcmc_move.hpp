@@ -13,6 +13,8 @@
 class MCMCmove{
     Chain *chain;
     string nameMove;
+    int numberAccept;
+    int numberReject;
 public:
     MCMCmove(Chain *chain, string nameMove);
     virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;

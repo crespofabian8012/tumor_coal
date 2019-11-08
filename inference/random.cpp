@@ -233,10 +233,14 @@ void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta)
     struct timeval tv; // Seed generation based on time
     gettimeofday(&tv,0);
     unsigned long mySeed = tv.tv_sec + tv.tv_usec;
+    //mySeed * randomUniformFromGsl();
     T = gsl_rng_ranlux389; // Generator setup
     r = gsl_rng_alloc (T);
     //gsl_rng_set(r, mySeed);
-     gsl_ran_dirichlet( r,  vectorSize, alpha, theta); // Generate it!
+    //unsigned long mySeed2 =gsl_rng_uniform_int( r, mySeed);
+    unsigned long mySeed2 = ((int)randomUniformFromGsl() )* mySeed;
+    gsl_rng_set(r, mySeed2);
+    gsl_ran_dirichlet( r,  vectorSize, alpha, theta); // Generate it!
     gsl_rng_free (r);
 
 }

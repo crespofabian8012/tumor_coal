@@ -2206,7 +2206,7 @@ void Chain::dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
     }
 }
 
-Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree, string& healthyTipLabel)
+Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree, string& healthyTipLabel)
 {
     double totalTreeLength;
     int        numCA, numMIG;
@@ -2317,7 +2317,7 @@ Chain *Chain::initializeChains(vector<Chain*> &chains,   ProgramOptions &program
     fprintf (stderr, "Initial log likelihood of the sequences of chain %d  is = %lf  \n", 0,chain->currentlogConditionalLikelihoodSequences );
     free(rootedNewick2);
     rootedNewick2=NULL;
-    chains.push_back(chain);
+   
     return chain;
 //    for(chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
 //    {
@@ -3505,7 +3505,7 @@ void Chain::initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Popula
              TreeNode * treeNodeRight=(TreeNode *)(p->right->data);
             std::transform (treeNodeLeft->numberTipsByPopulation.begin(), treeNodeLeft->numberTipsByPopulation.end(), treeNodeRight->numberTipsByPopulation.begin(), treeNode->numberTipsByPopulation.begin(), std::plus<int>());
             
-            printf("node %d has %d tips below \n", p->node_index,treeNode->numberOfTipsSubTree );
+            printf("\n node %d has %d tips below \n", p->node_index,treeNode->numberOfTipsSubTree );
             printf("node %d has %d accumulated tips below \n", p->node_index,accumulate(treeNode->numberTipsByPopulation.begin(),treeNode->numberTipsByPopulation.end(),0));
         }
     }
@@ -3641,7 +3641,7 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
 double  Chain::proposalSlidingWindow( double oldvalue,  double windowSize)
 {
     double newvalue =0;
-    newvalue = oldvalue + (randomUniformFromGsl()-0.5) * windowSize ;
+    newvalue = oldvalue + (randomUniformFromGsl()-0.5) * 0.5 * windowSize ;
     if (newvalue <0)
         newvalue = -  newvalue;
     return newvalue;

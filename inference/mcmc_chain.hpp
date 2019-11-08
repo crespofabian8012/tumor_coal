@@ -165,7 +165,7 @@ public:
     void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError);
     void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *));
     void  destroyTree(pll_utree_t * tree, void (*cb_destroy)(void *));
-   static Chain *initializeChains(vector<Chain*> &chains,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree, string& healthyTipLabel);
+   static Chain *initializeChain( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, pll_utree_t * initialTree, pll_rtree_t * initialRootedTree, string& healthyTipLabel);
     void runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
                          char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes, int currentIteration
                   );

@@ -38,4 +38,6 @@ int ChooseUniformState (double *prob, long int *seed);
 double randomUniformFromGsl();
 void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta);
 
+void  randomDirichletFromVector (vector<double> alpha, vector<double> &outputVector);
+
 #endif /* random_h */

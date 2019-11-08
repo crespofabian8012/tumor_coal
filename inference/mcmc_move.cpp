@@ -165,7 +165,8 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
         allPopulationPopSizesSet=true;
         proportionsVectorArray=&(chain->oldproportionsVector[0]);
          //init array with the current proportions vector
-        randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
+        randomDirichletFromVector (chain->oldproportionsVector, chain->proportionsVector);
+//        randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
         
         chain->updateEffectPopSizesCurrentProportionsVector();
         for( i = 0 ; i < chain->numClones; i++)

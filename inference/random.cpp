@@ -221,6 +221,27 @@ void  RandomDirichlet (double s, int vectorSize, vector<double> &outputVector, l
         // *(*outputVector + i)= *(*outputVector + i)/sum;
     }
 }
+/*************** RandomDirichlet ***************/
+//first generates random samples from a gamma and then divide each value by the sum
+void  randomDirichletFromVector (vector<double> alpha, vector<double> &outputVector)
+{   int i;
+    double sum=0.0;
+    double current;
+    long int seed =0;
+    // *outputVector = malloc(vectorSize * sizeof(double));
+    // if (*outputVector == NULL)
+    //     return;
+    outputVector.clear();
+    for (i=0; i < alpha.size(); i++){
+        current = RandomGamma(alpha.at(i), &seed);
+        outputVector.push_back(current);
+        sum=sum+current;
+    }
+    for (i=0; i < alpha.size(); i++){
+        outputVector.at(i)=  outputVector.at(i)/ sum;
+        // *(*outputVector + i)= *(*outputVector + i)/sum;
+    }
+}
 void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta)
 {
     //double theta[vectorSize];
@@ -235,11 +256,12 @@ void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta)
     unsigned long mySeed = tv.tv_sec + tv.tv_usec;
     //mySeed * randomUniformFromGsl();
     T = gsl_rng_ranlux389; // Generator setup
-    r = gsl_rng_alloc (T);
+    T = gsl_rng_default;
+    r = gsl_rng_alloc(T);
     //gsl_rng_set(r, mySeed);
     //unsigned long mySeed2 =gsl_rng_uniform_int( r, mySeed);
-    unsigned long mySeed2 = ((int)randomUniformFromGsl() )* mySeed;
-    gsl_rng_set(r, mySeed2);
+    //unsigned long mySeed2 = ((int)randomUniformFromGsl() )* mySeed;
+    //gsl_rng_set(r, mySeed2);
     gsl_ran_dirichlet( r,  vectorSize, alpha, theta); // Generate it!
     gsl_rng_free (r);
 

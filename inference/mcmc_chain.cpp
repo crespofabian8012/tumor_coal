@@ -7,6 +7,7 @@
 //#include "mcmc_chain.hpp"
 #include <map>
 #include <string>
+#include <vector>
 #include <queue>
 #include <unordered_set>
 #include <numeric>
@@ -1220,14 +1221,17 @@ void Chain::initProportionsVector(){
 void Chain::generateProportionsVectorFromDirichlet(double alpha[]){
     
     double theta[numClones];
-//    for (unsigned int i = 0; i < numClones; ++i){
-//        theta[i]=0;
-//    }
-    randomDirichletFromGsl(numClones, alpha, theta);
+    vector<double> outputVector;
+    for (unsigned int i = 0; i < numClones; ++i){
+        theta[i]=0;
+    }
+    vector<double> alphaVector(alpha, alpha + numClones);
+    randomDirichletFromVector(alphaVector, outputVector);
+    //randomDirichletFromGsl(numClones, alpha, theta);
     for (int i=0; i< numClones; i++)
     {
-        proportionsVector.at(i)=theta[i];
-        oldproportionsVector.at(i)=theta[i];
+        proportionsVector.at(i)=outputVector.at(i);
+        oldproportionsVector.at(i)=outputVector.at(i);
     }
     //std::copy(proportionsVector.begin(), proportionsVector.end(), theta);
 }
@@ -2291,7 +2295,7 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
             chain->proportionsVector.at(i)=alpha[i];
             chain->oldproportionsVector.at(i)=alpha[i];
         }
-        //chain->generateProportionsVectorFromDirichlet(alpha);
+        chain->generateProportionsVectorFromDirichlet(alpha);
         chain->initEffectPopulationSizesFromProportionsVector();
         chain->initTimeOriginSTD();
         chain->initPopulationMigration();//after setting the timeSTD

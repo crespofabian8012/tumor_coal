@@ -1591,7 +1591,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             //        coalTreeMRCA->anc = healthyRoot;
             p->anc1 = healthyRoot;
             
-            healthyRoot->timePUnits = p->timePUnits * healthyRoot->effectPopSize;
+           // healthyRoot->timePUnits = p->timePUnits * healthyRoot->effectPopSize;
             healthyRoot->nodeClass = 5;
             //        coalTreeMRCA->length = transformingBranchLength/mutationRate;
             p->length = 0;

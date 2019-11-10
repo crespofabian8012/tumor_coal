@@ -94,6 +94,8 @@ public:
     double DensityTime( double u);
     double LogProbNoCoalescentEventBetweenTimes(double from, double to, int numberActiveInd);
     void filterAndSortCoalescentEvents();
+    void multiplyCoalescentsEventByFactor(double factor);
+    void multiplyMigrationsTimesByFactor(double factor);
 private:
     static bool isNotPositive(double d);
 };

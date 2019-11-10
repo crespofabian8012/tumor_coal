@@ -509,3 +509,19 @@ bool Population::isNotPositive(double d) //test condition for remove_if algo.
 {
     return d <= 0;
 }
+void Population::multiplyCoalescentsEventByFactor(double factor)
+{
+    
+    int j = 0;
+    for (j = 0; j < CoalescentEventTimes.size(); j++) {
+        CoalescentEventTimes.at(j) = CoalescentEventTimes.at(j) * factor;
+    }
+}
+void Population::multiplyMigrationsTimesByFactor(double factor)
+{
+    
+    int j = 0;
+    for (j = 0; j < immigrantsPopOrderedByModelTime.size(); j++) {
+        immigrantsPopOrderedByModelTime.at(j).first = immigrantsPopOrderedByModelTime.at(j).first *factor;
+    }
+}

@@ -57,7 +57,7 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
     int i=0;
     Population *popI;
     Chain *chain=getChain();
-    safeCurrentValue();
+
     double newTotalPopulationSize;
 
     mcmcOptions.slidingWindowSizeTotalEffectPopSize= 2 * (chain->totalEffectPopSize - (chain->totalSampleSize() / mcmcOptions.fixedLambda));
@@ -172,7 +172,6 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     int i=0;
     Population *popI;
 
-    safeCurrentValue();
     double *proportionsVectorArray;
     
     bool allPopulationPopSizesSet=false;
@@ -258,7 +257,7 @@ void NewGrowthRateMoveForPopulation::safeCurrentValue()
 void NewGrowthRateMoveForPopulation::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
-    safeCurrentValue();
+
     double randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato);
     pop->delta =  randomDelta;
     pop->growthRate =pop->delta  / pop->effectPopSize;
@@ -332,7 +331,7 @@ void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOpti
     int i;
  
     Chain *chain=getChain();
-    safeCurrentValue();
+
     bool populationPopSizesSet=false;
     double newEffectPopulationSize;
     //int totalSampleSize = chain->totalSampleSize();

@@ -2295,7 +2295,7 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
             chain->proportionsVector.at(i)=alpha[i];
             chain->oldproportionsVector.at(i)=alpha[i];
         }
-        chain->generateProportionsVectorFromDirichlet(alpha);
+        // chain->generateProportionsVectorFromDirichlet(alpha);
         chain->initEffectPopulationSizesFromProportionsVector();
         chain->initTimeOriginSTD();
         chain->initPopulationMigration();//after setting the timeSTD

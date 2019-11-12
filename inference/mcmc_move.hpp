@@ -13,8 +13,11 @@
 class MCMCmove{
     Chain *chain;
     string nameMove;
+protected:
     int numberAccept;
     int numberReject;
+    double newLogConditionalLikelihoodTree;
+    double newLogConditionalLikelihoodSequences;
 public:
     MCMCmove(Chain *chain, string nameMove);
     virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;

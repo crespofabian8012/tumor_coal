@@ -70,8 +70,6 @@ Chain::Chain( int chainNumber,
     
     currentNumberIerations = 0;
     
-
-    
     currentlogConditionalLikelihoodTree=0;
     currentlogConditionalLikelihoodSequences=0;
     
@@ -2453,10 +2451,6 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     cumNumMIG=0;
     meanNumMIG=0;
    
-    
-    
-    
-    
     numCA = numMIG = 0;
     numEventsTot=0;
     countTMRCA = 0.0;
@@ -3402,7 +3396,7 @@ void Chain::initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<p
         pop->resetMigrationsList();//this requires  that you have set first timeOriginSTD in the population and effective population size
         //pop->InitCoalescentEvents(numClones);
     }
-    initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(rootRootedTree, rmrcaOfPopulation[rootRootedTree], rmrcaOfPopulation , healthyTipLabel);
+  initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(rootRootedTree, rmrcaOfPopulation[rootRootedTree], rmrcaOfPopulation , healthyTipLabel);
 }
 void Chain::initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation, string& healthyTipLabel ){
     
@@ -3794,8 +3788,17 @@ int Chain::totalSampleSize()
         if (parent !=NULL && edge->length >0 && mrcaOfPopulation.count(child) == 0  )
         {
             //totalBranchLength1 += edge->length;
-            availableEdges.push_back(edge);
-            branchLengths.push_back(edge->length);
+            if(child->left == NULL    && std::string(child->label).compare(healthyCellLabel)!=0 )//leaf different from healthy cell
+            {
+                availableEdges.push_back(edge);
+                branchLengths.push_back(edge->length);
+
+            }
+            else if(child->left != NULL)
+            {//not a leaf
+                availableEdges.push_back(edge);
+                branchLengths.push_back(edge->length);
+            }
 //            cumBranchLength = edge->length + cumulativeBranchLengths.at(cumulativeBranchLengths.size()-1);
 //            cumulativeBranchLengths.push_back(cumBranchLength);
         }

@@ -15,6 +15,8 @@ MCMCmove::MCMCmove(Chain *chain,  string nameMove)
     this->nameMove = nameMove;
     this->numberAccept=0;
     this->numberReject=0;
+    this->newLogConditionalLikelihoodTree =chain->currentlogConditionalLikelihoodTree;
+    this->newLogConditionalLikelihoodSequences=chain->currentlogConditionalLikelihoodSequences;
 }
 Chain * MCMCmove::getChain()
 {
@@ -111,7 +113,7 @@ double NewTotalEffectPopSizeMove::computeLogAcceptanceProb(ProgramOptions &progr
 {
     Chain *chain=getChain();
 
-    double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+ newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     
     fprintf (stderr, "\n>> log conditional Likelihood tree for the new total effective population size %d(old %d),  of the chain %d is = %lf  \n",chain->totalEffectPopSize, chain->oldTotalEffectPopSize,chain->chainNumber,newLogConditionalLikelihoodTree );
   
@@ -138,6 +140,11 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
     {//accept the move
         printf("\n Accepted new move %s \n", nameMove.c_str());
         this->numberAccept++;
+        Chain *chain=getChain();
+        if (chain->currentlogConditionalLikelihoodTree !=newLogConditionalLikelihoodTree)
+             chain->currentlogConditionalLikelihoodTree = newLogConditionalLikelihoodTree;
+        if (chain->currentlogConditionalLikelihoodSequences !=newLogConditionalLikelihoodSequences)
+               chain->currentlogConditionalLikelihoodSequences = newLogConditionalLikelihoodSequences;
     }
     else
     {
@@ -223,7 +230,7 @@ double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &progra
 {
     Chain *chain=getChain();
    // ListClonesAccordingTimeToOrigin(chain->populations);
-    double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+  newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     double priorDensityNewProportionsVector =  chain->DirichletDensity( chain->proportionsVector, chain->oldproportionsVector , chain->numClones);
     
     double priorDensityCurrentProportionsVector = chain->DirichletDensity(chain->oldproportionsVector, chain->proportionsVector, chain->numClones);
@@ -282,7 +289,7 @@ void NewGrowthRateMoveForPopulation::rollbackMove()
 double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
-    double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+    newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     
     fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total growth rate for population %d,  of the chain %d is = %lf  \n", pop->index, chain->chainNumber, newLogConditionalLikelihoodTree );
     
@@ -362,7 +369,7 @@ void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOpti
 double NewEffectPopSizeMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions){
     
     Chain *chain=getChain();
-    double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+    newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     
     // double slidingWindowSize= 2* (pop->oldeffectPopSize - pop->birthRate * pop->sampleSize);
     
@@ -422,6 +429,7 @@ void NewTimeOriginOnTreeforPopulationMove::safeCurrentValue()
     pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
      pop->oldSampleSize = pop->sampleSize;
     
+
      //save information for the other populations
     for( i = 0 ; i < chain->numClones; i++)
     {
@@ -490,7 +498,7 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
 {
     Chain *chain=getChain();
     
-    double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+   newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     double currentSumAvailBranchLengths = chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
       double newSumAvailBranchLengths = chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
     double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);
@@ -566,7 +574,7 @@ double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOp
 {
     Chain *chain=getChain();
     
-    double newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+   newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     double currentSumAvailBranchLengths;// chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
     double newSumAvailBranchLengths ;// chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
    // double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);

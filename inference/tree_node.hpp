@@ -37,6 +37,7 @@ public:
     vector<int> numberTipsByPopulation;
     TreeNode();
     void initNumberTipsVector(int numberClones);
+    void resetNumberTipsVector(int numberClones);
 };
 
 typedef TreeNode* pTreeNode;

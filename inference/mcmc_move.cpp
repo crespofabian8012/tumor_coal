@@ -434,7 +434,7 @@ void NewTimeOriginOnTreeforPopulationMove::safeCurrentValue()
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
-        
+         popI->oldSampleSize = popI->sampleSize;
         pop->oldFatherPop =  pop->FatherPop;
         popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
         popI->CoalescentEventTimes.clear();
@@ -482,7 +482,6 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
         auto pop =  chain->populations[i];
         alpha[i]= pop->sampleSize;
     }
-    
     
     int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
     std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));

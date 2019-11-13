@@ -3354,29 +3354,32 @@ void Chain::initPopulationCoalescentAndMigrationEventsFromRootNodeOnTree(pll_uno
         }
     }
 }
-void Chain::initPopulationsSampleSizes( std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation){
-    
+bool Chain::initPopulationsSampleSizes( std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation){
+    bool existsZeroSampleSizePop=false;
       if (rmrcaOfPopulation.count(initialRootedTree->root)==0)
           printf("Error, the root node is not the MRCA of any population");
-    
     initPopulationSampleSizesFromNodeOnRootedTree(initialRootedTree->root, rmrcaOfPopulation[initialRootedTree->root], rmrcaOfPopulation);
-   
     TreeNode *treeNode;
      for (unsigned int i = 0; i < numClones; ++i)
         {
             auto pop=populations[i];
             treeNode = (TreeNode *)(pop->rMRCA->data);
             if (pop->rMRCA->parent !=NULL)//not the oldest population
-            { pop->sampleSize =treeNode->numberTipsByPopulation[i];
+            { pop->sampleSize =treeNode->numberTipsByPopulation[pop->index];
+                existsZeroSampleSizePop =   pop->sampleSize <=0;
             }
             else{
-                if (treeNode->numberTipsByPopulation[i] -1 >0)
-                  pop->sampleSize =treeNode->numberTipsByPopulation[i] -1;
-                else
+                
+                if (treeNode->numberTipsByPopulation[pop->index] -1 >0)
+                  pop->sampleSize =treeNode->numberTipsByPopulation[pop->index] -1;
+                else{
                    printf("Error, the last population must have at least one tip");
+                 
+                }
+                   existsZeroSampleSizePop = treeNode->numberTipsByPopulation[pop->index] -1 <=0;
             }
         }
-
+    return existsZeroSampleSizePop;
 }
 
 void Chain::initPopulationsCoalescentAndMigrationEvents(std::map<pll_unode_t*, Population*> mrcaOfPopulation ){
@@ -3462,10 +3465,10 @@ void Chain::initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Popula
         TreeNode * treeNode=(TreeNode *)(p->data);
         if (p->left == NULL)//tip
         {
-            
             int idx= currentPopulation->index;
             if (idx <= numClones -1)
             {
+                treeNode->resetNumberTipsVector(numClones);
                 treeNode->numberTipsByPopulation.at(currentPopulation->index) = 1;
                 return;
             }
@@ -3826,29 +3829,41 @@ int Chain::totalSampleSize()
         pll_rnode_t * MRCA;
         bool existsZeroSampleSizePop=true;
         double alpha[numClones];
-       // copyMRCAOfPopulation.insert(mrcaOfPopulation.begin(), mrcaOfPopulation.end());
+        pll_rnode_t* node;
+        map<pll_rnode_t*,Population *>::iterator it;
+        for( it = mrcaOfPopulation.begin(); it != mrcaOfPopulation.end(); ++it) {
+            node= it->first;
+            eventIds.push_back(node->node_index);
+        }
         do
         {
             copyMRCAOfPopulation.clear();
             copyMRCAOfPopulation.insert(mrcaOfPopulation.begin(), mrcaOfPopulation.end());
+            copyMRCAOfPopulation.erase(pop->oldrMRCA);
             do
             {
                 random =randomUniformFromGsl();
                 nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
+                MRCA =availableEdges.at(nextEvent-1)->edge.rtree.child;
+                
             }
-            while(std::find(eventIds.begin(), eventIds.end(), nextEvent) != eventIds.end());
+           while(std::find(eventIds.begin(), eventIds.end(), MRCA->node_index) != eventIds.end());
 //            if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
 //                printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent, edges.at(nextEvent)->length, branchLengths.at(nextEvent -1));
-            ancestorMRCA =edges.at(nextEvent)->edge.rtree.parent;
-            MRCA =edges.at(nextEvent)->edge.rtree.child;
+            
+            
+            ancestorMRCA =availableEdges.at(nextEvent-1)->edge.rtree.parent;
+            MRCA =availableEdges.at(nextEvent-1)->edge.rtree.child;
+            eventIds.push_back(MRCA->node_index);
             copyMRCAOfPopulation[MRCA]= pop;
-            initPopulationsSampleSizes( copyMRCAOfPopulation);
-            existsZeroSampleSizePop= (pop->sampleSize == 0)? true: false;
+            pop->rMRCA=MRCA;
+            existsZeroSampleSizePop= initPopulationsSampleSizes( copyMRCAOfPopulation);
+            //existsZeroSampleSizePop= (pop->sampleSize == 0)? true: false;
         }
         while(existsZeroSampleSizePop);
     //////////////////////////////////////
             pop->rMRCA = MRCA;
-            mrcaOfPopulation[MRCA]=pop;
+            //mrcaOfPopulation[MRCA]=pop;
             u= (TreeNode *)(MRCA->data);
             v= (TreeNode *)(MRCA->parent->data);
             double proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*randomUniformFromGsl();

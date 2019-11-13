@@ -47,3 +47,9 @@ void TreeNode::initNumberTipsVector(int numberClones)
         numberTipsByPopulation.push_back(0);
     }
 }
+void TreeNode::resetNumberTipsVector(int numberClones)
+{
+    for (size_t i = 0; i < numberClones; i++) {
+        numberTipsByPopulation.at(i)=0;
+    }
+}

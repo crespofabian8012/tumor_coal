@@ -179,7 +179,7 @@ public:
     void initNodeDataFromTree();
 
     void initPopulationSampleSizesFromRootNodeOnTree(pll_unode_t *p, Population *population );
-    void initPopulationsSampleSizes(std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation);
+    bool initPopulationsSampleSizes(std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation);
     void initPopulationsCoalescentAndMigrationEvents(std::map<pll_unode_t*, Population*> mrcaOfPopulation );
     void initPopulationCoalescentAndMigrationEventsFromRootNodeOnTree(pll_unode_t *p, Population *population, std::map<pll_unode_t*, Population*> mrcaOfPopulation );
     void initProportionsVector();

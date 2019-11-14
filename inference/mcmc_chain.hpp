@@ -68,6 +68,9 @@ public:
     std::map<pll_rnode_t*, Population*> proposedrMRCAPopulation;
     
     vector<pll_tree_edge_t *> edges;
+    
+    vector<double> sampledTotalEffectPopSize;
+    vector<vector<double> > sampledPoportionVector;
 
     //vector<pll_edge_node_t*> edges;
 public:
@@ -216,6 +219,7 @@ public:
     void PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
     void writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files );
     void writeHeaderOutputChain(  const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files );
+    double autoCorrelation(int lag, vector<double> values);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

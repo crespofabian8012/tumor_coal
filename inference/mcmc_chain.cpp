@@ -2423,6 +2423,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
               ){
     
     vector<double>  varTimeGMRCA;
+    vector<MCMCmove *>  moves;
     //Population** populations;
     //TreeNode** nodes; TreeNode** treeTips;
     if (numClones <= 0)
@@ -2464,12 +2465,14 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     
     //2- Update M_T
     NewTotalEffectPopSizeMove *newTotalEffectPopSizeMove= new NewTotalEffectPopSizeMove(this, "new Total Effect Pop Size Move");
+    moves.push_back(newTotalEffectPopSizeMove);
     newTotalEffectPopSizeMove->move(programOptions, mcmcOptions);
 //    newTotalEffectivePopulationSizeMove(programOptions, ObservedCellNames,  msa,  opt, sampleSizes);
     
     //3-Update the vector of proportions \theta(this will change M_i)
     
     NewProportionsVectorMove *newProportionsVector= new NewProportionsVectorMove(this, "new Proportions Vector Move");
+    moves.push_back(newProportionsVector);
     newProportionsVector->move(programOptions, mcmcOptions);
   //newProportionsVectorMove(  programOptions, ObservedCellNames, msa, opt, sampleSizes);
     
@@ -2479,6 +2482,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     {
         popI=populations[i];
         newGrowthRateMoveForPopulation= new NewGrowthRateMoveForPopulation(this, "new Growth Rate Move for population", popI);
+        moves.push_back(newGrowthRateMoveForPopulation);
         newGrowthRateMoveForPopulation->move(programOptions, mcmcOptions);
         //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
     }
@@ -2489,6 +2493,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     {
         popI=populations[i];
         newTimeOriginOnTreeforPopulationMove= new NewTimeOriginOnTreeforPopulationMove(this, "new Time of Origin Move for population", popI);
+        moves.push_back(newTimeOriginOnTreeforPopulationMove);
         newTimeOriginOnTreeforPopulationMove->move(programOptions, mcmcOptions);
         //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
     }
@@ -2499,21 +2504,25 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     {
         popI=populations[i];
         newTimeOriginOnEdgeforPopulationMove= new NewTimeOriginOnEdgeforPopulationMove(this, "new Time of Origin Move for population", popI);
+        moves.push_back(newTimeOriginOnEdgeforPopulationMove);
         newTimeOriginOnEdgeforPopulationMove->move(programOptions, mcmcOptions);
         //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
     }
-    
-    
     //        6-Update the sub tree_i for sub population i by changing the topology of the sub tree of the time of some internal nodes.
     
     //slidingWindowMove
-    
-    
+
     //proposalChangeCoalTimeInternalNodePopulation(chain , programOptions, root, nodes, Population *pop, int numNodes, long int *seed, double mutationRate, pll_msa_t * msa);
     
-    
+    std::random_shuffle ( moves.begin(), moves.end() );
+    vector<MCMCmove *>::iterator it;
+    MCMCmove *currentMove;
+    for ( it=moves.begin(); it!=moves.end(); ++it)
+    {
+          currentMove=  *it;
+         // currentMove->move(programOptions, mcmcOptions);
+    }
     //   }
-    
 }
 //void Chain::WilsonBaldingMove( long int *seed, double currentLogLikelihoodSequences, ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa)
 //{
@@ -4005,4 +4014,24 @@ void Chain::writeHeaderOutputChain(const FilePaths &filePaths, const ProgramOpti
     }
     fprintf (files.fplog, "\n");
 }
-
+double Chain::autoCorrelation(int lag, vector<double> values)
+{
+    double result=0;
+    double sumDenominator=0;
+    double sumNumerator=0;
+    if (values.size() >0)
+    {
+        double mean = accumulate( values.begin(), values.end(), 0.0)/ values.size();
+        for (unsigned int i = 0; i <= values.size() -lag ; ++i)
+        {
+            sumNumerator = (values.at(i)- mean)*(values.at(i+lag)- mean);
+            sumDenominator += pow(values.at(i)- mean,2);
+        }
+        for (unsigned int i = values.size() -lag +1; i <= values.size()  ; ++i)
+        {
+            sumDenominator += pow(values.at(i)- mean,2);
+        }
+        result = sumNumerator/ sumDenominator;
+    }
+    return result;
+}

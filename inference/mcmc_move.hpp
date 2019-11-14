@@ -31,7 +31,7 @@ public:
    // virtual ~MCMCmove()=0;
 };
 
-class NewTotalEffectPopSizeMove:MCMCmove{
+class NewTotalEffectPopSizeMove:public MCMCmove{
 public:
     NewTotalEffectPopSizeMove(Chain *chain, string nameMove);
      void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
@@ -41,7 +41,7 @@ public:
      void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 
-class NewProportionsVectorMove:MCMCmove{
+class NewProportionsVectorMove:public MCMCmove{
 public:
     NewProportionsVectorMove(Chain *chain, string nameMove);
      void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
@@ -50,7 +50,7 @@ public:
      void safeCurrentValue();
      void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
-class NewGrowthRateMoveForPopulation:MCMCmove{
+class NewGrowthRateMoveForPopulation:public MCMCmove{
     Population *pop;
 public:
     NewGrowthRateMoveForPopulation(Chain *chain, string nameMove, Population *pop);
@@ -61,7 +61,7 @@ public:
      void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 
-class NewEffectPopSizeMoveForPopulation:MCMCmove{//this is not used since we can change the total effective population size and the proportions vector to achieve the same
+class NewEffectPopSizeMoveForPopulation:public MCMCmove{//this is not used since we can change the total effective population size and the proportions vector to achieve the same
     Population *pop;
 public:
     NewEffectPopSizeMoveForPopulation(Chain *chain, string nameMove, Population *pop);
@@ -72,7 +72,7 @@ public:
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 
-class NewTimeOriginOnTreeforPopulationMove:MCMCmove{
+class NewTimeOriginOnTreeforPopulationMove:public MCMCmove{
     Population *pop;
 public:
     NewTimeOriginOnTreeforPopulationMove(Chain *chain, string nameMove, Population *pop);
@@ -82,7 +82,7 @@ public:
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
-class NewTimeOriginOnEdgeforPopulationMove:MCMCmove{
+class NewTimeOriginOnEdgeforPopulationMove:public MCMCmove{
     Population *pop;
 public:
     NewTimeOriginOnEdgeforPopulationMove(Chain *chain, string nameMove, Population *pop);

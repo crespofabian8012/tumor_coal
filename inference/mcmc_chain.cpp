@@ -4035,3 +4035,15 @@ double Chain::autoCorrelation(int lag, vector<double> values)
     }
     return result;
 }
+double Chain::ESS(int lag, vector<double> values)
+{
+    double result=0;
+    double sumAutoCorrelations =0;
+    for (unsigned int i = 0; i <= values.size()  ; ++i)
+    {
+        sumAutoCorrelations +=autoCorrelation(i, values);
+        
+    }
+    result = values.size() / (1 + 2 * sumAutoCorrelations);
+    return result;
+}

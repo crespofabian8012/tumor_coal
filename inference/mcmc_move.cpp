@@ -96,7 +96,7 @@ void NewTotalEffectPopSizeMove::rollbackMove()
      int i=0;
     
     Population *popI;
-    chain->oldTotalEffectPopSize = chain->totalEffectPopSize;
+   
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
@@ -202,7 +202,6 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
                 break;
             }
         }
-        
     }
     while(!allPopulationPopSizesSet);
     chain->initPopulationMigration();//after setting the timeSTD
@@ -458,9 +457,11 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove()
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
+        popI->sampleSize = popI->oldSampleSize;
          pop->FatherPop = pop->oldFatherPop ;
         pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
         pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+        
     }
 }
 void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)

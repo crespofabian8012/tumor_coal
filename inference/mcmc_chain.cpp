@@ -1205,7 +1205,6 @@ void Chain::updateEffectPopSizesCurrentProportionsVector(){
     {
         popJ = populations [j];
         //temp=*(outputVector + i);
-        popJ->oldeffectPopSize = popJ->effectPopSize;
         popJ->effectPopSize = proportionsVector[j] * totalEffectPopSize;
     }
 }
@@ -1306,7 +1305,7 @@ void Chain::initTimeOriginSTD(){
     {
         popI=populations[i];
         popI->timeOriginSTD = popI->timeOriginInput /  popI->effectPopSize;
-        printf("\n population %d has  time origin std of: %lf  \n", popI->index, popI->timeOriginSTD );
+        printf("\n population %d with order %d  has  time origin std of: %lf  \n", popI->index, popI->order, popI->timeOriginSTD );
     }
 }
 void Chain::initPopulationsCoalTimes(){
@@ -2423,7 +2422,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
               ){
     
     vector<double>  varTimeGMRCA;
-    vector<MCMCmove *>  moves;
+    vector<MCMCmove*>  moves;
     //Population** populations;
     //TreeNode** nodes; TreeNode** treeTips;
     if (numClones <= 0)
@@ -2466,14 +2465,19 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     //2- Update M_T
     NewTotalEffectPopSizeMove *newTotalEffectPopSizeMove= new NewTotalEffectPopSizeMove(this, "new Total Effect Pop Size Move");
     moves.push_back(newTotalEffectPopSizeMove);
+    fprintf (stderr, "\n>> started  newTotalEffectPopSizeMove  \n" );
     newTotalEffectPopSizeMove->move(programOptions, mcmcOptions);
+    fprintf (stderr, "\n>> finished  newTotalEffectPopSizeMove  \n" );
 //    newTotalEffectivePopulationSizeMove(programOptions, ObservedCellNames,  msa,  opt, sampleSizes);
     
     //3-Update the vector of proportions \theta(this will change M_i)
     
     NewProportionsVectorMove *newProportionsVector= new NewProportionsVectorMove(this, "new Proportions Vector Move");
     moves.push_back(newProportionsVector);
+    fprintf (stderr, "\n>> started  newProportionsVector  \n" );
     newProportionsVector->move(programOptions, mcmcOptions);
+    fprintf (stderr, "\n>> finished  newProportionsVector  \n" );
+    
   //newProportionsVectorMove(  programOptions, ObservedCellNames, msa, opt, sampleSizes);
     
     //        4- Update the Delta_i
@@ -2483,19 +2487,27 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
         popI=populations[i];
         newGrowthRateMoveForPopulation= new NewGrowthRateMoveForPopulation(this, "new Growth Rate Move for population", popI);
         moves.push_back(newGrowthRateMoveForPopulation);
+         fprintf (stderr, "\n>> started  newGrowthRateMoveForPopulation  \n" );
         newGrowthRateMoveForPopulation->move(programOptions, mcmcOptions);
+         fprintf (stderr, "\n>> finished  newGrowthRateMoveForPopulation  \n" );
         //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
     }
     //        5A-Update  T_i
     //this move will update the time of origin of a population of order i. For a fixed tree, the move will try to choose another available edge
     NewTimeOriginOnTreeforPopulationMove *newTimeOriginOnTreeforPopulationMove ;
-    for( i = 0 ; i < numClones; i++)
+
+    for( i = 0 ; i < numClones - 2; i++)
     {
         popI=populations[i];
-        newTimeOriginOnTreeforPopulationMove= new NewTimeOriginOnTreeforPopulationMove(this, "new Time of Origin Move for population", popI);
-        moves.push_back(newTimeOriginOnTreeforPopulationMove);
-        newTimeOriginOnTreeforPopulationMove->move(programOptions, mcmcOptions);
-        //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
+        if (popI->rMRCA->node_index != rootRootedTree->node_index)// not do this move for the oldest population
+        {
+            newTimeOriginOnTreeforPopulationMove= new NewTimeOriginOnTreeforPopulationMove(this, "new Time of Origin Move on Tree for population", popI);
+            moves.push_back(newTimeOriginOnTreeforPopulationMove);
+             fprintf (stderr, "\n>> started  newTimeOriginOnTreeforPopulationMove  \n" );
+            newTimeOriginOnTreeforPopulationMove->move(programOptions, mcmcOptions);
+            fprintf (stderr, "\n>> finished  newTimeOriginOnTreeforPopulationMove  \n" );
+            //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
+        }
     }
     //        5B-Update  T_i
     //this move will update the time of origin of a population of order i. For a fixed tree, the move will try to change the time of origin within the same edge
@@ -2503,10 +2515,15 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     for( i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
-        newTimeOriginOnEdgeforPopulationMove= new NewTimeOriginOnEdgeforPopulationMove(this, "new Time of Origin Move for population", popI);
-        moves.push_back(newTimeOriginOnEdgeforPopulationMove);
-        newTimeOriginOnEdgeforPopulationMove->move(programOptions, mcmcOptions);
-        //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
+           if (popI->rMRCA->node_index != rootRootedTree->node_index)
+           {// not do this move for the oldest population
+            newTimeOriginOnEdgeforPopulationMove= new NewTimeOriginOnEdgeforPopulationMove(this, "new Time of Origin on Edge Move for population", popI);
+             moves.push_back(newTimeOriginOnEdgeforPopulationMove);
+               fprintf (stderr, "\n>> started  newTimeOriginOnEdgeforPopulationMove  \n" );
+             newTimeOriginOnEdgeforPopulationMove->move(programOptions, mcmcOptions);
+                fprintf (stderr, "\n>> finished  newTimeOriginOnEdgeforPopulationMove  \n" );
+               //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
+           }
     }
     //        6-Update the sub tree_i for sub population i by changing the topology of the sub tree of the time of some internal nodes.
     
@@ -2524,6 +2541,15 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     }
     //   }
 }
+//void Chain::initMoves(){
+//
+//    NewTotalEffectPopSizeMove *newTotalEffectPopSizeMove= new NewTotalEffectPopSizeMove(this, "new Total Effect Pop Size Move");
+//    moves.push_back(newTotalEffectPopSizeMove);
+//
+//    NewProportionsVectorMove *newProportionsVector= new NewProportionsVectorMove(this, "new Proportions Vector Move");
+//    moves.push_back(newProportionsVector);
+//
+//}
 //void Chain::WilsonBaldingMove( long int *seed, double currentLogLikelihoodSequences, ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa)
 //{
 //    if (numClones > 1)
@@ -2878,7 +2904,7 @@ void Chain::initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnow
         
         if (node->label != 0) // only the tips have labels
         {
-            cout << node->label << ": " << node->node_index << ", back: " << node->back->node_index << ", next: " << node->next << endl;
+            //cout << node->label << ": " << node->node_index << ", back: " << node->back->node_index << ", next: " << node->next << endl;
             treeTips.push_back(node);
             if (assignationKnown)
             {
@@ -2888,7 +2914,7 @@ void Chain::initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnow
         }
         else{
             
-            cout << "interior: " << node->node_index << ", " << node->clv_index << ", back: " << node->back->node_index << ", next:" << node->next->node_index << ", nextnext:" << node->next->next->node_index<< endl;
+          //  cout << "interior: " << node->node_index << ", " << node->clv_index << ", back: " << node->back->node_index << ", next:" << node->next->node_index << ", nextnext:" << node->next->next->node_index<< endl;
             
         }
       }
@@ -2986,7 +3012,7 @@ void Chain::initNodeDataFromTree()
                  u1 = (TreeNode *)(node->data);
                  u1->initNumberTipsVector(numClones);
                 u1->timePUnits=time;
-                printf("updated data for node %d \n", node->node_index);
+                //printf("updated data for node %d \n", node->node_index);
             }
             if (node->next != NULL &&  node->next->data ==NULL)
             {
@@ -3481,7 +3507,8 @@ void Chain::initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Popula
                 treeNode->numberTipsByPopulation.at(currentPopulation->index) = 1;
                 return;
             }
-            else{
+            else
+            {
                 printf("error the index is out of bounds");
             }
         }
@@ -3515,8 +3542,8 @@ void Chain::initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Popula
              TreeNode * treeNodeRight=(TreeNode *)(p->right->data);
             std::transform (treeNodeLeft->numberTipsByPopulation.begin(), treeNodeLeft->numberTipsByPopulation.end(), treeNodeRight->numberTipsByPopulation.begin(), treeNode->numberTipsByPopulation.begin(), std::plus<int>());
             
-            printf("\n node %d has %d tips below \n", p->node_index,treeNode->numberOfTipsSubTree );
-            printf("node %d has %d accumulated tips below \n", p->node_index,accumulate(treeNode->numberTipsByPopulation.begin(),treeNode->numberTipsByPopulation.end(),0));
+           // printf("\n node %d has %d tips below \n", p->node_index,treeNode->numberOfTipsSubTree );
+           // printf("node %d has %d accumulated tips below \n", p->node_index,accumulate(treeNode->numberTipsByPopulation.begin(),treeNode->numberTipsByPopulation.end(),0));
         }
     }
 }

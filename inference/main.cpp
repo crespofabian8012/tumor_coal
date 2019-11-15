@@ -74,7 +74,7 @@ int main(int argc, char* argv[] )
     std::map<pll_unode_t, Population> tipsAssign;
     
     mcmcOptions.tuningParameter = 1;
-    mcmcOptions.thinning  = 1000;
+    mcmcOptions.thinning  = 10;
     mcmcOptions.totalEffectPopSizefrom = 7;
     mcmcOptions.totalEffectPopSizeto = 13;
     mcmcOptions.MutRatefrom = -13;
@@ -172,7 +172,7 @@ int main(int argc, char* argv[] )
     Chain *currentChain;
     int currentIteration;
     int sampleEvery = mcmcOptions.thinning;
-    mcmcOptions.Niterations = 1000000;
+    mcmcOptions.Niterations = 100;
 
      for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
    {

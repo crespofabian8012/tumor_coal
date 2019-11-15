@@ -15,6 +15,7 @@
 
 #include "data_utils.hpp"
 
+
 //#include "population.hpp"
 
 //#include "utils.hpp"
@@ -71,6 +72,8 @@ public:
     
     vector<double> sampledTotalEffectPopSize;
     vector<vector<double> > sampledPoportionVector;
+    
+    //vector<MCMCmove*>  moves;
 
     //vector<pll_edge_node_t*> edges;
 public:

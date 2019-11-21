@@ -184,8 +184,11 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     bool allPopulationPopSizesSet=false;
     do {
         allPopulationPopSizesSet=true;
-        proportionsVectorArray=&(chain->oldproportionsVector[0]);
+        //proportionsVectorArray=&(chain->oldproportionsVector[0]);
          //init array with the current proportions vector
+        //print old proportions vector
+         for( i = 0 ; i < chain->numClones; i++)
+             fprintf (stderr, "\n old proportions vector at %d: %lf \n",i,chain->oldproportionsVector.at(i) );
         randomDirichletFromVector (chain->oldproportionsVector, chain->proportionsVector);
 //        randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
         
@@ -485,7 +488,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     }
     
     int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
-    std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
+    std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](double a) {return a /totalSampleSize; } );
     chain->initProportionsVector();
     chain->generateProportionsVectorFromDirichlet(alpha);
     chain->initEffectPopulationSizesFromProportionsVector();

@@ -6,6 +6,7 @@
 #include <map>
 #include <unordered_map>
 #include <string>
+#include <omp.h>
 #include "data_utils.hpp"
 #include "population.hpp"
 #include "mcmc_chain.hpp"

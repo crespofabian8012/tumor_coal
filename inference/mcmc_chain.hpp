@@ -70,6 +70,8 @@ public:
     
     vector<pll_tree_edge_t *> edges;
     
+    vector<pair<double, pll_tree_edge_t *> > edgeLengths;
+    
     vector<double> sampledTotalEffectPopSize;
     vector<vector<double> > sampledPoportionVector;
     
@@ -181,7 +183,7 @@ public:
     Population * getPopulationbyIndex(int indexPopulation);
     int getPopulationIndex(char * label);
     std::map<pll_unode_t*, Population*> chooseTimeOfOriginsOnTree( long int *seed);
-    std::map<pll_rnode_t*, Population*>  initTimeOfOriginsOnRootedTree(  vector<double> branchLengths, int numberPoints, string &healthyCellLabel);
+    std::map<pll_rnode_t*, Population*>  initTimeOfOriginsOnRootedTree(  vector<pair<double, pll_tree_edge_t *> > edgeLengths, int numberPoints, string &healthyCellLabel);
     void initNodeDataFromTree();
 
     void initPopulationSampleSizesFromRootNodeOnTree(pll_unode_t *p, Population *population );
@@ -202,7 +204,7 @@ public:
     void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, Population*> rmrcaOfPopulation, string& healthyTipLabel);
     void initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *population, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation);
     void  initNumberTipsSubTree(pll_rnode_t *node);
-    void initBranches(string& healthyCellLabel,vector<double> &branchLengths, vector<pll_tree_edge_t *> &edges);
+    void initBranches(string& healthyCellLabel,vector<pair<double, pll_tree_edge_t *> > &edgeLengths, vector<pll_tree_edge_t *> &edges);
     void initTimeOriginSTD();
     double SumBranches2(pll_rnode_t *p, double mutationRate);
     void filterSortPopulationsCoalescentEvents();

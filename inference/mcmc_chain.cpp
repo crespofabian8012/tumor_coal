@@ -14,6 +14,10 @@
 #include <gsl/gsl_sf_bessel.h>
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_cdf.h>
+#include <functional>
+#include <random>
+#include <boost/regex.h>
+#include <boost/random.hpp>
 
 #include <sys/stat.h>
 
@@ -38,7 +42,7 @@ extern "C"
 #include "mcmc_move.hpp"
 
 using namespace std;
-
+using namespace std::placeholders;
 //Parametrized Constructor
 
 Chain::Chain( int chainNumber,
@@ -2264,12 +2268,12 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
         double alpha[chain->numClones];
         int numberPoints = chain->numClones -1;
         vector<double> branchLengths;
-        chain->initBranches(healthyTipLabel, branchLengths, chain->edges);
+        chain->initBranches(healthyTipLabel, chain->edgeLengths, chain->edges);
         //std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation;
         do {
              existsZeroSampleSizePop=false; 
             chain->rMRCAPopulation.clear();
-            chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree(branchLengths, numberPoints,  healthyTipLabel);
+            chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree( chain->edgeLengths, numberPoints,  healthyTipLabel);
             
             chain->initPopulationsSampleSizes( chain->rMRCAPopulation);
            
@@ -2285,7 +2289,8 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
         while(existsZeroSampleSizePop);
             
          int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
-        std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
+        //std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
+        std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](double a) {return a /totalSampleSize; } );
         chain->initProportionsVector();
         for (int i=0; i< chain->numClones; i++)
         {
@@ -2531,7 +2536,9 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
 
     //proposalChangeCoalTimeInternalNodePopulation(chain , programOptions, root, nodes, Population *pop, int numNodes, long int *seed, double mutationRate, pll_msa_t * msa);
     
-    std::random_shuffle ( moves.begin(), moves.end() );
+    std::random_device rng;
+    std::mt19937 urng(rng());
+    std::shuffle ( moves.begin(), moves.end(), urng );
     vector<MCMCmove *>::iterator it;
     MCMCmove *currentMove;
     for ( it=moves.begin(); it!=moves.end(); ++it)
@@ -2932,7 +2939,7 @@ void Chain::initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignati
             
             if (node->label != 0) // only the tips have labels
             {
-                cout << node->label << ": " << node->node_index << ", parent: " <<node->parent->node_index   << endl;
+                //cout << node->label << ": " << node->node_index << ", parent: " <<node->parent->node_index   << endl;
                 rtreeTips.push_back(node);
                 if (assignationKnown)
                 {
@@ -2941,10 +2948,10 @@ void Chain::initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignati
                 }
             }
             else{
-                if (node->parent!=NULL)
-                    cout << "interior: " << node->node_index << ", " << node->clv_index << ", parent: " << node->parent->node_index << ", left:" << node->left->node_index << ", right:" << node->right->node_index<< endl;
-                else
-                    cout << "interior: " << node->node_index << ", " << node->clv_index << ", parent: " << " " << ", left:" << node->left->node_index << ", right:" << node->right->node_index<< endl;
+//                if (node->parent!=NULL)
+//                    cout << "interior: " << node->node_index << ", " << node->clv_index << ", parent: " << node->parent->node_index << ", left:" << node->left->node_index << ", right:" << node->right->node_index<< endl;
+//                else
+//                    cout << "interior: " << node->node_index << ", " << node->clv_index << ", parent: " << " " << ", left:" << node->left->node_index << ", right:" << node->right->node_index<< endl;
                 
             }
         }
@@ -3020,7 +3027,7 @@ void Chain::initNodeDataFromTree()
                 u2 = (TreeNode *)(node->next->data);
                  u2->initNumberTipsVector(numClones);
                  u2->timePUnits = time;
-                printf("updated data for node %d \n", node->next->node_index);
+                //printf("updated data for node %d \n", node->next->node_index);
             }
             if (node->next != NULL &&  node->next->next!=NULL && node->next->next->data ==NULL)
             {
@@ -3028,7 +3035,7 @@ void Chain::initNodeDataFromTree()
                 u3 = (TreeNode *)(node->next->next->data);
                  u3->initNumberTipsVector(numClones);
                  u3->timePUnits = time;
-                printf("updated data for node %d \n", node->next->next->node_index);
+                //printf("updated data for node %d \n", node->next->next->node_index);
             }
            // printf("timePUnits : %lf \n", ((TreeNode *) node->data)->timePUnits);
             
@@ -3089,7 +3096,7 @@ void Chain::initNodeDataFromRootedTree()
                 u1 = (TreeNode *)(node->data);
                 u1->timePUnits=time;
                 u1->initNumberTipsVector(numClones);
-                printf("updated data for node %d \n", node->node_index);
+                //printf("updated data for node %d \n", node->node_index);
             }
          
            
@@ -3163,8 +3170,9 @@ std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int 
         cumBranchLengths.insert(cumBranchLengths.begin(), 0);
         
         maxCumBranchLength = *std::max_element(cumBranchLengths.begin(), cumBranchLengths.end());
+    
         
-        std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),std::bind2nd(std::divides<double>(),maxCumBranchLength));
+        std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),[maxCumBranchLength](double a) {return a /maxCumBranchLength; } );
         
         double cumBranchLengthsArray[cumBranchLengths.size()];
         std::copy(cumBranchLengths.begin() ,cumBranchLengths.end()
@@ -3219,11 +3227,11 @@ std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int 
     }
    return(mrcaOfPopulation);
 }
-void Chain::initBranches(string& healthyCellLabel,vector<double> &branchLengths, vector<pll_tree_edge_t *> &edges)
+void Chain::initBranches(string& healthyCellLabel,vector<pair<double, pll_tree_edge_t *> > &edgeLengths, vector<pll_tree_edge_t *> &edges)
 {
     TreeNode *u, *v;
     vector<double> cumulativeBranchLengths;
-    pll_tree_edge * edge;
+    pll_tree_edge * edge,* previousEdge;
     //vector<pll_tree_edge_t *> edges;
     set<pll_tree_edge_t *> visitedEdges;
     set<pll_rnode_t *> visitedNodes;
@@ -3231,7 +3239,8 @@ void Chain::initBranches(string& healthyCellLabel,vector<double> &branchLengths,
     double cumBranchLength=0;
     double totalBranchLength1=0;
     int totalNumberNodes  =initialRootedTree->tip_count+ initialRootedTree->inner_count;
-    branchLengths.clear();
+    edgeLengths.clear();
+    
     for (unsigned int i = 0; i < totalNumberNodes; ++i)
     {
         auto node =initialRootedTree->nodes[i];
@@ -3245,15 +3254,25 @@ void Chain::initBranches(string& healthyCellLabel,vector<double> &branchLengths,
             edge->length = node->length;
             //visitedNodes.insert(node->parent);
             totalBranchLength1 += edge->length;
+            
             // if(visitedEdges.count(edge) ==0)
             // {
             if (node->label && std::string(node->label).compare(healthyCellLabel)!=0)//not  the branch from the healthyTip
             {
-                branchLengths.push_back(edge->length);
+                //branchLengths.push_back(edge->length);
+//                if (edgesCumulativeLengths.size()==0)
+//                    edgesCumulativeLengths.push_back(make_pair(0, edge));
+//                else
+//                {
+                    edgeLengths.push_back(make_pair(edge->length, edge));
+                //}
+                //edges.push_back(edge);
             }
             else if(!node->label && node->parent->parent !=NULL)//not the branch to the root
             {
-                branchLengths.push_back(edge->length);
+                //branchLengths.push_back(edge->length);
+                 edgeLengths.push_back(make_pair(edge->length, edge));
+               // edges.push_back(edge);
             }
             edges.push_back(edge);
             cumBranchLength = edge->length + cumulativeBranchLengths.at(cumulativeBranchLengths.size()-1);
@@ -3263,7 +3282,7 @@ void Chain::initBranches(string& healthyCellLabel,vector<double> &branchLengths,
         visitedNodes.insert(node);
     }
 }
-std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vector<double> branchLengths, int numberPoints, string &healthyCellLabel)
+std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vector<pair<double, pll_tree_edge_t *> > edgeLengths, int numberPoints, string &healthyCellLabel)
 {
     std::unordered_set<pll_rnode_t *>  ancestorsOfTimeOfOrigins(numberPoints);
     std::unordered_set<pll_rnode_t *>  MRCAs(numberPoints);
@@ -3277,7 +3296,11 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vecto
     double random;
     std::map<pll_rnode_t*, Population*> mrcaOfPopulation;
     
-   
+    vector<double> branchLengths;
+
+    std::transform(std::begin(edgeLengths), std::end(edgeLengths),
+                   std::back_inserter(branchLengths), [](auto const& pair){return pair.first;}
+                   );
     
     if (branchLengths.size()>0)
     {
@@ -3294,7 +3317,8 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vecto
         
         maxCumBranchLength = *std::max_element(cumBranchLengths.begin(), cumBranchLengths.end());
         
-        std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),std::bind2nd(std::divides<double>(),maxCumBranchLength));
+        
+         std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),[maxCumBranchLength](double a) {return a /maxCumBranchLength; } );
         
         double cumBranchLengthsArray[cumBranchLengths.size()];
         std::copy(cumBranchLengths.begin() ,cumBranchLengths.end()
@@ -3854,7 +3878,7 @@ int Chain::totalSampleSize()
         
         maxCumBranchLength = *std::max_element(cumBranchLengths.begin(), cumBranchLengths.end());
         
-        std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),std::bind2nd(std::divides<double>(),maxCumBranchLength));
+         std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),[maxCumBranchLength](double a) {return a /maxCumBranchLength; } );
         
         double cumBranchLengthsArray[cumBranchLengths.size()];
         std::copy(cumBranchLengths.begin() ,cumBranchLengths.end()
@@ -4069,7 +4093,6 @@ double Chain::ESS(int lag, vector<double> values)
     for (unsigned int i = 0; i <= values.size()  ; ++i)
     {
         sumAutoCorrelations +=autoCorrelation(i, values);
-        
     }
     result = values.size() / (1 + 2 * sumAutoCorrelations);
     return result;

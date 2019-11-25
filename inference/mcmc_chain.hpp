@@ -226,6 +226,7 @@ public:
     void writeHeaderOutputChain(  const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files );
     double autoCorrelation(int lag, vector<double> values);
     double ESS(int lag, vector<double> values);
+    void copyProportionsVector(double alpha[]);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

@@ -1232,9 +1232,18 @@ void Chain::generateProportionsVectorFromDirichlet(double alpha[]){
     for (int i=0; i< numClones; i++)
     {
         proportionsVector.at(i)=outputVector.at(i);
-        oldproportionsVector.at(i)=outputVector.at(i);
+        //oldproportionsVector.at(i)=outputVector.at(i);
     }
     //std::copy(proportionsVector.begin(), proportionsVector.end(), theta);
+}
+void Chain::copyProportionsVector(double alpha[]){
+    
+
+    for (int i=0; i< numClones; i++)
+    {
+        proportionsVector.at(i)=alpha[i];
+    }
+  
 }
 void Chain::initTotalEffectivePopulationSize(MCMCoptions &mcmcOptions, long int *seed)
 {
@@ -2508,7 +2517,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
         {
             newTimeOriginOnTreeforPopulationMove= new NewTimeOriginOnTreeforPopulationMove(this, "new Time of Origin Move on Tree for population", popI);
             moves.push_back(newTimeOriginOnTreeforPopulationMove);
-             fprintf (stderr, "\n>> started  newTimeOriginOnTreeforPopulationMove  \n" );
+            fprintf (stderr, "\n>> started  newTimeOriginOnTreeforPopulationMove  index: %d, order:  %d \n", popI->index, popI->order);
             newTimeOriginOnTreeforPopulationMove->move(programOptions, mcmcOptions);
             fprintf (stderr, "\n>> finished  newTimeOriginOnTreeforPopulationMove  \n" );
             //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
@@ -3335,13 +3344,18 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vecto
             }
             while(std::find(eventIds.begin(), eventIds.end(), nextEvent) != eventIds.end());
             
-             printf( "\n edge id: %d out of  %lu ",nextEvent, cumBranchLengths.size()-1 );
+             printf( "\n edge id: %d out of  %lu and length %lf \n",nextEvent-1, cumBranchLengths.size()-1, branchLengths.at(nextEvent-1) );
             
-            if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
-                printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent, edges.at(nextEvent)->length, branchLengths.at(nextEvent -1));
+//            if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
+//                printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent, edges.at(nextEvent)->length, branchLengths.at(nextEvent -1));
             
-            ancestorMRCA =edges.at(nextEvent)->edge.rtree.parent;
-            MRCA =edges.at(nextEvent)->edge.rtree.child;
+            if (edgeLengths.at(nextEvent-1).second->length != branchLengths.at(nextEvent -1))
+                printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent -1, edgeLengths.at(nextEvent-1).second->length, branchLengths.at(nextEvent -1));
+            
+            //ancestorMRCA =edges.at(nextEvent)->edge.rtree.parent;
+            //MRCA =edges.at(nextEvent)->edge.rtree.child;
+            ancestorMRCA =edgeLengths.at(nextEvent-1).second->edge.rtree.parent;
+            MRCA =edgeLengths.at(nextEvent-1).second->edge.rtree.child;
            // if (ancestorsOfTimeOfOrigins.count(ancestorMRCA)==0)
          //    if (ancestorsOfTimeOfOrigins.count(ancestorMRCA)==0)//the parents of the 2 events are differents
           //  {
@@ -3834,7 +3848,8 @@ int Chain::totalSampleSize()
     TreeNode *u, *v;
     //vector<double> cumulativeBranchLengths;
     vector<double> branchLengths;
-    vector<pll_tree_edge_t *> availableEdges;
+    //vector<pll_tree_edge_t *> availableEdges;
+    vector<pair<double, pll_tree_edge_t *> > availableEdges;
     set<pll_tree_edge_t *> visitedEdges;
     set<pll_rnode_t *> visitedNodes;
     //cumulativeBranchLengths.push_back(0);
@@ -3842,10 +3857,10 @@ int Chain::totalSampleSize()
     pll_tree_edge_t *edge;
     pll_rnode_t *parent, *child;
     double cumBranchLength;
-    
-    for (unsigned int i = 0; i < edges.size(); ++i)
+
+    for (unsigned int i = 0; i < edgeLengths.size(); ++i)
     {
-        auto edge =edges.at(i);
+        auto edge =edgeLengths.at(i).second;
         parent = edge->edge.rtree.parent ;
         child = edge->edge.rtree.child;
         if (parent !=NULL && edge->length >0 && mrcaOfPopulation.count(child) == 0  )
@@ -3853,20 +3868,22 @@ int Chain::totalSampleSize()
             //totalBranchLength1 += edge->length;
             if(child->left == NULL    && std::string(child->label).compare(healthyCellLabel)!=0 )//leaf different from healthy cell
             {
-                availableEdges.push_back(edge);
-                branchLengths.push_back(edge->length);
-
+                availableEdges.push_back(make_pair(edge->length, edge));
             }
             else if(child->left != NULL)
             {//not a leaf
-                availableEdges.push_back(edge);
-                branchLengths.push_back(edge->length);
+                availableEdges.push_back(make_pair(edge->length, edge));
             }
 //            cumBranchLength = edge->length + cumulativeBranchLengths.at(cumulativeBranchLengths.size()-1);
 //            cumulativeBranchLengths.push_back(cumBranchLength);
         }
     }
     std::map<pll_rnode_t*, Population*> copyMRCAOfPopulation;
+    branchLengths.clear();
+    
+    std::transform(std::begin(availableEdges), std::end(availableEdges),
+                   std::back_inserter(branchLengths), [](auto const& pair){return pair.first;}
+                   );
     ////////////////////////////////////
     if (availableEdges.size()>0)
     {
@@ -3878,7 +3895,7 @@ int Chain::totalSampleSize()
         
         maxCumBranchLength = *std::max_element(cumBranchLengths.begin(), cumBranchLengths.end());
         
-         std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),[maxCumBranchLength](double a) {return a /maxCumBranchLength; } );
+        std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),[maxCumBranchLength](double a) {return a /maxCumBranchLength; } );
         
         double cumBranchLengthsArray[cumBranchLengths.size()];
         std::copy(cumBranchLengths.begin() ,cumBranchLengths.end()
@@ -3891,7 +3908,9 @@ int Chain::totalSampleSize()
         double alpha[numClones];
         pll_rnode_t* node;
         map<pll_rnode_t*,Population *>::iterator it;
-        for( it = mrcaOfPopulation.begin(); it != mrcaOfPopulation.end(); ++it) {
+        eventIds.clear();
+        for( it = mrcaOfPopulation.begin(); it != mrcaOfPopulation.end(); ++it)
+        {
             node= it->first;
             eventIds.push_back(node->node_index);
         }
@@ -3904,16 +3923,15 @@ int Chain::totalSampleSize()
             {
                 random =randomUniformFromGsl();
                 nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
-                MRCA =availableEdges.at(nextEvent-1)->edge.rtree.child;
+                MRCA =availableEdges.at(nextEvent-1).second->edge.rtree.child;
                 
             }
            while(std::find(eventIds.begin(), eventIds.end(), MRCA->node_index) != eventIds.end());
 //            if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
 //                printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent, edges.at(nextEvent)->length, branchLengths.at(nextEvent -1));
             
-            
-            ancestorMRCA =availableEdges.at(nextEvent-1)->edge.rtree.parent;
-            MRCA =availableEdges.at(nextEvent-1)->edge.rtree.child;
+            ancestorMRCA =availableEdges.at(nextEvent-1).second->edge.rtree.parent;
+            MRCA =availableEdges.at(nextEvent-1).second->edge.rtree.child;
             eventIds.push_back(MRCA->node_index);
             copyMRCAOfPopulation[MRCA]= pop;
             pop->rMRCA=MRCA;

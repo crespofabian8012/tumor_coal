@@ -184,6 +184,7 @@ int main(int argc, char* argv[] )
                                             files );
        for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
      {
+         fprintf (stderr, "\n Chain #%d, Iteration %d \n", currentChain->chainNumber ,currentIteration );
         currentChain->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
          
        if (currentIteration % sampleEvery == 0 )

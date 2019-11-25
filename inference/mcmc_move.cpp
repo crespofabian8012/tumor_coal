@@ -105,7 +105,9 @@ void NewTotalEffectPopSizeMove::rollbackMove()
         popI->deathRate = popI->oldDeathRate;
         popI->growthRate = popI->oldGrowthRate;
         popI->CoalescentEventTimes = popI->oldCoalescentEventTimes;
+        popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
+        popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
     
 }
@@ -225,7 +227,9 @@ void NewProportionsVectorMove::rollbackMove()
         popI->deathRate = popI->oldDeathRate;
         popI->growthRate = popI->oldGrowthRate;
         popI->CoalescentEventTimes = popI->oldCoalescentEventTimes;
+        popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
+        popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
 double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
@@ -285,7 +289,9 @@ void NewGrowthRateMoveForPopulation::rollbackMove()
     {
         popI=chain->populations[i];
         popI->CoalescentEventTimes = popI->oldCoalescentEventTimes;
+        popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
+        popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
 double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
@@ -332,7 +338,9 @@ void NewEffectPopSizeMoveForPopulation::rollbackMove()
     {
         popI=chain->populations[i];
         popI->CoalescentEventTimes = popI->oldCoalescentEventTimes;
+        popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
+        popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
 void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
@@ -453,7 +461,9 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove()
     pop->rMRCA = pop->oldrMRCA ;
     pop->FatherPop = pop->oldFatherPop ;
     pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
+    pop->oldCoalescentEventTimes.clear();
     pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+    pop->oldimmigrantsPopOrderedByModelTime.clear();
     pop->sampleSize = pop->oldSampleSize;
     
     //save information for the other populations
@@ -463,7 +473,9 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove()
         popI->sampleSize = popI->oldSampleSize;
          pop->FatherPop = pop->oldFatherPop ;
         pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
+        pop->oldCoalescentEventTimes.clear();
         pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+        pop->oldimmigrantsPopOrderedByModelTime.clear();
         
     }
 }
@@ -471,7 +483,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
 {
      Chain *chain=getChain();
     //first compute the list of  edges without events
-    //then select at random an edge
+    //then select at random an edge(proportional to the length)
     //recompute the sample sizes
     //recompute the proportions vector
     // recompute the coalescent and migration events
@@ -489,8 +501,9 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     
     int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
     std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](double a) {return a /totalSampleSize; } );
-    chain->initProportionsVector();
-    chain->generateProportionsVectorFromDirichlet(alpha);
+    //chain->initProportionsVector();
+    chain->copyProportionsVector(alpha);
+   // chain->generateProportionsVectorFromDirichlet(alpha);
     chain->initEffectPopulationSizesFromProportionsVector();
     chain->initTimeOriginSTD();
     chain->initPopulationMigration();//after setting the timeSTD
@@ -549,7 +562,9 @@ void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
     //pop->rMRCA = pop->oldrMRCA ;
     pop->FatherPop = pop->oldFatherPop ;
     pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
+    pop->oldCoalescentEventTimes.clear();
     pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+    pop->oldimmigrantsPopOrderedByModelTime.clear();
     pop->sampleSize = pop->oldSampleSize;
     
     //save information for the other populations

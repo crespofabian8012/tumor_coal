@@ -325,7 +325,9 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
         exit (-1);
     }
     if (PopFather->order <= PopChild->order ) {
-        fprintf (stderr, "\nError. The target Population %d for  migration must be older than the Population of origin %d \n", PopFather->index, PopChild->index);
+        
+        fprintf (stderr, "\nError. The father Population %d for  migration must be older than the Population of origin %d \n", PopFather->index, PopChild->index);
+        fprintf (stderr, "\nError. The MRCA node for the father is %d and the MRCA for the child is %d \n", PopFather->rMRCA->node_index, PopChild->rMRCA->node_index);
         exit (-1);
     }
     int updatedNumIncomingMigrations = PopFather->numIncomingMigrations;

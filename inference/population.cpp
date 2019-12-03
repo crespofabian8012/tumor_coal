@@ -159,6 +159,8 @@ double Population::CalculateH (double t, double TOrigin, double delta)
     b = 1.0 - exp(-1.0 * delta * TOrigin);
     BelowTerm = b * b;
     //printf ("\nBelowTerm(H) = %lf", BelowTerm);
+    if (BelowTerm == 0.0)
+       printf ("\n BelowTerm = 0.0 \n");
     
     H = AboveTerm / BelowTerm;
     //printf ("\nH = %lf", H);
@@ -189,12 +191,16 @@ double Population::FmodelTstandard (double t, double TOrigin, double delta)
     
     secondTerm = exp(delta * TOrigin);
     //fprintf (stderr, "secondTerm = %lf\n", secondTerm);
+    if (delta * TOrigin == 0)
+        fprintf (stderr, "\n delta * TOrigin == 0 \n");
+    
+//    if (delta * (TOrigin - t) == 0)
+//        fprintf (stderr, "\n delta * (TOrigin - t) == 0 \n");
     
     b = 1.0 / (1.0 - exp(-1.0 * delta * (TOrigin - t)));
     c = 1.0 / (1.0 - exp(-1.0 * delta * TOrigin));
     thirdTerm = b - c;
     //fprintf (stderr, "thirdTerm = %lf\n", thirdTerm);
-    
     
     ModelTimeF = firstTerm * secondTerm * thirdTerm;
     //fprintf (stderr, "ModelTimeF = %lf\n", ModelTimeF);
@@ -210,6 +216,11 @@ double Population::FmodelTstandard (double t, double TOrigin, double delta)
     a = exp(delta * t) - 1.0;
     b = 1.0 - exp(-1.0 * delta * TOrigin);
     c = 1.0 - exp(-1.0 * delta * (TOrigin - t));
+    
+    if ( c == 0.0)
+      fprintf (stderr, "\n  c = 0.0 \n");
+    if ( delta == 0.0)
+        fprintf (stderr, "\n delta  = 0.0 \n");
     
     ModelTimeF = a * b / (delta * c);
     //fprintf (stderr, "ModelTimeF = %lf\n", ModelTimeF);
@@ -324,11 +335,16 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
         fprintf (stderr, "\nError. The target Population %d for  migration must be different than the Population of origin %d \n", PopFather->index, PopChild->index);
         exit (-1);
     }
-    if (PopFather->order <= PopChild->order ) {
+    if (PopFather->order <= PopChild->order )
+    {
         
-        fprintf (stderr, "\nError. The father Population %d for  migration must be older than the Population of origin %d \n", PopFather->index, PopChild->index);
+        fprintf (stderr, "\nError. The father Population of order   %d for  migration must be older than the Population of origin order %d \n", PopFather->order, PopChild->order);
+        
+        fprintf (stderr, "\nError. The father Population  %d for  migration must be older than the Population of origin %d \n", PopFather->index, PopChild->index);
         fprintf (stderr, "\nError. The MRCA node for the father is %d and the MRCA for the child is %d \n", PopFather->rMRCA->node_index, PopChild->rMRCA->node_index);
-        exit (-1);
+         fprintf (stderr, "\nError. The previous  MRCA for the child is %d \n",
+                  PopChild->oldrMRCA->node_index);
+        //exit (-1);
     }
     int updatedNumIncomingMigrations = PopFather->numIncomingMigrations;
     // int lengthMigrationsArray = (int)(PopFather->order) + 1;
@@ -347,14 +363,6 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
     for (int i = 0; i < PopFather->immigrantsPopOrderedByModelTime.size(); ++i)
         printf("\n ordered migrations: time : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
    
-
-    //  fprintf (stderr ,"\n updatedNumIncomingMigrations %d \n",PopFather->numIncomingMigrations);
-    //PopFather->immigrantsPopOrderedModelTime[j-1] = PopChild;
-    //order immigrant Population by time of origin
-//    if (PopFather->numIncomingMigrations > 1 )
-//        sort(PopFather->migrationTimes.begin(), PopFather->migrationTimes.end(), compare);
-//    if (PopFather->numIncomingMigrations -1 > 1 )
-//        sort(PopFather->immigrantsPopOrderedModelTime.begin(), PopFather->immigrantsPopOrderedModelTime.end(), comparePopulationsByTimeOrigin);
 }
 
 bool Population::comparePopulationsPairByTimeOrigin(const pair<double, Population *> s1, const pair<double, Population *> s2)

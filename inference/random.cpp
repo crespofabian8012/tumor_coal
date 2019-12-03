@@ -13,7 +13,15 @@
 #include "random.h"
 #include <sys/time.h>
 #include <chrono>
-#include <ctime>  
+#include <ctime>
+#include <boost/random.hpp>
+#include <random>
+#include <boost/random/gamma_distribution.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/nondet_random.hpp>
+#include <boost/bind.hpp>
+#include <boost/ref.hpp>
+#include <boost/function.hpp>
 /***************************** RandomUniform **********************************/
 /* It returns a random uniform variate in range 0..1. It is described in
  Park, S. K. and K. W. Miller. 1988. Random number generators: good
@@ -232,8 +240,11 @@ void  randomDirichletFromVector (vector<double> alpha, vector<double> &outputVec
     // if (*outputVector == NULL)
     //     return;
     outputVector.clear();
+    
     for (i=0; i < alpha.size(); i++){
+        
         current = RandomGamma(alpha.at(i), &seed);
+        current = randomGammaBoost(alpha.at(i), 1);
         outputVector.push_back(current);
         sum=sum+current;
     }
@@ -264,10 +275,8 @@ void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta)
     //gsl_rng_set(r, mySeed2);
     gsl_ran_dirichlet( r,  vectorSize, alpha, theta); // Generate it!
     gsl_rng_free (r);
-
 }
 double RandomLogUniform( double from, double to){
-  
     return(exp(from + randomUniformFromGsl()*(to -from)));
 }
 // from https://stackoverflow.com/questions/9768519/gsl-uniform-random-number-generator
@@ -284,4 +293,25 @@ double randomUniformFromGsl(){
     double u = gsl_rng_uniform(r); // Generate it!
     gsl_rng_free (r);
     return (float)u;
+}
+double randomGammaBoost( double shape, double scale ) {
+//    boost::random_device rd;
+//    std::uint64_t value = rd();
+    //value = (value << 32) | rd();
+//    boost::gamma_distribution<std::uint64_t> dis;
+//    boost::function<std::uint64_t()> gen = boost::bind(dis, boost::ref(rd));
+//    std::uint64_t value = gen();
+    boost::mt19937 rng(56) ;
+    boost::gamma_distribution<> gd( shape );
+    boost::variate_generator<boost::mt19937&,boost::gamma_distribution<> > var_gamma( rng, gd );
+    return scale*var_gamma();
+}
+double randomGammaBoost2( double mean , double variance )
+{
+    const double shape = ( mean * mean )/variance;
+    double scale = variance/mean;
+    boost::mt19937 rng(56) ;
+    boost::gamma_distribution<> gd( shape );
+    boost::variate_generator<boost::mt19937&,boost::gamma_distribution<> > var_gamma( rng, gd );
+    return scale*var_gamma();
 }

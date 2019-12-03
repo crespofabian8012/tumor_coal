@@ -200,7 +200,7 @@ public:
     static void computeNumberTipsSubTree(pll_unode_t *node, void *data);
     void initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignationKnown );
     void initNodeDataFromRootedTree();
-    void initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation,  string& healthyTipLabel);
+    void initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*> &rmrcaOfPopulation,  string& healthyTipLabel);
     void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, Population*> rmrcaOfPopulation, string& healthyTipLabel);
     void initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *population, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation);
     void  initNumberTipsSubTree(pll_rnode_t *node);
@@ -227,6 +227,7 @@ public:
     double autoCorrelation(int lag, vector<double> values);
     double ESS(int lag, vector<double> values);
     void copyProportionsVector(double alpha[]);
+    void computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &availableEdges, std::map<pll_rnode_t *, Population *> &currentMrcaOfPopulation, std::string &healthyCellLabel);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

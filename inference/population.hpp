@@ -29,8 +29,11 @@ class Population
 public:
     int index; // label of the population {1, 2, 3, ...}
     int order; // population order by time of origin
+    int oldOrder; // population order by time of origin
     double timeOriginSTD; // standardized time of origin
+    double oldTimeOriginSTD; // standardized time of origin
     double timeOriginInput; // time of origin
+    double oldTimeOriginInput; // time of origin
     double delta; // growth rate * effectPopSize
     double olddelta;
     double effectPopSize;

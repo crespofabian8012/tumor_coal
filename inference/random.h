@@ -11,6 +11,8 @@
 
 #include <vector>
 
+
+
 using namespace std;
 
 double   RandomUniform (long int *seed);
@@ -39,5 +41,6 @@ double randomUniformFromGsl();
 void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta);
 
 void  randomDirichletFromVector (vector<double> alpha, vector<double> &outputVector);
-
+double randomGammaBoost( double shape, double scale );
+double randomGammaBoost2( double mean , double variance );
 #endif /* random_h */

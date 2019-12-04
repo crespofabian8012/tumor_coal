@@ -180,15 +180,20 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     int i=0;
     Population *popI;
     double *proportionsVectorArray;
+    vector<double> sampleSizesvector(chain->numClones);
     bool allPopulationPopSizesSet=false;
+    //double totalSampleSize= chain->totalSampleSize();
     for( i = 0 ; i < chain->numClones; i++)
-        fprintf (stderr, "\n old proportions vector at %d: %lf \n",i,chain->oldproportionsVector.at(i) );
+    {
+        sampleSizesvector.at(i) = chain->oldproportionsVector.at(i) * chain->totalEffectPopSize;
+        fprintf (stderr, "\n old proportions vector at %d: %lf \n",i,sampleSizesvector.at(i) );
+    }
     do {
         allPopulationPopSizesSet=true;
         //proportionsVectorArray=&(chain->oldproportionsVector[0]);
          //init array with the current proportions vector
         //print old proportions vector
-        randomDirichletFromVector (chain->oldproportionsVector, chain->proportionsVector);
+        randomDirichletFromVector (sampleSizesvector, chain->proportionsVector);
 //        randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
         chain->updateEffectPopSizesCurrentProportionsVector();
         for( i = 0 ; i < chain->numClones; i++)
@@ -202,6 +207,53 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
                 allPopulationPopSizesSet=false;
                 break;
             }
+           
+         }
+            chain->initPopulationMigration();//after setting the timeSTD
+            chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
+            chain->filterSortPopulationsCoalescentEvents();
+            for( i = 0 ; i < chain->numClones; i++)
+            {
+                popI=chain->populations[i];
+                if (popI->immigrantsPopOrderedByModelTime.at(popI->immigrantsPopOrderedByModelTime.size()-1).first != popI->timeOriginSTD)//check the  last position
+                {
+                    allPopulationPopSizesSet=false;
+                    break;
+                    
+                }
+                if (!allPopulationPopSizesSet)
+                    break;
+                for( unsigned i = 0 ; i < popI->immigrantsPopOrderedByModelTime.size()-1; i++)
+                {
+                    if (popI->immigrantsPopOrderedByModelTime.at(i).first >= popI->immigrantsPopOrderedByModelTime.at(i+1).first )
+                    {
+                        allPopulationPopSizesSet=false;
+                        break;
+                        
+                    }
+                }
+                if (!allPopulationPopSizesSet)
+                    break;
+//                if (popI->rMRCA->node_index != chain->rootRootedTree->node_index)
+//                {
+//                    //not the last population, and then it will have a father population
+//                    auto it = std::find_if( popI->FatherPop->oldimmigrantsPopOrderedByModelTime.begin(), popI->FatherPop->oldimmigrantsPopOrderedByModelTime.end(),
+//                                           [&](const std::pair<double , Population*>& element){ return element.second->index== popI->index;} );
+//                    if (it == popI->FatherPop->oldimmigrantsPopOrderedByModelTime.end())
+//                    {
+//                        //this is an error: the popI must be an inmigrants in the father population
+//                    }
+//                    else
+//                    {
+//                        if (it->first > (popI->timeOriginInput / popI->FatherPop->effectPopSize) )
+//                        {
+//                            allPopulationPopSizesSet=false;
+//                            break;
+//                        }
+//                    }
+//                }
+            // if popI->timeOriginSTD
+            //check that time of origin dont pass the previous migration(previous order)
         }
     }
     while(!allPopulationPopSizesSet);
@@ -505,7 +557,6 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
         fprintf (stderr, "\n After. The population %d with order %d has MRCA node %d \n", it->second->index,  it->second->order,  it->first->node_index );
          }
     
-  
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
             auto pop =  chain->populations[i];
@@ -550,12 +601,13 @@ void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue()
     int i=0;
     Population *popI;
     //save information for the population
-    pop->oldFatherPop =  pop->FatherPop;
-    pop->oldCoalescentEventTimes = pop->CoalescentEventTimes;
-    pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
-    pop->oldSampleSize = pop->sampleSize;
+    //pop->oldFatherPop =  pop->FatherPop;
+    //pop->oldCoalescentEventTimes = pop->CoalescentEventTimes;
+    //pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
+    //pop->oldSampleSize = pop->sampleSize;
+   
     
-    //pop->FatherPop->oldimmigrantsPopOrderedByModelTime =  pop->FatherPop->immigrantsPopOrderedByModelTime;
+    pop->FatherPop->oldimmigrantsPopOrderedByModelTime =  pop->FatherPop->immigrantsPopOrderedByModelTime;
     
     pop->oldTimeOriginInput = pop->timeOriginInput;
     pop->oldTimeOriginSTD = pop->timeOriginSTD;
@@ -563,11 +615,11 @@ void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue()
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
-        popI->oldFatherPop =  pop->FatherPop;
-        popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
-        popI->CoalescentEventTimes.clear();
-        popI->oldimmigrantsPopOrderedByModelTime= popI->immigrantsPopOrderedByModelTime;
-        popI->immigrantsPopOrderedByModelTime.clear();
+        //popI->oldFatherPop =  pop->FatherPop;
+        //popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
+        //popI->CoalescentEventTimes.clear();
+        //popI->oldimmigrantsPopOrderedByModelTime= popI->immigrantsPopOrderedByModelTime;
+        //popI->immigrantsPopOrderedByModelTime.clear();
     }
 }
 void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
@@ -576,8 +628,8 @@ void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
     int i=0;
     Population *popI;
     //save information for the population
-    //pop->rMRCA = pop->oldrMRCA ;
-    //pop->FatherPop->immigrantsPopOrderedByModelTime = pop->FatherPop->oldimmigrantsPopOrderedByModelTime;
+    
+    pop->FatherPop->immigrantsPopOrderedByModelTime = pop->FatherPop->oldimmigrantsPopOrderedByModelTime;
     
     pop->timeOriginInput = pop->oldTimeOriginInput;
     pop->timeOriginSTD = pop->oldTimeOriginSTD;
@@ -585,9 +637,11 @@ void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
-        pop->FatherPop = pop->oldFatherPop ;
-        pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
-        pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+//        pop->FatherPop = pop->oldFatherPop ;
+//        pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
+//        pop->oldCoalescentEventTimes.clear();
+//        pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+//        pop->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
 void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
@@ -600,8 +654,6 @@ void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programO
     
     chain->chooseNewTimeofOriginOnEdge(pop);
     chain->initTimeOriginSTD();
-    chain->initPopulationMigration();//after setting the timeSTD
-    chain->ListClonesAccordingTimeToOrigin(chain->populations);
 
     chain->initPopulationMigration();//after setting the timeSTD
 

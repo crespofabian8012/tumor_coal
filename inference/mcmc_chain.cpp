@@ -1756,6 +1756,8 @@ double Chain::LogDensityCoalescentTimesForPopulation()
         currentCoalescentEvent=0;
         currentMigrationEvent=0;
         numberAliveCells= popI->sampleSize;
+        if (popI->sampleSize <=1)
+            continue;
         // numberLeftCoalescences =  popI->numCompletedCoalescences; //in the numCompletedCoalescences we are considering also the migrations
         //numberLeftCoalescences =  popI->numCompletedCoalescences - (popI->numIncomingMigrations-1);
         numberLeftCoalescences = popI->CoalescentEventTimes.size() - (popI->immigrantsPopOrderedByModelTime.size()-1);
@@ -1767,7 +1769,7 @@ double Chain::LogDensityCoalescentTimesForPopulation()
         }
         numberLeftMigrations = popI->immigrantsPopOrderedByModelTime.size()-1;
         //we are not counting time of origin as a migration
-        if (numberLeftCoalescences ==0)
+        if (numberLeftCoalescences <=0)
             continue;
         while(numberLeftMigrations > 0)
         {
@@ -4203,3 +4205,33 @@ double Chain::ESS(int lag, vector<double> values)
     result = values.size() / (1 + 2 * sumAutoCorrelations);
     return result;
 }
+bool Chain::checkMigrationsOrder()
+{
+    bool migrationsOrderCorrect = true;
+    Population *popI;
+    for(unsigned  i = 0 ; i < numClones; i++)
+    {
+        popI = populations[i];
+        if (popI->immigrantsPopOrderedByModelTime.at(popI->immigrantsPopOrderedByModelTime.size()-1).first != popI->timeOriginSTD)//check the  last position
+        {
+            migrationsOrderCorrect=false;
+            break;
+        }
+        for( unsigned i = 0 ; i < popI->immigrantsPopOrderedByModelTime.size()-1; i++)
+        {
+            if (popI->immigrantsPopOrderedByModelTime.at(i).first >= popI->immigrantsPopOrderedByModelTime.at(i+1).first )
+            {
+                migrationsOrderCorrect=false;
+                break;
+                
+            }
+        }
+        if (!migrationsOrderCorrect)
+            break;
+    }
+  
+    return migrationsOrderCorrect;
+}
+
+
+

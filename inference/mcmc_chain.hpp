@@ -228,6 +228,7 @@ public:
     double ESS(int lag, vector<double> values);
     void copyProportionsVector(double alpha[]);
     void computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &availableEdges, std::map<pll_rnode_t *, Population *> &currentMrcaOfPopulation, std::string &healthyCellLabel);
+    bool checkMigrationsOrder();
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

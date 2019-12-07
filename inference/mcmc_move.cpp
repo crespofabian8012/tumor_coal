@@ -194,9 +194,6 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     }
     do {
         allPopulationPopSizesSet=true;
-        //proportionsVectorArray=&(chain->oldproportionsVector[0]);
-         //init array with the current proportions vector
-        //print old proportions vector
         randomDirichletFromVector (sampleSizesvector, chain->proportionsVector);
 //        randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
         chain->updateEffectPopSizesCurrentProportionsVector();
@@ -488,7 +485,6 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove()
         popI=chain->populations[i];
         popI->sampleSize = popI->oldSampleSize;
          popI->effectPopSize = popI->oldeffectPopSize;
-        popI->FatherPop = popI->oldFatherPop;
         pop->timeOriginSTD = pop->oldTimeOriginSTD;
         popI->FatherPop = popI->oldFatherPop ; //the father population can change also for other populations
         pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
@@ -521,7 +517,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
         {
         fprintf (stderr, "\n After. The population %d with order %d has MRCA node %d \n", it->second->index,  it->second->order,  it->first->node_index );
          }
-    
+
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
             auto pop =  chain->populations[i];
@@ -536,10 +532,10 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     chain->initEffectPopulationSizesFromProportionsVector();
     chain->initTimeOriginSTD();
     chain->initPopulationMigration();//after setting the timeSTD
-
-  
+    
     chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
     chain->filterSortPopulationsCoalescentEvents();
+    
 }
 double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
@@ -571,21 +567,23 @@ void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue()
     //pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
     //pop->oldSampleSize = pop->sampleSize;
    
-    
     pop->FatherPop->oldimmigrantsPopOrderedByModelTime =  pop->FatherPop->immigrantsPopOrderedByModelTime;
+   // pop->FatherPop->immigrantsPopOrderedByModelTime.clear();
     
     pop->oldTimeOriginInput = pop->timeOriginInput;
     pop->oldTimeOriginSTD = pop->timeOriginSTD;
     //save information for the other populations
-    for( i = 0 ; i < chain->numClones; i++)
-    {
-        popI=chain->populations[i];
-        //popI->oldFatherPop =  pop->FatherPop;
-        //popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
-        //popI->CoalescentEventTimes.clear();
-        //popI->oldimmigrantsPopOrderedByModelTime= popI->immigrantsPopOrderedByModelTime;
-        //popI->immigrantsPopOrderedByModelTime.clear();
-    }
+//    for( i = 0 ; i < chain->numClones; i++)
+//    {
+//        popI=chain->populations[i];
+//       // popI->oldFatherPop =  pop->FatherPop;
+//        popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
+//        popI->CoalescentEventTimes.clear();
+//        popI->numCompletedCoalescences=0;
+//        popI->oldimmigrantsPopOrderedByModelTime= popI->immigrantsPopOrderedByModelTime;
+//        popI->immigrantsPopOrderedByModelTime.clear();
+//        popI->numIncomingMigrations=0;
+//    }
 }
 void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
 {
@@ -596,18 +594,19 @@ void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
     
     pop->FatherPop->immigrantsPopOrderedByModelTime = pop->FatherPop->oldimmigrantsPopOrderedByModelTime;
     
+    //pop->FatherPop->oldimmigrantsPopOrderedByModelTime.clear();
     pop->timeOriginInput = pop->oldTimeOriginInput;
     pop->timeOriginSTD = pop->oldTimeOriginSTD;
     //save information for the other populations
-    for( i = 0 ; i < chain->numClones; i++)
-    {
-        popI=chain->populations[i];
-//        pop->FatherPop = pop->oldFatherPop ;
+//    for( i = 0 ; i < chain->numClones; i++)
+//    {
+//        popI=chain->populations[i];
+//        //pop->FatherPop = pop->oldFatherPop ;
 //        pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
 //        pop->oldCoalescentEventTimes.clear();
 //        pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
 //        pop->oldimmigrantsPopOrderedByModelTime.clear();
-    }
+//    }
 }
 void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
@@ -618,12 +617,15 @@ void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programO
         fprintf(stderr, "the time origin input is 0");
     
     chain->chooseNewTimeofOriginOnEdge(pop);
-    chain->initTimeOriginSTD();
-
-    chain->initPopulationMigration();//after setting the timeSTD
-
-    chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
-    chain->filterSortPopulationsCoalescentEvents();
+    //chain->initTimeOriginSTD();
+//    chain->initPopulationMigration();//after setting the timeSTD
+//
+//    chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
+//    chain->filterSortPopulationsCoalescentEvents();
+    sort(pop->FatherPop->immigrantsPopOrderedByModelTime.begin(), pop->FatherPop->immigrantsPopOrderedByModelTime.end(), Population::comparePopulationsPairByTimeOrigin);
+ 
+    for (int i = 0; i < pop->FatherPop->immigrantsPopOrderedByModelTime.size(); ++i)
+        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin input%lf \n", pop->FatherPop->immigrantsPopOrderedByModelTime[i].first,  pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->order , pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->timeOriginInput);
 }
 double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {

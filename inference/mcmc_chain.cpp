@@ -1750,6 +1750,8 @@ double Chain::LogDensityCoalescentTimesForPopulation()
     int currentCoalescentEvent=0;
     int currentMigrationEvent=0;
     double temp;
+    double termOnlyAfterFirstCoalEvent=0.0;
+    double lastEventTimeBeforeMigration=0;
     for ( i = 0; i < numClones; i++){
         popI = populations[i];
           fprintf (stderr, "\n Likelihood population index %d order %d and sample size %d \n", popI->index, popI->order, popI->sampleSize);
@@ -1765,7 +1767,6 @@ double Chain::LogDensityCoalescentTimesForPopulation()
          fprintf (stderr, "\n The number of completed coalescences %d, %lu, migrations %d,%lu  for population order %d and sample size %d \n",popI->numCompletedCoalescences, popI->CoalescentEventTimes.size(), popI->numIncomingMigrations -1, popI->immigrantsPopOrderedByModelTime.size() -1, popI->order, popI->sampleSize );
         if (popI->numCompletedCoalescences != popI->CoalescentEventTimes.size()){
             fprintf (stderr, "\n wrong \n");
-            
         }
         numberLeftMigrations = popI->immigrantsPopOrderedByModelTime.size()-1;
         //we are not counting time of origin as a migration
@@ -1775,62 +1776,67 @@ double Chain::LogDensityCoalescentTimesForPopulation()
         {
             
             while(popI->CoalescentEventTimes[currentCoalescentEvent] < popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first
-                 && numberAliveCells > 1 &&  (currentCoalescentEvent+1) < popI->CoalescentEventTimes.size())
+                 && numberAliveCells > 1 &&  (currentCoalescentEvent) <= (popI->CoalescentEventTimes.size()-1))
             {
                  fprintf (stderr, "\n Coalescesce between migrations %d time %lf\n",currentCoalescentEvent,popI->CoalescentEventTimes[currentCoalescentEvent] );
-                temp=log(numberAliveCells * (numberAliveCells-1)/2);
+                temp=log(numberAliveCells * (numberAliveCells-1.0)/2.0);
                 if (isnan(temp) || isinf(temp))
                     fprintf (stderr, "\n isNan product\n");
                 result= result + temp;
                
-                temp = log(1/Population::CalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta));
+                temp = log(1.0 /Population::CalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta));
                 if (isnan(temp) || isinf(temp))
                     fprintf (stderr, "\n isNan product\n");
                 result= result + temp;
-               
-                temp =  (numberAliveCells/2)* (numberAliveCells-1)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent+1], popI->timeOriginSTD, popI->delta));
+                termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta);
+                temp =  (numberAliveCells/ 2.0)* (numberAliveCells-1)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
                 if (isnan(temp) || isinf(temp))
                     fprintf (stderr, "\n isNan product\n");
                 result= result -temp;
                 if (isnan(result) || isinf(result))
                     fprintf (stderr, "\n isNan product\n");
+                lastEventTimeBeforeMigration=popI->CoalescentEventTimes[currentCoalescentEvent];
                 currentCoalescentEvent++;
                 numberLeftCoalescences--;
                 numberAliveCells--;
             }
             //if (numberLeftMigrations > 0 && numberAliveCells > 1)// if there are migrations
-            if (numberLeftMigrations > 0 )// if there are migrations
+            if (numberLeftMigrations > 0 &&  currentMigrationEvent <= (popI->immigrantsPopOrderedByModelTime.size()-1))// if there are migrations
             {
                 fprintf (stderr, "\n Migration  %d time %lf from pop order %d \n",currentMigrationEvent,popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first, popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].second->order);
-                temp= popI->LogProbNoCoalescentEventBetweenTimes(popI->CoalescentEventTimes[currentCoalescentEvent],popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first, numberAliveCells );
+               
+                temp= popI->LogProbNoCoalescentEventBetweenTimes(lastEventTimeBeforeMigration,popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first, numberAliveCells );
+                
+                lastEventTimeBeforeMigration=popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first;
                 if (isnan(temp) || isinf(temp))
                     fprintf (stderr, "\n isNan product\n");
                 result= result+ temp;
-              
+                
+                numberAliveCells++;
                 numberLeftMigrations--;
                 currentMigrationEvent++;
             }
         }
         fprintf (stderr, "\n More coalescences \n" );
         //here there are only coalescents events left(al least one event)
-        while(numberLeftCoalescences > 0 && numberAliveCells > 1 && (currentCoalescentEvent+1) < popI->CoalescentEventTimes.size() )
+//        while(numberLeftCoalescences > 0 && numberAliveCells > 1 && (currentCoalescentEvent+1) < popI->CoalescentEventTimes.size() )
+       while(numberLeftCoalescences > 0 && numberAliveCells > 1 && currentCoalescentEvent <= (popI->CoalescentEventTimes.size()-1) )
         {
-            
             fprintf (stderr, "\n Coalescesce after all true migrations  %d time %lf\n",currentCoalescentEvent,popI->CoalescentEventTimes[currentCoalescentEvent] );
-            
-            
-            temp = log(numberAliveCells * (numberAliveCells-1)/2);
+        
+            temp = log(numberAliveCells * (numberAliveCells-1.0)/2.0);
             if (isnan(temp) || isinf(temp))
                 fprintf (stderr, "\n isNan temp\n");
             result= result + temp;
-            temp = log(1/Population::CalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta));
+            temp = log(1.0 / Population::CalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta));
             
             if (isnan(temp) || isinf(temp))
                 fprintf (stderr, "\n isNan temp\n");
             result= result + temp;
             if (isnan(temp) || isinf(temp))
                 fprintf (stderr, "\n isNan temp\n");
-            temp=( numberAliveCells/2)* (numberAliveCells-1)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent+1], popI->timeOriginSTD, popI->delta));
+            termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta);
+            temp=( numberAliveCells/ 2.0)* (numberAliveCells-1.0)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
             if (isnan(temp) || isinf(temp))
                 fprintf (stderr, "\n isNan temp\n");
             
@@ -1851,8 +1857,6 @@ double Chain::LogDensityCoalescentTimesForPopulation()
 }
 double  Chain::LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, double seqError,double dropoutError)
 {
-
-  
 
     //pll_state_t pll_map_gt10_2[256];
     if (NewickString == NULL)
@@ -2337,14 +2341,13 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
             chain->rMRCAPopulation.clear();
             chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree( chain->edgeLengths, numberPoints,  healthyTipLabel);
             
-            chain->initPopulationsSampleSizes( chain->rMRCAPopulation);
+            existsZeroSampleSizePop=chain->initPopulationsSampleSizes( chain->rMRCAPopulation, healthyTipLabel);
            
             for (unsigned int i = 0; i < chain->numClones; ++i){
                 auto pop =  chain->populations[i];
                 alpha[i]= pop->sampleSize;
                 printf("\n population %d and order %d with sample size %d \n", pop->index,pop->order,pop->sampleSize);
-                if (pop->sampleSize == 0)
-                    existsZeroSampleSizePop=true;
+                
             }
         }
         while(existsZeroSampleSizePop);
@@ -2567,7 +2570,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     for( i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
-        if (popI->rMRCA->node_index != rootRootedTree->node_index)// not do this move for the oldest population
+        if (popI->rMRCA->node_index != rootRootedTree->left->node_index && popI->rMRCA->node_index != rootRootedTree->right->node_index)// not do this move for the oldest population
         {
             newTimeOriginOnTreeforPopulationMove= new NewTimeOriginOnTreeforPopulationMove(this, "new Time of Origin Move on Tree for population", popI);
             moves.push_back(newTimeOriginOnTreeforPopulationMove);
@@ -2583,7 +2586,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     for( i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
-           if (popI->rMRCA->node_index != rootRootedTree->node_index)
+           if (popI->rMRCA->node_index != rootRootedTree->left->node_index && popI->rMRCA->node_index != rootRootedTree->right->node_index)
            {// not do this move for the oldest population
             newTimeOriginOnEdgeforPopulationMove= new NewTimeOriginOnEdgeforPopulationMove(this, "new Time of Origin on Edge Move for population", popI);
              moves.push_back(newTimeOriginOnEdgeforPopulationMove);
@@ -3442,8 +3445,23 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vecto
             k++;
         }
         Population* pop=getPopulationbyIndex(numClones -1);
-        pop->rMRCA =initialRootedTree->root;//the last population has MRCA node  the root  of the tree(the right child is the outgroup)
-        u= (TreeNode *)(initialRootedTree->root->data);
+        if (std::string(initialRootedTree->root->right->label).compare(healthyCellLabel)==0)
+        {
+            pop->rMRCA =initialRootedTree->root->left;
+            u= (TreeNode *)(initialRootedTree->root->left->data);
+        }
+        else  if (std::string(initialRootedTree->root->left->label).compare(healthyCellLabel)==0)
+        {
+            pop->rMRCA =initialRootedTree->root->right;
+            u= (TreeNode *)(initialRootedTree->root->right->data);
+        }
+        else{
+            //this should not happen
+            pop->rMRCA =initialRootedTree->root;
+            u= (TreeNode *)(initialRootedTree->root->data);
+             printf( "\n Error, the healthy cell is not a direct child of the tree root \n"  );
+        }
+    
         pop->timeOriginInput = u->timePUnits;
         mrcaOfPopulation[pop->rMRCA]=pop;
     }
@@ -3480,30 +3498,18 @@ void Chain::initPopulationCoalescentAndMigrationEventsFromRootNodeOnTree(pll_uno
         }
     }
 }
-bool Chain::initPopulationsSampleSizes( std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation){
+bool Chain::initPopulationsSampleSizes( std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation, string &healthyTipLabel){
     bool existsZeroSampleSizePop=false;
-      if (rmrcaOfPopulation.count(initialRootedTree->root)==0)
-          printf("Error, the root node is not the MRCA of any population");
-    initPopulationSampleSizesFromNodeOnRootedTree(initialRootedTree->root, rmrcaOfPopulation[initialRootedTree->root], rmrcaOfPopulation);
+//      if (rmrcaOfPopulation.count(initialRootedTree->root)==0)
+//          printf("Error, the root node is not the MRCA of any population");
+    initPopulationSampleSizesFromNodeOnRootedTree(initialRootedTree->root, rmrcaOfPopulation[initialRootedTree->root], rmrcaOfPopulation,healthyTipLabel );
     TreeNode *treeNode;
      for (unsigned int i = 0; i < numClones; ++i)
         {
             auto pop=populations[i];
             treeNode = (TreeNode *)(pop->rMRCA->data);
-            if (pop->rMRCA->parent !=NULL)//not the oldest population
-            { pop->sampleSize =treeNode->numberTipsByPopulation[pop->index];
-                existsZeroSampleSizePop =   pop->sampleSize <=0;
-            }
-            else{
-                
-                if (treeNode->numberTipsByPopulation[pop->index] -1 >0)
-                  pop->sampleSize =treeNode->numberTipsByPopulation[pop->index] -1;
-                else{
-                   printf("Error, the last population must have at least one tip");
-                 
-                }
-                   existsZeroSampleSizePop = treeNode->numberTipsByPopulation[pop->index] -1 <=0;
-            }
+            pop->sampleSize =treeNode->numberTipsByPopulation[pop->index];
+            existsZeroSampleSizePop =   pop->sampleSize <=0;
         }
     return existsZeroSampleSizePop;
 }
@@ -3527,7 +3533,7 @@ void Chain::initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<p
         // pop->resetMigrationsList();//this requires  that you have set first timeOriginSTD in the population and effective population size
         //pop->InitCoalescentEvents(numClones);
     }
-  initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(rootRootedTree, rmrcaOfPopulation[rootRootedTree], rmrcaOfPopulation , healthyTipLabel);
+  initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(rootRootedTree, NULL, rmrcaOfPopulation , healthyTipLabel);
 }
 void Chain::initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*> &rmrcaOfPopulation, string& healthyTipLabel ){
     
@@ -3537,15 +3543,40 @@ void Chain::initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_r
         {
             currentPopulation->rtips.push_back(p);
         }
-        else if (p->left == NULL && std::string(p->label).compare(healthyTipLabel)==0)
+       else if (p->left == NULL && std::string(p->label).compare(healthyTipLabel)==0)
         {
+            return;
             //nothing to do with the healthy cell
         }
         else
         {
+            
+            //initialize currentPopulation
+            if (p->parent == NULL && (std::string(p->right->label).compare(healthyTipLabel)==0) && rmrcaOfPopulation.count(p->left))
+            {
+                currentPopulation = rmrcaOfPopulation[p->left];
+                initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(p->left, currentPopulation, rmrcaOfPopulation , healthyTipLabel);
+                return;
+                
+            }
+            else if (p->parent == NULL && (std::string(p->left->label).compare(healthyTipLabel)==0) && rmrcaOfPopulation.count(p->right))
+            {
+                currentPopulation = rmrcaOfPopulation[p->right];
+                initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(p->right, currentPopulation, rmrcaOfPopulation , healthyTipLabel);
+                return;
+                
+            }
+         
+            //if is not the root ot the tree
             TreeNode * u= (TreeNode *)p->data;
-            currentPopulation->CoalescentEventTimes.push_back(u->timePUnits / currentPopulation->effectPopSize  );
-            currentPopulation->numCompletedCoalescences= currentPopulation->numCompletedCoalescences +1;
+            if (p->parent != NULL &&  currentPopulation != NULL )
+            {
+                //if is not the root of the tree(the parent of the MRCA of the oldest population
+                currentPopulation->CoalescentEventTimes.push_back(u->timePUnits / currentPopulation->effectPopSize  );
+                currentPopulation->numCompletedCoalescences= currentPopulation->numCompletedCoalescences +1;
+            }
+            
+            
             if(p->left !=NULL && rmrcaOfPopulation.count(p->left) != 0 )
              { // in this branch we have  migration
                  
@@ -3591,11 +3622,26 @@ void Chain::initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_r
 //
 //    }
 //}
-void Chain::initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation)
+void Chain::initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation, string &healthyTipLabel)
 {
     if (p!=NULL)
     {
         TreeNode * treeNode=(TreeNode *)(p->data);
+        //initialize currentPopulation
+        if (p->parent == NULL && (std::string(p->right->label).compare(healthyTipLabel)==0) && rmrcaOfPopulation.count(p->left))
+        {
+            currentPopulation = rmrcaOfPopulation[p->left];
+            initPopulationSampleSizesFromNodeOnRootedTree(p->left, rmrcaOfPopulation[p->left], rmrcaOfPopulation, healthyTipLabel);
+            return;
+            
+        }
+        else if (p->parent == NULL && (std::string(p->left->label).compare(healthyTipLabel)==0) && rmrcaOfPopulation.count(p->right))
+        {
+            currentPopulation = rmrcaOfPopulation[p->right];
+             initPopulationSampleSizesFromNodeOnRootedTree(p->right, rmrcaOfPopulation[p->right], rmrcaOfPopulation, healthyTipLabel);
+            return;
+        }
+    
         if (p->left == NULL)//tip
         {
             int idx= currentPopulation->index;
@@ -3618,10 +3664,10 @@ void Chain::initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Popula
             it = rmrcaOfPopulation.find(p->left);
             if (rmrcaOfPopulation.count(p->left) != 1)
                 printf("error the MRCA(left) node appear more than once");
-            initPopulationSampleSizesFromNodeOnRootedTree(p->left, rmrcaOfPopulation[p->left], rmrcaOfPopulation );
+            initPopulationSampleSizesFromNodeOnRootedTree(p->left, rmrcaOfPopulation[p->left], rmrcaOfPopulation, healthyTipLabel );
            }
             else{
-               initPopulationSampleSizesFromNodeOnRootedTree(p->left, currentPopulation, rmrcaOfPopulation );
+               initPopulationSampleSizesFromNodeOnRootedTree(p->left, currentPopulation, rmrcaOfPopulation, healthyTipLabel );
                }
            if (rmrcaOfPopulation.count(p->right)>0 )
            {
@@ -3629,11 +3675,11 @@ void Chain::initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Popula
             it = rmrcaOfPopulation.find(p->right);
             if (rmrcaOfPopulation.count(p->right) != 1)
                 printf("error the MRCA(right) node appear more than once");
-            initPopulationSampleSizesFromNodeOnRootedTree(p->right, rmrcaOfPopulation[p->right], rmrcaOfPopulation );
+            initPopulationSampleSizesFromNodeOnRootedTree(p->right, rmrcaOfPopulation[p->right], rmrcaOfPopulation, healthyTipLabel );
             }
            else
            {
-            initPopulationSampleSizesFromNodeOnRootedTree(p->right, currentPopulation, rmrcaOfPopulation);
+            initPopulationSampleSizesFromNodeOnRootedTree(p->right, currentPopulation, rmrcaOfPopulation, healthyTipLabel);
             }
              TreeNode * treeNodeLeft=(TreeNode *)(p->left->data);
              TreeNode * treeNodeRight=(TreeNode *)(p->right->data);
@@ -3996,7 +4042,7 @@ std::map<pll_rnode_t*, Population*> Chain::chooseAvailableEdgeOnRootedTreeForPop
             eventIds.push_back(MRCA->node_index);
             copyMRCAOfPopulation[MRCA]= pop;
             pop->rMRCA=MRCA;
-            existsZeroSampleSizePop= initPopulationsSampleSizes( copyMRCAOfPopulation);
+            existsZeroSampleSizePop= initPopulationsSampleSizes( copyMRCAOfPopulation, healthyCellLabel);
             fprintf (stderr, "\n current sample size %d for population order %d \n", pop->sampleSize, pop->order );
             //existsZeroSampleSizePop= (pop->sampleSize == 0)? true: false;
         }
@@ -4039,6 +4085,7 @@ double Chain::sumAvailableBranchLengths(std::map<pll_rnode_t*, Population*> curr
 void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
 {
     TreeNode * u, *v;
+    double oldMigrationTime;
     u= (TreeNode *)( pop->rMRCA->data);
     v= (TreeNode *)( pop->rMRCA->parent->data);
    // double proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*randomUniformFromGsl();
@@ -4066,9 +4113,11 @@ void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
     }
     else {
         //update time migration for pop in immigrantsPopOrderedByModelTime of
-        (*it).first=proposedTime;
+        oldMigrationTime =(*it).first;
+        (*it).first=proposedTime / pop->FatherPop->effectPopSize;
     }
-    printf( "\n MRCA node id %d with time %lf anf parent with time %lf was assigned to pop %d and time of origin %lf after new time origin on edge \n", pop->rMRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput  );
+    printf( "\n New time origin on edge for population index %d order %d new time %lf, old time %lf and MRCA node %d\n", pop->index, pop->order, pop->timeOriginInput,  pop->oldTimeOriginInput,  pop->rMRCA->node_index );
+    printf( "\n the new migration time in the father pop order %d is %lf, old time %lf \n",  pop->FatherPop->order, proposedTime / pop->FatherPop->effectPopSize,  oldMigrationTime);
     
 }
 void Chain::PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)

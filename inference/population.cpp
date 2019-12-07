@@ -361,14 +361,14 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
  
      printf("\n pop order  %d choose pop father of order %d \n", PopChild->order, PopFather->order);
     for (int i = 0; i < PopFather->immigrantsPopOrderedByModelTime.size(); ++i)
-        printf("\n ordered migrations: time : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
+        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
    
 }
 
 bool Population::comparePopulationsPairByTimeOrigin(const pair<double, Population *> s1, const pair<double, Population *> s2)
 {
-    //printf("\n s1: %lf ", s1.first);
-    // printf("\n s2: %lf \n", s2.first);
+    printf("\n s1: %lf ", s1.first);
+    printf("\n s2: %lf \n", s2.first);
     return (s1.first < s2.first);
 }
 
@@ -502,8 +502,9 @@ double Population::LogProbNoCoalescentEventBetweenTimes(double from, double to, 
 {
     int j=numberActiveInd;
     double result=0.0;
-    
-    result=  -1 * j* (j-1)*(Population::FmodelTstandard(to,timeOriginSTD, delta)-Population::FmodelTstandard(from, timeOriginSTD, delta))/2;
+    if (j==0 || j==1)
+        return 0;
+    result= log(j *(j-1) /2.0) -1.0 * j* (j-1)*(Population::FmodelTstandard(to,timeOriginSTD, delta)-Population::FmodelTstandard(from, timeOriginSTD, delta))/ 2.0;
     return result;
 }
 void Population::filterAndSortCoalescentEvents(){

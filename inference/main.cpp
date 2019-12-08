@@ -127,7 +127,7 @@ int main(int argc, char* argv[] )
         fprintf (stderr, "Error reading phylip file \n");
     //    int chainNumber=0;
     //
-    mcmcOptions.numChains=2;
+    mcmcOptions.numChains=1;
     
     vector<Chain*> chains;
 

@@ -367,8 +367,8 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
 
 bool Population::comparePopulationsPairByTimeOrigin(const pair<double, Population *> s1, const pair<double, Population *> s2)
 {
-    printf("\n s1: %lf ", s1.first);
-    printf("\n s2: %lf \n", s2.first);
+    //printf("\n s1: %lf ", s1.first);
+    //printf("\n s2: %lf \n", s2.first);
     return (s1.first < s2.first);
 }
 

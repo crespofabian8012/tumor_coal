@@ -2577,6 +2577,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
             fprintf (stderr, "\n>> started  newTimeOriginOnTreeforPopulationMove  index: %d, order:  %d \n", popI->index, popI->order);
             newTimeOriginOnTreeforPopulationMove->move(programOptions, mcmcOptions);
             fprintf (stderr, "\n>> finished  newTimeOriginOnTreeforPopulationMove  \n" );
+            fprintf (stderr, "\n   \n" );
             //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
         }
     }
@@ -4187,14 +4188,16 @@ void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, c
     string paramName;
     Population *pop;
     fprintf (files.fplog, "%d  ", currentIteration);
+    fprintf (files.fplog, "%.5f  ", currentlogConditionalLikelihoodTree);
+    fprintf (files.fplog, "%.5f  ", currentlogConditionalLikelihoodSequences);
     for (unsigned int i = 0; i < populations.size(); ++i){
         pop =populations[i];
-        fprintf (files.fplog, "  %lf  ", pop->growthRate);
-        fprintf (files.fplog, "  %lf  ", pop->effectPopSize);
+        fprintf (files.fplog, "  %.8f  ", pop->growthRate);
+        fprintf (files.fplog, "  %5f  ", pop->effectPopSize);
         fprintf (files.fplog, "  %d  ", pop->popSize);
         fprintf (files.fplog, "  %d  ", pop->sampleSize);
-        fprintf (files.fplog, "  %lf  ", pop->timeOriginInput);
-         fprintf (files.fplog, "  %lf  ", pop->timeOriginSTD);
+        fprintf (files.fplog, "  %.8f  ", pop->timeOriginInput);
+         fprintf (files.fplog, "  %.8f  ", pop->timeOriginSTD);
     }
     fprintf (files.fplog, "\n");
 
@@ -4202,9 +4205,11 @@ void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, c
 void Chain::writeHeaderOutputChain(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files )
 {
     std::time_t timeNow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    fprintf (files.fplog, "#tumor_coal 1.0 \n ");
-    fprintf (files.fplog, "# Generated %s \n ", std::ctime(&timeNow));
-    fprintf (files.fplog, "state");
+    fprintf (files.fplog, "#tumor_coal 1.0 \n");
+    fprintf (files.fplog, "# Generated %s \n", std::ctime(&timeNow));
+    fprintf (files.fplog, "state ");
+    fprintf (files.fplog, "loglikTree ");
+    fprintf (files.fplog, "loglikSeq ");
     string paramName;
     for (unsigned int i = 0; i < populations.size(); ++i){
         paramName =  "growth_rate(pop" + std::to_string(i) + ")";

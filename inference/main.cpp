@@ -191,7 +191,7 @@ int main(int argc, char* argv[] )
          
        if (currentIteration % sampleEvery == 0 )
           {
-              currentChain->writeMCMCState(  currentIteration, filePaths, programOptions,files );
+              currentChain->writeMCMCState(  currentIteration, filePaths, programOptions,files, mcmcOptions);
 ////                PrintTrees(currentIteration, &(chains[chainNumber].root), files.fpTrees, programOptions.mutationRate, programOptions.doUseObservedCellNames);
 ////                PrintTrees2(currentIteration, &(chains[chainNumber].root), files.fpTrees2, programOptions.mutationRate,  ObservedCellNames, programOptions.doUseObservedCellNames);
 ////                PrintTimes(currentIteration, files.fpTimes, programOptions.mutationRate, chains[chainNumber].nodes, programOptions.thereisOutgroup);

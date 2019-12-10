@@ -4182,48 +4182,50 @@ void Chain::PrepareFiles(const FilePaths &filePaths, const ProgramOptions &progr
         exit(-1);
     }
 }
-void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files )
+void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files , MCMCoptions &mcmcOptions)
 {
 //    fprintf (files.fplog, "%d  %lf %lf %lf effect_pop_size(pop1) effect_pop_size(pop2) effect_pop_size(pop3) sample_size(pop1)  sample_size(pop2) sample_size(pop3) time_origin(pop1)  time_origin(pop2) time_origin(pop3) \n", pop);
     string paramName;
     Population *pop;
-    fprintf (files.fplog, "%d  ", currentIteration);
-    fprintf (files.fplog, "%.5f  ", currentlogConditionalLikelihoodTree);
-    fprintf (files.fplog, "%.5f  ", currentlogConditionalLikelihoodSequences);
+    fprintf (files.fplog, "%d\t", currentIteration);
+    fprintf (files.fplog, "%.5f\t", currentlogConditionalLikelihoodTree);
+    fprintf (files.fplog, "%.5f\t", currentlogConditionalLikelihoodSequences);
     for (unsigned int i = 0; i < populations.size(); ++i){
         pop =populations[i];
-        fprintf (files.fplog, "  %.8f  ", pop->growthRate);
-        fprintf (files.fplog, "  %5f  ", pop->effectPopSize);
-        fprintf (files.fplog, "  %d  ", pop->popSize);
-        fprintf (files.fplog, "  %d  ", pop->sampleSize);
-        fprintf (files.fplog, "  %.8f  ", pop->timeOriginInput);
-         fprintf (files.fplog, "  %.8f  ", pop->timeOriginSTD);
+        fprintf (files.fplog, "%.8f\t", pop->growthRate);
+        fprintf (files.fplog, "%5f\t", pop->effectPopSize);
+        fprintf (files.fplog, "%d\t", pop->popSize);
+        fprintf (files.fplog, "%d\t", pop->sampleSize);
+        fprintf (files.fplog, "%.8f\t", pop->timeOriginInput);
+         fprintf (files.fplog, "%.8f\t", pop->timeOriginSTD);
+        
     }
-    fprintf (files.fplog, "\n");
-
+  if (currentIteration <= mcmcOptions.Niterations)
+      fprintf (files.fplog, "\n");
+    
 }
 void Chain::writeHeaderOutputChain(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files )
 {
     std::time_t timeNow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    fprintf (files.fplog, "#tumor_coal 1.0 \n");
-    fprintf (files.fplog, "# Generated %s \n", std::ctime(&timeNow));
-    fprintf (files.fplog, "state ");
-    fprintf (files.fplog, "loglikTree ");
-    fprintf (files.fplog, "loglikSeq ");
+    fprintf (files.fplog, "#tumor_coal 1.0\n");
+    fprintf (files.fplog, "# Generated %s\n", std::ctime(&timeNow));
+    fprintf (files.fplog, "state\t");
+    fprintf (files.fplog, "loglikTree\t");
+    fprintf (files.fplog, "loglikSeq\t");
     string paramName;
     for (unsigned int i = 0; i < populations.size(); ++i){
         paramName =  "growth_rate(pop" + std::to_string(i) + ")";
-        fprintf (files.fplog, "  %s  ", paramName.c_str());
+        fprintf (files.fplog, "%s\t", paramName.c_str());
         paramName =  "effect_pop_size(pop" + std::to_string(i) + ")";
-        fprintf (files.fplog, "  %s  ", paramName.c_str());
+        fprintf (files.fplog, "%s\t", paramName.c_str());
         paramName =  "pop_size(pop" + std::to_string(i) + ")";
-        fprintf (files.fplog, "  %s  ", paramName.c_str());
+        fprintf (files.fplog, "%s\t", paramName.c_str());
         paramName =  "sample_size(pop" + std::to_string(i) + ")";
-        fprintf (files.fplog, "  %s  ", paramName.c_str());
+        fprintf (files.fplog, "%s\t", paramName.c_str());
         paramName =  "time_origin_input(pop" + std::to_string(i) + ")";
-        fprintf (files.fplog, "  %s", paramName.c_str());
+        fprintf (files.fplog, "%s\t", paramName.c_str());
         paramName =  "time_origin_std(pop" + std::to_string(i) + ")";
-        fprintf (files.fplog, "  %s", paramName.c_str());
+        fprintf (files.fplog, "%s\t", paramName.c_str());
     }
     fprintf (files.fplog, "\n");
 }

@@ -222,7 +222,7 @@ public:
     double sumAvailableBranchLengths(std::map<pll_rnode_t*, Population*> currentMRCAPopulation);
     void chooseNewTimeofOriginOnEdge(Population *pop);
     void PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
-    void writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files );
+    void writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files,  MCMCoptions &mcmcOptions );
     void writeHeaderOutputChain(  const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files );
     double autoCorrelation(int lag, vector<double> values);
     double ESS(int lag, vector<double> values);

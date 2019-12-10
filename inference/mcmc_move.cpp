@@ -15,6 +15,7 @@ MCMCmove::MCMCmove(Chain *chain,  string nameMove)
     this->nameMove = nameMove;
     this->numberAccept=0;
     this->numberReject=0;
+    this->numberAttemps=0;
     this->newLogConditionalLikelihoodTree =chain->currentlogConditionalLikelihoodTree;
     this->newLogConditionalLikelihoodSequences=chain->currentlogConditionalLikelihoodSequences;
 }
@@ -62,7 +63,9 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
     double newTotalPopulationSize;
     mcmcOptions.slidingWindowSizeTotalEffectPopSize= 2 * 0.01* (chain->totalEffectPopSize - (chain->totalSampleSize() / mcmcOptions.fixedLambda));
     bool allPopulationPopSizesSet=false;
+   
     do {
+        numberAttemps++;
         allPopulationPopSizesSet=true;
         newTotalPopulationSize= chain->proposalSlidingWindow(chain->oldTotalEffectPopSize,  mcmcOptions.slidingWindowSizeTotalEffectPopSize);
       
@@ -87,14 +90,22 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
             }
         }
         if (!allPopulationPopSizesSet)
+             fprintf (stderr, "\n The  popSize < sampleSize\n");
+        if (!allPopulationPopSizesSet)
             break;
         chain->initPopulationMigration();//after setting the timeSTD
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         allPopulationPopSizesSet = chain->checkMigrationsOrder();
+        if (!allPopulationPopSizesSet)
+            fprintf (stderr, "\n The order of migrations if not correct, attempts %d\n", numberAttemps);
+        if (numberAttemps >mcmcOptions.maxNumberProposalAttempts)
+            break;
     }
     while(!allPopulationPopSizesSet);
-        fprintf (stderr, "\n new total effect pop size %d \n",chain->totalEffectPopSize );
+    
+    if (allPopulationPopSizesSet)
+       fprintf (stderr, "\n new total effect pop size %d \n",chain->totalEffectPopSize );
 }
 void NewTotalEffectPopSizeMove::rollbackMove()
 {
@@ -116,7 +127,7 @@ void NewTotalEffectPopSizeMove::rollbackMove()
         popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
-        popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size()-1;
+        popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
     
@@ -138,7 +149,16 @@ double NewTotalEffectPopSizeMove::computeLogAcceptanceProb(ProgramOptions &progr
 void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     safeCurrentValue();
+    numberAttemps=0;
     makeProposal(programOptions, mcmcOptions);
+    if (numberAttemps > mcmcOptions.maxNumberProposalAttempts)
+    {
+        rollbackMove();
+        this->numberReject++;
+        printf("\n Rejected new move %s because too many  proposals \n", nameMove.c_str());
+        return;
+    }
+        
     double logAcceptanceRate =computeLogAcceptanceProb(programOptions, mcmcOptions);
     double randomNumber= randomUniformFromGsl();
     double logRandom=log(randomNumber);
@@ -196,6 +216,7 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     }
     do {
         allPopulationPopSizesSet=true;
+          numberAttemps++;
         randomDirichletFromVector (sampleSizesvector, chain->proportionsVector);
 //        randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
         chain->updateEffectPopSizesCurrentProportionsVector();
@@ -220,10 +241,15 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
             chain->filterSortPopulationsCoalescentEvents();
         allPopulationPopSizesSet = chain->checkMigrationsOrder();
+        if (numberAttemps >mcmcOptions.maxNumberProposalAttempts)
+            break;
     }
     while(!allPopulationPopSizesSet);
-    for( i = 0 ; i < chain->numClones; i++)
+    if (allPopulationPopSizesSet)
+    {
+        for( i = 0 ; i < chain->numClones; i++)
         fprintf (stderr, "\n new proportions vector at %d: %lf \n",i,chain->proportionsVector.at(i) );
+    }
 }
 void NewProportionsVectorMove::rollbackMove()
 {
@@ -243,7 +269,7 @@ void NewProportionsVectorMove::rollbackMove()
            popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
-           popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size()-1;
+           popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
@@ -309,7 +335,7 @@ void NewGrowthRateMoveForPopulation::rollbackMove()
           popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
-          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size()-1;
+          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
@@ -362,7 +388,7 @@ void NewEffectPopSizeMoveForPopulation::rollbackMove()
           popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
-          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size()-1;
+          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
@@ -376,7 +402,7 @@ void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOpti
     double newEffectPopulationSize;
     //int totalSampleSize = chain->totalSampleSize();
     
-    double slidingWindowSize= 2* 0.01* (pop->oldeffectPopSize - pop->birthRate * pop->sampleSize);
+    double slidingWindowSize= 2* 0.1* (pop->oldeffectPopSize - pop->birthRate * pop->sampleSize);
     do {
         newEffectPopulationSize= chain->proposalSlidingWindow(pop->oldeffectPopSize,  slidingWindowSize);
         
@@ -499,7 +525,7 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove()
           popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime = popI->oldimmigrantsPopOrderedByModelTime;
-          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size()-1;
+          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }

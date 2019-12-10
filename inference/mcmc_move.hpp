@@ -16,6 +16,7 @@ class MCMCmove{
 protected:
     int numberAccept;
     int numberReject;
+    int numberAttemps;
     double newLogConditionalLikelihoodTree;
     double newLogConditionalLikelihoodSequences;
 public:

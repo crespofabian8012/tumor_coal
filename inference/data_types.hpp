@@ -187,6 +187,7 @@ public:
     double dispersion;
     double tuningParameter;
     double fixedLambda;
+    int maxNumberProposalAttempts;
 };
 
 

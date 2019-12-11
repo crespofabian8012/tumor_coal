@@ -99,6 +99,8 @@ public:
     void filterAndSortCoalescentEvents();
     void multiplyCoalescentsEventByFactor(double factor);
     void multiplyMigrationsTimesByFactor(double factor);
+    double LogDensityTime(double u);
+    static double LogCalculateH (double t, double TOrigin, double delta);
 private:
     static bool isNotPositive(double d);
 };

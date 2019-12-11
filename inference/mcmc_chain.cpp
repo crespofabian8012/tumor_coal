@@ -1712,21 +1712,30 @@ double Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions  )
     Population* popJ;
     Population* fatherPop;
     double product=0;
-    int i, j;
+    unsigned int i, j;
     double temp;
     for ( i = 0; i < numClones; i++)
     {
         popI=populations[i];
-        product = product + log( popI->DensityTime( popI->timeOriginSTD));
+        temp=popI->LogDensityTime( popI->timeOriginSTD);
+        if (isnan(temp) || isinf(temp))
+            fprintf (stderr, "\n isNan temp LogDensityTime\n");
+            
+        product = product + popI->LogDensityTime( popI->timeOriginSTD);
+        
+        fprintf (stderr, "\n Product log Density Time   = %lf after pop order %d,  popI->LogDensityTime( popI->timeOriginSTD) %lf,  popI->timeOriginSTD: %lf, popI->delta: %lf\n", product, popI->order, popI->LogDensityTime( popI->timeOriginSTD), popI->timeOriginSTD,popI->delta );
     }
-    for ( j = 0; j < numClones - 1; j++)
+    for ( j = 0; j < numClones ; j++)
     {
         popJ = populations[j ];
-        product = product + log( popJ->popSize);
-        fatherPop = popJ -> FatherPop;
-        temp=popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize;
-        temp=Population::CalculateH(popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize, fatherPop->timeOriginSTD, fatherPop->delta);
-        product = product  + log( temp);
+        if (popJ->FatherPop !=NULL){
+            product = product + log( popJ->FatherPop->popSize);
+            fatherPop = popJ -> FatherPop;
+            temp=popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize;
+            temp=Population::LogCalculateH(popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize, fatherPop->timeOriginSTD, fatherPop->delta);
+            product = product  + temp;
+            fprintf (stderr, "\n Product calculate H    = %lf after pop order %d \n", product, popJ->order);
+        }
     }
     //for ( i = 0; i < numClones; i++)
     //  {
@@ -1735,6 +1744,9 @@ double Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions  )
     product = product + LogDensityCoalescentTimesForPopulation();
     //}
     fprintf (stderr, "\n Product after  = %lf \n", product);
+    if (product > 3000000 ||  product < -3000000)
+        fprintf (stderr, "\n wrong2 \n");
+        
     return product;
 }
 /************************ LogDensityCoalescentTimesForPopulation ***********************/
@@ -1774,23 +1786,22 @@ double Chain::LogDensityCoalescentTimesForPopulation()
             continue;
         while(numberLeftMigrations > 0)
         {
-            
             while(popI->CoalescentEventTimes[currentCoalescentEvent] < popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first
                  && numberAliveCells > 1 &&  (currentCoalescentEvent) <= (popI->CoalescentEventTimes.size()-1))
             {
-                 fprintf (stderr, "\n Coalescesce between migrations %d time %lf\n",currentCoalescentEvent,popI->CoalescentEventTimes[currentCoalescentEvent] );
+               fprintf (stderr, "\n Coalescesce between migrations %d time %lf\n",currentCoalescentEvent,popI->CoalescentEventTimes[currentCoalescentEvent] );
                 temp=log(numberAliveCells * (numberAliveCells-1.0)/2.0);
-                if (isnan(temp) || isinf(temp))
+                if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
                     fprintf (stderr, "\n isNan product\n");
                 result= result + temp;
                
-                temp = log(1.0 /Population::CalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta));
-                if (isnan(temp) || isinf(temp))
+                temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta);
+                if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
                     fprintf (stderr, "\n isNan product\n");
                 result= result + temp;
                 termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta);
                 temp =  (numberAliveCells/ 2.0)* (numberAliveCells-1)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
-                if (isnan(temp) || isinf(temp))
+                if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
                     fprintf (stderr, "\n isNan product\n");
                 result= result -temp;
                 if (isnan(result) || isinf(result))
@@ -1804,12 +1815,11 @@ double Chain::LogDensityCoalescentTimesForPopulation()
             if (numberLeftMigrations > 0 &&  currentMigrationEvent <= (popI->immigrantsPopOrderedByModelTime.size()-1))// if there are migrations
             {
                 fprintf (stderr, "\n Migration  %d time %lf from pop order %d \n",currentMigrationEvent,popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first, popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].second->order);
-               
                 temp= popI->LogProbNoCoalescentEventBetweenTimes(lastEventTimeBeforeMigration,popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first, numberAliveCells );
-                
-                lastEventTimeBeforeMigration=popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first;
-                if (isnan(temp) || isinf(temp))
+                if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
                     fprintf (stderr, "\n isNan product\n");
+                lastEventTimeBeforeMigration=popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first;
+             
                 result= result+ temp;
                 
                 numberAliveCells++;
@@ -1825,28 +1835,29 @@ double Chain::LogDensityCoalescentTimesForPopulation()
             fprintf (stderr, "\n Coalescesce after all true migrations  %d time %lf\n",currentCoalescentEvent,popI->CoalescentEventTimes[currentCoalescentEvent] );
         
             temp = log(numberAliveCells * (numberAliveCells-1.0)/2.0);
-            if (isnan(temp) || isinf(temp))
+            if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
                 fprintf (stderr, "\n isNan temp\n");
             result= result + temp;
-            temp = log(1.0 / Population::CalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta));
+            temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta);
             
-            if (isnan(temp) || isinf(temp))
+            if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
                 fprintf (stderr, "\n isNan temp\n");
+            
+            temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta);
             result= result + temp;
-            if (isnan(temp) || isinf(temp))
-                fprintf (stderr, "\n isNan temp\n");
+ 
             termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta);
             temp=( numberAliveCells/ 2.0)* (numberAliveCells-1.0)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
-            if (isnan(temp) || isinf(temp))
+            if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
                 fprintf (stderr, "\n isNan temp\n");
-            
+            temp=( numberAliveCells/ 2.0)* (numberAliveCells-1.0)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
             result= result -  temp;
           
             currentCoalescentEvent++;
             numberLeftCoalescences--;
             numberAliveCells--;
         }
-         fprintf (stderr, "\n Result = %lf after population order %d \n", result, popI->order);
+         //fprintf (stderr, "\n Result = %lf after population order %d \n", result, popI->order);
     }
     fprintf (stderr, "\n Result = %lf \n", result);
     
@@ -3445,15 +3456,19 @@ std::map<pll_rnode_t*, Population*>  Chain::initTimeOfOriginsOnRootedTree( vecto
             printf( "\n MRCA node id %d with time %lf and parent with time %lf was assigned to pop %d and time of origin %lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput  );
             k++;
         }
-        Population* pop=getPopulationbyIndex(numClones -1);
+        Population* pop=getPopulationbyIndex(numClones -1);//the oldest population
         if (std::string(initialRootedTree->root->right->label).compare(healthyCellLabel)==0)
         {
             pop->rMRCA =initialRootedTree->root->left;
+            u= (TreeNode *)(initialRootedTree->root->data);
+            pop->timeOriginInput = u->timePUnits;
             u= (TreeNode *)(initialRootedTree->root->left->data);
         }
         else  if (std::string(initialRootedTree->root->left->label).compare(healthyCellLabel)==0)
         {
             pop->rMRCA =initialRootedTree->root->right;
+            u= (TreeNode *)(initialRootedTree->root->data);
+            pop->timeOriginInput = u->timePUnits;
             u= (TreeNode *)(initialRootedTree->root->right->data);
         }
         else{
@@ -4044,7 +4059,7 @@ std::map<pll_rnode_t*, Population*> Chain::chooseAvailableEdgeOnRootedTreeForPop
             copyMRCAOfPopulation[MRCA]= pop;
             pop->rMRCA=MRCA;
             existsZeroSampleSizePop= initPopulationsSampleSizes( copyMRCAOfPopulation, healthyCellLabel);
-            fprintf (stderr, "\n current sample size %d for population order %d \n", pop->sampleSize, pop->order );
+            //fprintf (stderr, "\n current sample size %d for population order %d \n", pop->sampleSize, pop->order );
             //existsZeroSampleSizePop= (pop->sampleSize == 0)? true: false;
         }
         while(existsZeroSampleSizePop);
@@ -4071,12 +4086,16 @@ std::map<pll_rnode_t*, Population*> Chain::chooseAvailableEdgeOnRootedTreeForPop
 double Chain::sumAvailableBranchLengths(std::map<pll_rnode_t*, Population*> currentMRCAPopulation)
 {
     double result=0.0;
+    pll_rnode_t* parent, *child;
+    pll_tree_edge* edge;
+    std::map<pll_rnode_t*, Population*>::iterator it;
     for (unsigned int i = 0; i < edges.size(); ++i)
     {
-        auto edge =edges.at(i);
-        auto parent = edge->edge.rtree.parent ;
-        auto child = edge->edge.rtree.child;
-        if (parent !=NULL && edge->length >0 && currentMRCAPopulation.count(child) != 0  )
+        edge =edges.at(i);
+        parent = edge->edge.rtree.parent ;
+        child = edge->edge.rtree.child;
+        it= currentMRCAPopulation.find(child);
+        if (parent !=NULL && edge->length >0 && it == currentMRCAPopulation.end() )
         {
             result+= result;
         }
@@ -4099,7 +4118,6 @@ void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
 //    else{
 //        proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*randomUniformFromGsl();
 //    }
-    
     if (proposedTime<=0)
         printf( "time of origin must be positive");
     pop->timeOriginInput =proposedTime;
@@ -4107,19 +4125,18 @@ void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
     
     auto it = std::find_if(  pop->FatherPop->immigrantsPopOrderedByModelTime.begin(),  pop->FatherPop->immigrantsPopOrderedByModelTime.end(),  [&](const pair<double, Population *> &p)
                            { return p.second->index == pop->index; });
-    if (it ==  pop->FatherPop->immigrantsPopOrderedByModelTime.end()){
-        
-    fprintf (stderr, "\n Error, The population of order %d is not father pop of pop order %d\n",pop->FatherPop->order, pop->order );
-        
+    if (it ==  pop->FatherPop->immigrantsPopOrderedByModelTime.end())
+    {
+        fprintf (stderr, "\n Error, The population of order %d is not father pop of pop order %d\n",pop->FatherPop->order, pop->order );
     }
-    else {
+    else
+    {
         //update time migration for pop in immigrantsPopOrderedByModelTime of
         oldMigrationTime =(*it).first;
         (*it).first=proposedTime / pop->FatherPop->effectPopSize;
     }
     printf( "\n New time origin on edge for population index %d order %d new time %lf, old time %lf and MRCA node %d\n", pop->index, pop->order, pop->timeOriginInput,  pop->oldTimeOriginInput,  pop->rMRCA->node_index );
     printf( "\n the new migration time in the father pop order %d is %lf, old time %lf \n",  pop->FatherPop->order, proposedTime / pop->FatherPop->effectPopSize,  oldMigrationTime);
-    
 }
 void Chain::PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)
 {
@@ -4165,9 +4182,7 @@ void Chain::PrepareFiles(const FilePaths &filePaths, const ProgramOptions &progr
             exit(-1);
         }
         sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.timesDir);
-      
         sprintf(File,"%s/Chain%d/%s/%s_2.txt", filePaths.resultsDir,chainNumber, filePaths.timesDir, filePaths.timesFile);
-        
         if (openFile(&files.fpTimes2, File) == -1)
         {
             fprintf(stderr, "Can't open %s.\n", File);
@@ -4198,11 +4213,9 @@ void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, c
         fprintf (files.fplog, "%d\t", pop->sampleSize);
         fprintf (files.fplog, "%.8f\t", pop->timeOriginInput);
          fprintf (files.fplog, "%.8f\t", pop->timeOriginSTD);
-        
     }
-  if (currentIteration <= mcmcOptions.Niterations)
+  if (currentIteration <= mcmcOptions.Niterations -1)
       fprintf (files.fplog, "\n");
-    
 }
 void Chain::writeHeaderOutputChain(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files )
 {

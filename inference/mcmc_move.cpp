@@ -545,20 +545,20 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
       map<pll_rnode_t*, Population*>::iterator it;
     for ( it = chain->rMRCAPopulation.begin(); it != chain->rMRCAPopulation.end(); it++ )
     {
-        fprintf (stderr, "\n Before. The population %d with order %d has MRCA node %d, time origin input %lf, std %lf, and sample size %d\n", it->second->index,  it->second->order,  it->first->node_index, it->second->timeOriginInput, it->second->timeOriginSTD, it->second->sampleSize);
+//        fprintf (stderr, "\n Before. The population %d with order %d has MRCA node %d, time origin input %lf, std %lf, and sample size %d\n", it->second->index,  it->second->order,  it->first->node_index, it->second->timeOriginInput, it->second->timeOriginSTD, it->second->sampleSize);
     }
         chain->proposedrMRCAPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, chain->rMRCAPopulation, programOptions.healthyTipLabel);
     
-       for ( it = chain->proposedrMRCAPopulation.begin(); it != chain->proposedrMRCAPopulation.end(); it++ )
-        {
-        fprintf (stderr, "\n After. The population %d with order %d has MRCA node %d \n", it->second->index,  it->second->order,  it->first->node_index );
-         }
+//       for ( it = chain->proposedrMRCAPopulation.begin(); it != chain->proposedrMRCAPopulation.end(); it++ )
+//        {
+//        fprintf (stderr, "\n After. The population %d with order %d has MRCA node %d \n", it->second->index,  it->second->order,  it->first->node_index );
+//         }
 
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
             auto pop =  chain->populations[i];
             alpha[i]= pop->sampleSize;
-            fprintf (stderr, "\n New sample size %d for population order %d \n", pop->sampleSize, pop->order );
+           // fprintf (stderr, "\n New sample size %d for population order %d \n", pop->sampleSize, pop->order );
     }
     int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
     std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](double a) {return a /totalSampleSize; } );
@@ -602,17 +602,17 @@ void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue()
     //pop->oldCoalescentEventTimes = pop->CoalescentEventTimes;
     //pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
     //pop->oldSampleSize = pop->sampleSize;
-    for(unsigned i=0; i< pop->FatherPop->immigrantsPopOrderedByModelTime.size();i++){
-        
-         fprintf (stderr, "\n inmigrant %d, time %lf to father population order %d of population of order  %d \n", i , pop->FatherPop->immigrantsPopOrderedByModelTime.at(i).first, pop->FatherPop->order, pop->order);
-        
-    }
+//    for(unsigned i=0; i< pop->FatherPop->immigrantsPopOrderedByModelTime.size();i++){
+//
+//         fprintf (stderr, "\n inmigrant %d, time %lf to father population order %d of population of order  %d \n", i , pop->FatherPop->immigrantsPopOrderedByModelTime.at(i).first, pop->FatherPop->order, pop->order);
+//
+//    }
     
-    for(unsigned i=0; i< pop->CoalescentEventTimes.size();i++){
-        
-        fprintf (stderr, "\n coalescent %d, time %lf  of population order %d and sample size %d  \n", i , pop->CoalescentEventTimes.at(i), pop->order, pop->sampleSize);
-        
-    }
+//    for(unsigned i=0; i< pop->CoalescentEventTimes.size();i++){
+//
+//        fprintf (stderr, "\n coalescent %d, time %lf  of population order %d and sample size %d  \n", i , pop->CoalescentEventTimes.at(i), pop->order, pop->sampleSize);
+//
+//    }
    
     pop->FatherPop->oldimmigrantsPopOrderedByModelTime =  pop->FatherPop->immigrantsPopOrderedByModelTime;
    // pop->FatherPop->immigrantsPopOrderedByModelTime.clear();
@@ -671,8 +671,8 @@ void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programO
 //    chain->filterSortPopulationsCoalescentEvents();
     sort(pop->FatherPop->immigrantsPopOrderedByModelTime.begin(), pop->FatherPop->immigrantsPopOrderedByModelTime.end(), Population::comparePopulationsPairByTimeOrigin);
  
-    for (int i = 0; i < pop->FatherPop->immigrantsPopOrderedByModelTime.size(); ++i)
-        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin input%lf \n", pop->FatherPop->immigrantsPopOrderedByModelTime[i].first,  pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->order , pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->timeOriginInput);
+//    for (int i = 0; i < pop->FatherPop->immigrantsPopOrderedByModelTime.size(); ++i)
+//        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin input%lf \n", pop->FatherPop->immigrantsPopOrderedByModelTime[i].first,  pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->order , pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->timeOriginInput);
 }
 double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {

@@ -188,6 +188,7 @@ public:
     double tuningParameter;
     double fixedLambda;
     int maxNumberProposalAttempts;
+    int numberWarmUpIterations;
 };
 
 

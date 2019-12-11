@@ -165,4 +165,5 @@ int set_tipclv_custom_error_model(pll_partition_t * partition,
                                   double _seq_error_rate,
                                   double _dropout_rate);
 double LogUniformDensity(double value, double from, double to);
+void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCoptions &mcmcOptions);
 #endif /* data_utils_hpp */

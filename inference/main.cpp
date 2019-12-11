@@ -31,11 +31,9 @@ using namespace std;
 int main(int argc, char* argv[] )
 {
     // default evolution model: JC
-    
     FILE *input_file;
     
     char* input_path;
-    
     //    char *fileName; //="Houetal_HS.fasta";
     //    char *fileNamePhylip ;//="Houetal_HS1.phylips";
     char *fileNameFasta = argv[2];
@@ -48,12 +46,11 @@ int main(int argc, char* argv[] )
     MCMCoptions mcmcOptions;
     vector<double> varTimeGMRCA;
     // 1. call function to parse the input file
-    //
     if (argc <= 2)
     {
         if ((input_file = freopen("input_path", "r", stdin)) != NULL)
         {
-            // ReadMCMCParametersFromFile();
+            ReadMCMCParametersFromFile(programOptions, filePaths, mcmcOptions);
         }
         else
         {
@@ -70,7 +67,7 @@ int main(int argc, char* argv[] )
     programOptions.mutationRate= 9.1e-8;
     programOptions.doUsefixedMutationRate=1;
     programOptions.doSimulateData=NO;
-    
+
     std::map<std::string,int> tipsLabelling;
     std::map<pll_unode_t, Population> tipsAssign;
     
@@ -84,7 +81,6 @@ int main(int argc, char* argv[] )
     mcmcOptions.Deltato = 1;
     mcmcOptions.fixedLambda=1;
     
-   
     programOptions.seqErrorRate=programOptions.sequencingError=0;
     programOptions.dropoutRate=programOptions.ADOrate=0;
     
@@ -125,8 +121,7 @@ int main(int argc, char* argv[] )
     pll_msa_t *msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
     if (!msa)
         fprintf (stderr, "Error reading phylip file \n");
-    //    int chainNumber=0;
-    //
+
     mcmcOptions.numChains=1;
     
     vector<Chain*> chains;
@@ -151,7 +146,7 @@ int main(int argc, char* argv[] )
         exit(1);
     }
      //pllmod_utree_set_length_recursive(initialUnrootedTree, BRLEN_MIN, 1);
-   pll_unode_t *root = initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
+      pll_unode_t *root = initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
     
      pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
 //       char * newick = pll_utree_export_newick(initialUnrootedTree->vroot,NULL);
@@ -164,11 +159,9 @@ int main(int argc, char* argv[] )
 //    
 //    Chain *chain;
 //    double loglh =  chain->LogConditionalLikelihoodSequences( msa,  newick, programOptions, 0, 0);
-    
     //free(newick);
     string healthyTipLabel = "healthycell";
     programOptions.healthyTipLabel ="healthycell";
-//    Chain *chain =Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
 
     Chain *currentChain;
     int currentIteration;
@@ -176,6 +169,7 @@ int main(int argc, char* argv[] )
     mcmcOptions.maxNumberProposalAttempts=10;
     int sampleEvery = mcmcOptions.thinning;
     mcmcOptions.Niterations = 10000;
+    mcmcOptions.numberWarmUpIterations =mcmcOptions.Niterations / 2.0;
 
      for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
    {
@@ -189,23 +183,22 @@ int main(int argc, char* argv[] )
          fprintf (stderr, "\n Chain #%d, Iteration %d \n", currentChain->chainNumber ,currentIteration );
         currentChain->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
          
-       if (currentIteration % sampleEvery == 0 )
+       if (currentIteration % sampleEvery == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
           {
               currentChain->writeMCMCState(  currentIteration, filePaths, programOptions,files, mcmcOptions);
+              //in the future i will write trees to a nexus file
 ////                PrintTrees(currentIteration, &(chains[chainNumber].root), files.fpTrees, programOptions.mutationRate, programOptions.doUseObservedCellNames);
 ////                PrintTrees2(currentIteration, &(chains[chainNumber].root), files.fpTrees2, programOptions.mutationRate,  ObservedCellNames, programOptions.doUseObservedCellNames);
 ////                PrintTimes(currentIteration, files.fpTimes, programOptions.mutationRate, chains[chainNumber].nodes, programOptions.thereisOutgroup);
 ////                PrintTimes2(currentIteration, files.fpTimes2, programOptions.mutationRate, chains[chainNumber].nodes, programOptions.thereisOutgroup);
-           }
+         }
       }
       currentChain->currentNumberIerations =currentIteration;
   }
     //close files
     fclose(files.fplog);
-    
-   pll_msa_destroy(msa);
+    pll_msa_destroy(msa);
 
   return 0;
-
 }
 

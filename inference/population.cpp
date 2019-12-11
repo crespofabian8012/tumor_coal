@@ -167,6 +167,34 @@ double Population::CalculateH (double t, double TOrigin, double delta)
     
     return H;
 }
+double Population::LogCalculateH (double t, double TOrigin, double delta)
+{
+    double  logH, AboveTerm, BelowTerm, firstTerm, secondTerm;
+    double  a, b;
+    
+    AboveTerm = 0.0;
+    BelowTerm = 0.0;
+    firstTerm = 0.0;
+    secondTerm = 0.0;
+    a = 0.0;
+    b = 0.0;
+    logH = 0.0;
+    
+    //printf ("\nInput(H), t=%lf T=%lf delta=%lf ", t, T, delta);
+    
+    a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
+    firstTerm = 2.0 * log(a);
+    secondTerm = -1.0 * delta * t;
+    AboveTerm = firstTerm + secondTerm;
+    //printf ("\nAboveTerm(H) = %lf (%lf %lf %lf) / delta = %lf, T = %lf, t = %lf", AboveTerm, a, firstTerm, secondTerm, delta, T, t);
+    
+    b = 1.0 - exp(-1.0 * delta * TOrigin);
+    BelowTerm = 2.0 * log(b);
+  
+    logH = AboveTerm - BelowTerm;
+    //printf ("\nH = %lf", H);
+    return logH;
+}
 
 double Population::FmodelTstandard (double t, double TOrigin, double delta)
 {
@@ -212,6 +240,7 @@ double Population::FmodelTstandard (double t, double TOrigin, double delta)
     a = 0.0;
     b = 0.0;
     c = 0.0;
+    
     
     a = exp(delta * t) - 1.0;
     b = 1.0 - exp(-1.0 * delta * TOrigin);
@@ -359,9 +388,9 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
 
       sort(PopFather->immigrantsPopOrderedByModelTime.begin(), PopFather->immigrantsPopOrderedByModelTime.end(), comparePopulationsPairByTimeOrigin);
  
-     printf("\n pop order  %d choose pop father of order %d \n", PopChild->order, PopFather->order);
-    for (int i = 0; i < PopFather->immigrantsPopOrderedByModelTime.size(); ++i)
-        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
+//     printf("\n pop order  %d choose pop father of order %d \n", PopChild->order, PopFather->order);
+//    for (int i = 0; i < PopFather->immigrantsPopOrderedByModelTime.size(); ++i)
+//        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
    
 }
 
@@ -492,10 +521,11 @@ int Population::bbinClones (double dat, double *v, int n)
     exit (-1);
     return -1;
 }
-double Population::DensityTime(double u){
-    double term1=delta * exp(-1*delta*u);
-    double term2=1-exp(-1*delta*u);
-    double result=delta * term1 * exp(-1*term1/term2) /(term2 * term2);
+double Population::LogDensityTime(double u){
+    double term1 = delta * exp(-1.0 *delta*u);
+    double term2 = 1.0-exp(-1.0 *delta*u);
+    double result = log(delta * term1 /(term2 * term2));
+    result = result - term1/term2;
     return result;
 }
 double Population::LogProbNoCoalescentEventBetweenTimes(double from, double to, int numberActiveInd)

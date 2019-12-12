@@ -19,6 +19,16 @@ MCMCmove::MCMCmove(Chain *chain,  string nameMove)
     this->newLogConditionalLikelihoodTree =chain->currentlogConditionalLikelihoodTree;
     this->newLogConditionalLikelihoodSequences=chain->currentlogConditionalLikelihoodSequences;
 }
+double MCMCmove::numberAccepted()
+{
+    return this->numberAccept;
+}
+double MCMCmove::numberRejected()
+{
+    
+      return this->numberReject;
+    
+}
 Chain * MCMCmove::getChain()
 {
     return chain;
@@ -373,7 +383,6 @@ void NewEffectPopSizeMoveForPopulation::safeCurrentValue()
         popI->oldimmigrantsPopOrderedByModelTime= popI->immigrantsPopOrderedByModelTime;
         popI->immigrantsPopOrderedByModelTime.clear();
     }
-    
 }
 void NewEffectPopSizeMoveForPopulation::rollbackMove()
 {  Chain *chain=getChain();

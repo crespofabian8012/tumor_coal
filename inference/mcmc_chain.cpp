@@ -76,8 +76,8 @@ Chain::Chain( int chainNumber,
     
     currentlogConditionalLikelihoodTree=0;
     currentlogConditionalLikelihoodSequences=0;
-    
-    
+    totalAccepted=0;
+    totalRejected=0;
 }
 int Chain::setInitialTreeFromNewick(char * NewickString){
     
@@ -2601,8 +2601,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     numCA = numMIG = 0;
     numEventsTot=0;
     countTMRCA = 0.0;
-    int totalAccepted=0;
-    int totalRejected=0;
+ 
     
     // order of proposals: the order should be random
    // fprintf (stderr, "\n>> Current log conditional Likelihood tree of the chain %d is = %lf  \n", chainNumber,currentlogConditionalLikelihoodTree );
@@ -2616,7 +2615,8 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     moves.push_back(newTotalEffectPopSizeMove);
     fprintf (stderr, "\n>> started  newTotalEffectPopSizeMove  \n" );
     newTotalEffectPopSizeMove->move(programOptions, mcmcOptions);
-   
+    totalAccepted+= newTotalEffectPopSizeMove->numberAccepted();
+    totalRejected+= newTotalEffectPopSizeMove->numberRejected();
     fprintf (stderr, "\n>> finished  newTotalEffectPopSizeMove \n" );
 //    newTotalEffectivePopulationSizeMove(programOptions, ObservedCellNames,  msa,  opt, sampleSizes);
     
@@ -2626,6 +2626,8 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     moves.push_back(newProportionsVector);
     fprintf (stderr, "\n>> started  newProportionsVector  \n" );
     newProportionsVector->move(programOptions, mcmcOptions);
+    totalAccepted+= newTotalEffectPopSizeMove->numberAccepted();
+    totalRejected+= newTotalEffectPopSizeMove->numberRejected();
     fprintf (stderr, "\n>> finished  newProportionsVector  \n" );
     
   //newProportionsVectorMove(  programOptions, ObservedCellNames, msa, opt, sampleSizes);
@@ -2639,6 +2641,8 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
         moves.push_back(newGrowthRateMoveForPopulation);
          fprintf (stderr, "\n>> started  newGrowthRateMoveForPopulation  \n" );
         newGrowthRateMoveForPopulation->move(programOptions, mcmcOptions);
+        totalAccepted+= newTotalEffectPopSizeMove->numberAccepted();
+        totalRejected+= newTotalEffectPopSizeMove->numberRejected();
          fprintf (stderr, "\n>> finished  newGrowthRateMoveForPopulation  \n" );
         //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
     }
@@ -2655,6 +2659,8 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
             moves.push_back(newTimeOriginOnTreeforPopulationMove);
             fprintf (stderr, "\n>> started  newTimeOriginOnTreeforPopulationMove  index: %d, order:  %d \n", popI->index, popI->order);
             newTimeOriginOnTreeforPopulationMove->move(programOptions, mcmcOptions);
+            totalAccepted+= newTotalEffectPopSizeMove->numberAccepted();
+            totalRejected+= newTotalEffectPopSizeMove->numberRejected();
             fprintf (stderr, "\n>> finished  newTimeOriginOnTreeforPopulationMove  \n" );
             fprintf (stderr, "\n   \n" );
             //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
@@ -2672,6 +2678,8 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
              moves.push_back(newTimeOriginOnEdgeforPopulationMove);
                fprintf (stderr, "\n>> started  newTimeOriginOnEdgeforPopulationMove index: %d, order:  %d  \n", popI->index, popI->order );
              newTimeOriginOnEdgeforPopulationMove->move(programOptions, mcmcOptions);
+               totalAccepted+= newTotalEffectPopSizeMove->numberAccepted();
+               totalRejected+= newTotalEffectPopSizeMove->numberRejected();
                 fprintf (stderr, "\n>> finished  newTimeOriginOnEdgeforPopulationMove  \n" );
                //newScaledGrowthRateMoveforPopulation( popI, seed,  programOptions,ObservedCellNames, msa, opt, sampleSizes);
            }

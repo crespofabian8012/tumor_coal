@@ -25,6 +25,8 @@ public:
     virtual void rollbackMove()=0;
     virtual void safeCurrentValue()=0;
     virtual double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
+    double numberAccepted();
+    double numberRejected();
     Chain * getChain();
 public:
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);

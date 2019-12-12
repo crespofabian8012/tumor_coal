@@ -30,6 +30,8 @@ public:
     int oldnumClones;
     int gammaParam;
     int currentNumberIerations;
+    int totalAccepted;
+    int totalRejected;
     pll_unode_t *root;
     pll_rnode_t *rootRootedTree;
     vector<pll_unode_t*> nodes;

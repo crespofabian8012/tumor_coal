@@ -168,7 +168,7 @@ int main(int argc, char* argv[] )
     mcmcOptions.thinning  = 1000;
     mcmcOptions.maxNumberProposalAttempts=10;
     int sampleEvery = mcmcOptions.thinning;
-    mcmcOptions.Niterations = 10000;
+    mcmcOptions.Niterations = 1000000;
     mcmcOptions.numberWarmUpIterations =mcmcOptions.Niterations / 2.0;
 
      for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
@@ -195,6 +195,11 @@ int main(int argc, char* argv[] )
       }
       currentChain->currentNumberIerations =currentIteration;
   }
+    for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
+    {
+        currentChain= chains.at(chainNumber);
+        fprintf (stderr, "\n Number accepted moves %d, number of rejected moves %d \n", currentChain->totalAccepted,currentChain->totalRejected );
+    }
     //close files
     fclose(files.fplog);
     pll_msa_destroy(msa);

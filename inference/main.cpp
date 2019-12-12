@@ -165,7 +165,7 @@ int main(int argc, char* argv[] )
 
     Chain *currentChain;
     int currentIteration;
-    mcmcOptions.thinning  = 100;
+    mcmcOptions.thinning  = 1000;
     mcmcOptions.maxNumberProposalAttempts=10;
     int sampleEvery = mcmcOptions.thinning;
     mcmcOptions.Niterations = 10000;

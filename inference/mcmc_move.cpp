@@ -247,8 +247,8 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     while(!allPopulationPopSizesSet);
     if (allPopulationPopSizesSet)
     {
-        for( i = 0 ; i < chain->numClones; i++)
-        fprintf (stderr, "\n new proportions vector at %d: %lf \n",i,chain->proportionsVector.at(i) );
+//        for( i = 0 ; i < chain->numClones; i++)
+//         fprintf (stderr, "\n new proportions vector at %d: %lf \n",i,chain->proportionsVector.at(i) );
     }
 }
 void NewProportionsVectorMove::rollbackMove()

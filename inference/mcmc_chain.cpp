@@ -1310,7 +1310,7 @@ void Chain::initEffectPopulationSizesFromProportionsVector(){
     {
         popI=populations[i];
         popI->effectPopSize = totalEffectPopSize * proportionsVector[i];
-        printf("\n initial effect pop size  for pop index %d  is %lf \n", popI->index,popI->effectPopSize);
+        //printf("\n initial effect pop size  for pop index %d  is %lf \n", popI->index,popI->effectPopSize);
     }
 }
 void Chain::initTimeOriginSTD(){
@@ -1320,7 +1320,7 @@ void Chain::initTimeOriginSTD(){
     {
         popI=populations[i];
         popI->timeOriginSTD = popI->timeOriginInput /  popI->effectPopSize;
-        printf("\n population %d with order %d  has  time origin std of: %lf and input: %lf\n", popI->index, popI->order, popI->timeOriginSTD, popI->timeOriginInput );
+        //printf("\n population %d with order %d  has  time origin std of: %lf and input: %lf\n", popI->index, popI->order, popI->timeOriginSTD, popI->timeOriginInput );
     }
 }
 void Chain::initPopulationsCoalTimes(){
@@ -1723,9 +1723,9 @@ double Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions  )
             
         product = product + popI->LogDensityTime( popI->timeOriginSTD);
         
-        fprintf (stderr, "\n Product log Density Time   = %lf after pop order %d,  popI->LogDensityTime( popI->timeOriginSTD) %lf,  popI->timeOriginSTD: %lf, popI->delta: %lf\n", product, popI->order, popI->LogDensityTime( popI->timeOriginSTD), popI->timeOriginSTD,popI->delta );
+       // fprintf (stderr, "\n Product log Density Time   = %lf after pop order %d,  popI->LogDensityTime( popI->timeOriginSTD) %lf,  popI->timeOriginSTD: %lf, popI->delta: %lf\n", product, popI->order, popI->LogDensityTime( popI->timeOriginSTD), popI->timeOriginSTD,popI->delta );
     }
-    for ( j = 0; j < numClones ; j++)
+    for ( j = 0; j < numClones-1 ; j++)
     {
         popJ = populations[j ];
         if (popJ->FatherPop !=NULL){
@@ -1734,18 +1734,17 @@ double Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions  )
             temp=popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize;
             temp=Population::LogCalculateH(popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize, fatherPop->timeOriginSTD, fatherPop->delta);
             product = product  + temp;
-            fprintf (stderr, "\n Product calculate H    = %lf after pop order %d \n", product, popJ->order);
+           // fprintf (stderr, "\n Product calculate H    = %lf after pop order %d \n", product, popJ->order);
         }
     }
     //for ( i = 0; i < numClones; i++)
     //  {
     //     popI=*(populations + i );
     fprintf (stderr, "\n Product before  = %lf \n", product);
-    product = product + LogDensityCoalescentTimesForPopulation();
+    product = product + LogDensityCoalescentTimesForPopulation2();
     //}
     fprintf (stderr, "\n Product after  = %lf \n", product);
-    if (product > 3000000 ||  product < -3000000)
-        fprintf (stderr, "\n wrong2 \n");
+    
         
     return product;
 }
@@ -1769,6 +1768,7 @@ double Chain::LogDensityCoalescentTimesForPopulation()
           fprintf (stderr, "\n Likelihood population index %d order %d and sample size %d \n", popI->index, popI->order, popI->sampleSize);
         currentCoalescentEvent=0;
         currentMigrationEvent=0;
+        lastEventTimeBeforeMigration=0;
         numberAliveCells= popI->sampleSize;
         if (popI->sampleSize <=1)
             continue;
@@ -1791,17 +1791,17 @@ double Chain::LogDensityCoalescentTimesForPopulation()
             {
                fprintf (stderr, "\n Coalescesce between migrations %d time %lf\n",currentCoalescentEvent,popI->CoalescentEventTimes[currentCoalescentEvent] );
                 temp=log(numberAliveCells * (numberAliveCells-1.0)/2.0);
-                if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
+                if (isnan(temp) || isinf(temp) )
                     fprintf (stderr, "\n isNan product\n");
                 result= result + temp;
                
                 temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta);
-                if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
+                if (isnan(temp) || isinf(temp) )
                     fprintf (stderr, "\n isNan product\n");
                 result= result + temp;
                 termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta);
                 temp =  (numberAliveCells/ 2.0)* (numberAliveCells-1)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
-                if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
+                if (isnan(temp) || isinf(temp) )
                     fprintf (stderr, "\n isNan product\n");
                 result= result -temp;
                 if (isnan(result) || isinf(result))
@@ -1816,7 +1816,7 @@ double Chain::LogDensityCoalescentTimesForPopulation()
             {
                 fprintf (stderr, "\n Migration  %d time %lf from pop order %d \n",currentMigrationEvent,popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first, popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].second->order);
                 temp= popI->LogProbNoCoalescentEventBetweenTimes(lastEventTimeBeforeMigration,popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first, numberAliveCells );
-                if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
+                if (isnan(temp) || isinf(temp) )
                     fprintf (stderr, "\n isNan product\n");
                 lastEventTimeBeforeMigration=popI->immigrantsPopOrderedByModelTime[currentMigrationEvent].first;
              
@@ -1829,18 +1829,17 @@ double Chain::LogDensityCoalescentTimesForPopulation()
         }
         fprintf (stderr, "\n More coalescences \n" );
         //here there are only coalescents events left(al least one event)
-//        while(numberLeftCoalescences > 0 && numberAliveCells > 1 && (currentCoalescentEvent+1) < popI->CoalescentEventTimes.size() )
        while(numberLeftCoalescences > 0 && numberAliveCells > 1 && currentCoalescentEvent <= (popI->CoalescentEventTimes.size()-1) )
         {
             fprintf (stderr, "\n Coalescesce after all true migrations  %d time %lf\n",currentCoalescentEvent,popI->CoalescentEventTimes[currentCoalescentEvent] );
         
             temp = log(numberAliveCells * (numberAliveCells-1.0)/2.0);
-            if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
+            if (isnan(temp) || isinf(temp) )
                 fprintf (stderr, "\n isNan temp\n");
             result= result + temp;
             temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta);
             
-            if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
+            if (isnan(temp) || isinf(temp) )
                 fprintf (stderr, "\n isNan temp\n");
             
             temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta);
@@ -1848,7 +1847,7 @@ double Chain::LogDensityCoalescentTimesForPopulation()
  
             termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta);
             temp=( numberAliveCells/ 2.0)* (numberAliveCells-1.0)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
-            if (isnan(temp) || isinf(temp) || temp > 3000000 ||  temp < -3000000)
+            if (isnan(temp) || isinf(temp) )
                 fprintf (stderr, "\n isNan temp\n");
             temp=( numberAliveCells/ 2.0)* (numberAliveCells-1.0)*(Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
             result= result -  temp;
@@ -1859,12 +1858,78 @@ double Chain::LogDensityCoalescentTimesForPopulation()
         }
          //fprintf (stderr, "\n Result = %lf after population order %d \n", result, popI->order);
     }
-    fprintf (stderr, "\n Result = %lf \n", result);
+    //fprintf (stderr, "\n Result = %lf \n", result);
     
     if (isnan(result) || isinf(result))
      fprintf (stderr, "\n isNan product\n");
    
     return result;
+}
+double Chain::LogDensityCoalescentTimesForPopulation2(){
+    Population *popI;
+    double result =0;
+    double temp;
+    double timeCurrentEvent;
+    int numberAliveCells;
+    int currentCoalescentEvent=0;
+    int currentMigrationEvent=0;
+    double termOnlyAfterFirstCoalEvent;
+    double lastEventTimeBeforeMigration=0;
+    std::vector<double> immigrantsTimes;
+    
+   // vector<double> allEventsSorted;
+    for ( unsigned i = 0; i < numClones; i++)
+    {
+        popI = populations[i];
+        numberAliveCells = popI->sampleSize;
+        currentCoalescentEvent=0;
+        currentMigrationEvent=0;
+        lastEventTimeBeforeMigration=0;
+        if (popI->sampleSize <=1)
+            continue;
+        immigrantsTimes.clear();
+        std::transform(popI->immigrantsPopOrderedByModelTime.begin(), popI->immigrantsPopOrderedByModelTime.end(),
+                       std::back_inserter(immigrantsTimes),
+                       [](auto const& pair){ return pair.first; });
+        std::vector<double> allEventsSorted(popI->CoalescentEventTimes.size()+immigrantsTimes.size(), 0.0);
+        merge(popI->CoalescentEventTimes.begin(), popI->CoalescentEventTimes.end(), immigrantsTimes.begin(), immigrantsTimes.end(), allEventsSorted.begin());
+        for ( unsigned j = 0; j < allEventsSorted.size(); j++)
+        {
+            timeCurrentEvent= allEventsSorted.at(j);
+            if (timeCurrentEvent== popI->timeOriginSTD)
+                break;
+            if(std::binary_search(popI->CoalescentEventTimes.begin(), popI->CoalescentEventTimes.end(), timeCurrentEvent) )//is a coalescent event
+            {
+                if (numberAliveCells > 1)
+                {
+                    temp=log(numberAliveCells * (numberAliveCells-1.0)/2.0);
+                    result= result + temp;
+                    temp = -1.0 * Population::LogCalculateH(timeCurrentEvent,popI->timeOriginSTD, popI->delta);
+                    result= result + temp;
+                    termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta);
+                    temp =  (numberAliveCells / 2.0)* (numberAliveCells - 1.0)*(Population::FmodelTstandard(timeCurrentEvent,popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
+                    result= result -temp;
+                    lastEventTimeBeforeMigration = timeCurrentEvent;
+                    currentCoalescentEvent++;
+                    numberAliveCells--;
+                }
+            }
+            else if(std::binary_search(immigrantsTimes.begin(),
+                         immigrantsTimes.end(), timeCurrentEvent) )//is a migration event
+            {
+                if (numberAliveCells > 1)
+                {
+                temp= popI->LogProbNoCoalescentEventBetweenTimes(lastEventTimeBeforeMigration,timeCurrentEvent, numberAliveCells );
+                result= result+ temp;
+                }
+                lastEventTimeBeforeMigration=timeCurrentEvent;
+                currentMigrationEvent++;
+                numberAliveCells++;
+            }
+        }
+    }
+    fprintf (stderr, "\n Result = %lf \n", result);
+     return result;
 }
 double  Chain::LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, double seqError,double dropoutError)
 {
@@ -2357,7 +2422,7 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
             for (unsigned int i = 0; i < chain->numClones; ++i){
                 auto pop =  chain->populations[i];
                 alpha[i]= pop->sampleSize;
-                printf("\n population %d and order %d with sample size %d \n", pop->index,pop->order,pop->sampleSize);
+               // printf("\n population %d and order %d with sample size %d \n", pop->index,pop->order,pop->sampleSize);
                 
             }
         }
@@ -2391,13 +2456,13 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
 
     rootedNewick2 =  pll_rtree_export_newick(initialRootedTree->root,NULL);
     //newickString2 = chain->toNewickString ( chain->root, chain->mutationRate,     programOptions.doUseObservedCellNames);
-    printf("\n newick = %s  \n", rootedNewick2);
+    //printf("\n newick = %s  \n", rootedNewick2);
     
     chain->currentlogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree( programOptions);
     printf ( "Initial log likelihood of the tree of chain %d is:  %lf \n",0, chain->currentlogConditionalLikelihoodTree );
     
     chain->currentlogConditionalLikelihoodSequences= chain->LogConditionalLikelihoodSequences( msa,  rootedNewick2, programOptions, chain->seqErrorRate, chain->dropoutRate);
-    fprintf (stderr, "Initial log likelihood of the sequences of chain %d  is = %lf  \n", 0,chain->currentlogConditionalLikelihoodSequences );
+    //fprintf (stderr, "Initial log likelihood of the sequences of chain %d  is = %lf  \n", 0,chain->currentlogConditionalLikelihoodSequences );
     free(rootedNewick2);
     rootedNewick2=NULL;
    
@@ -2536,9 +2601,11 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     numCA = numMIG = 0;
     numEventsTot=0;
     countTMRCA = 0.0;
+    int totalAccepted=0;
+    int totalRejected=0;
     
     // order of proposals: the order should be random
-    fprintf (stderr, "\n>> Current log conditional Likelihood tree of the chain %d is = %lf  \n", chainNumber,currentlogConditionalLikelihoodTree );
+   // fprintf (stderr, "\n>> Current log conditional Likelihood tree of the chain %d is = %lf  \n", chainNumber,currentlogConditionalLikelihoodTree );
     
     // 1- Update the topology using Wilson Balding move
 //    if (programOptions->doUseFixedTree == NO)
@@ -2549,7 +2616,8 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     moves.push_back(newTotalEffectPopSizeMove);
     fprintf (stderr, "\n>> started  newTotalEffectPopSizeMove  \n" );
     newTotalEffectPopSizeMove->move(programOptions, mcmcOptions);
-    fprintf (stderr, "\n>> finished  newTotalEffectPopSizeMove  \n" );
+   
+    fprintf (stderr, "\n>> finished  newTotalEffectPopSizeMove \n" );
 //    newTotalEffectivePopulationSizeMove(programOptions, ObservedCellNames,  msa,  opt, sampleSizes);
     
     //3-Update the vector of proportions \theta(this will change M_i)
@@ -2865,7 +2933,7 @@ void Chain::newScaledGrowthRateMoveforPopulation( Population *popI, long int *se
     
     double newLogConditionalLikelihoodTree= LogConditionalLikelihoodTree(programOptions);
     
-    fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total growth rate for population %d,  of the chain %d is = %lf  \n", popI->index, chainNumber, newLogConditionalLikelihoodTree );
+    //fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total growth rate for population %d,  of the chain %d is = %lf  \n", popI->index, chainNumber, newLogConditionalLikelihoodTree );
     
 //    char *newickString2;
 //    newickString2=NULL;
@@ -3796,7 +3864,7 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
     
     double newLogConditionalLikelihoodTree= LogConditionalLikelihoodTree(programOptions);
     
-    fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total effective population size,  of the chain %d is = %lf  \n", chainNumber,newLogConditionalLikelihoodTree );
+    //fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total effective population size,  of the chain %d is = %lf  \n", chainNumber,newLogConditionalLikelihoodTree );
 //    char *newickString2;
 //    newickString2=NULL;
 //    newickString2 = toNewickString2 ( oldroot, programOptions.mutationRate,     programOptions.doUseObservedCellNames);
@@ -3873,7 +3941,7 @@ void Chain::newProportionsVectorMove(ProgramOptions &programOptions, char *Obser
     }
     ListClonesAccordingTimeToOrigin(populations);
     double newLogConditionalLikelihoodTree= LogConditionalLikelihoodTree(programOptions);
-    fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total effective population size,  of the chain %d is = %lf  \n", chainNumber,newLogConditionalLikelihoodTree );
+    //fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total effective population size,  of the chain %d is = %lf  \n", chainNumber,newLogConditionalLikelihoodTree );
 //    char *newickString2;
 //    newickString2=NULL;
 //    newickString2 = toNewickString2 ( chain->oldroot, programOptions->mutationRate,     programOptions->doUseObservedCellNames);
@@ -4135,8 +4203,8 @@ void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
         oldMigrationTime =(*it).first;
         (*it).first=proposedTime / pop->FatherPop->effectPopSize;
     }
-    printf( "\n New time origin on edge for population index %d order %d new time %lf, old time %lf and MRCA node %d\n", pop->index, pop->order, pop->timeOriginInput,  pop->oldTimeOriginInput,  pop->rMRCA->node_index );
-    printf( "\n the new migration time in the father pop order %d is %lf, old time %lf \n",  pop->FatherPop->order, proposedTime / pop->FatherPop->effectPopSize,  oldMigrationTime);
+    //printf( "\n New time origin on edge for population index %d order %d new time %lf, old time %lf and MRCA node %d\n", pop->index, pop->order, pop->timeOriginInput,  pop->oldTimeOriginInput,  pop->rMRCA->node_index );
+    //printf( "\n the new migration time in the father pop order %d is %lf, old time %lf \n",  pop->FatherPop->order, proposedTime / pop->FatherPop->effectPopSize,  oldMigrationTime);
 }
 void Chain::PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)
 {

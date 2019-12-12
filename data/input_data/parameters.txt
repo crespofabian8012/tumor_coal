@@ -1,11 +1,10 @@
-[PARAMETERS FILE FOR TumourCoalCC2.0]
+[PARAMETERS FILE FOR THE SIMULATOR TumourCoalCC2.0]
 [options and comments within brackets are ignored]
 
 
 [*** GLOBAL SETTINGS ***]
-[simulate data or do inference (mandatory. 1= do simulation, 0 = do inference) s1]
 [number of replicates (mandatory)]	n1
-
+[number of sites s1]
 
 [*** POPULATION GENETICS SETTINGS ***]
 [Haploid - Diploid (0-1) (mandatory)]	x2

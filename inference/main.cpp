@@ -79,7 +79,7 @@ int main(int argc, char* argv[] )
     mcmcOptions.MutRateto = -8;
     mcmcOptions.Deltafrom = -4;
     mcmcOptions.Deltato = 1;
-    mcmcOptions.fixedLambda=1;
+    mcmcOptions.fixedLambda=0.1;
     
     programOptions.seqErrorRate=programOptions.sequencingError=0;
     programOptions.dropoutRate=programOptions.ADOrate=0;
@@ -168,7 +168,7 @@ int main(int argc, char* argv[] )
     mcmcOptions.thinning  = 1000;
     mcmcOptions.maxNumberProposalAttempts=10;
     int sampleEvery = mcmcOptions.thinning;
-    mcmcOptions.Niterations = 1000000;
+    mcmcOptions.Niterations = 10000000;
     mcmcOptions.numberWarmUpIterations =mcmcOptions.Niterations / 2.0;
 
      for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)

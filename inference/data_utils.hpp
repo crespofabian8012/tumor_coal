@@ -166,4 +166,6 @@ int set_tipclv_custom_error_model(pll_partition_t * partition,
                                   double _dropout_rate);
 double LogUniformDensity(double value, double from, double to);
 void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCoptions &mcmcOptions);
+void computeUnfoldedISMSFS(int numSites,vector<SiteStr> &allSites,int numSNVs, vector<int> &SNVsites, vector<int> &SFS, vector<int> &numberDifferences);
+int countTrueVariants (vector<TreeNode *> &nodes,  int numSites, int numCells, TreeNode *HEALTHY_ROOT, vector<SiteStr> &allSites, vector<int> &variantSites, vector<int> &SNVsites );
 #endif /* data_utils_hpp */

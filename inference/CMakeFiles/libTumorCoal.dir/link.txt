@@ -1,0 +1,2 @@
+/usr/bin/ar qc liblibTumorCoal.a  CMakeFiles/libTumorCoal.dir/data_utils.cpp.o CMakeFiles/libTumorCoal.dir/eigen.cpp.o CMakeFiles/libTumorCoal.dir/main.cpp.o CMakeFiles/libTumorCoal.dir/mcmc_chain.cpp.o CMakeFiles/libTumorCoal.dir/mcmc_move.cpp.o CMakeFiles/libTumorCoal.dir/mutationModel.cpp.o CMakeFiles/libTumorCoal.dir/output_functions.cpp.o CMakeFiles/libTumorCoal.dir/population.cpp.o CMakeFiles/libTumorCoal.dir/random.cpp.o CMakeFiles/libTumorCoal.dir/tree_node.cpp.o CMakeFiles/libTumorCoal.dir/utils.cpp.o
+/usr/bin/ranlib liblibTumorCoal.a

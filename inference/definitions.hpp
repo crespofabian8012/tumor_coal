@@ -18,7 +18,7 @@ extern "C"
 #define YES         1
 #define INCREMENT_NODES   500
 
-#define	infinity                999999
+#define	infinity2                999999
 #define	MATERNAL                0
 #define	PATERNAL                1
 #define BINARY                  0

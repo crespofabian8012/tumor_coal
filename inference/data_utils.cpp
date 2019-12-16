@@ -26,6 +26,7 @@
 #include "output_functions.hpp"
 #include "random.h"
 #include "utils.hpp"
+#include <algorithm>
 
 /***************************** ReadParametersFromFile *******************************/
 /* Reads parameter values from the parameter file */
@@ -977,38 +978,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
             
         }/* end of mutation simulation process */
         
-//        TreeNode *p;
-//        for(i=0; i<programOptions.numNodes; i++)
-//        {
-//            p= nodes[i] + i;
-//            //             free( p->cellName);
-//            //    p->cellName=NULL;
-//            free( p->maternalSequence);
-//            p->maternalSequence=NULL;
-//            free( p->paternalSequence);
-//            p->paternalSequence=NULL;
-//            free(p->numbersMutationsUnderSubtreePerSite);
-//            p->numbersMutationsUnderSubtreePerSite=NULL;
-//            free(p->numbersMaternalMutationsPerSite);
-//            p->numbersMaternalMutationsPerSite=NULL;
-//            free(p->numbersPaternalMutationsPerSite);
-//            p->numbersPaternalMutationsPerSite=NULL;
-//                        free( p->nodeLeft);
-//                        p->nodeLeft=NULL;
-//                        free(p->nodeRight);
-//                        p->nodeRight=NULL;
-//                        free(p->nodeBack);
-//                        p->nodeBack=NULL;
-//                        free(p->edgeBack);
-//                        p->edgeBack=NULL;
-//                        free(p->edgeLeft);
-//                        p->edgeLeft=NULL;
-//                        free(p->edgeRight);
-//                        p->edgeRight=NULL;
-//
-//        }
-//        free (nodes);
-//        nodes=NULL;
+
    
     }
     
@@ -1018,26 +988,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     {
         free( allSites[i].alternateAlleles);
     }
-    //free(allSites);
-    //allSites=NULL;
-//    free(SNVsites);
-//    SNVsites=NULL;
-//    free(SFS);
-//    SFS=NULL;
-//    free(variantSites);
-//    variantSites=NULL;
-//    free(DefaultModelSites);
-//    DefaultModelSites=NULL;
-//    free(AltModelSites);
-//    AltModelSites=NULL;
-//    free(treeTips);
-//    treeTips=NULL;
-//    free(proportionsVector);
-//    proportionsVector=NULL;
-//    free(varEvent);
-//    varEvent=NULL;
-//    free(varTimeGMRCA);
-//    varTimeGMRCA=NULL;
+ 
     
     return 0;
 }
@@ -2848,9 +2799,9 @@ void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptio
     programOptions.doGTR = NO;
     programOptions.doGTnR = NO;
     programOptions.rateVarAmongSites = NO;         /* rate variation among different sites along the genome */
-    programOptions.alphaSites = infinity;          /* alpha shape of the gamma distribution for rate variation among sites */
-    programOptions.alphaBranches = infinity;       /* alpha shape of the gamma distribution for rate variation among lineages */
-    programOptions.alphaCoverage = infinity;       /* alpha shape of the gamma distribution for coverage */
+    programOptions.alphaSites = infinity2;          /* alpha shape of the gamma distribution for rate variation among sites */
+    programOptions.alphaBranches = infinity2;       /* alpha shape of the gamma distribution for rate variation among lineages */
+    programOptions.alphaCoverage = infinity2;       /* alpha shape of the gamma distribution for coverage */
     programOptions.doSimulateFixedNumMutations = NO;    /* whether to simulate a fixed number of mutations */
     programOptions.doUserTree = NO;                /* whether to assume a user tree instead od making the coalescent */
     programOptions.doUserGenome = NO;                /* whether to use a user genome instead of a simulated one */
@@ -3872,4 +3823,54 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
         }
     }
     
+}
+/************************ computeUnfoldedISMSFS ***********************/
+/* compute unfolded version of SFS */
+void computeUnfoldedISMSFS(int numSites,vector<SiteStr> &allSites,int numSNVs, vector<int> &SNVsites, vector<int> &SFS, vector<int> &numberDifferences){
+    int numberDiff;
+    int site;
+    int posSNV;
+    for (site=0; site<numSites; site++){
+        SFS[site]=0;
+    }
+    for (site=0; site<numSNVs; site++){
+        // if (allSites[site].isVariant == YES){
+        posSNV =SNVsites[site];
+        numberDiff=allSites[posSNV].numberDiffReference;
+        SFS[numberDiff]=SFS[numberDiff]+1;
+        numberDifferences[site]=numberDiff;
+        //}
+    }
+}
+int countTrueVariants (vector<TreeNode *> &nodes,  int numSites, int numCells, TreeNode *HEALTHY_ROOT, vector<SiteStr> &allSites, vector<int> &variantSites, vector<int> &SNVsites )
+{
+    int        cell, site;
+    int        nVariants = 0;
+    int numberDiff=0;
+    int isVariant=NO;
+    TreeNode* p;
+    for (site=0; site<numSites; site++)
+    {   isVariant=NO;
+        numberDiff=0;
+        for (cell=0; cell<numCells; cell++)
+        {    p= nodes.at(cell);
+            if (p->maternalSequence[site] != DELETION && p->maternalSequence[site] != HEALTHY_ROOT->maternalSequence[site])
+            {
+                isVariant=YES;
+                numberDiff++;
+            }
+            if (p->paternalSequence[site] != DELETION && p->paternalSequence[site] != HEALTHY_ROOT->paternalSequence[site])
+            {
+                isVariant=YES;
+                numberDiff++;
+            }
+        }
+        if (isVariant){
+            allSites[site].isVariant = YES;
+            SNVsites[ nVariants] = site;
+            nVariants++;
+        }
+        allSites[site].numberDiffReference=numberDiff;
+    }
+    return nVariants;
 }

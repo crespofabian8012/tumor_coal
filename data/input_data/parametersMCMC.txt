@@ -1,0 +1,19 @@
+[PARAMETERS FILE FOR THE GROWTH RATE INFERENCE]
+[options and comments within brackets are ignored]
+
+[GLOBAL OPTIONS]
+[number of chains]	n1
+[number of iterations] i1000000
+[sample every number of iterations]  s1000
+[maximum number of proposals before rejection]  r10
+
+[PATHS]
+[tree file path] t/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/SimulatedTreeJC1Site.tre
+[genotypes file path, fasta file] g/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/SimulatedDataJC1Site.fasta
+[genotypes file path Philip file] p/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/SimulatedDataJC1Site.phylip
+
+
+[OTHER OPTIONS]
+[use a fixed tree, YES=1, NO=0] f1
+[number of clones known YES=1, NO=0]  c1
+[number of clones]  z3

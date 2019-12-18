@@ -1,4 +1,3 @@
-# code relating to tree structured stick breaking process
 link_directories(${CMAKE_SOURCE_DIR}/install/lib/)
 
 file( GLOB SRCS *.cpp *.hpp *.c *.h)

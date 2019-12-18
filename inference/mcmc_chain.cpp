@@ -16,6 +16,8 @@
 #include <gsl/gsl_cdf.h>
 #include <functional>
 #include <random>
+#include <chrono>
+#include <set>
 #include <boost/regex.h>
 //#include <boost/random.hpp>
 

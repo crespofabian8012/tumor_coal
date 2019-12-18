@@ -45,6 +45,7 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
         if (numberSeq >=1){
             // *numCells =numberSeq;//not counting the healthy cell
             programOptions.numCells=numberSeq;
+            programOptions.TotalNumSequences=numberSeq;
         }
         else{
             //   *numCells =0;

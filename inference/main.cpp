@@ -32,29 +32,36 @@ int main(int argc, char* argv[] )
 {
     // default evolution model: JC
     FILE *input_file;
-    
     char* input_path;
     //    char *fileName; //="Houetal_HS.fasta";
     //    char *fileNamePhylip ;//="Houetal_HS1.phylips";
-    char *fileNameFasta = argv[2];
-    char *fileNamePhylip = argv[3];
-    char *treefileName = argv[4];
+    char *fileNameFasta ;//= argv[2];
+    char *fileNamePhylip ;//= argv[3];
+    char *treefileName; //= argv[4];
     
     ProgramOptions programOptions;
     Files files;
     FilePaths filePaths;
     MCMCoptions mcmcOptions;
     vector<double> varTimeGMRCA;
+    if (argc <= 2)
+        input_path = argv[1];
+    else{
+        fprintf (stderr, "\nERROR: No parameters specified (use command  parameter file)");
+        PrintUsage();
+    }
+    
     // 1. call function to parse the input file
     if (argc <= 2)
     {
-        if ((input_file = freopen("input_path", "r", stdin)) != NULL)
+        if ((input_file = freopen(input_path, "r", stdin)) != NULL)
         {
             ReadMCMCParametersFromFile(programOptions, filePaths, mcmcOptions);
         }
         else
         {
             fprintf (stderr, "\nERROR: No parameters specified (use command line or parameter file)");
+            exit(-1);
         }
     }
     programOptions.numberClonesKnown=YES;
@@ -63,7 +70,7 @@ int main(int argc, char* argv[] )
     programOptions.doUseGenotypes = YES;
     programOptions.doUseFixedTree =NO;
     programOptions.seed = 1248697;
-    programOptions.numClones=3;
+   
     programOptions.mutationRate= 9.1e-8;
     programOptions.doUsefixedMutationRate=1;
     programOptions.doSimulateData=NO;
@@ -81,7 +88,7 @@ int main(int argc, char* argv[] )
     mcmcOptions.Deltato = 1;
     mcmcOptions.fixedLambda=0.1;
     
-    programOptions.seqErrorRate=programOptions.sequencingError=0;
+  programOptions.seqErrorRate=programOptions.sequencingError=0;
     programOptions.dropoutRate=programOptions.ADOrate=0;
     
     vector<int> sampleSizes(programOptions.numClones);
@@ -92,10 +99,20 @@ int main(int argc, char* argv[] )
     //
     //    //3. do inference
     //
-    sampleSizes[0]=5;
-    sampleSizes[1]=3;
-    sampleSizes[2]=4;
-    programOptions.numClones = 3;
+//    sampleSizes[0]=5;
+//    sampleSizes[1]=3;
+//    sampleSizes[2]=4;
+   // programOptions.numClones = 3;
+    
+  
+    //    //char *fileName ="Nietal_HS.fasta";
+    
+    fileNameFasta = filePaths.inputGenotypeFileFasta;
+    ReadParametersFromFastaFile(fileNameFasta,  programOptions);
+    vector<vector<int> > ObservedData;
+    
+    char *ObservedCellNames[programOptions.numCells];
+    ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
     
     programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
     programOptions.numCells = programOptions.TotalNumSequences;
@@ -104,28 +121,22 @@ int main(int argc, char* argv[] )
     if (programOptions.numberClonesKnown==YES)
     {
         mcmcOptions.totalEffectPopSizefrom = round(log(programOptions.numCells +2));
-        mcmcOptions.totalEffectPopSizefrom = round(log(100* programOptions.numCells +200 ));
-        
+        mcmcOptions.totalEffectPopSizeto = round(log(200000 ));
     }
-    //    //char *fileName ="Nietal_HS.fasta";
-    ReadParametersFromFastaFile(fileNameFasta,  programOptions);
-    vector<vector<int> > ObservedData;
-    
-    char *ObservedCellNames[programOptions.numCells];
-    ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
     //
     //    for( i = 0 ; i < programOptions.numCells; i++)
     //        fprintf (stderr, "observed cell name %s\n", ObservedCellNames[i]);
     //    //fprintf (stderr, "observed data %d \n", *ObservedData[0]);
     //
+    fileNamePhylip =filePaths.inputGenotypeFilePhylip;
     pll_msa_t *msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
     if (!msa)
         fprintf (stderr, "Error reading phylip file \n");
 
-    mcmcOptions.numChains=1;
-    
+
     vector<Chain*> chains;
 
+    treefileName = filePaths.inputTreeFile;
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
     pll_utree_t * initialUnrootedTree = pll_utree_parse_newick(treefileName);
    
@@ -165,10 +176,10 @@ int main(int argc, char* argv[] )
 
     Chain *currentChain;
     int currentIteration;
-    mcmcOptions.thinning  = 1000;
-    mcmcOptions.maxNumberProposalAttempts=10;
+    //mcmcOptions.thinning  = 5000;
+    //mcmcOptions.maxNumberProposalAttempts=10;
     int sampleEvery = mcmcOptions.thinning;
-    mcmcOptions.Niterations = 10000000;
+    //mcmcOptions.Niterations = 10000000;
     mcmcOptions.numberWarmUpIterations =mcmcOptions.Niterations / 2.0;
 
      for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)

@@ -220,6 +220,9 @@ typedef struct {
     char  resultsDir[MAX_NAME];
     char  dir[MAX_NAME];
     char  File[MAX_NAME];
+    char  inputTreeFile[500];
+    char  inputGenotypeFileFasta[500];
+    char  inputGenotypeFilePhylip[500];
 } FilePaths;
 
 typedef struct {

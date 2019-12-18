@@ -119,18 +119,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 //*numClones = (int) argument;
                 programOptions.numClones=(int) argument;
                 
-//                *CloneNameBegin =  (int*)malloc( programOptions.numClones * (long) sizeof(int));
-//                *CloneSampleSizeBegin = (int*)malloc( programOptions.numClones* (long) sizeof(int));
-//                *ClonePopSizeBegin = (int*)calloc( programOptions.numClones , (long) sizeof(int));
-//                *CloneBirthRateBegin =  (double*)calloc( programOptions.numClones, (long) sizeof(double));
-//                *CloneDeathRateBegin =  (double*)calloc( programOptions.numClones, (long) sizeof(double));
-//                *CloneTimeOriginInput =  (double*)calloc( programOptions.numClones, (long) sizeof(double));
-                
-//                if (*CloneNameBegin == NULL || *CloneSampleSizeBegin == NULL || *ClonePopSizeBegin == NULL || *CloneBirthRateBegin == NULL || *CloneDeathRateBegin == NULL || *CloneTimeOriginInput == NULL)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Could not allocate variables for clones\n");
-//                    exit (1);
-//                }
+
                 
                 for (j = 0; j <  programOptions.numClones; j++)
                 {
@@ -333,7 +322,6 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 }
                 else
                 {
-                    
                     programOptions.doJC = NO;
                     programOptions.doHKY = NO;
                     //  programOptions.doGTR = NO;
@@ -3299,6 +3287,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
     double argumentDouble1;
     int argumentInt;
     long int argumentLongInt;
+    string argumentString;
     
     /* Used:  */
     
@@ -3326,486 +3315,118 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
         switch (ch)
         {
           case 'N':
-              if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 1)
+              if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
                    {
-                      fprintf(stderr, "PARAMETER ERROR: Bad number of replicates (%d)\n\n", (int)argumentInt);
-                   // PrintUsage();
+                      fprintf(stderr, "PARAMETER ERROR: Bad number of chains (%d)\n\n", (int)argumentInt);
+                    PrintUsage();
                   }
-//                programOptions.numDataSets =argumentInt;
-//                break;
-//            case '#':
-//                if (fscanf(stdin, "%lu bytes", &argumentLongInt) != 1 || argumentLongInt < 0)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad seed (#) (%d)\n\n", (int)argumentLongInt);
-//                    PrintUsage();
-//                }
-//                programOptions.userSeed =argumentLongInt;
-//                break;
-//
-//
-//            case 'X':
-//                if (fscanf(stdin, "%f", &argument) != 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad haplid/diploid chosen (x) (%d)\n\n", (int) argument);
-//                    PrintUsage();
-//                }
-//                //*Nscaling = (int) argument;
-//                programOptions.Nscaling =(int) argument;
-//                if (programOptions.Nscaling < 1 || programOptions.Nscaling > 2)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Haploid/diplod option (x) (1-2) (%d)\n\n", programOptions.Nscaling);
-//                    PrintUsage();
-//                }
-//                break;
-//            case 'C':
-//                if (fscanf(stdin, "%f", &argument) != 1 || argument <= 0)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad number of clones (must be 1 or higher) (%d)\n\n", (int) argument);
-//                    PrintUsage();
-//                }
-//                //*numClones = (int) argument;
-//                programOptions.numClones=(int) argument;
-//
-//                //                *CloneNameBegin =  (int*)malloc( programOptions.numClones * (long) sizeof(int));
-//                //                *CloneSampleSizeBegin = (int*)malloc( programOptions.numClones* (long) sizeof(int));
-//                //                *ClonePopSizeBegin = (int*)calloc( programOptions.numClones , (long) sizeof(int));
-//                //                *CloneBirthRateBegin =  (double*)calloc( programOptions.numClones, (long) sizeof(double));
-//                //                *CloneDeathRateBegin =  (double*)calloc( programOptions.numClones, (long) sizeof(double));
-//                //                *CloneTimeOriginInput =  (double*)calloc( programOptions.numClones, (long) sizeof(double));
-//
-//                //                if (*CloneNameBegin == NULL || *CloneSampleSizeBegin == NULL || *ClonePopSizeBegin == NULL || *CloneBirthRateBegin == NULL || *CloneDeathRateBegin == NULL || *CloneTimeOriginInput == NULL)
-//                //                {
-//                //                    fprintf (stderr, "PARAMETER ERROR: Could not allocate variables for clones\n");
-//                //                    exit (1);
-//                //                }
-//
-//                for (j = 0; j <  programOptions.numClones; j++)
-//                {
-//
-//                    for (z = 1; z <= NUM_COLS; z++)
-//                    {
-//                        if (z == 1)
-//                        {
-//                            fscanf(stdin, "%f", &argument);
-//                            //*(*CloneNameBegin + j) = (int) argument;
-//                            CloneNameBegin.push_back((int)argument);
-//                            if ( CloneNameBegin[j]  <= 0 ||  CloneNameBegin[j]  >  programOptions.numClones)
-//                            {
-//                                fprintf (stderr, "PARAMETER ERROR: Bad number for clone %d (should be higher than 0 and lower than the number of clones %d) (%d)\n\n", j,  programOptions.numClones, CloneNameBegin[j] );
-//                                PrintUsage();
-//                            }
-//                        }
-//                        if (z == 2)
-//                        {
-//                            fscanf(stdin, "%f", &argument);
-//                            CloneSampleSizeBegin.push_back((int) argument);
-//                            programOptions.numCells= programOptions.numCells + (int) argument;
-//                            if (CloneSampleSizeBegin[j] < 0)
-//                            {
-//                                fprintf (stderr, "PARAMETER ERROR: Bad sample size for clone %d (should not be negative) (%d)\n\n", j, CloneSampleSizeBegin[j] );
-//                                PrintUsage();
-//                            }
-//                        }
-//                        if (z == 3)
-//                        {
-//                            fscanf(stdin, "%f", &argument);
-//                            ClonePopSizeBegin.push_back((int)argument);
-//                            if (ClonePopSizeBegin[j] < 0)
-//                            {
-//                                fprintf (stderr, "PARAMETER ERROR: Bad population size for clone %d (should be higher than 0) (%d)\n\n", j, ClonePopSizeBegin[j] );
-//                                PrintUsage();
-//                            }
-//                        }
-//                        if (z == 4)
-//                        {
-//                            fscanf(stdin, "%f", &argument);
-//                            CloneBirthRateBegin.push_back((double) argument);
-//                        }
-//                        if (z == 5)
-//                        {
-//                            fscanf(stdin, "%f", &argument);
-//                            CloneDeathRateBegin.push_back((double) argument);
-//                        }
-//                        if (z == 6)
-//                        {
-//                            fscanf(stdin, "%f", &argument);
-//                            CloneTimeOriginInput.push_back((double) argument);
-//                            if (CloneTimeOriginInput[j]  < 0)
-//                            {
-//                                fprintf (stderr, "PARAMETER ERROR: Bad time to origin for clone %d (should not be negative) (%lf)\n\n", j,  CloneTimeOriginInput[j] );
-//                                PrintUsage();
-//                            }
-//                        }
-//
-//                    }
-//
-//                }
-//                break;
-//
-//
-//            case 'U':
-//
-//                if (fscanf(stdin, "%lf", &argumentDouble) != 1)
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad mutation rate (%f) \n\n", argumentDouble);
-//                    PrintUsage();
-//                }
-//                programOptions.mutationRate=  (double) argumentDouble;
-//                break;
-//
-//            case 'B':
-//                if (fscanf(stdin, "%f", &argument) !=1 || argument < 0  || argument > 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad alphabet (%d)\n\n", (int) argument);
-//                    PrintUsage();
-//                }
-//                //*alphabet = (int) argument;
-//                programOptions.alphabet =(int) argument;
-//                break;
-//
-//            case 'Y':
-//                if (fscanf(stdin, "%d",  &argumentInt) != 1 || argumentInt < 0)
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad noisy value (%d)\n\n", (int) argumentInt);
-//                    PrintUsage();
-//                }
-//                programOptions.noisy =(int) argumentInt;
-//                break;
-//
-//            case 'D':
-//                if (fscanf(stdin, "%lf", &argumentDouble) !=1 ||argumentDouble < 0 ||argumentDouble > 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad allelic dropout rate (%f)\n\n", argumentDouble);
-//                    PrintUsage();
-//                }
-//                programOptions.ADOrate =(double) argumentDouble;
-//                break;
-//            case 'O':
-//                if (fscanf(stdin, "%d", &argumentInt) < 0 )
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad selection for outgroup %d (0: No outgroup, 1 outgroup with one branch, 2 outgroup with two branches\n\n", argumentInt);
-//                    PrintUsage();
-//                }
-//                programOptions.outgroupSelection = argumentInt;
-//                if ( programOptions.outgroupSelection != 0 &&  programOptions.outgroupSelection != 1 &&  programOptions.outgroupSelection != 2)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad selection for outgroup %d (0: No outgroup, 1 outgroup with one branch, 2 outgroup with two branches\n\n",  programOptions.outgroupSelection);
-//                    PrintUsage();
-//                }
-//
-//                if ( programOptions.outgroupSelection == 0)
-//                {
-//                    programOptions.thereisOutgroup = NO;
-//                    programOptions.outgroupBranchLength_RootSample = 0.0;
-//                    programOptions.outgroupBranchLength_Root1Root2 = 0.0;
-//                }
-//                else if (programOptions.outgroupSelection == 1)
-//                {
-//                    //*thereisOutgroup = YES;
-//                    programOptions.thereisOutgroup=YES;
-//                    programOptions.outgroupBranchLength_Root1Root2 = 0.0;
-//
-//                    if (fscanf(stdin, "%lf", &argumentDouble) < 0)
-//                    {
-//                        fprintf(stderr, "PARAMETER ERROR: Bad outgroup branch length (Root-Sample) value (%f)\n\n", argumentDouble);
-//                        PrintUsage();
-//                    }
-//                    programOptions.outgroupBranchLength_RootSample=argumentDouble;
-//                }
-//                else if (programOptions.outgroupSelection == 2)
-//                {
-//                    //*thereisOutgroup = YES;
-//                    programOptions.thereisOutgroup=YES;
-//                    if (fscanf(stdin, "%lf", &argumentDouble) < 0)
-//                    {
-//                        fprintf(stderr, "PARAMETER ERROR: Bad outgroup branch length (Root1-Root2) value (%f)\n\n", argumentDouble);
-//                        PrintUsage();
-//                    }
-//                    programOptions.outgroupBranchLength_Root1Root2=argumentDouble;
-//                    if (fscanf(stdin, "%lf", &argumentDouble) < 0)
-//                    {
-//                        fprintf(stderr, "PARAMETER ERROR: Bad outgroup branch length (Root2-Sample) value (%f)\n\n", argumentDouble);
-//                        PrintUsage();
-//                    }
-//                    programOptions.outgroupBranchLength_RootSample=argumentDouble;
-//                }
-//                else
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad selection for outgroup %d (0: No outgroup, 1 outgroup with one branch, 2 outgroup with two branches\n\n", argumentInt);
-//                    PrintUsage();
-//                }
-//                //outgroupBranchLength_RootSample = 0;
-//                break;
-//            case 'I':
-//                if (fscanf(stdin, "%lf", &argumentDouble) !=1 || argumentDouble < 0 || argumentDouble > 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad allelic imbalance (%f)\n\n", argumentDouble);
-//                    PrintUsage();
-//                }
-//                programOptions.allelicImbalance=argumentDouble;
-//                break;
-//            case 'R':
-//                if (programOptions.doHKY == YES)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Cannot specify a mutation matrix (GTR model) and a ti/tv (HKY model) at the same time\n\n");
-//                    PrintUsage();
-//                }
-//                if (fscanf(stdin, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf  %lf %lf %lf %lf",
-//                           &Mij[0][0], &Mij[0][1], &Mij[0][2], &Mij[0][3],
-//                           &Mij[1][0], &Mij[1][1], &Mij[1][2], &Mij[1][3],
-//                           &Mij[2][0], &Mij[2][1], &Mij[2][2], &Mij[2][3],
-//                           &Mij[3][0], &Mij[3][1], &Mij[3][2], &Mij[3][3])!=16)
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad general rate matrix (-rx x x x x x x x x x x) (AA AC AG AT CA CC CG CT GA GC GG GT TA TC TG TT)\n\n");
-//                    PrintUsage();
-//                }
-//
-//                if (Mij[0][0] != 0  || Mij[1][1] != 0 || Mij[2][2] != 0 || Mij[3][3] != 0)
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad general rate matrix: diagonals should be 0 \n\n");
-//                    PrintUsage();
-//                }
-//                //*thereIsMij = YES;
-//                programOptions.thereIsMij=YES;
-//                if (CheckMatrixSymmetry (Mij) == YES)
-//                {
-//
-//                    //programOptions.doJC = NO;
-//                    programOptions.doJC = YES;
-//                    programOptions.doHKY = NO;
-//                    //programOptions.doGTR = YES;
-//                    programOptions.doGTR = NO;
-//                    programOptions.doGTnR = NO;
-//
-//                }
-//                else
-//                {
-//
-//                    programOptions.doJC = NO;
-//                    programOptions.doHKY = NO;
-//                    //  programOptions.doGTR = NO;
-//                    programOptions.doGTR =  YES;
-//                    // programOptions.doGTnR = YES;
-//                    programOptions.doGTnR = NO;
-//                }
-//                break;
-//            case 'P':
-//                if (fscanf(stdin, "%lf", &argumentDouble) !=1 || argumentDouble < 0 || argumentDouble > 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad proportion of alternative model sites (%f)\n\n", argumentDouble);
-//                    PrintUsage();
-//                }
-//                programOptions.propAltModelSites=argumentDouble;
-//                if (programOptions.propAltModelSites < 0 || programOptions.propAltModelSites > 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad proportion of alternative model sites (%f). It has to be between 0 and 1\n\n", programOptions.propAltModelSites);
-//                    PrintUsage();
-//                }
-//                if (programOptions.propAltModelSites > 0 && programOptions.altModel != ISMhap && programOptions.doSimulateFixedNumMutations == YES)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: You cannot specify a proportion of non-ISM  sites bigger than zero if the number of mutations is fixed\n\n");
-//                    PrintUsage();
-//                }
-//                if (programOptions.alphabet == DNA && programOptions.propAltModelSites > 0)
-//                {
-//                    if (programOptions.altModel == Mk)
-//                    {
-//                        fprintf (stderr, "PARAMETER ERROR: The DNA alphabet and the alt model (%d) specified are incompatible", (int) programOptions.altModel);
-//                        PrintUsage();
-//                    }
-//                }
-//                else if (programOptions.alphabet == BINARY && programOptions.propAltModelSites > 0)
-//                {
-//                    if (programOptions.altModel == finiteDNA)
-//                    {
-//                        fprintf (stderr, "PARAMETER ERROR: The binary alphabet and the alt model (%d) specified are incompatible", (int) programOptions.altModel);
-//                        PrintUsage();
-//                    }
-//                }
-//                break;
-//            case 'M':
-//                if (fscanf(stdin, "%f", &argument) !=1 || argument < 0 || argument > 2)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad alternative mutation model (%d)\n\n", (int) argument);
-//                    PrintUsage();
-//                }
-//                programOptions.altModel = (int) argument;
-//                if (programOptions.alphabet == DNA && programOptions.propAltModelSites > 0)
-//                {
-//                    if (programOptions.altModel == Mk)
-//                    {
-//                        fprintf (stderr, "PARAMETER ERROR: The DNA alphabet and the model (%d) specified are incompatible", (int) argument);
-//                        PrintUsage();
-//                    }
-//                }
-//                else if (programOptions.alphabet == BINARY && programOptions.propAltModelSites > 0)
-//                {
-//                    if (programOptions.altModel == finiteDNA)
-//                    {
-//                        fprintf (stderr, "PARAMETER ERROR: The binary alphabet and the model (%d) specified are incompatible", (int) argument);
-//                        PrintUsage();
-//                    }
-//                }
-//                break;
-//            case 'T':
-//                ch = fgetc(stdin);
-//                if (isspace(ch))
-//                {
-//                    strcpy(filePaths.treeFile, "trees");
-//                }
-//                else
-//                {
-//                    j = 0;
-//                    do
-//                    {
-//                        filePaths.treeFile[j] = ch;
-//                        j++;
-//                        ch = fgetc(stdin);
-//                    }
-//                    while (!isspace(ch));
-//                    filePaths.treeFile[j] = '\0';
-//                }
-//                //*doPrintTrees = YES;
-//                programOptions.doPrintTrees = YES;
-//                break;
-//            case 'A':
-//                if (fscanf(stdin, "%lf %lf %d", &argumentDouble, &argumentDouble1, &argumentInt) != 3)
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad mean/var/model amplification error (%f ; %f ; model=%d)\n\n",argumentDouble, argumentDouble1, argumentInt);
-//                    PrintUsage();
-//                }
-//                programOptions.meanAmplificationError= argumentDouble;
-//                programOptions.varAmplificationError= argumentDouble1;
-//                programOptions.simulateOnlyTwoTemplates=argumentInt;
-//
-//                if ( programOptions.meanAmplificationError < 0 ||  programOptions.meanAmplificationError > 1)
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad mean amplification error (%f)\n\n",  programOptions.meanAmplificationError);
-//                    PrintUsage();
-//                }
-//                if ( programOptions.varAmplificationError < 0 || ( programOptions.meanAmplificationError > 0 &&  programOptions.varAmplificationError >= ( programOptions.meanAmplificationError * (1.0 -  programOptions.meanAmplificationError))))
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad variance amplification error (%f); it has to be < mean*(1-mean)\n\n",  programOptions.meanAmplificationError);
-//                    PrintUsage();
-//                }
-//                if ( programOptions.simulateOnlyTwoTemplates != 0 &&  programOptions.simulateOnlyTwoTemplates != 1)
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad simulateOnlyTwoTemplates error (%d); it has to be 0 (assume 4 templates) or 1 (assume 2 templates)",  programOptions.simulateOnlyTwoTemplates);
-//                    PrintUsage();
-//                }
-//                break;
-//            case 'E':
-//                if (fscanf(stdin, "%lf",  &argumentDouble) !=1 ||  argumentDouble < 0 ||  argumentDouble > 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad sequencing error (%f)\n\n",  argumentDouble);
-//                    PrintUsage();
-//                }
-//                programOptions.sequencingError= argumentDouble;
-//                break;
-//                //            case 'S':
-//                //                if (fscanf(stdin, "%f", &argument) !=1 || argument < 0 || argument > 1)
-//                //                {
-//                //                    fprintf (stderr, "PARAMETER ERROR: Bad alternative  do simulated data or not (%d)\n\n", (int) argument);
-//                //                    PrintUsage();
-//                //                }
-//                //                programOptions.doSimulateData= (int)argument;
-//                //                break;
-//            case 'K':
-//                ch = fgetc(stdin);
-//                if (isspace(ch))
-//                {
-//                    strcpy(filePaths.timesFile, "times");
-//                }
-//                else
-//                {
-//                    j = 0;
-//                    do
-//                    {
-//                        filePaths.timesFile[j] = ch;
-//                        j++;
-//                        ch = fgetc(stdin);
-//                    }
-//                    while (!isspace(ch));
-//                    filePaths.timesFile[j] = '\0';
-//                }
-//                //*doPrintTimes = YES;
-//                programOptions.doPrintTimes = YES;
-//                break;
-//            case 'J':
-//                if (fscanf(stdin, "%f", &argument) !=1 || argument < 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad number of mutations (%d)\n\n", (int) argument);
-//                    PrintUsage();
-//                }
-//                programOptions.numFixedMutations = (int) argument;
-//                //programOptions.doSimulateFixedNumMutations = YES;
-//                programOptions.doSimulateFixedNumMutations = YES;
-//                if (programOptions.propAltModelSites > 0 && programOptions.altModel != ISMhap)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: You cannot specify a fixed number of mutations if there is any non-ISM  site. Set the proportion of non-ISM diploid sites to zero\n\n");
-//                    PrintUsage();
-//                }
-//                break;
-//            case 'F':
-//                if (fscanf(stdin, "%lf %lf %lf %lf", &freq[0], &freq[1], &freq[2], &freq[3])!=4)
-//                {
-//                    fprintf(stderr, "PARAMETER ERROR: Bad Base Frequencies\n\n");
-//                    PrintUsage();
-//                }
-//                else if (freq[0] == freq[1] == freq[2] == freq[3])
-//                    programOptions.equalBaseFreq = YES;
-//                else
-//                    programOptions.equalBaseFreq = NO;
-//                sumPi = freq[0] + freq[1] + freq[2] + freq[3];
-//                if (sumPi != 1.0)
-//                {
-//                    freq[0]/=sumPi;
-//                    freq[1]/=sumPi;
-//                    freq[2]/=sumPi;
-//                    freq[3]/=sumPi;
-//                }
-//                break;
-//            case '?':
-//                PrintUsage();
-//                break;
-//                /*case 'H':
-//                 PrintUsage();
-//                 break;*/
-//            case 'V':
-//                if (fscanf(stdin, "%lf", &argumentDouble)!=1 || argumentDouble <= 0)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad coverage dispersion (%f)\n\n", argumentDouble);
-//                    PrintUsage();
-//                }
-//                programOptions.rateVarCoverage = YES;
-//                break;
-//            case 'Z':
-//                if (fscanf(stdin, "%lf", &argumentDouble)!=1 || argumentDouble < 0)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad germline SNP rate (%f)\n\n", argumentDouble);
-//                    PrintUsage();
-//                }
-//                programOptions.SNPrate = YES;
-//                break;
-//
-//            case 'H':
-//                if (fscanf(stdin, "%f", &argument) !=1 || argument < 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad sequencing coverage (%d)\n\n", (int) argument);
-//                    PrintUsage();
-//                }
-//                programOptions.coverage = (int) argument;
-//                if (programOptions.coverage > 0){
-//                    programOptions.doSimulateReadCounts=YES;
-//                    // *doSimulateReadCounts = YES;
-//
-//                }
-//                if (programOptions.genotypingError > 0 && programOptions.doSimulateReadCounts == YES)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Cannot specify a coverage larger than 0, which implies read count generation, and a genotyping error at the same time\n\n");
-//                    PrintUsage();
-//                }
-//                break;
+                 mcmcOptions.numChains =argumentInt;
+                break;
+            case 'I':
+                if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
+                {
+                    fprintf(stderr, "PARAMETER ERROR: Bad number of iterations (%d)\n\n", (int)argumentInt);
+                    PrintUsage();
+                }
+                mcmcOptions.Niterations =argumentInt;
+                break;
+            case 'S':
+                if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
+                {
+                    fprintf(stderr, "PARAMETER ERROR: Bad number of thinni g iterations (%d)\n\n", (int)argumentInt);
+                    PrintUsage();
+                }
+                mcmcOptions.thinning =argumentInt;
+                break;
+            case 'R':
+                if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
+                {
+                    fprintf(stderr, "PARAMETER ERROR: Bad max number of proposal before rejection  (%d)\n\n", (int)argumentInt);
+                    PrintUsage();
+                }
+                mcmcOptions.maxNumberProposalAttempts =argumentInt;
+                break;
+            case 'F':
+                if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0 || argumentInt > 1)
+                {
+                    fprintf(stderr, "PARAMETER ERROR: Bad option user fixed tree  (%d)\n\n", (int)argumentInt);
+                    PrintUsage();
+                }
+                programOptions.doUseFixedTree =argumentInt;
+                break;
+            case 'Z':
+                if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
+                {
+                    fprintf(stderr, "PARAMETER ERROR: Bad  number of clones  (%d)\n\n", (int)argumentInt);
+                    PrintUsage();
+                }
+                programOptions.numClones =argumentInt;
+                break;
+            case 'C':
+                if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0 || argumentInt > 1)
+                {
+                    fprintf(stderr, "PARAMETER ERROR: Bad option number of clones known  (%d)\n\n", (int)argumentInt);
+                    PrintUsage();
+                }
+                programOptions.numberClonesKnown =argumentInt;
+                break;
+            case 'T':
+                ch = fgetc(stdin);
+                if (isspace(ch))
+                {
+                    strcpy(filePaths.inputTreeFile, "trees.tre");
+                }
+                else
+                {
+                    j = 0;
+                    do
+                    {
+                        filePaths.inputTreeFile[j] = ch;
+                        j++;
+                        ch = fgetc(stdin);
+                    }
+                    while (!isspace(ch));
+                    filePaths.inputTreeFile[j] = '\0';
+                }
+                break;
+            case 'G':
+                ch = fgetc(stdin);
+                if (isspace(ch))
+                {
+                    strcpy(filePaths.inputGenotypeFileFasta, "geno.fasta");
+                }
+                else
+                {
+                    j = 0;
+                    do
+                    {
+                        filePaths.inputGenotypeFileFasta[j] = ch;
+                        j++;
+                        ch = fgetc(stdin);
+                    }
+                    while (!isspace(ch));
+                    filePaths.inputGenotypeFileFasta[j] = '\0';
+                }
+                break;
+            case 'P':
+                ch = fgetc(stdin);
+                if (isspace(ch))
+                {
+                    strcpy(filePaths.inputGenotypeFilePhylip, "geno.phylip");
+                }
+                else
+                {
+                    j = 0;
+                    do
+                    {
+                        filePaths.inputGenotypeFilePhylip[j] = ch;
+                        j++;
+                        ch = fgetc(stdin);
+                    }
+                    while (!isspace(ch));
+                    filePaths.inputGenotypeFilePhylip[j] = '\0';
+                }
+                break;
             default :
                 fprintf(stderr, "PARAMETER ERROR: Incorrect parameter: %c\n\n", ch);
                 PrintUsage();

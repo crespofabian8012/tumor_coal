@@ -8,6 +8,7 @@
 #include "mcmc_move.hpp"
 #include "data_utils.hpp"
 #include "random.h"
+#include <algorithm>
 using namespace std;
 MCMCmove::MCMCmove(Chain *chain,  string nameMove)
 {

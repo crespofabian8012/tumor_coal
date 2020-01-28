@@ -74,22 +74,29 @@ Population::Population(int ind, int ord, double timeOriginInput,
         
         delta= growthRate * effectPopSize;
         
-        isAlive=YES;
+        isAlive = YES;
         
         timeOriginSTD = timeOriginInput /effectPopSize;
         
         numActiveGametes = sampleSize;
 
-        numGametes=sampleSize;
+        numGametes = sampleSize;
 
         nodeIdAncestorMRCA = 0;
-        numCompletedCoalescences=0;
-        nextAvailableIdInmigrant =0;
+        numCompletedCoalescences = 0;
+        nextAvailableIdInmigrant = 0;
         numIncomingMigrations = 0;
         numPossibleMigrations = 0;
         doEstimateTimeOrigin = estimateTOR;
         
         MRCA=0;
+        
+        r = 0.0;
+        oldr = 0.0;
+        x = 0.0;
+        oldx = 0.0;
+        theta = 0.0;
+        oldTheta = 0.0;
 }
 double Population::ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones)
 {
@@ -481,7 +488,6 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
         fprintf (stderr, "\n\nERROR: firstInd out of range!\n");
         exit (-1);
     }
-    
     if (choosePairIndividuals== YES && numActiveGametes > 1) {
         
         do//choose randomly another individual to coalesce
@@ -552,7 +558,6 @@ bool Population::isNotPositive(double d) //test condition for remove_if algo.
 }
 void Population::multiplyCoalescentsEventByFactor(double factor)
 {
-    
     int j = 0;
     for (j = 0; j < CoalescentEventTimes.size(); j++) {
         CoalescentEventTimes.at(j) = CoalescentEventTimes.at(j) * factor;
@@ -560,7 +565,6 @@ void Population::multiplyCoalescentsEventByFactor(double factor)
 }
 void Population::multiplyMigrationsTimesByFactor(double factor)
 {
-    
     int j = 0;
     for (j = 0; j < immigrantsPopOrderedByModelTime.size(); j++) {
         immigrantsPopOrderedByModelTime.at(j).first = immigrantsPopOrderedByModelTime.at(j).first *factor;

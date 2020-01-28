@@ -34,8 +34,14 @@ public:
     double oldTimeOriginSTD; // standardized time of origin
     double timeOriginInput; // time of origin
     double oldTimeOriginInput; // time of origin
-    double delta; // growth rate * effectPopSize
+    double delta; // growth rate * effectPopSize = r * x
     double olddelta;
+    double r;
+    double oldr;
+    double x;
+    double oldx;
+    double theta;
+    double oldTheta;
     double effectPopSize;
     double oldeffectPopSize;
     double birthRate, deathRate, growthRate;

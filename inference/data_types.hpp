@@ -183,14 +183,15 @@ public:
     int    startChainsRandomTree;
     int    doTopologicalMoves;
     double slidingWindowSizeTotalEffectPopSize;
+    double slidingWindowSizeGrowtRate;
     double meanGrowthRate;
     double dispersion;
     double tuningParameter;
     double fixedLambda;
     int maxNumberProposalAttempts;
     int numberWarmUpIterations;
+    double paramMultiplierMoveTheta;
 };
-
 
 typedef struct {
     char  SNVgenotypesFile[MAX_NAME];

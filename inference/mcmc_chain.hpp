@@ -15,7 +15,6 @@
 
 #include "data_utils.hpp"
 
-
 //#include "population.hpp"
 
 //#include "utils.hpp"
@@ -51,6 +50,9 @@ public:
     double seqErrorRate;
     double dropoutRate;
     double oldmutationRate;
+    double theta;
+    double oldtheta;
+    
     vector<Population*> populations;
     
     vector<double > proportionsVector;
@@ -77,11 +79,10 @@ public:
     vector<double> sampledTotalEffectPopSize;
     vector<vector<double> > sampledPoportionVector;
     
-    //vector<MCMCmove*>  moves;
-
+    //vector<MCMCmove*>  moves
     //vector<pll_edge_node_t*> edges;
 public:
-    Chain( int chainNumber,
+    Chain(int chainNumber,
           int numClones,
           int gammaParam,
           double mutationRate,
@@ -232,6 +233,7 @@ public:
     void computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &availableEdges, std::map<pll_rnode_t *, Population *> &currentMrcaOfPopulation, std::string &healthyCellLabel);
     bool checkMigrationsOrder();
     double LogDensityCoalescentTimesForPopulation2();
+    void rescaleNodeDataFromRootedTree(double scale);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

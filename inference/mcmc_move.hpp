@@ -95,4 +95,14 @@ public:
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
+class NewPairGlobalScaledMutationRateRIMove:public MCMCmove{
+    Population *pop;
+public:
+    NewPairGlobalScaledMutationRateRIMove(Chain *chain, string nameMove, Population *pop);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void rollbackMove();
+    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void safeCurrentValue();
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+};
 #endif /* mcmc_move_hpp */

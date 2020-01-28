@@ -52,7 +52,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
     int argumentInt;
     long int argumentLongInt;
     
-    /* Used: N X C R D M O T K Y # */
+    /* Used: N # X C U B Y D O I R P M T A E K J F ? V Z H S */
     
     if (feof(stdin))
     {
@@ -443,14 +443,14 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 }
                 programOptions.sequencingError= argumentDouble;
                 break;
-//            case 'S':
-//                if (fscanf(stdin, "%f", &argument) !=1 || argument < 0 || argument > 1)
-//                {
-//                    fprintf (stderr, "PARAMETER ERROR: Bad alternative  do simulated data or not (%d)\n\n", (int) argument);
-//                    PrintUsage();
-//                }
-//                programOptions.doSimulateData= (int)argument;
-//                break;
+            case 'S':
+                if (fscanf(stdin, "%f", &argument) !=1 || argument < 0 )
+                {
+                    fprintf (stderr, "PARAMETER ERROR: Bad number of sites (%d)\n\n", (int) argument);
+                    PrintUsage();
+                }
+               programOptions.numSites= (int)argument;
+                break;
             case 'K':
                 ch = fgetc(stdin);
                 if (isspace(ch))

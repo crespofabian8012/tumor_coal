@@ -20,6 +20,7 @@ protected:
     double newLogConditionalLikelihoodTree;
     double newLogConditionalLikelihoodSequences;
 public:
+    string name();
     MCMCmove(Chain *chain, string nameMove);
     virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
     virtual void rollbackMove()=0;

@@ -71,11 +71,11 @@ int main(int argc, char* argv[] )
     programOptions.doUseGenotypes = YES;
     programOptions.doUseFixedTree =NO;
     programOptions.seed = 1248697;
-   
+    
     programOptions.mutationRate= 9.1e-8;
     programOptions.doUsefixedMutationRate=0;
     programOptions.doSimulateData=NO;
-
+    
     std::map<std::string,int> tipsLabelling;
     std::map<pll_unode_t, Population> tipsAssign;
     
@@ -89,7 +89,7 @@ int main(int argc, char* argv[] )
     mcmcOptions.Deltato = 1;
     mcmcOptions.fixedLambda=1;
     
-  programOptions.seqErrorRate=programOptions.sequencingError=0;
+    programOptions.seqErrorRate=programOptions.sequencingError=0;
     programOptions.dropoutRate=programOptions.ADOrate=0;
     
     vector<int> sampleSizes(programOptions.numClones);
@@ -99,9 +99,9 @@ int main(int argc, char* argv[] )
     InitFilesPathsOptions(filePaths, programOptions);
     //
     //    //3. do inference
-
-   // programOptions.numClones = 3;
-  
+    
+    // programOptions.numClones = 3;
+    
     //    //char *fileName ="Nietal_HS.fasta";
     
     fileNameFasta = filePaths.inputGenotypeFileFasta;
@@ -117,8 +117,8 @@ int main(int argc, char* argv[] )
     
     if (programOptions.numberClonesKnown==YES)
     {
-        mcmcOptions.totalEffectPopSizefrom = round(log(programOptions.numCells +2));
-        mcmcOptions.totalEffectPopSizeto = round(log(200000 ));
+        mcmcOptions.totalEffectPopSizefrom = round(log(10*programOptions.numCells));
+        mcmcOptions.totalEffectPopSizeto = round(log(200*programOptions.numCells ));
     }
     //
     //    for( i = 0 ; i < programOptions.numCells; i++)
@@ -129,13 +129,13 @@ int main(int argc, char* argv[] )
     pll_msa_t *msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
     if (!msa)
         fprintf (stderr, "Error reading phylip file \n");
-
+    
     vector<Chain*> chains(mcmcOptions.numChains);
-
+    
     treefileName = filePaths.inputTreeFile;
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
     pll_utree_t * initialUnrootedTree = pll_utree_parse_newick(treefileName);
-   
+    
     if (!initialRootedTree)
     {
         fprintf (stderr, "Error reading newick representation of initial rooted tree \n");
@@ -152,62 +152,61 @@ int main(int argc, char* argv[] )
         fprintf (stderr, "Error unrooting the tree \n");
         exit(1);
     }
-     //pllmod_utree_set_length_recursive(initialUnrootedTree, BRLEN_MIN, 1);
-      pll_unode_t *root = initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
+    //pllmod_utree_set_length_recursive(initialUnrootedTree, BRLEN_MIN, 1);
+    pll_unode_t *root = initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
     
-     pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
-//       char * newick = pll_utree_export_newick(initialUnrootedTree->vroot,NULL);
-//       char * rootedNewick = pll_utree_export_newick_rooted(initialUnrootedTree->vroot, 6.13);
-//       char * rootedNewick2 =  pll_rtree_export_newick(initialRootedTree->root,NULL);
-//
-//      printf("%s\n", newick);
-//      printf("%s\n", rootedNewick);
-//      printf("%s\n", rootedNewick2);
-//    
-//    Chain *chain;
-//    double loglh =  chain->LogConditionalLikelihoodSequences( msa,  newick, programOptions, 0, 0);
+    pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
+    //       char * newick = pll_utree_export_newick(initialUnrootedTree->vroot,NULL);
+    //       char * rootedNewick = pll_utree_export_newick_rooted(initialUnrootedTree->vroot, 6.13);
+    //       char * rootedNewick2 =  pll_rtree_export_newick(initialRootedTree->root,NULL);
+    //
+    //      printf("%s\n", newick);
+    //      printf("%s\n", rootedNewick);
+    //      printf("%s\n", rootedNewick2);
+    //    
+    //    Chain *chain;
+    //    double loglh =  chain->LogConditionalLikelihoodSequences( msa,  newick, programOptions, 0, 0);
     //free(newick);
     string healthyTipLabel = "healthycell";
     programOptions.healthyTipLabel ="healthycell";
-
+    
     Chain *currentChain;
     int currentIteration;
     //mcmcOptions.thinning  = 5000;
     //mcmcOptions.maxNumberProposalAttempts=10;
     int sampleEvery = mcmcOptions.thinning;
-    mcmcOptions.paramMultiplierMoveTheta = 5;
+    mcmcOptions.paramMultiplierMoveTheta = 3;
+    mcmcOptions.paramMultiplierEffectPopSize = 2;
     //mcmcOptions.Niterations = 10000000;
     mcmcOptions.numberWarmUpIterations =mcmcOptions.Niterations / 2.0;
-//candidate for parallelizing
-     for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
-   {
-       chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
-      
-       chains.at(chainNumber)->PrepareFiles(filePaths, programOptions, files);
-       chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,
-                                            files );
-       for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
-     {
-         fprintf (stderr, "\n Chain #%d, Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration );
-        chains.at(chainNumber)->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
-         
-       if (currentIteration % sampleEvery == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
-          {
-              chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,files, mcmcOptions);
-              //in the future i will write trees to a nexus file
-              ////PrintTrees(currentIteration, &(chains[chainNumber].root), 
-         }
-      }
-      chains.at(chainNumber)->currentNumberIerations =currentIteration;
-  }
+    //candidate for parallelizing
     for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
     {
-        currentChain= chains.at(chainNumber);
-        fprintf (stderr, "\n Number accepted moves %d, number of rejected moves %d \n", currentChain->totalAccepted,currentChain->totalRejected );
+        chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);
+        
+        chains.at(chainNumber)->PrepareFiles(filePaths, programOptions, files);
+        chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,
+                                                       files );
+        for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
+        {
+            fprintf (stderr, "\n Chain #%d, Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration );
+            chains.at(chainNumber)->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
+            
+            if (currentIteration % sampleEvery == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
+            {
+                chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,files, mcmcOptions);
+                //in the future i will write trees to a nexus file
+                ////PrintTrees(currentIteration, &(chains[chainNumber].root), 
+            }
+        }
+        chains.at(chainNumber)->currentNumberIerations =currentIteration;
+        if (currentIteration == mcmcOptions.numChains -1)//last iteration
+          fprintf (stderr, "\n Number accepted moves %d, number of rejected moves %d \n", chains.at(chainNumber)->totalAccepted,chains.at(chainNumber)->totalRejected );
     }
+
     //close files
     fclose(files.fplog);
     pll_msa_destroy(msa);
-  return 0;
+    return 0;
 }
 

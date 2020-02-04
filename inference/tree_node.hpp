@@ -21,10 +21,13 @@ public:
     TreeNode *left, *right, *anc1, *outgroup;
     int         index, label, isOutgroup;
     double      length, time,lengthModelUnits, timePUnits;
+    double      oldlength, oldtime, oldlengthModelUnits, oldtimePUnits;
+    double      timeInputTreeUnits;
     int         nodeClass; // 0: leaf, 1: internal, 2: 3: 4: outgroup 5: healthy cells (TODO: check later)
     int         indexOldClone, indexCurrentClone,orderCurrentClone;
     //indexCoalClone;
     double      effectPopSize;
+    double      oldeffectPopSize;
     char        cellName[MAX_NAME];
     char        observedCellName[MAX_NAME];
     vector<int>        maternalSequence;

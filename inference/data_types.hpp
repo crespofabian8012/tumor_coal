@@ -191,6 +191,7 @@ public:
     int maxNumberProposalAttempts;
     int numberWarmUpIterations;
     double paramMultiplierMoveTheta;
+    double paramMultiplierEffectPopSize;
 };
 
 typedef struct {

@@ -69,8 +69,8 @@ public:
     std::unordered_map<pll_unode_t*, Population*> tipsAssign;
     std::unordered_map<std::string, pll_unode_t*> labelsAssign;
     
-    std::map<pll_rnode_t*, Population*> rMRCAPopulation;
-    std::map<pll_rnode_t*, Population*> proposedrMRCAPopulation;
+    std::map<pll_rnode_t*, vector<Population*>> rMRCAPopulation;
+    std::map<pll_rnode_t*, vector<Population*>> proposedrMRCAPopulation;
     
     vector<pll_tree_edge_t *> edges;
     
@@ -186,11 +186,11 @@ public:
     Population * getPopulationbyIndex(int indexPopulation);
     int getPopulationIndex(char * label);
     std::map<pll_unode_t*, Population*> chooseTimeOfOriginsOnTree( long int *seed);
-    std::map<pll_rnode_t*, Population*>  initTimeOfOriginsOnRootedTree(  vector<pair<double, pll_tree_edge_t *> > edgeLengths, int numberPoints, string &healthyCellLabel);
+    std::map<pll_rnode_t*, vector<Population*>>  initTimeOfOriginsOnRootedTree(  vector<pair<double, pll_tree_edge_t *> > edgeLengths, int numberPoints, string &healthyCellLabel);
     void initNodeDataFromTree();
 
     void initPopulationSampleSizesFromRootNodeOnTree(pll_unode_t *p, Population *population );
-    bool initPopulationsSampleSizes(std::map<pll_rnode_t*, Population*>  rmrcaOfPopulation, string &healthyTipLabel );
+    bool initPopulationsSampleSizes(std::map<pll_rnode_t*, vector<Population*>>  rmrcaOfPopulation, string &healthyTipLabel );
     void initPopulationsCoalescentAndMigrationEvents(std::map<pll_unode_t*, Population*> mrcaOfPopulation );
     void initPopulationCoalescentAndMigrationEventsFromRootNodeOnTree(pll_unode_t *p, Population *population, std::map<pll_unode_t*, Population*> mrcaOfPopulation );
     void initProportionsVector();
@@ -203,9 +203,9 @@ public:
     static void computeNumberTipsSubTree(pll_unode_t *node, void *data);
     void initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignationKnown );
     void initNodeDataFromRootedTree();
-    void initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, Population*> &rmrcaOfPopulation,  string& healthyTipLabel);
-    void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, Population*> rmrcaOfPopulation, string& healthyTipLabel);
-    void initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *population, std::map<pll_rnode_t*, Population*> rmrcaOfPopulation, string &healthyTipLabel);
+    void initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, vector<Population*>> &rmrcaOfPopulation,  string& healthyTipLabel);
+    void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, vector<Population*>> rmrcaOfPopulation, string& healthyTipLabel);
+    void initPopulationSampleSizesFromNodeOnRootedTree(pll_rnode_t *p, Population *population, std::map<pll_rnode_t*, vector<Population*> > rmrcaOfPopulation, string &healthyTipLabel);
     void  initNumberTipsSubTree(pll_rnode_t *node);
     void initBranches(string& healthyCellLabel,vector<pair<double, pll_tree_edge_t *> > &edgeLengths, vector<pll_tree_edge_t *> &edges);
     void initTimeOriginSTD();
@@ -221,8 +221,8 @@ public:
     double DirichletDensity(vector<double> &proportionsVector,  vector<double> &concentrationVector, int sizeVector);
     void updateEffectPopSizesCurrentProportionsVector();
     int totalSampleSize();
-    std::map<pll_rnode_t*, Population*> chooseAvailableEdgeOnRootedTreeForPopulation(Population *pop, std::map<pll_rnode_t*, Population*> &mrcaOfPopulation, string &healthyCellLabel);
-    double sumAvailableBranchLengths(std::map<pll_rnode_t*, Population*> currentMRCAPopulation);
+    std::map<pll_rnode_t*, vector<Population*>> chooseAvailableEdgeOnRootedTreeForPopulation(Population *pop, std::map<pll_rnode_t*, vector<Population*>> &mrcaOfPopulation, string &healthyCellLabel);
+    double sumAvailableBranchLengths(std::map<pll_rnode_t*, vector<Population*>> currentMRCAPopulation);
     void chooseNewTimeofOriginOnEdge(Population *pop);
     void PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
     void writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files,  MCMCoptions &mcmcOptions );
@@ -234,6 +234,11 @@ public:
     bool checkMigrationsOrder();
     double LogDensityCoalescentTimesForPopulation2();
     void rescaleNodeDataFromRootedTree(double scale);
+    void computeAdjacentEdges( vector<pair<double, pll_tree_edge_t *> > &availableEdges, std::map<pll_rnode_t *, vector<Population *>> &currentMrcaOfPopulation, std::string &healthyCellLabel, Population *pop);
+    void safeTreeNodeCurrentTimePUnits();
+    void rollbackTreeNodeCurrentTimePUnits();
+    void updateNodeScaledTimeForRootedTree(double newScale);
+    Population* getYoungestPopulationOnEdge(pll_rnode_t* p, std::map<pll_rnode_t*, vector<Population*> >  rmrcaOfPopulation);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

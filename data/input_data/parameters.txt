@@ -3,15 +3,15 @@
 
 
 [*** GLOBAL SETTINGS ***]
-[number of replicates (mandatory)]	n1
-[number of sites s1]
+[number of replicates (mandatory)]	n10
+[number of sites] s100
 
 [*** POPULATION GENETICS SETTINGS ***]
 [Haploid - Diploid (0-1) (mandatory)]	x2
 
 [number of clones; clone number, sample size, population size (not effective), birth rate, death rate, time to origin (days, months, years; All clones with 0 = estimated) (mandatory)]
 c1
-	1 8 1000  0.1  0.0999 50000
+	1 20 1000  1  0.99999 50000
 [c1
 	1 20 1000  1  0.99999999 10000000]
 [c1

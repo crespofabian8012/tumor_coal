@@ -3512,12 +3512,13 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
         //        std::vector<int>::iterator it = std::find(branchLengths.begin(), branchLengths.end(), maxBranchLength);
         //   branchLengths.erase(std::remove(branchLengths.begin(), branchLengths.end(), maxBranchLength), branchLengths.end());
         double maxCumBranchLength ;
-        vector<double>  cumBranchLengths( branchLengths.size());
-        std::partial_sum(branchLengths.begin(), branchLengths.end(), cumBranchLengths.begin(), plus<double>());
+       
+        vector<double>  cumBranchLengths( branchLengths.size(),0);
+        std::partial_sum(branchLengths.begin(), branchLengths.end(), cumBranchLengths.begin(),  plus<double>());
         
         cumBranchLengths.insert(cumBranchLengths.begin(), 0);
         
-        maxCumBranchLength = *std::max_element(cumBranchLengths.begin(), cumBranchLengths.end());
+        maxCumBranchLength = cumBranchLengths.back(); //*std::max_element(cumBranchLengths.begin(), cumBranchLengths.end());
         
         
         std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),[maxCumBranchLength](double a) {return a /maxCumBranchLength; } );
@@ -3652,7 +3653,7 @@ bool Chain::initPopulationsSampleSizes( std::map<pll_rnode_t*, vector<Population
     bool existsZeroSampleSizePop=false;
     //      if (rmrcaOfPopulation.count(initialRootedTree->root)==0)
     //          printf("Error, the root node is not the MRCA of any population");
-    initPopulationSampleSizesFromNodeOnRootedTree(initialRootedTree->root, rmrcaOfPopulation[initialRootedTree->root].back(), rmrcaOfPopulation,healthyTipLabel );
+    initPopulationSampleSizesFromNodeOnRootedTree(initialRootedTree->root, NULL, rmrcaOfPopulation,healthyTipLabel );
     TreeNode *treeNode;
     for (unsigned int i = 0; i < numClones; ++i)
     {
@@ -3872,13 +3873,7 @@ Population* Chain::getYoungestPopulationOnEdge(pll_rnode_t* p, std::map<pll_rnod
     {
         vec = rmrcaOfPopulation[p];
         numberPoints =  vec.size();
-        if (numberPoints >1)
-        {
-            vec = rmrcaOfPopulation[p];
-            youngestPop = vec.at(0); // we take the youngest population since the
-            //population are ordered by time of origin
-        }
-       
+         youngestPop = vec.front();
     }
     return youngestPop;
 }

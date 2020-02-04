@@ -174,7 +174,7 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
         return;
     }
         
-    double logAcceptanceRate =computeLogAcceptanceProb(programOptions, mcmcOptions);
+    double logAcceptanceRate =computeLogAcceptanceProb(programOptions, mcmcOptions);//-inf when one sample size is 0 for the new Pair...
     printf("\n logAcceptancerate %lf \n", logAcceptanceRate);
     double randomNumber= randomUniformFromGsl();
     double logRandom=log(randomNumber);

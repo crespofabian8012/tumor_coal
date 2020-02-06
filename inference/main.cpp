@@ -89,6 +89,9 @@ int main(int argc, char* argv[] )
     mcmcOptions.Deltato = 1;
     mcmcOptions.fixedLambda=1;
     
+    mcmcOptions.GrowthRatefrom = -20;
+    mcmcOptions.GrowthRateto = log(log(2));//maximum growth rate of log(2) = 0.6931472
+    
     programOptions.seqErrorRate=programOptions.sequencingError=0;
     programOptions.dropoutRate=programOptions.ADOrate=0;
     

@@ -173,6 +173,8 @@ public:
     double thinning;
     double Deltafrom;
     double Deltato;
+    double GrowthRatefrom;
+    double GrowthRateto;
     double MutRatefrom;
     double MutRateto;
     double totalEffectPopSizefrom;

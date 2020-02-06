@@ -779,7 +779,6 @@ void NewPairGlobalScaledMutationRateRIMove::makeProposal(ProgramOptions &program
     else
        fprintf (stderr, "\n the new theta cannot be 0\n");
     
-    
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
         auto pop =  chain->populations[i];
@@ -862,11 +861,11 @@ double NewPairGlobalScaledMutationRateRIMove::computeLogAcceptanceProb(ProgramOp
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
         auto pop =  chain->populations[i];
-        priorDensityNewGrowthRate +=LogUniformDensity(pop->growthRate, mcmcOptions.MutRatefrom, mcmcOptions.MutRateto);
-        priorDensityCurrentGrowthRate +=LogUniformDensity(pop->oldGrowthRate, mcmcOptions.MutRatefrom, mcmcOptions.MutRateto);
+        priorDensityNewGrowthRate +=LogUniformDensity(pop->growthRate, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
+        priorDensityCurrentGrowthRate +=LogUniformDensity(pop->oldGrowthRate, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
     }
     
-    double logkernelTotalEffectPopulationSize=log(chain->totalEffectPopSize /chain->oldTotalEffectPopSize);//log(multiplier factor)
+    double logkernelTotalEffectPopulationSize=log((double)chain->totalEffectPopSize / chain->oldTotalEffectPopSize);//log(multiplier factor)
     
     double logkernelMutationRate=log(chain->mutationRate /chain->oldmutationRate);//log(multiplier factor)
     

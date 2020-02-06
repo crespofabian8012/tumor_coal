@@ -1732,7 +1732,7 @@ double Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions  )
         if (isnan(temp) || isinf(temp))
             fprintf (stderr, "\n isNan temp LogDensityTime\n");
         
-        product = product + popI->LogDensityTime( popI->timeOriginSTD);
+        product = product + temp;
         
         // fprintf (stderr, "\n Product log Density Time   = %lf after pop order %d,  popI->LogDensityTime( popI->timeOriginSTD) %lf,  popI->timeOriginSTD: %lf, popI->delta: %lf\n", product, popI->order, popI->LogDensityTime( popI->timeOriginSTD), popI->timeOriginSTD,popI->delta );
     }
@@ -1880,7 +1880,7 @@ double Chain::LogDensityCoalescentTimesForPopulation2(){
     double temp;
     double timeCurrentEvent;
     int numberAliveCells;
-    int currentCoalescentEvent=0;
+    int currentCoalescentEventInThisEpoch=0;
     int currentMigrationEvent=0;
     double termOnlyAfterFirstCoalEvent;
     double lastEventTimeBeforeMigration=0;
@@ -1891,11 +1891,10 @@ double Chain::LogDensityCoalescentTimesForPopulation2(){
     {
         popI = populations[i];
         numberAliveCells = popI->sampleSize;
-        currentCoalescentEvent=0;
+        currentCoalescentEventInThisEpoch=0;
         currentMigrationEvent=0;
         lastEventTimeBeforeMigration=0;
-        if (popI->sampleSize <=1)
-            continue;
+      
         immigrantsTimes.clear();
         std::transform(popI->immigrantsPopOrderedByModelTime.begin(), popI->immigrantsPopOrderedByModelTime.end(),
                        std::back_inserter(immigrantsTimes),
@@ -1915,11 +1914,11 @@ double Chain::LogDensityCoalescentTimesForPopulation2(){
                     result= result + temp;
                     temp = -1.0 * Population::LogCalculateH(timeCurrentEvent,popI->timeOriginSTD, popI->delta);
                     result= result + temp;
-                    termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta);
+                    termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(lastEventTimeBeforeMigration, popI->timeOriginSTD, popI->delta):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], popI->timeOriginSTD, popI->delta);//if no coalescent
                     temp =  (numberAliveCells / 2.0)* (numberAliveCells - 1.0)*(Population::FmodelTstandard(timeCurrentEvent,popI->timeOriginSTD, popI->delta)-termOnlyAfterFirstCoalEvent);
                     result= result - temp;
                     lastEventTimeBeforeMigration = timeCurrentEvent;
-                    currentCoalescentEvent++;
+                    currentCoalescentEventInThisEpoch++;
                     numberAliveCells--;
                 }
             }
@@ -1934,6 +1933,7 @@ double Chain::LogDensityCoalescentTimesForPopulation2(){
                 lastEventTimeBeforeMigration=timeCurrentEvent;
                 currentMigrationEvent++;
                 numberAliveCells++;
+                currentCoalescentEventInThisEpoch=0;//new epoch is starting
             }
         }
     }
@@ -2457,6 +2457,7 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
         {
             auto pop =  chain->populations[i];
             pop->x = chain->proportionsVector[i];
+            pop->theta = pop->x * chain->theta;
         }
 
         // chain->generateProportionsVectorFromDirichlet(alpha);
@@ -2467,7 +2468,7 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         chain->SetPopulationsBirthRate(mcmcOptions.fixedLambda);
-        chain->samplePopulationDeltaFromPriors(mcmcOptions, seed );
+        chain->samplePopulationGrowthRateFromPriors(mcmcOptions, seed );
         //chain->initPopulationsCoalescentAndMigrationEvents(mrcaOfPopulation);
         
         //chain->initializeCoalescentEventTimes(chain->initialUnrootedTree, sampleSizes);
@@ -3532,7 +3533,6 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
         pll_rnode_t * MRCA;
        
         do{
-            //random = RandomUniform(seed);
             //do{
                 random =randomUniformFromGsl();
                 nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
@@ -3540,30 +3540,26 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
            // while(std::find(eventIds.begin(), eventIds.end(), nextEvent) != eventIds.end());
 
             printf( "\n attempted edge id: %d out of  %lu and length %lf \n",nextEvent-1, cumBranchLengths.size()-1, branchLengths.at(nextEvent-1) );
-            
-            //            if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
-            //                printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent, edges.at(nextEvent)->length, branchLengths.at(nextEvent -1));
-            
+        
             if (edgeLengths.at(nextEvent-1).second->length != branchLengths.at(nextEvent -1))
                 printf( "the lengths of the branches %d does not match: %lf, %lf ",nextEvent -1, edgeLengths.at(nextEvent-1).second->length, branchLengths.at(nextEvent -1));
             
-            //ancestorMRCA =edges.at(nextEvent)->edge.rtree.parent;
-            //MRCA =edges.at(nextEvent)->edge.rtree.child;
+            nextEvent= 16;
             ancestorMRCA =edgeLengths.at(nextEvent-1).second->edge.rtree.parent;
             MRCA =edgeLengths.at(nextEvent-1).second->edge.rtree.child;
-            // if (ancestorsOfTimeOfOrigins.count(ancestorMRCA)==0)
-            //    if (ancestorsOfTimeOfOrigins.count(ancestorMRCA)==0)//the parents of the 2 events are differents
-            //  {
+      
             eventIds.push_back(nextEvent);
             ancestorsOfTimeOfOrigins.insert(ancestorMRCA);
             MRCAs.insert(MRCA);
-            // }
-            //  else if(ancestorsOfTimeOfOrigins.count(ancestorMRCA)>0 && ancestorMRCA->parent->parent!= NULL)//the parents of the 2 events are igual, but this same parent is not the left child of the root
-            // {
-            //                eventIds.push_back(nextEvent);
-            //                ancestorsOfTimeOfOrigins.insert(ancestorMRCA);
-            //                 MRCAs.insert(MRCA);
-            // }
+            
+            nextEvent= 22;
+            ancestorMRCA =edgeLengths.at(nextEvent-1).second->edge.rtree.parent;
+            MRCA =edgeLengths.at(nextEvent-1).second->edge.rtree.child;
+            
+            eventIds.push_back(nextEvent);
+            ancestorsOfTimeOfOrigins.insert(ancestorMRCA);
+            MRCAs.insert(MRCA);
+         
         }
         while(MRCAs.size() < numberPoints);
         int k=0;
@@ -3911,6 +3907,21 @@ void Chain::samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *
         popI->deathRate= popI->birthRate - popI->growthRate;
     }
 }
+void Chain::samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, long int *seed )
+{
+    int i;
+    Population *popI;
+    double randomGrowthRate;
+    for( i = 0 ; i < numClones; i++)
+    {
+        popI=populations[i];
+        randomGrowthRate = RandomLogUniform(mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
+        popI->growthRate =  randomGrowthRate;
+        popI->r =  popI->growthRate * totalEffectPopSize;
+        popI->deathRate= popI->birthRate - popI->growthRate;
+        popI->delta = popI->r * popI->theta;
+    }
+}
 void Chain::rescaleRootedTreeBranchLengths(double mutationRate)
 {
     if (mutationRate <=0)
@@ -4012,7 +4023,7 @@ double  Chain::proposalSlidingWindow( double oldvalue,  double windowSize)
 {
     double newvalue =0;
     newvalue = oldvalue + (randomUniformFromGsl()-0.5) * 0.5 * windowSize ;//windowSize is the distance  from the minimum to the  maximum value
-    if (newvalue <0)
+    if (newvalue <0 )
         newvalue = -  newvalue;
     return newvalue;
 }

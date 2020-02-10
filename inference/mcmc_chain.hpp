@@ -240,6 +240,7 @@ public:
     void updateNodeScaledTimeForRootedTree(double newScale);
     Population* getYoungestPopulationOnEdge(pll_rnode_t* p, std::map<pll_rnode_t*, vector<Population*> >  rmrcaOfPopulation);
     void samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, long int *seed );
+    void updateFatherPopOnSameEdge(std::map<pll_rnode_t*, vector<Population*> > &rmrcaOfPopulation, pll_rnode_t *p, Population * populationOfCurrentNode);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

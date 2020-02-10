@@ -583,7 +583,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
 //        {
 //        fprintf (stderr, "\n After. The population %d with order %d has MRCA node %d \n", it->second->index,  it->second->order,  it->first->node_index );
 //         }
-
+    chain->initPopulationsSampleSizes( chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
             auto pop =  chain->populations[i];

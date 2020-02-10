@@ -123,11 +123,7 @@ int main(int argc, char* argv[] )
         mcmcOptions.totalEffectPopSizefrom = round(log(10*programOptions.numCells));
         mcmcOptions.totalEffectPopSizeto = round(log(200*programOptions.numCells ));
     }
-    //
-    //    for( i = 0 ; i < programOptions.numCells; i++)
-    //        fprintf (stderr, "observed cell name %s\n", ObservedCellNames[i]);
-    //    //fprintf (stderr, "observed data %d \n", *ObservedData[0]);
-    //
+   
     fileNamePhylip =filePaths.inputGenotypeFilePhylip;
     pll_msa_t *msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
     if (!msa)
@@ -166,14 +162,11 @@ int main(int argc, char* argv[] )
     //      printf("%s\n", newick);
     //      printf("%s\n", rootedNewick);
     //      printf("%s\n", rootedNewick2);
-    //    
-    //    Chain *chain;
-    //    double loglh =  chain->LogConditionalLikelihoodSequences( msa,  newick, programOptions, 0, 0);
+  
     //free(newick);
     string healthyTipLabel = "healthycell";
     programOptions.healthyTipLabel ="healthycell";
     
-    Chain *currentChain;
     int currentIteration;
     //mcmcOptions.thinning  = 5000;
     //mcmcOptions.maxNumberProposalAttempts=10;
@@ -183,6 +176,7 @@ int main(int argc, char* argv[] )
     //mcmcOptions.Niterations = 10000000;
     mcmcOptions.numberWarmUpIterations =mcmcOptions.Niterations / 2.0;
     //candidate for parallelizing
+#pragma parallel for default(shared) private(chainNumber, currentIteration) firstprivate(files)
     for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
     {
         chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  initialUnrootedTree, initialRootedTree, healthyTipLabel);

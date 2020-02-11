@@ -43,4 +43,5 @@ void   randomDirichletFromGsl(int vectorSize, double alpha[], double *theta);
 void  randomDirichletFromVector (vector<double> alpha, vector<double> &outputVector);
 double randomGammaBoost( double shape, double scale );
 double randomGammaBoost2( double mean , double variance );
+double logMultinomialProbability(const  size_t size, const double *p, const unsigned int *n );
 #endif /* random_h */

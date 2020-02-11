@@ -9,6 +9,7 @@
 #include "data_utils.hpp"
 #include "random.h"
 #include <algorithm>
+
 using namespace std;
 MCMCmove::MCMCmove(Chain *chain,  string nameMove)
 {
@@ -587,15 +588,15 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
             auto pop =  chain->populations[i];
-            alpha[i]= pop->sampleSize;
+            alpha[i]= pop->sampleSize ;
            // fprintf (stderr, "\n New sample size %d for population order %d \n", pop->sampleSize, pop->order );
     }
-    int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
-    std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](double a) {return a /totalSampleSize; } );
+   // int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
+    //std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](double a) {return a /totalSampleSize; } );
     //chain->initProportionsVector();
-    chain->copyProportionsVector(alpha);
+   // chain->copyProportionsVector(alpha);
    // chain->generateProportionsVectorFromDirichlet(alpha);
-    chain->initEffectPopulationSizesFromProportionsVector();
+   // chain->initEffectPopulationSizesFromProportionsVector();
     chain->initTimeOriginSTD();
     chain->initPopulationMigration();//after setting the timeSTD
     
@@ -606,18 +607,38 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
 double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
+    vector<pair<double, pll_tree_edge_t *> > currentAvailableEdges;
+    vector<pair<double, pll_tree_edge_t *> > proposedAvailableEdges;
     
    newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
-    double currentSumAvailBranchLengths = chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
-      double newSumAvailBranchLengths = chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
-    double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);
+    double currentSumAvailBranchLengths = chain->computeAdjacentEdges(currentAvailableEdges, chain->rMRCAPopulation, programOptions.healthyTipLabel, pop, pop->oldrMRCA);
+    
+    double newSumAvailBranchLengths =chain->computeAdjacentEdges(proposedAvailableEdges, chain->proposedrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->rMRCA);
+
+    double currentProportionsArray[chain->numClones];
+    unsigned int currentSampleSizesArray[chain->numClones];
+    unsigned int proposedSampleSizesArray[chain->numClones];
+    for (unsigned int i = 0; i < chain->numClones; ++i)
+    {
+        auto pop =  chain->populations[i];
+        proposedSampleSizesArray[i]= pop->sampleSize ;
+        currentSampleSizesArray[i]= pop->oldSampleSize ;
+        currentProportionsArray[i]= pop->x;
+
+    }
+   
+    double currentlogMultinomialProb= logMultinomialProbability(chain->numClones, currentProportionsArray, currentSampleSizesArray);
+    
+    double proposedlogMultinomialProb=logMultinomialProbability(chain->numClones, currentProportionsArray, proposedSampleSizesArray);
+  
+    double numeratorQ=log(pop->oldrMRCA->length) - log(newSumAvailBranchLengths);
 //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
-    double denominatorQ= log(pop->rMRCA->length) + log(currentSumAvailBranchLengths);
+    double denominatorQ= log(pop->rMRCA->length) - log(currentSumAvailBranchLengths);
 //    priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
-    double sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ;
+    double sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ+proposedlogMultinomialProb ;
     
-    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ;
+    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ+currentlogMultinomialProb;
     
     double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
     return LogAcceptanceRate;

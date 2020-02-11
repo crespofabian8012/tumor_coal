@@ -234,13 +234,14 @@ public:
     bool checkMigrationsOrder();
     double LogDensityCoalescentTimesForPopulation2();
     void rescaleNodeDataFromRootedTree(double scale);
-    void computeAdjacentEdges( vector<pair<double, pll_tree_edge_t *> > &availableEdges, std::map<pll_rnode_t *, vector<Population *>> &currentMrcaOfPopulation, std::string &healthyCellLabel, Population *pop);
+    double  computeAdjacentEdges( vector<pair<double, pll_tree_edge_t *> > &availableEdges, std::map<pll_rnode_t *, vector<Population *>> &currentMrcaOfPopulation, std::string &healthyCellLabel, Population *pop, pll_rnode_t * mrca);
     void safeTreeNodeCurrentTimePUnits();
     void rollbackTreeNodeCurrentTimePUnits();
     void updateNodeScaledTimeForRootedTree(double newScale);
     Population* getYoungestPopulationOnEdge(pll_rnode_t* p, std::map<pll_rnode_t*, vector<Population*> >  rmrcaOfPopulation);
     void samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, long int *seed );
     void updateFatherPopOnSameEdge(std::map<pll_rnode_t*, vector<Population*> > &rmrcaOfPopulation, pll_rnode_t *p, Population * populationOfCurrentNode);
+    double sumAdjacentEdges(std::map<pll_rnode_t*, vector<Population*>> currentMRCAPopulation, pll_rnode_t*MRCA, Population *pop);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

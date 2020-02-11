@@ -315,3 +315,7 @@ double randomGammaBoost2( double mean , double variance )
     boost::variate_generator<boost::mt19937&,boost::gamma_distribution<> > var_gamma( rng, gd );
     return scale*var_gamma();
 }
+double logMultinomialProbability(const  size_t size, const double *p, const unsigned int *n )
+{
+    return gsl_ran_multinomial_lnpdf(size, p, n);
+}

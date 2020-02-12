@@ -4184,7 +4184,9 @@ void Chain::computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &ava
     else{// the MRCA of the population is in the dictionary
         availableEdges.clear();
         pll_tree_edge * edge;
+        //upper branch
         if (mrca->parent != NULL &&  mrca->parent->parent != NULL)
+            //not the edge from the tumor MRCA to the root
         {
             edge = new pll_tree_edge_t();
             edge->edge.rtree.child  =  mrca->parent;
@@ -4193,7 +4195,7 @@ void Chain::computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &ava
             sum += mrca->parent->length;
             availableEdges.push_back(make_pair(mrca->parent->length, edge));
         }
-        else if(mrca->parent != NULL &&  mrca->parent->parent == NULL &&  currentMrcaOfPopulation[pop->rMRCA].size() >=2 && std::string(mrca->label).compare(healthyCellLabel)!=0)// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
+        else if(mrca->parent != NULL &&  mrca->parent->parent == NULL &&  currentMrcaOfPopulation[mrca].size() >=2 )// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
         {
             edge = new pll_tree_edge_t();
             edge->edge.rtree.child  =  mrca->parent;
@@ -4202,7 +4204,9 @@ void Chain::computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &ava
             sum += mrca->parent->length;
             availableEdges.push_back(make_pair(mrca->parent->length, edge));
         }
-        if (mrca->left != NULL){
+        //left branch
+        if (mrca->left != NULL && mrca->parent != NULL &&  mrca->parent->parent != NULL &&  currentMrcaOfPopulation[mrca].size() >=2)//not a leaf and not the edge from the tumor MRCA to the root
+        {
             edge = new pll_tree_edge_t();
             edge->edge.rtree.child  =  mrca->left;
             edge->edge.rtree.parent = mrca;
@@ -4210,7 +4214,19 @@ void Chain::computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &ava
             sum += mrca->left->length;
             availableEdges.push_back(make_pair(mrca->left->length, edge));
         }
-        if (mrca->right != NULL)
+        else if(mrca->left != NULL && mrca->parent != NULL &&  mrca->parent->parent == NULL  &&  currentMrcaOfPopulation[mrca].size() >=2 )// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
+        {
+            edge = new pll_tree_edge_t();
+            edge->edge.rtree.child  =  mrca->left;
+            edge->edge.rtree.parent = mrca;
+            edge->length = mrca->left->length;
+            sum += mrca->left->length;
+            availableEdges.push_back(make_pair(mrca->left->length, edge));
+            
+            
+        }
+        //right branch
+        if (mrca->right != NULL && mrca->parent != NULL &&  mrca->parent->parent != NULL )//not a leaf and not the edge from the tumor MRCA to the root
         {
             edge = new pll_tree_edge_t();
             edge->edge.rtree.child  =  mrca->right;
@@ -4219,6 +4235,15 @@ void Chain::computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &ava
             sum += mrca->right->length;
             availableEdges.push_back(make_pair(mrca->right->length, edge));
         }
+       else if(mrca->right != NULL && mrca->parent != NULL &&  mrca->parent->parent == NULL &&  currentMrcaOfPopulation[mrca].size() >=2 && std::string(mrca->label).compare(healthyCellLabel)!=0)// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
+       {
+           edge = new pll_tree_edge_t();
+           edge->edge.rtree.child  =  mrca->right;
+           edge->edge.rtree.parent = mrca;
+           edge->length = mrca->right->length;
+           sum += mrca->right->length;
+           availableEdges.push_back(make_pair(mrca->right->length, edge));
+       }
     }
     return sum;
 }
@@ -4274,7 +4299,16 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseAvailableEdgeOnRootedTr
         copyMRCAOfPopulation.clear();
     copyMRCAOfPopulation.insert(currentMrcaOfPopulation.begin(), currentMrcaOfPopulation.end());
        
-        copyMRCAOfPopulation[pop->oldrMRCA].erase(std::remove(copyMRCAOfPopulation[pop->oldrMRCA].begin(), copyMRCAOfPopulation[pop->oldrMRCA].end(), pop), copyMRCAOfPopulation[pop->oldrMRCA].end());
+        if (copyMRCAOfPopulation[pop->oldrMRCA].size() > 1)
+        {
+            copyMRCAOfPopulation[pop->oldrMRCA].erase(std::remove(copyMRCAOfPopulation[pop->oldrMRCA].begin(), copyMRCAOfPopulation[pop->oldrMRCA].end(), pop), copyMRCAOfPopulation[pop->oldrMRCA].end());
+            
+        }
+        else if (copyMRCAOfPopulation[pop->oldrMRCA].size() == 1)
+        {
+            copyMRCAOfPopulation.erase(pop->oldrMRCA);
+        }
+            
         
         random =randomUniformFromGsl();
         nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());

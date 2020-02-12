@@ -71,6 +71,7 @@ public:
     
     std::map<pll_rnode_t*, vector<Population*>> rMRCAPopulation;
     std::map<pll_rnode_t*, vector<Population*>> proposedrMRCAPopulation;
+    std::map<pll_rnode_t*, vector<Population*>> currentrMRCAPopulation;
     
     vector<pll_tree_edge_t *> edges;
     

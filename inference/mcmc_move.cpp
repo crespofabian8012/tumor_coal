@@ -578,12 +578,18 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     {
 //        fprintf (stderr, "\n Before. The population %d with order %d has MRCA node %d, time origin input %lf, std %lf, and sample size %d\n", it->second->index,  it->second->order,  it->first->node_index, it->second->timeOriginInput, it->second->timeOriginSTD, it->second->sampleSize);
     }
+    
         chain->proposedrMRCAPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, chain->rMRCAPopulation, programOptions.healthyTipLabel);
     
-//       for ( it = chain->proposedrMRCAPopulation.begin(); it != chain->proposedrMRCAPopulation.end(); it++ )
-//        {
-//        fprintf (stderr, "\n After. The population %d with order %d has MRCA node %d \n", it->second->index,  it->second->order,  it->first->node_index );
-//         }
+    
+    chain->currentrMRCAPopulation.clear();
+    chain->currentrMRCAPopulation.insert(chain->rMRCAPopulation.begin(), chain->rMRCAPopulation.end());
+    
+    chain->rMRCAPopulation.clear();
+    chain->rMRCAPopulation.insert(chain->proposedrMRCAPopulation.begin(), chain->proposedrMRCAPopulation.end());
+    
+    
+
     chain->initPopulationsSampleSizes( chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
@@ -611,7 +617,7 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
     vector<pair<double, pll_tree_edge_t *> > proposedAvailableEdges;
     
    newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
-    double currentSumAvailBranchLengths = chain->computeAdjacentEdges(currentAvailableEdges, chain->rMRCAPopulation, programOptions.healthyTipLabel, pop, pop->oldrMRCA);
+    double currentSumAvailBranchLengths = chain->computeAdjacentEdges(currentAvailableEdges, chain->currentrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->oldrMRCA);
     
     double newSumAvailBranchLengths =chain->computeAdjacentEdges(proposedAvailableEdges, chain->proposedrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->rMRCA);
 
@@ -695,6 +701,11 @@ void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
     //pop->FatherPop->oldimmigrantsPopOrderedByModelTime.clear();
     pop->timeOriginInput = pop->oldTimeOriginInput;
     pop->timeOriginSTD = pop->oldTimeOriginSTD;
+    
+    chain->rMRCAPopulation.clear();
+    chain->rMRCAPopulation.insert(chain->currentrMRCAPopulation.begin(), chain->currentrMRCAPopulation.end());
+    
+    chain->proposedrMRCAPopulation.clear();
     //save information for the other populations
 //    for( i = 0 ; i < chain->numClones; i++)
 //    {

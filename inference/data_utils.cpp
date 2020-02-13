@@ -1555,14 +1555,12 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             healthyRoot->length = 0;
             //        healthyRoot->length = 0;
             
-            //        if (noisy > 2)
-            //            fprintf (stderr, "DONE");
-            //
+       
+          
             nextAvailable++;
             //
             //        /* connect the healthy ancestral cell with the tip healthy cell*/
-            //        if (noisy > 2)
-            //            fprintf (stderr, "\n>> Adding healthy tip ... ");
+       
             TreeNode* healthyTip = nodes[nextAvailable];
             healthyTip->left = NULL;
             healthyTip->right = NULL;
@@ -1573,28 +1571,18 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             healthyTip->anc1 = healthyRoot;
             healthyRoot->right = healthyTip;
             
-            double  healthyTipBranchLengthRatio =1;
+            double  healthyTipBranchLengthRatio = RandomUniform(seed);
             
-            //this is to put healthy tip at the same level than the other tips
-//            healthyTip->time = 0;
-//            healthyTip->timePUnits = 0;
-//            healthyTip->length = (healthyTip->anc1->timePUnits- healthyTip->timePUnits);
-//
-//            healthyTip->lengthModelUnits = (healthyTip->anc1->time- healthyTip->time);
 
-            //for now we put the healthy tip at the same time than the healthy root
-             healthyTip->time = healthyRoot->time;
-             healthyTip->timePUnits = healthyRoot->timePUnits;
+            //we put the  time of healthy tip inside the tree root and 0
+             healthyTip->time = healthyTipBranchLengthRatio * healthyRoot->time;
+             healthyTip->timePUnits = healthyTipBranchLengthRatio * healthyRoot->timePUnits;
             healthyTip->length = 0;
             healthyTip->lengthModelUnits = 0;
             
             healthyTip->isOutgroup= YES;
             
-            //connectNodes(p, healthyTip, healthyRoot);
-            //setLength(p);
-            //setLength(healthyTip);
-            //*treeRootInit=healthyRoot;
-            treeRootInit=healthyRoot;
+            treeRootInit = healthyRoot;
   
         }
 

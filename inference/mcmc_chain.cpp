@@ -1740,10 +1740,10 @@ double Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions  )
     {
         popJ = populations[j ];
         if (popJ->FatherPop !=NULL){
-            product = product + log( popJ->FatherPop->popSize);
             fatherPop = popJ->FatherPop;
-            temp=popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize;
-            temp=Population::LogCalculateH(popJ->timeOriginSTD * popJ->effectPopSize / fatherPop->effectPopSize, fatherPop->timeOriginSTD, fatherPop->delta);
+            product = product + log( fatherPop->x);
+            temp=popJ->timeOriginSTD * popJ->x / fatherPop->x;
+            temp=Population::LogCalculateH(temp, fatherPop->timeOriginSTD, fatherPop->delta);
             product = product  + temp;
             // fprintf (stderr, "\n Product calculate H    = %lf after pop order %d \n", product, popJ->order);
         }
@@ -4197,15 +4197,15 @@ void Chain::computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &ava
         }
         else if(mrca->parent != NULL &&  mrca->parent->parent == NULL &&  currentMrcaOfPopulation[mrca].size() >=2 )// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
         {
-            edge = new pll_tree_edge_t();
-            edge->edge.rtree.child  =  mrca->parent;
-            edge->edge.rtree.parent = mrca->parent->parent;
-            edge->length = mrca->parent->length;
-            sum += mrca->parent->length;
-            availableEdges.push_back(make_pair(mrca->parent->length, edge));
+//            edge = new pll_tree_edge_t();
+//            edge->edge.rtree.child  =  mrca->parent;
+//            edge->edge.rtree.parent = mrca->parent->parent;
+//            edge->length = mrca->parent->length;
+//            sum += mrca->parent->length;
+//            availableEdges.push_back(make_pair(mrca->parent->length, edge));
         }
         //left branch
-        if (mrca->left != NULL && mrca->parent != NULL &&  mrca->parent->parent != NULL &&  currentMrcaOfPopulation[mrca].size() >=2)//not a leaf and not the edge from the tumor MRCA to the root
+        if (mrca->left != NULL && mrca->parent != NULL &&  mrca->parent->parent != NULL )//not a leaf and not the edge from the tumor MRCA to the root
         {
             edge = new pll_tree_edge_t();
             edge->edge.rtree.child  =  mrca->left;
@@ -4340,16 +4340,18 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseAvailableEdgeOnRootedTr
         //////////////////////////////////////
        
         //if the new edge is the edge from the root to the healthy then move the root
-       if(pop->oldrMRCA->parent != NULL &&  pop->oldrMRCA->parent->parent == NULL &&  currentMrcaOfPopulation[pop->oldrMRCA].size() >=2 && std::string(pop->oldrMRCA->label).compare(healthyCellLabel)!=0)// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
+       if(pop->oldrMRCA->parent != NULL &&  pop->oldrMRCA->parent->parent == NULL &&  currentMrcaOfPopulation[pop->oldrMRCA].size() >=2)// && std::string(pop->oldrMRCA->label).compare(healthyCellLabel)!=0)// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
        {
-           pop->timeOriginInput =pop->timeOriginInput +  proposedTime;
+           pop->timeOriginInput =proposedTime;
            pop->scaledtimeOriginInput = pop->timeOriginInput / theta;
-           
-           pop->oldrMRCA->length=  pop->oldrMRCA->length + proposedTime ;
-           if (std::string(pop->oldrMRCA->parent->right->label).compare(healthyCellLabel)==0)
-              pop->oldrMRCA->parent->right->length = pop->oldrMRCA->parent->right->length - proposedTime;
-           else if (std::string(pop->oldrMRCA->parent->left->label).compare(healthyCellLabel)==0)
-               pop->oldrMRCA->parent->left->length = pop->oldrMRCA->parent->left->length - proposedTime;
+//           pop->timeOriginInput =pop->timeOriginInput +  proposedTime;
+//           pop->scaledtimeOriginInput = pop->timeOriginInput / theta;
+//
+//           pop->oldrMRCA->length=  pop->oldrMRCA->length + proposedTime ;
+//           if (std::string(pop->oldrMRCA->parent->right->label).compare(healthyCellLabel)==0)
+//              pop->oldrMRCA->parent->right->length = pop->oldrMRCA->parent->right->length - proposedTime;
+//           else if (std::string(pop->oldrMRCA->parent->left->label).compare(healthyCellLabel)==0)
+//               pop->oldrMRCA->parent->left->length = pop->oldrMRCA->parent->left->length - proposedTime;
            
        }
        else{
@@ -4362,8 +4364,6 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseAvailableEdgeOnRootedTr
             sort(copyMRCAOfPopulation[pop->rMRCA].begin(), copyMRCAOfPopulation[pop->rMRCA].end(), comparePopulationsByTimeOrigin);
         
         printf( "\n MRCA node id %d with time %lf and parent with time %lf was assigned to pop %d with order %d and time of origin %lf, scaled %lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->order,  pop->timeOriginInput, pop->scaledtimeOriginInput );
-        
-        
     }
     return copyMRCAOfPopulation;
 }

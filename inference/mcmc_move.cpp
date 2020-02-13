@@ -574,13 +574,8 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     int numberPoints = chain->numClones -1;
     std::map<pll_rnode_t*, vector<Population*>>  newrmrcaOfPopulation;
       map<pll_rnode_t*, vector<Population*>>::iterator it;
-    for ( it = chain->rMRCAPopulation.begin(); it != chain->rMRCAPopulation.end(); it++ )
-    {
-//        fprintf (stderr, "\n Before. The population %d with order %d has MRCA node %d, time origin input %lf, std %lf, and sample size %d\n", it->second->index,  it->second->order,  it->first->node_index, it->second->timeOriginInput, it->second->timeOriginSTD, it->second->sampleSize);
-    }
-    
-        chain->proposedrMRCAPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, chain->rMRCAPopulation, programOptions.healthyTipLabel);
-    
+ 
+    chain->proposedrMRCAPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, chain->rMRCAPopulation, programOptions.healthyTipLabel);
     
     chain->currentrMRCAPopulation.clear();
     chain->currentrMRCAPopulation.insert(chain->rMRCAPopulation.begin(), chain->rMRCAPopulation.end());

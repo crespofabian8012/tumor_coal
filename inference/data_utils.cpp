@@ -1512,7 +1512,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
             if (programOptions.outgroupSelection == 1)  /*** Root 2 times and outgroup ***/
                 currentTime = CurrentPop->timeOriginSTD; // origin of the clone; // currentTime + (outgroupBranchLength_Root1Root2 / mutationRate); // set time of the new root (from which the MRCA and outgroup nodes are derived)
             else if (programOptions.outgroupSelection == 2) { /*** Root 2 times and outgroup ***/
-                currentTime = CurrentPop->timeOriginSTD + (programOptions.outgroupBranchLength_Root1Root2 / CurrentPop->effectPopSize) ; // origin of the clone + time given by the user
+                currentTime = (CurrentPop->timeOriginSTD -programOptions.outgroupBranchLength_Root1Root2 * tumour_mrca->time) / (1.0- programOptions.outgroupBranchLength_Root1Root2 )  ; // origin of the clone + time given by the user
                 
             }
             else

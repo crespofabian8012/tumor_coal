@@ -3565,8 +3565,7 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
             MRCAs.insert(MRCA);
             pop->rMRCA = MRCA;
         
-            
-            
+
             u= (TreeNode *)(MRCA->data);
             v= (TreeNode *)(MRCA->parent->data);
            // proposedTime= u->timeInputTreeUnits+ (v->timeInputTreeUnits- u->timeInputTreeUnits)*proportionInsideChosenEdge;
@@ -3607,7 +3606,8 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
         }
         u= (TreeNode *)(pop->rMRCA->data);
         v= (TreeNode *)(pop->rMRCA->parent->data);
-        proposedTime =  u->timePUnits + (v->timePUnits- u->timePUnits) * randomUniformFromGsl();
+       // proposedTime =  u->timePUnits + (v->timePUnits- u->timePUnits) * randomUniformFromGsl();
+        proposedTime =( v->timePUnits > v->timePUnits)?v->timePUnits:  u->timePUnits;
         pop->timeOriginInput =proposedTime ;
         pop->scaledtimeOriginInput = proposedTime / theta;
         
@@ -4195,14 +4195,15 @@ void Chain::computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &ava
             sum += mrca->parent->length;
             availableEdges.push_back(make_pair(mrca->parent->length, edge));
         }
-        else if(mrca->parent != NULL &&  mrca->parent->parent == NULL &&  currentMrcaOfPopulation[mrca].size() >=2 )// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
+        else if(mrca->parent != NULL &&  mrca->parent->parent == NULL &&  currentMrcaOfPopulation[mrca].size() >=1 && pop->timeOriginInput == ((TreeNode *)mrca->parent->data)->timePUnits )// if it is the edge from the tumor MRCA to the root and  we have  at least 1 event and is the oldest population(the tiem of origin is the root of the tree)
         {
-//            edge = new pll_tree_edge_t();
-//            edge->edge.rtree.child  =  mrca->parent;
-//            edge->edge.rtree.parent = mrca->parent->parent;
-//            edge->length = mrca->parent->length;
-//            sum += mrca->parent->length;
-//            availableEdges.push_back(make_pair(mrca->parent->length, edge));
+            edge = new pll_tree_edge_t();
+            edge->edge.rtree.parent   =  mrca->parent;
+            
+            edge->edge.rtree.parent = mrca->parent->parent;
+            edge->length = mrca->parent->length;
+            sum += mrca->parent->length;
+            availableEdges.push_back(make_pair(mrca->parent->length, edge));
         }
         //left branch
         if (mrca->left != NULL && mrca->parent != NULL &&  mrca->parent->parent != NULL )//not a leaf and not the edge from the tumor MRCA to the root

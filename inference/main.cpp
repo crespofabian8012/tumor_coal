@@ -123,7 +123,7 @@ int main(int argc, char* argv[] )
         mcmcOptions.totalEffectPopSizefrom = round(log(10*programOptions.numCells));
         mcmcOptions.totalEffectPopSizeto = round(log(200*programOptions.numCells ));
     }
-   
+    
     fileNamePhylip =filePaths.inputGenotypeFilePhylip;
     pll_msa_t *msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
     if (!msa)
@@ -162,7 +162,7 @@ int main(int argc, char* argv[] )
     //      printf("%s\n", newick);
     //      printf("%s\n", rootedNewick);
     //      printf("%s\n", rootedNewick2);
-  
+    
     //free(newick);
     string healthyTipLabel = "healthycell";
     programOptions.healthyTipLabel ="healthycell";
@@ -198,9 +198,9 @@ int main(int argc, char* argv[] )
         }
         chains.at(chainNumber)->currentNumberIerations =currentIteration;
         if (currentIteration == mcmcOptions.numChains -1)//last iteration
-          fprintf (stderr, "\n Number accepted moves %d, number of rejected moves %d \n", chains.at(chainNumber)->totalAccepted,chains.at(chainNumber)->totalRejected );
+            fprintf (stderr, "\n Number accepted moves %d, number of rejected moves %d \n", chains.at(chainNumber)->totalAccepted,chains.at(chainNumber)->totalRejected );
     }
-
+    
     //close files
     fclose(files.fplog);
     pll_msa_destroy(msa);

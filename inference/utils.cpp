@@ -20,7 +20,7 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
     FILE *fastaFile;
     kseq_t *seq;
     int l1;
-
+    
     int  seqlength=0;
     int index;
     int max_length=0.0;
@@ -33,14 +33,14 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
         numberSeq=0;
         while ((l1 = kseq_read(seq)) >= 0 )
         {
- 
+            
             numberSeq=numberSeq+1;
             if ( l1 > max_length)
             {
                 max_length=l1;
             }
         }
-
+        
         programOptions.numSites=max_length;
         if (numberSeq >=1){
             // *numCells =numberSeq;//not counting the healthy cell
@@ -84,9 +84,9 @@ void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **O
             if (ObservedCellNames[current] != NULL)
             {
                 strcpy(ObservedCellNames[current], seq->name.s);
-
+                
             }
-
+            
             seqlength=0;
             currentSeq=seq->seq.s;
             // for ( t= currentSeq; *t != '\0'; t++) {

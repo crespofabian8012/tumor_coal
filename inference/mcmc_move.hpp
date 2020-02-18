@@ -31,28 +31,28 @@ public:
     Chain * getChain();
 public:
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-   
-   // virtual ~MCMCmove()=0;
+    
+    // virtual ~MCMCmove()=0;
 };
 
 class NewTotalEffectPopSizeMove:public MCMCmove{
 public:
     NewTotalEffectPopSizeMove(Chain *chain, string nameMove);
-     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-     void rollbackMove();
-     double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void rollbackMove();
+    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
-     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 
 class NewProportionsVectorMove:public MCMCmove{
 public:
     NewProportionsVectorMove(Chain *chain, string nameMove);
-     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-     void rollbackMove();
-     double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-     void safeCurrentValue();
-     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void rollbackMove();
+    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void safeCurrentValue();
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 class NewGrowthRateMoveForPopulation:public MCMCmove{
     Population *pop;
@@ -62,7 +62,7 @@ public:
     void rollbackMove();
     double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
-     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 
 class NewEffectPopSizeMoveForPopulation:public MCMCmove{//this is not used since we can change the total effective population size and the proportions vector to achieve the same

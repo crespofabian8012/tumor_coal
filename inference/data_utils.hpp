@@ -88,16 +88,16 @@ void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  i
 void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, vector<TreeNode *> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
                           int &labelNodes, double &currentTime, int &numNodes);
 TreeNode *BuildTree(vector<Population* > &populations,
-               Population *CurrentPop,
-               long int *seed,
-               ProgramOptions &programOptions,
-               vector<TreeNode *> &nodes,
-               vector<TreeNode *> &treeTips,
-               TreeNode *treeRootInit,
-               int &nextAvailable,
-               int &newInd,
-               double &currentTime,
-               int &labelNodes);
+                    Population *CurrentPop,
+                    long int *seed,
+                    ProgramOptions &programOptions,
+                    vector<TreeNode *> &nodes,
+                    vector<TreeNode *> &treeTips,
+                    TreeNode *treeRootInit,
+                    int &nextAvailable,
+                    int &newInd,
+                    double &currentTime,
+                    int &labelNodes);
 
 void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
 
@@ -111,20 +111,20 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
 double SumBranches (TreeNode *p, double mutationRate);
 
 TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &populations,
-                           int &numNodes,
-                           int numClones,
-                           ProgramOptions &programOptions,
-                           double cumNumCA,
-                           double meanNumCA,
-                           double cumNumMIG,
-                           double meanNumMIG,
-                           int  &numMIG,
-                           int  &numCA,
-                           double &numEventsTot,
-                           vector<TreeNode *> &nodes,
-                           vector<TreeNode *> &treeTips,
-                           TreeNode    *treeRootInit
-                           ) ;
+                                int &numNodes,
+                                int numClones,
+                                ProgramOptions &programOptions,
+                                double cumNumCA,
+                                double meanNumCA,
+                                double cumNumMIG,
+                                double meanNumMIG,
+                                int  &numMIG,
+                                int  &numCA,
+                                double &numEventsTot,
+                                vector<TreeNode *> &nodes,
+                                vector<TreeNode *> &treeTips,
+                                TreeNode    *treeRootInit
+                                ) ;
 void SimulatePopulation( Population *popI, vector<Population*> &populations,
                         ProgramOptions &programOptions,
                         long int *seed,

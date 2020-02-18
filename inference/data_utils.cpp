@@ -119,7 +119,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 //*numClones = (int) argument;
                 programOptions.numClones=(int) argument;
                 
-
+                
                 
                 for (j = 0; j <  programOptions.numClones; j++)
                 {
@@ -449,7 +449,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                     fprintf (stderr, "PARAMETER ERROR: Bad number of sites (%d)\n\n", (int) argument);
                     PrintUsage();
                 }
-               programOptions.numSites= (int)argument;
+                programOptions.numSites= (int)argument;
                 break;
             case 'K':
                 ch = fgetc(stdin);
@@ -587,7 +587,7 @@ void ReadUntil(FILE *fv, char stopChar, string what)
 /* InitListClones*/
 void InitListClones(vector<Population *> &populations, int numClones, int verbose, const vector<int> &CloneNameBegin, const vector<int> &CloneSampleSizeBegin, const vector<double> &CloneBirthRateBegin,  const vector<double> &CloneDeathRateBegin, const vector<int> &ClonePopSizeBegin,
                     const vector<double> &CloneTimeOriginInput,  int TotalNumSequences  )
- {
+{
     int z;
     for (z = 0; z <= (numClones - 1); z++)
     {
@@ -601,7 +601,7 @@ void InitListClones(vector<Population *> &populations, int numClones, int verbos
         
         auto pop = new Population(ind, ord, timeOriginInput, sampleSize, popSize, birthRate, deathRate, NO);
         populations.push_back(pop);
-
+        
         if (verbose > 1)
             printf("\t%d\t\t", CloneNameBegin[z ]);
         if ((z + 1) != CloneNameBegin[z])
@@ -614,7 +614,7 @@ void InitListClones(vector<Population *> &populations, int numClones, int verbos
             fprintf (stderr, "PARAMETER ERROR: The growth rate cannot be lower than the death rate(Delta parameter negative, Delta=(%10.9lf)) for population %d\n\n", pop->delta, z);
             PrintUsage();
         }
-
+        
         if (verbose > 1)
         {
             printf("\t\t\t%d\t\t\t", CloneSampleSizeBegin[z ]);
@@ -629,7 +629,7 @@ void InitListClones(vector<Population *> &populations, int numClones, int verbos
     }
 }
 
- void InitNumberNodes(double &TotalBirthRate, double &TotalDeathRate, int &TotalN,  vector<Population *> &populations, ProgramOptions &programOptions) {
+void InitNumberNodes(double &TotalBirthRate, double &TotalDeathRate, int &TotalN,  vector<Population *> &populations, ProgramOptions &programOptions) {
     programOptions.TotalNumSequences = 0;
     TotalN = 0;
     TotalBirthRate = 0.0;
@@ -654,7 +654,7 @@ void InitListClones(vector<Population *> &populations, int numClones, int verbos
 void ListClonesAccordingTimeToOrigin(vector<Population *> &populations, int numClones)
 {
     sort(populations.begin(), populations.end(), comparePopulationsByTimeOrigin);
-//    qsort(populations, numClones, sizeof(Population), comparePopulationsByTimeOrigin);
+    //    qsort(populations, numClones, sizeof(Population), comparePopulationsByTimeOrigin);
 }
 /***************************** comparePopulationsByTimeOrigin*******************************/
 bool comparePopulationsByTimeOrigin(const void *s1, const void *s2)
@@ -732,12 +732,12 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     int    numISMdeletions, numISMCNLOH;
     int cumNumMUperTree;
     int     numAltModelSites = 0, numDefaultModelSites = 0, numISMmutations = 0, altModel = 0;
-
+    
     double cumfreq[4];
     double cumMij[4][4];
     double Eij[4][4];
     double cumEij[4][4];
-
+    
     double    kappa = 0.0, beta = 0.0, freqR = 0.0, freqY = 0.0, freqAG = 0.0, freqCT = 0.0;
     double    Rmat[6], NRmat[12], Cijk[256], Root[4];
     double *triNucFreq;
@@ -773,11 +773,11 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     /* allocate memory for site information (equal for maternal and paternal) */
     //SiteStr* allSites = (SiteStr*) calloc (programOptions.numSites, sizeof(SiteStr));
     vector<SiteStr> allSites(programOptions.numSites);
-//    if (!allSites)
-//    {
-//        fprintf (stderr, "Could not allocate the allSites structure\n");
-//        exit (-1);
-//    }
+    //    if (!allSites)
+    //    {
+    //        fprintf (stderr, "Could not allocate the allSites structure\n");
+    //        exit (-1);
+    //    }
     for (i=0; i< programOptions.numSites; i++)
     {
         //allSites[i].alternateAlleles = (int *) calloc (4, sizeof(int));
@@ -799,7 +799,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     vector<double> proportionsVector(programOptions.numClones);
     vector<int> varEvent(programOptions.numDataSets);
     vector<double> varTimeGMRCA(programOptions.numDataSets);
-
+    
     ////////////////////////////////////////////////////////////////////////////////////////////
     TreeNode *init_root = new TreeNode(programOptions.numSites);
     
@@ -812,10 +812,10 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     programOptions.doUseObservedCellNames=NO;
     //int ***data;
     ValidateParameters(programOptions,CloneNameBegin , CloneSampleSizeBegin, ClonePopSizeBegin);
-
+    
     InitListPossibleMigrations(populations, programOptions.numClones);
     InitPopulationsCoalescentEvents( programOptions.numClones,  populations);
-   
+    
     for (dataSetNum = 0; dataSetNum < programOptions.numDataSets; dataSetNum++)// dataSetNum refers to a simulated tree number
     {
         if (programOptions.doPrintSeparateReplicates == YES)
@@ -833,7 +833,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         }
         varEvent[dataSetNum] = 0;
         varTimeGMRCA[dataSetNum] = 0.0;
-   
+        
         numCA = numMIG = 0;
         countTMRCA = 0.0;
         /* coalescent tree */
@@ -842,19 +842,19 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
             fprintf (stderr, "\n>> Start coalescent tree .. \n");
         
         TreeNode *root = MakeCoalescenceTree2 (&programOptions.seed, populations,
-                              programOptions.numNodes,
-                              programOptions.numClones,
-                              programOptions,
-                              cumNumCA,
-                              meanNumCA,
-                              cumNumMIG,
-                              meanNumMIG,
-                              numMIG,
-                              numCA,
-                              numEventsTot,
-                              nodes,
-                              treeTips,
-                              init_root) ;
+                                               programOptions.numNodes,
+                                               programOptions.numClones,
+                                               programOptions,
+                                               cumNumCA,
+                                               meanNumCA,
+                                               cumNumMIG,
+                                               meanNumMIG,
+                                               numMIG,
+                                               numCA,
+                                               numEventsTot,
+                                               nodes,
+                                               treeTips,
+                                               init_root) ;
         if (programOptions.noisy > 1)
             fprintf (stderr, "\n>> Finishing coalescent tree ... DONE");
         cumNumCA += numCA;
@@ -866,15 +866,15 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         varTimeGMRCA[dataSetNum] = countTMRCA;
         varEvent[dataSetNum] = numCA + numMIG;
         // counterTime = counterTime + counterTimeInit;
-       
+        
         /*************** output files *************/
         newickString2=NULL;
         newickString2 = toNewickString2 ( root, programOptions.mutationRate,     programOptions.doUseObservedCellNames);
         printf("\n newick = %s  \n", newickString2);
-      
+        
         if (programOptions.doPrintTrees == YES)
         {
-   
+            
             PrintTrees(dataSetNum, root, files.fpTrees, programOptions.mutationRate, programOptions.doUseObservedCellNames);
             PrintTrees2(dataSetNum, root, files.fpTrees2, programOptions.mutationRate, NULL, NO);
         }
@@ -895,7 +895,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         
         free(newickString2);
         newickString2=NULL;
-      
+        
         for (z = 0; z < programOptions.MutationAssignNum; z++)
         {
             numMU=0;
@@ -915,7 +915,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
                 allSites[i].numMutationsMaternal =0;
                 allSites[i].numMutationsPaternal =0;
             }
-
+            
             InitializeGenomes (root, &(programOptions.seed), programOptions.alphabet, programOptions.doUserGenome,programOptions.numSites,  allSites, programOptions.doGeneticSignatures,cumfreq, triNucFreq, NULL);
             // SNPrate=0.01;
             // HEALTHY_ROOT=treeRootInit[0]->label;
@@ -925,8 +925,8 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
             //        if (SNPrate > 0)
             //            AddGermlineVariation (treeRootInit[0], &seed,  numSites, SNPrate, allSites, alphabet,  data,   HEALTHY_ROOT, cumMij );
             
-
-
+            
+            
             EvolveSitesOnTree (root, MATERNAL, &(programOptions.seed), programOptions.rateVarAmongSites,  programOptions.numSites,  allSites, programOptions.doGeneticSignatures, programOptions.alphaSites, programOptions.propAltModelSites ,  numDefaultModelSites, numAltModelSites, DefaultModelSites, AltModelSites,  totalTreeLength , numISMmutations, programOptions.numFixedMutations, numSNVmaternal,  programOptions.doSimulateFixedNumMutations,  programOptions.alphabet,  numMU, cumMij,  programOptions.altModel, programOptions.altModelMutationRate, programOptions.doUserTree,  programOptions.doJC,  programOptions.doHKY,  programOptions.doGTR,
                                programOptions.doGTnR,  freqR,  freqY,
                                freqAG, freqCT, programOptions.titv, freq, Mij ,   Root,  Cijk);
@@ -935,7 +935,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
                                freqAG, freqCT, programOptions.titv, freq, Mij,   Root,  Cijk );
             cumNumMU += numMU;
             cumNumMUSq += pow(numMU,2);
-          
+            
             if (programOptions.doPrintTrueHaplotypes == YES)
             {
                 if (programOptions.doPrintSeparateReplicates == NO)
@@ -962,85 +962,85 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
                     fclose(files.fpTrueHaplotypes);
                 
             }
-       
+            
             
         }/* end of mutation simulation process */
         
-
-   
+        
+        
     }
     
- 
- 
+    
+    
     for (i=0; i< programOptions.numSites; i++)
     {
         free( allSites[i].alternateAlleles);
     }
- 
+    
     
     return 0;
 }
 /***************************** ValidateParameters*******************************/
-        /* Validate parameters*/
-        
+/* Validate parameters*/
+
 void ValidateParameters(ProgramOptions &programOptions,
                         vector<int> CloneNameBegin , vector<int> CloneSampleSizeBegin, vector<int> ClonePopSizeBegin)
 {
-            if (programOptions.noisy > 1)
-            {
-                printf("\n>> Settings ..\n");
-                
-                printf("Number of replicates = %d\n", programOptions.numDataSets);
-                if (programOptions.Nscaling == 1)
-                    printf("Haploid data (%d)\n", programOptions.Nscaling);
-                else
-                    printf("Diploid data (%d)\n", programOptions.Nscaling);
-                printf("Number of clones = %d\n", programOptions.numClones);
-            }
-            for (int j = 0; j < programOptions.numClones; j++)
-            {
-                // Checking
-                //  if (numClones <  CloneNameBegin[j] )
-                if (programOptions.numClones <  CloneNameBegin[j] )
-                {
-                    fprintf (stderr, "PARAMETER ERROR: Clon (%d) is higher than the number of clones (%d). (d)\n\n",  CloneNameBegin[j], programOptions.numClones);
-                    PrintUsage();
-                }
-                if ( CloneSampleSizeBegin[j] > ClonePopSizeBegin[j] )
-                {
-                    fprintf (stderr, "PARAMETER ERROR: Clone (%d) cannot have sample size (%d) higher than population size (%d). (d)\n\n", j, CloneSampleSizeBegin[j] , ClonePopSizeBegin[j]);
-                    PrintUsage();
-                }
-            }
-        }
-    /***************** bbinClones *****************/
-    /* binary search in the probabilities with clones */
-        int bbinClones (double dat, double *v, int n)
+    if (programOptions.noisy > 1)
+    {
+        printf("\n>> Settings ..\n");
+        
+        printf("Number of replicates = %d\n", programOptions.numDataSets);
+        if (programOptions.Nscaling == 1)
+            printf("Haploid data (%d)\n", programOptions.Nscaling);
+        else
+            printf("Diploid data (%d)\n", programOptions.Nscaling);
+        printf("Number of clones = %d\n", programOptions.numClones);
+    }
+    for (int j = 0; j < programOptions.numClones; j++)
+    {
+        // Checking
+        //  if (numClones <  CloneNameBegin[j] )
+        if (programOptions.numClones <  CloneNameBegin[j] )
         {
-            int init, end, middle;
-            
-            if (dat >= 0 && dat <= v[1])
-                return (1); /* first population */
-            
-            init = 1;
-            end = n;
-            
-            while (init <= end)
-            {
-                middle = (init + end) / 2;
-                
-                if (dat > v[middle - 1] && dat <= v[middle])
-                    return (middle);
-                else if (dat > v[middle])
-                    init = middle + 1;
-                else
-                    end = middle - 1;
-            }
-            
-            fprintf (stderr, "\n Warning in bbinClones function");
-            exit (-1);
-            return -1;
+            fprintf (stderr, "PARAMETER ERROR: Clon (%d) is higher than the number of clones (%d). (d)\n\n",  CloneNameBegin[j], programOptions.numClones);
+            PrintUsage();
         }
+        if ( CloneSampleSizeBegin[j] > ClonePopSizeBegin[j] )
+        {
+            fprintf (stderr, "PARAMETER ERROR: Clone (%d) cannot have sample size (%d) higher than population size (%d). (d)\n\n", j, CloneSampleSizeBegin[j] , ClonePopSizeBegin[j]);
+            PrintUsage();
+        }
+    }
+}
+/***************** bbinClones *****************/
+/* binary search in the probabilities with clones */
+int bbinClones (double dat, double *v, int n)
+{
+    int init, end, middle;
+    
+    if (dat >= 0 && dat <= v[1])
+        return (1); /* first population */
+    
+    init = 1;
+    end = n;
+    
+    while (init <= end)
+    {
+        middle = (init + end) / 2;
+        
+        if (dat > v[middle - 1] && dat <= v[middle])
+            return (middle);
+        else if (dat > v[middle])
+            init = middle + 1;
+        else
+            end = middle - 1;
+    }
+    
+    fprintf (stderr, "\n Warning in bbinClones function");
+    exit (-1);
+    return -1;
+}
 
 /********************** InitListPossibleMigrations ************************/
 /* Initialize the list of possible migrations times in all populations */
@@ -1119,11 +1119,11 @@ void AssignCurrentSequencesToPopulation(vector<Population *> &populations, vecto
     vector<int> CumSumNodes(numClones+1);
     //int*  CumSamNodes = (int *) malloc ((numClones + 1)* (long) sizeof(int)); /* cumulative of samples in clones */
     
-//            if (!CumSamNodes)
-//            {
-//                fprintf (stderr, "Could not allocate CumSamNodes (%lu bytes)\n", (numNodes + 1) * (long) sizeof(int));
-//                exit (1);
-//            }
+    //            if (!CumSamNodes)
+    //            {
+    //                fprintf (stderr, "Could not allocate CumSamNodes (%lu bytes)\n", (numNodes + 1) * (long) sizeof(int));
+    //                exit (1);
+    //            }
     
     CumSumNodes[0] = 0;
     
@@ -1164,7 +1164,7 @@ void AssignCurrentSequencesToPopulation(vector<Population *> &populations, vecto
                 
                 pop->idsGametes.push_back(j);
                 pop->numGametes = pop->numGametes+1;
-
+                
                 p->indexOldClone = currentPopIndex;
                 p->indexCurrentClone = currentPopIndex;
                 p->effectPopSize= pop->effectPopSize;
@@ -1186,675 +1186,675 @@ void AssignCurrentSequencesToPopulation(vector<Population *> &populations, vecto
     nextAvailable = numActiveGametes;
     labelNodes = labelNodes + 1;
 }
-        /********************** ChooseRandomIndividual************************/
-        /* ChooseRandomIndividual  */
-        void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  int *secondInd, long *seed, int choosePairIndividuals)
-        {
-            double random;
-            int k, w;
-            double *cumPopulPart = (double *) malloc((popI->numActiveGametes + 1)* (long) sizeof(double));
-            if (!cumPopulPart)
-            {
-                fprintf (stderr, "Could not allocate cumPopulPart (%lu bytes)\n", (popI->numActiveGametes + 1) * (long) sizeof(double));
-                exit (-1);
-            }
-            cumPopulPart[0] = 0;
-            for (k = 1; k <= popI->numActiveGametes; k++)
-                cumPopulPart[k] = 0;
-            for (k = 1; k <= popI->numActiveGametes; k++)
-                cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (popI->numActiveGametes);
-            
-            w = 0;
-            //    for (k = 0; k < numClones; k++)
-            //    {
-            //        pop = *(populations + k);
-            //        w = w + (pop->numActiveGametes);
-            //        //fprintf (stderr, "\nClone %d with %d gametes. w=%d ", k, pop->numActiveGametes, w);
-            //    }
-            //    if (w != numActiveGametes)
-            //    {
-            //        fprintf (stderr, "\nError. The sum of partial active gametes is different to the total number of gametes, w %d != numActiveGametes %d. In Coalescence.", w, numActiveGametes);
-            //        exit (-1);
-            //    }
-            random = RandomUniform(seed);
-            //fprintf (stderr, "\nran = %lf ", ran);
-            *firstInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
-            w = 0;
-            
-            if (*firstInd >= popI->numActiveGametes || *firstInd < 0 ) /* checking */
-            {
-                fprintf (stderr, "\n\nERROR: firstInd out of range!\n");
-                exit (-1);
-            }
-            
-            if (choosePairIndividuals== YES && popI->numActiveGametes > 1) {
-                
-                do//choose randomly another individual to coalesce
-                {
-                    random = RandomUniform(seed);
-                    *secondInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
-                    
-                } while (*firstInd == *secondInd  );
-            }
-            free (cumPopulPart);
-            cumPopulPart=NULL;
-        }
+/********************** ChooseRandomIndividual************************/
+/* ChooseRandomIndividual  */
+void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  int *secondInd, long *seed, int choosePairIndividuals)
+{
+    double random;
+    int k, w;
+    double *cumPopulPart = (double *) malloc((popI->numActiveGametes + 1)* (long) sizeof(double));
+    if (!cumPopulPart)
+    {
+        fprintf (stderr, "Could not allocate cumPopulPart (%lu bytes)\n", (popI->numActiveGametes + 1) * (long) sizeof(double));
+        exit (-1);
+    }
+    cumPopulPart[0] = 0;
+    for (k = 1; k <= popI->numActiveGametes; k++)
+        cumPopulPart[k] = 0;
+    for (k = 1; k <= popI->numActiveGametes; k++)
+        cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (popI->numActiveGametes);
+    
+    w = 0;
+    //    for (k = 0; k < numClones; k++)
+    //    {
+    //        pop = *(populations + k);
+    //        w = w + (pop->numActiveGametes);
+    //        //fprintf (stderr, "\nClone %d with %d gametes. w=%d ", k, pop->numActiveGametes, w);
+    //    }
+    //    if (w != numActiveGametes)
+    //    {
+    //        fprintf (stderr, "\nError. The sum of partial active gametes is different to the total number of gametes, w %d != numActiveGametes %d. In Coalescence.", w, numActiveGametes);
+    //        exit (-1);
+    //    }
+    random = RandomUniform(seed);
+    //fprintf (stderr, "\nran = %lf ", ran);
+    *firstInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
+    w = 0;
+    
+    if (*firstInd >= popI->numActiveGametes || *firstInd < 0 ) /* checking */
+    {
+        fprintf (stderr, "\n\nERROR: firstInd out of range!\n");
+        exit (-1);
+    }
+    
+    if (choosePairIndividuals== YES && popI->numActiveGametes > 1) {
         
-        /********************** MakeCoalescenceEvent************************/
-        /*  choose 2  active individuals  to make coalescent  */
+        do//choose randomly another individual to coalesce
+        {
+            random = RandomUniform(seed);
+            *secondInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
+            
+        } while (*firstInd == *secondInd  );
+    }
+    free (cumPopulPart);
+    cumPopulPart=NULL;
+}
+
+/********************** MakeCoalescenceEvent************************/
+/*  choose 2  active individuals  to make coalescent  */
 void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, vector<TreeNode *> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
                           int &labelNodes, double &currentTime, int &numNodes)
-        {
-
-         
-            TreeNode  *p, *q, *r;
-            int firstInd, secondInd=0, newInd=0;
-            int choosePairIndividuals = YES;
-            
-            ChooseRandomIndividual(&firstInd, numClones, popI,  &secondInd, seed, choosePairIndividuals);
-            
-            newInd = nextAvailable;
-            //if (noisy > 1)
-                fprintf (stderr, "\n Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
-            
+{
     
-            /*  set pointers between nodes */
-            p = nodes[popI->idsActiveGametes[firstInd]];
-            q = nodes[popI->idsActiveGametes[secondInd]];
-            r = nodes[newInd];    /* new ancester */
-            r->index = nextAvailable;
-            r->label = labelNodes;
-            labelNodes=labelNodes+1;
-            r->indexOldClone = r->indexCurrentClone = popI->index;//here the clone number is updated
-            // r->indexCurrentClone = p->indexCurrentClone;
-            // r->orderCurrentClone = p->orderCurrentClone;
-            r->orderCurrentClone = popI->order;
-            r->effectPopSize=popI->effectPopSize;
-            r->nodeClass = 4;
-            // link the nodes
-            r->left = p;
-            r->right = q;
-            p->anc1 = r;
-            q->anc1 = r;
-            r->time = currentTime;
-            r->timePUnits = currentTime * (popI->effectPopSize);
-            
-            //fprintf (stderr, "\n r->index = %d, r->time = %lf, ClonePopSizeMeffectBegin[ThisCloneNumber] = %lf, ThisCloneNumber = %d\n", r->index, r->time, ClonePopSizeMeffectBegin[ThisCloneNumber], ThisCloneNumber);
-            if (noisy > 1)
-                fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
-            /* readjust active nodes */
-            
-            popI->idsActiveGametes[firstInd] = newInd;
-            popI->idsActiveGametes[secondInd] = popI->idsActiveGametes[popI->numActiveGametes - 1];;
-            numActiveGametes = numActiveGametes - 1; /* less 1 active node */
-            
-            
-            
-            
-            
-            //update list ids nodes
-           // popI->idsGametes[popI->numGametes] = newInd;
-            popI->numGametes = popI->numGametes +1;
-            
-            nextAvailable=nextAvailable+1; /* 1 node more is available */
-            
-            popI->CoalescentEventTimes[ popI->numCompletedCoalescences]=  r->time;
-            popI->numActiveGametes = popI->numActiveGametes - 1; /* now this clone
-                                                                  has 1 less node */
-            
-            popI->numCompletedCoalescences= popI->numCompletedCoalescences+1;
-            
-            fprintf (stderr, "\n pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
-            
-            for(int i=0; i < popI->idsActiveGametes.size();i++)
-                fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
-            /* memory for number of nodes */
-            if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
-            {
-                /* ReallocNodes(&numNodes, activeGametes); */
-                if (noisy == 4)
-                    fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
-                numNodes += INCREMENT_NODES;
-                /* realloc */
-//                *nodes = (TreeNode *) realloc (*nodes, *numNodes  * (long) sizeof(TreeNode) );
-//                if (!(*nodes))
-//                {
-//                    fprintf (stderr, "Could not reallocate nodes (%lu bytes)\n", *numNodes  * (long) sizeof(TreeNode));
-//                    exit (-1);
-//                }
-//                popI->idsActiveGametes = (int *) realloc (popI->idsActiveGametes, *numNodes * (long) sizeof(int));
-//                if (!(popI->idsActiveGametes))
-//                {
-//                    fprintf (stderr, "Could not reallocate idsActiveGametes for the current population(%lu bytes)\n", *numNodes * (long) sizeof(int));
-//                    exit (-1);
-//                }
-            }
-        }
-    /********************** BuildTree************************/
-    /*  build tree */
-    TreeNode *BuildTree(vector<Population* > &populations,
-                   Population *CurrentPop,
-                   long int *seed,
-                   ProgramOptions &programOptions,
-                   vector<TreeNode *> &nodes,
-                   vector<TreeNode *> &treeTips,
-                   TreeNode *tumour_mrca,
-                   int &nextAvailable,
-                   int &newInd,
-                   double &currentTime,
-                   int &labelNodes)
+    
+    TreeNode  *p, *q, *r;
+    int firstInd, secondInd=0, newInd=0;
+    int choosePairIndividuals = YES;
+    
+    ChooseRandomIndividual(&firstInd, numClones, popI,  &secondInd, seed, choosePairIndividuals);
+    
+    newInd = nextAvailable;
+    //if (noisy > 1)
+    fprintf (stderr, "\n Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
+    
+    
+    /*  set pointers between nodes */
+    p = nodes[popI->idsActiveGametes[firstInd]];
+    q = nodes[popI->idsActiveGametes[secondInd]];
+    r = nodes[newInd];    /* new ancester */
+    r->index = nextAvailable;
+    r->label = labelNodes;
+    labelNodes=labelNodes+1;
+    r->indexOldClone = r->indexCurrentClone = popI->index;//here the clone number is updated
+    // r->indexCurrentClone = p->indexCurrentClone;
+    // r->orderCurrentClone = p->orderCurrentClone;
+    r->orderCurrentClone = popI->order;
+    r->effectPopSize=popI->effectPopSize;
+    r->nodeClass = 4;
+    // link the nodes
+    r->left = p;
+    r->right = q;
+    p->anc1 = r;
+    q->anc1 = r;
+    r->time = currentTime;
+    r->timePUnits = currentTime * (popI->effectPopSize);
+    
+    //fprintf (stderr, "\n r->index = %d, r->time = %lf, ClonePopSizeMeffectBegin[ThisCloneNumber] = %lf, ThisCloneNumber = %d\n", r->index, r->time, ClonePopSizeMeffectBegin[ThisCloneNumber], ThisCloneNumber);
+    if (noisy > 1)
+        fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
+    /* readjust active nodes */
+    
+    popI->idsActiveGametes[firstInd] = newInd;
+    popI->idsActiveGametes[secondInd] = popI->idsActiveGametes[popI->numActiveGametes - 1];;
+    numActiveGametes = numActiveGametes - 1; /* less 1 active node */
+    
+    
+    
+    
+    
+    //update list ids nodes
+    // popI->idsGametes[popI->numGametes] = newInd;
+    popI->numGametes = popI->numGametes +1;
+    
+    nextAvailable=nextAvailable+1; /* 1 node more is available */
+    
+    popI->CoalescentEventTimes[ popI->numCompletedCoalescences]=  r->time;
+    popI->numActiveGametes = popI->numActiveGametes - 1; /* now this clone
+                                                          has 1 less node */
+    
+    popI->numCompletedCoalescences= popI->numCompletedCoalescences+1;
+    
+    fprintf (stderr, "\n pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
+    
+    for(int i=0; i < popI->idsActiveGametes.size();i++)
+        fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
+    /* memory for number of nodes */
+    if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
     {
-        int i, j;
-        int indexCurrentTip;
-        int  foundSuperflousNode;
-        TreeNode *p, *q, *r;
-        TreeNode *treeRootInit;
-        /********** BUILDING TREES ***********/
-        if (programOptions.noisy > 1)
+        /* ReallocNodes(&numNodes, activeGametes); */
+        if (noisy == 4)
+            fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
+        numNodes += INCREMENT_NODES;
+        /* realloc */
+        //                *nodes = (TreeNode *) realloc (*nodes, *numNodes  * (long) sizeof(TreeNode) );
+        //                if (!(*nodes))
+        //                {
+        //                    fprintf (stderr, "Could not reallocate nodes (%lu bytes)\n", *numNodes  * (long) sizeof(TreeNode));
+        //                    exit (-1);
+        //                }
+        //                popI->idsActiveGametes = (int *) realloc (popI->idsActiveGametes, *numNodes * (long) sizeof(int));
+        //                if (!(popI->idsActiveGametes))
+        //                {
+        //                    fprintf (stderr, "Could not reallocate idsActiveGametes for the current population(%lu bytes)\n", *numNodes * (long) sizeof(int));
+        //                    exit (-1);
+        //                }
+    }
+}
+/********************** BuildTree************************/
+/*  build tree */
+TreeNode *BuildTree(vector<Population* > &populations,
+                    Population *CurrentPop,
+                    long int *seed,
+                    ProgramOptions &programOptions,
+                    vector<TreeNode *> &nodes,
+                    vector<TreeNode *> &treeTips,
+                    TreeNode *tumour_mrca,
+                    int &nextAvailable,
+                    int &newInd,
+                    double &currentTime,
+                    int &labelNodes)
+{
+    int i, j;
+    int indexCurrentTip;
+    int  foundSuperflousNode;
+    TreeNode *p, *q, *r;
+    TreeNode *treeRootInit;
+    /********** BUILDING TREES ***********/
+    if (programOptions.noisy > 1)
+    {
+        fprintf (stderr, "\n>> Building trees ..");
+    }
+    
+    j=0;
+    indexCurrentTip=0;
+    /* get rid of superflous nodes */
+    foundSuperflousNode = YES;
+    while (foundSuperflousNode == YES)
+    {
+        foundSuperflousNode = NO;
+        for (i = 0; i < nextAvailable; i++) // available all the nodes
         {
-            fprintf (stderr, "\n>> Building trees ..");
-        }
-        
-        j=0;
-        indexCurrentTip=0;
-        /* get rid of superflous nodes */
-        foundSuperflousNode = YES;
-        while (foundSuperflousNode == YES)
-        {
-            foundSuperflousNode = NO;
-            for (i = 0; i < nextAvailable; i++) // available all the nodes
+            p = nodes[i];
+            
+            //fprintf (stderr, "\n\np->index = %d", p->index);
+            
+            if (p->left == NULL && p->right == NULL && p->anc1 == NULL)
             {
-                p = nodes[i];
-                
-                //fprintf (stderr, "\n\np->index = %d", p->index);
-                
-                if (p->left == NULL && p->right == NULL && p->anc1 == NULL)
-                {
-                    // nothing to do with this node because it is not connected to anything
-                    //fprintf (stderr, "\n * nothing to do with this node because it is not connected to anything");
+                // nothing to do with this node because it is not connected to anything
+                //fprintf (stderr, "\n * nothing to do with this node because it is not connected to anything");
+            }
+            else if (p->left == NULL && p->right == NULL && p->anc1 != NULL)
+            {
+                // (*treeTips)[indexCurrentTip]=p;
+                if(indexCurrentTip <  programOptions.TotalNumSequences){
+                    //treeTips[indexCurrentTip]=p;
+                    treeTips.push_back(p);
+                    indexCurrentTip++;
                 }
-                else if (p->left == NULL && p->right == NULL && p->anc1 != NULL)
+                //connectNodes(NULL, NULL, p);
+                // do not do anything with this node because it is a tip
+                //fprintf (stderr, "\n * do not do anything with this node because it is a tip");
+            }
+            else if (p->left != NULL && p->right == NULL && p->anc1 != NULL )
+            {
+                // this is a superflous node and can be removed(this superfluos nodes are the MRCA nodes of the demes
+                foundSuperflousNode = YES;
+                q = p->left;
+                r = p->anc1;
+                if (p->anc1->left == p)  // p->anc up, p->left down, total: up and down for left
                 {
-                    // (*treeTips)[indexCurrentTip]=p;
-                    if(indexCurrentTip <  programOptions.TotalNumSequences){
-                        //treeTips[indexCurrentTip]=p;
-                        treeTips.push_back(p);
-                        indexCurrentTip++;
-                    }
-                    //connectNodes(NULL, NULL, p);
-                    // do not do anything with this node because it is a tip
-                    //fprintf (stderr, "\n * do not do anything with this node because it is a tip");
-                }
-                else if (p->left != NULL && p->right == NULL && p->anc1 != NULL )
-                {
-                    // this is a superflous node and can be removed(this superfluos nodes are the MRCA nodes of the demes
-                    foundSuperflousNode = YES;
-                    q = p->left;
-                    r = p->anc1;
-                    if (p->anc1->left == p)  // p->anc up, p->left down, total: up and down for left
-                    {
-                        r->left = q;
-                        q->anc1 = r;
-                        p->left = NULL;
-                        p->anc1 = NULL;
-                        
-                        //connectNodes(q, r->right, r);
-                    }
-                    else
-                    {
-                        r->right = q;
-                        q->anc1 = r;
-                        p->left = NULL;
-                        p->anc1 = NULL;
-                        //connectNodes(r->left, q, r);
-                    }
-                    
-                    //fprintf (stderr, "\n - this is a superflous node and can be removed (1)");
-                }
-                else if (p->left == NULL && p->right != NULL && p->anc1 != NULL )
-                {
-                    // this is a superflous node and can be removed
-                    foundSuperflousNode = YES;
-                    q = p->right;
-                    r = p->anc1;
-                    if (p->anc1->left == p)
-                    {
-                        r->left = q;
-                        q->anc1 = r;
-                        p->right = NULL;
-                        p->anc1 = NULL;
-                        //connectNodes(q, r->right, r);
-                    }
-                    else
-                    {
-                        r->right = q;
-                        q->anc1 = r;
-                        p->right = NULL;
-                        p->anc1 = NULL;
-                        //connectNodes(r->left, q, r);
-                    }
-                    
-                    //fprintf (stderr, "\n - this is a superflous node and can be removed (2)");
-                }
-                else if (p->left != NULL && p->right != NULL && p->anc1 != NULL)
-                {
-                    //connectNodes(p->left, p->right, p);
-                    // this is an internal node formed by a coalescence event, do not touch
-                    //fprintf (stderr, "\n * this is an internal node formed by a coalescence event, do not touch");
-                }
-                else if (p->left != NULL && p->right != NULL && p->anc1 == NULL)
-                {
-                    //connectNodes(p->left, p->right, p);
-                    // this is the last (coalescence event) in the tree, MRCA
-                    //fprintf (stderr, "\n * this is the last (coalescence event) in the tree, MRCA");
-                }
-                else if (p->left != NULL && p->right == NULL && p->anc1 == NULL)
-                {
-                    // Seems to be the last coalescent event among sequences with non-ancestral material
-                    // it is not superfluous, we just remove it
-                    p->left->anc1 = NULL;
-                    //fprintf (stderr, "\n - this is a superflous node and can be removed (3)");
-                }
-                else if (p->left == NULL && p->right != NULL && p->anc1 == NULL)
-                {
-                    // not clear what this node could be doing, but we will remove it anyway
-                    fprintf (stderr, "strange\n");
+                    r->left = q;
+                    q->anc1 = r;
                     p->left = NULL;
-                    p->right->anc1 = NULL;
-                    //fprintf (stderr, "\n - this is a superflous node and can be removed (4)");
+                    p->anc1 = NULL;
+                    
+                    //connectNodes(q, r->right, r);
                 }
                 else
                 {
-                    fprintf (stderr, "You should not be here, I think\n");
-                    fprintf (stderr, "%d %d-- %d %d %d\n", Index(p), j, Index(p->left), Index(p->right), Index(p->anc1));
+                    r->right = q;
+                    q->anc1 = r;
+                    p->left = NULL;
+                    p->anc1 = NULL;
+                    //connectNodes(r->left, q, r);
                 }
-                if (p->anc1 != NULL)
-                {//update length field
-                    
-                    //   p->length = p->anc1->time- p->time;
-                    p->length = (p->anc1->timePUnits- p->timePUnits);
-                    //*mutationRate;
-                    p->lengthModelUnits = (p->anc1->time- p->time);
-                    //*mutationRate;
-                    //setLength(p);
-                }
-            }
-            //fprintf (stderr, "\n");
-        }//while
-        
-        /* about the MRCA */
-        newInd=nextAvailable-1;
-        p = nodes[newInd];
-        //p = *nodes + *newInd; /* because the last one event is the last coalescence */
-        //fprintf (stderr, "\n\n\n>> newInd = %d\n", newInd);
-        
-        if (programOptions.thereisOutgroup == NO)
-        {
-            //p = *nodes + *newInd;
-            p = nodes[newInd];
-            p->nodeClass = 5;
-            tumour_mrca = p;
-            //*treeRootInit = p;
-            //treeRootInit[0] = p;
-            p->anc1 = NULL;
-            treeRootInit = tumour_mrca;
-        }
-        if (programOptions.thereisOutgroup == YES && programOptions.outgroupSelection > 0)  /*** Root and outgroup ***/
-        {
-            p = nodes[newInd]; // MRCA
-            p->nodeClass = 4;
-            
-            if (programOptions.noisy > 1)
-                fprintf (stderr, "\n\n>> Attaching outgroup .. ");
-            
-            //fprintf (stderr, "\n>> ThisCloneNumber = %d, ListMigrationTimesInitial[ThisCloneNumber] = %lf, ClonePopSizeMeffectBegin[ThisCloneNumber] = %lf \n", ThisCloneNumber, ListMigrationTimesInitial[ThisCloneNumber], ClonePopSizeMeffectBegin[ThisCloneNumber]);
-            
-            if (programOptions.outgroupSelection == 1)  /*** Root 2 times and outgroup ***/
-                currentTime = CurrentPop->timeOriginSTD; // origin of the clone; // currentTime + (outgroupBranchLength_Root1Root2 / mutationRate); // set time of the new root (from which the MRCA and outgroup nodes are derived)
-            else if (programOptions.outgroupSelection == 2) { /*** Root 2 times and outgroup ***/
-                currentTime = (CurrentPop->timeOriginSTD -programOptions.outgroupBranchLength_Root1Root2 * tumour_mrca->time) / (1.0- programOptions.outgroupBranchLength_Root1Root2 )  ; // origin of the clone + time given by the user
                 
+                //fprintf (stderr, "\n - this is a superflous node and can be removed (1)");
+            }
+            else if (p->left == NULL && p->right != NULL && p->anc1 != NULL )
+            {
+                // this is a superflous node and can be removed
+                foundSuperflousNode = YES;
+                q = p->right;
+                r = p->anc1;
+                if (p->anc1->left == p)
+                {
+                    r->left = q;
+                    q->anc1 = r;
+                    p->right = NULL;
+                    p->anc1 = NULL;
+                    //connectNodes(q, r->right, r);
+                }
+                else
+                {
+                    r->right = q;
+                    q->anc1 = r;
+                    p->right = NULL;
+                    p->anc1 = NULL;
+                    //connectNodes(r->left, q, r);
+                }
+                
+                //fprintf (stderr, "\n - this is a superflous node and can be removed (2)");
+            }
+            else if (p->left != NULL && p->right != NULL && p->anc1 != NULL)
+            {
+                //connectNodes(p->left, p->right, p);
+                // this is an internal node formed by a coalescence event, do not touch
+                //fprintf (stderr, "\n * this is an internal node formed by a coalescence event, do not touch");
+            }
+            else if (p->left != NULL && p->right != NULL && p->anc1 == NULL)
+            {
+                //connectNodes(p->left, p->right, p);
+                // this is the last (coalescence event) in the tree, MRCA
+                //fprintf (stderr, "\n * this is the last (coalescence event) in the tree, MRCA");
+            }
+            else if (p->left != NULL && p->right == NULL && p->anc1 == NULL)
+            {
+                // Seems to be the last coalescent event among sequences with non-ancestral material
+                // it is not superfluous, we just remove it
+                p->left->anc1 = NULL;
+                //fprintf (stderr, "\n - this is a superflous node and can be removed (3)");
+            }
+            else if (p->left == NULL && p->right != NULL && p->anc1 == NULL)
+            {
+                // not clear what this node could be doing, but we will remove it anyway
+                fprintf (stderr, "strange\n");
+                p->left = NULL;
+                p->right->anc1 = NULL;
+                //fprintf (stderr, "\n - this is a superflous node and can be removed (4)");
             }
             else
             {
-                fprintf (stderr, "\n\nError simulationg the outgroup. Check input settings\n");
-                PrintUsage();
+                fprintf (stderr, "You should not be here, I think\n");
+                fprintf (stderr, "%d %d-- %d %d %d\n", Index(p), j, Index(p->left), Index(p->right), Index(p->anc1));
             }
-            //TreeNode* healthyRoot = *nodes + *nextAvailable;
-            TreeNode* healthyRoot = nodes[nextAvailable];
-            healthyRoot->index = nextAvailable;
-            healthyRoot->label = labelNodes;
-            healthyRoot->effectPopSize= p->effectPopSize;
-            labelNodes=labelNodes+1;
-            healthyRoot->left = p;//coalTreeMRCA;
-            //        coalTreeMRCA->anc = healthyRoot;
-            p->anc1 = healthyRoot;
-            
-           // healthyRoot->timePUnits = p->timePUnits * healthyRoot->effectPopSize;
-            healthyRoot->nodeClass = 5;
-            //        coalTreeMRCA->length = transformingBranchLength/mutationRate;
-            p->length = 0;
-            
-            //        coalTreeMRCA->branchLength = transformingBranchLength;
-            p->lengthModelUnits = 0;
-            
-            //        healthyRoot->time = currentTime +  transformingBranchLength/mutationRate;
-            healthyRoot->time = currentTime;
-            
-            int transformingBranchLength=1.001;
-            // healthyRoot->time = p->time * transformingBranchLength ;
-            healthyRoot->timePUnits = currentTime * healthyRoot->effectPopSize;
-            
-            fprintf (stderr, "\n Time of the healthy root %lf\n",  healthyRoot->timePUnits);
-            
-            p->length = (p->anc1->timePUnits- p->timePUnits);
-            //*mutationRate;
-            p->lengthModelUnits = (p->anc1->time- p->time);
-            //*mutationRate;
-            
-            healthyRoot->length = 0;
-            //        healthyRoot->length = 0;
-            
-       
-          
-            nextAvailable++;
-            //
-            //        /* connect the healthy ancestral cell with the tip healthy cell*/
-       
-            TreeNode* healthyTip = nodes[nextAvailable];
-            healthyTip->left = NULL;
-            healthyTip->right = NULL;
-            healthyTip->effectPopSize= healthyRoot->effectPopSize;
-            
-            //connectNodes(NULL, NULL, healthyTip);
-            
-            healthyTip->anc1 = healthyRoot;
-            healthyRoot->right = healthyTip;
-            
-            double  healthyTipBranchLengthRatio = RandomUniform(seed);
-            
-
-            //we put the  time of healthy tip inside the tree root and 0
-             healthyTip->time = healthyTipBranchLengthRatio * healthyRoot->time;
-             healthyTip->timePUnits = healthyTipBranchLengthRatio * healthyRoot->timePUnits;
-            healthyTip->length = 0;
-            healthyTip->lengthModelUnits = 0;
-            
-            healthyTip->isOutgroup= YES;
-            
-            treeRootInit = healthyRoot;
-  
+            if (p->anc1 != NULL)
+            {//update length field
+                
+                //   p->length = p->anc1->time- p->time;
+                p->length = (p->anc1->timePUnits- p->timePUnits);
+                //*mutationRate;
+                p->lengthModelUnits = (p->anc1->time- p->time);
+                //*mutationRate;
+                //setLength(p);
+            }
         }
-
-        int intLabel = 0;
-        if (programOptions.noisy > 1)
-            fprintf (stderr, "\n\n>> Relabeling nodes on tree... \n\n");
-        if (programOptions.thereisOutgroup == YES)
-            intLabel = programOptions.TotalNumSequences + 1;
-        else
-            intLabel = programOptions.TotalNumSequences;
+        //fprintf (stderr, "\n");
+    }//while
     
-        RelabelNodes(treeRootInit, intLabel);
-        
-        return treeRootInit;
+    /* about the MRCA */
+    newInd=nextAvailable-1;
+    p = nodes[newInd];
+    //p = *nodes + *newInd; /* because the last one event is the last coalescence */
+    //fprintf (stderr, "\n\n\n>> newInd = %d\n", newInd);
+    
+    if (programOptions.thereisOutgroup == NO)
+    {
+        //p = *nodes + *newInd;
+        p = nodes[newInd];
+        p->nodeClass = 5;
+        tumour_mrca = p;
+        //*treeRootInit = p;
+        //treeRootInit[0] = p;
+        p->anc1 = NULL;
+        treeRootInit = tumour_mrca;
     }
-        /********************* PrepareSeparateFiles **********************/
-        /* Open individual files to output results */
+    if (programOptions.thereisOutgroup == YES && programOptions.outgroupSelection > 0)  /*** Root and outgroup ***/
+    {
+        p = nodes[newInd]; // MRCA
+        p->nodeClass = 4;
         
-        void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)
-        {
-            char File[MAX_NAME];
-            char dir[MAX_NAME];
-            /* contains the simulated tree in Newick format
-             */
-            mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
-            //mkdir("Results",0);
-#ifdef MAC
-            strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
-#else
-            strcpy (dir, "Results/");
-#endif
-            //strcpy (resultsDir, dir);
-            if (programOptions.doPrintTrees == YES)
-            {
-                if (programOptions.doSimulateData ==YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.treeDir );
-                }
-                else
-                {
-                    sprintf(File,"%s/%s_Chain%d", filePaths.resultsDir, filePaths.treeDir, ChainNumber );
-                    
-                }
-                mkdir(File,S_IRWXU);
-                
-                if (programOptions.doSimulateData ==YES)
-                {
-                    sprintf(File,"%s/%s/%s_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile, paramSetNumber+1, replicate+1);
-                }
-                else
-                {
-                    sprintf(File,"%s/%s_Chain%d/%s_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir,ChainNumber , filePaths.treeFile, paramSetNumber+1, replicate+1);
-                }
-                //if ((*fpTrees = fopen(File, "w")) == NULL)
-                if (openFile(&files.fpTrees, File) == -1)
-                {
-                    fprintf (stderr, "Can't open \"%s\"\n", File);
-                    exit(-1);
-                }
-                
-                sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.treeDir);
-                
-                if (programOptions.doSimulateData ==YES)
-                {
-                    sprintf(File,"%s/%s/%s_2_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile, paramSetNumber+1, replicate+1);
-                }
-                else
-                {
-                    sprintf(File,"%s/%s_Chain%d/%s_2_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, ChainNumber, filePaths.treeFile, paramSetNumber+1, replicate+1);
-                    
-                }
-                //sprintf(File,"%s/%s/%s_2_%04d.tre", resultsDir, treeDir, treeFile, replicate+1);
-                //if ((*fpTrees2 = fopen(File, "w")) == NULL)
-                if (openFile(&files.fpTrees2, File) == -1)
-                {
-                    fprintf(stderr, "Can't open %s.\n", File);
-                    exit(-1);
-                }
-            }
+        if (programOptions.noisy > 1)
+            fprintf (stderr, "\n\n>> Attaching outgroup .. ");
+        
+        //fprintf (stderr, "\n>> ThisCloneNumber = %d, ListMigrationTimesInitial[ThisCloneNumber] = %lf, ClonePopSizeMeffectBegin[ThisCloneNumber] = %lf \n", ThisCloneNumber, ListMigrationTimesInitial[ThisCloneNumber], ClonePopSizeMeffectBegin[ThisCloneNumber]);
+        
+        if (programOptions.outgroupSelection == 1)  /*** Root 2 times and outgroup ***/
+            currentTime = CurrentPop->timeOriginSTD; // origin of the clone; // currentTime + (outgroupBranchLength_Root1Root2 / mutationRate); // set time of the new root (from which the MRCA and outgroup nodes are derived)
+        else if (programOptions.outgroupSelection == 2) { /*** Root 2 times and outgroup ***/
+            currentTime = (CurrentPop->timeOriginSTD -programOptions.outgroupBranchLength_Root1Root2 * tumour_mrca->time) / (1.0- programOptions.outgroupBranchLength_Root1Root2 )  ; // origin of the clone + time given by the user
             
-            if (programOptions.doPrintTimes == YES)
-            {
-                if (programOptions.doSimulateData ==YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.timesDir);
-                }
-                else
-                {
-                    sprintf(File,"%s/%s_Chain%d", filePaths.resultsDir, filePaths.timesDir, ChainNumber );
-                }
-                mkdir(File,S_IRWXU);
-                if (programOptions.doSimulateData ==YES)
-                {
-                    sprintf(File,"%s/%s/%s_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile, paramSetNumber+1, replicate+1);
-                }
-                else
-                {
-                    sprintf(File,"%s/%s_Chain%d/%s_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, ChainNumber, filePaths.timesFile, paramSetNumber+1, replicate+1);
-                    
-                }
-                //if ((*fpTimes = fopen(File, "w")) == NULL)
-                if (openFile(&files.fpTimes, File) == -1)
-                {
-                    fprintf (stderr, "Can't open \"%s\"\n", File);
-                    exit(-1);
-                }
-                sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.timesDir);
-                if (programOptions.doSimulateData ==YES)
-                {
-                    sprintf(File,"%s/%s/%s_2_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile, paramSetNumber+1, replicate+1);
-                }
-                else
-                {
-                    sprintf(File,"%s/%s_Chain%d/%s_2_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, ChainNumber,filePaths.timesFile, paramSetNumber+1, replicate+1);
-                    
-                }
-                // sprintf(File,"%s/%s/%s_2_%04d.txt", resultsDir, timesDir, timesFile, replicate+1);
-                
-                //if ((*fpTimes2 = fopen(File, "w")) == NULL)
-                if (openFile(&files.fpTimes2, File) == -1)
-                {
-                    fprintf(stderr, "Can't open %s.\n", File);
-                    exit(-1);
-                }
-            }
-            
-     
         }
-        /********************* PrepareSeparateFilesGenotypes **********************/
-        /* Open individual genotypes files to output results */
-        void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationAssignNum,
-                                           const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)
+        else
         {
-            char File[MAX_NAME];
-            char dir[MAX_NAME];
-            /* contains the simulated tree in Newick format
-             */
-            mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
-            //mkdir("Results",0);
+            fprintf (stderr, "\n\nError simulationg the outgroup. Check input settings\n");
+            PrintUsage();
+        }
+        //TreeNode* healthyRoot = *nodes + *nextAvailable;
+        TreeNode* healthyRoot = nodes[nextAvailable];
+        healthyRoot->index = nextAvailable;
+        healthyRoot->label = labelNodes;
+        healthyRoot->effectPopSize= p->effectPopSize;
+        labelNodes=labelNodes+1;
+        healthyRoot->left = p;//coalTreeMRCA;
+        //        coalTreeMRCA->anc = healthyRoot;
+        p->anc1 = healthyRoot;
+        
+        // healthyRoot->timePUnits = p->timePUnits * healthyRoot->effectPopSize;
+        healthyRoot->nodeClass = 5;
+        //        coalTreeMRCA->length = transformingBranchLength/mutationRate;
+        p->length = 0;
+        
+        //        coalTreeMRCA->branchLength = transformingBranchLength;
+        p->lengthModelUnits = 0;
+        
+        //        healthyRoot->time = currentTime +  transformingBranchLength/mutationRate;
+        healthyRoot->time = currentTime;
+        
+        int transformingBranchLength=1.001;
+        // healthyRoot->time = p->time * transformingBranchLength ;
+        healthyRoot->timePUnits = currentTime * healthyRoot->effectPopSize;
+        
+        fprintf (stderr, "\n Time of the healthy root %lf\n",  healthyRoot->timePUnits);
+        
+        p->length = (p->anc1->timePUnits- p->timePUnits);
+        //*mutationRate;
+        p->lengthModelUnits = (p->anc1->time- p->time);
+        //*mutationRate;
+        
+        healthyRoot->length = 0;
+        //        healthyRoot->length = 0;
+        
+        
+        
+        nextAvailable++;
+        //
+        //        /* connect the healthy ancestral cell with the tip healthy cell*/
+        
+        TreeNode* healthyTip = nodes[nextAvailable];
+        healthyTip->left = NULL;
+        healthyTip->right = NULL;
+        healthyTip->effectPopSize= healthyRoot->effectPopSize;
+        
+        //connectNodes(NULL, NULL, healthyTip);
+        
+        healthyTip->anc1 = healthyRoot;
+        healthyRoot->right = healthyTip;
+        
+        double  healthyTipBranchLengthRatio = RandomUniform(seed);
+        
+        
+        //we put the  time of healthy tip inside the tree root and 0
+        healthyTip->time = healthyTipBranchLengthRatio * healthyRoot->time;
+        healthyTip->timePUnits = healthyTipBranchLengthRatio * healthyRoot->timePUnits;
+        healthyTip->length = 0;
+        healthyTip->lengthModelUnits = 0;
+        
+        healthyTip->isOutgroup= YES;
+        
+        treeRootInit = healthyRoot;
+        
+    }
+    
+    int intLabel = 0;
+    if (programOptions.noisy > 1)
+        fprintf (stderr, "\n\n>> Relabeling nodes on tree... \n\n");
+    if (programOptions.thereisOutgroup == YES)
+        intLabel = programOptions.TotalNumSequences + 1;
+    else
+        intLabel = programOptions.TotalNumSequences;
+    
+    RelabelNodes(treeRootInit, intLabel);
+    
+    return treeRootInit;
+}
+/********************* PrepareSeparateFiles **********************/
+/* Open individual files to output results */
+
+void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)
+{
+    char File[MAX_NAME];
+    char dir[MAX_NAME];
+    /* contains the simulated tree in Newick format
+     */
+    mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
+    //mkdir("Results",0);
 #ifdef MAC
-            strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
+    strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
 #else
-            strcpy (dir, "Results/");
+    strcpy (dir, "Results/");
 #endif
-            //strcpy (resultsDir, dir);
+    //strcpy (resultsDir, dir);
+    if (programOptions.doPrintTrees == YES)
+    {
+        if (programOptions.doSimulateData ==YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.treeDir );
+        }
+        else
+        {
+            sprintf(File,"%s/%s_Chain%d", filePaths.resultsDir, filePaths.treeDir, ChainNumber );
             
-            if (programOptions.doSimulateData == YES)
+        }
+        mkdir(File,S_IRWXU);
+        
+        if (programOptions.doSimulateData ==YES)
+        {
+            sprintf(File,"%s/%s/%s_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile, paramSetNumber+1, replicate+1);
+        }
+        else
+        {
+            sprintf(File,"%s/%s_Chain%d/%s_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir,ChainNumber , filePaths.treeFile, paramSetNumber+1, replicate+1);
+        }
+        //if ((*fpTrees = fopen(File, "w")) == NULL)
+        if (openFile(&files.fpTrees, File) == -1)
+        {
+            fprintf (stderr, "Can't open \"%s\"\n", File);
+            exit(-1);
+        }
+        
+        sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.treeDir);
+        
+        if (programOptions.doSimulateData ==YES)
+        {
+            sprintf(File,"%s/%s/%s_2_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile, paramSetNumber+1, replicate+1);
+        }
+        else
+        {
+            sprintf(File,"%s/%s_Chain%d/%s_2_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, ChainNumber, filePaths.treeFile, paramSetNumber+1, replicate+1);
+            
+        }
+        //sprintf(File,"%s/%s/%s_2_%04d.tre", resultsDir, treeDir, treeFile, replicate+1);
+        //if ((*fpTrees2 = fopen(File, "w")) == NULL)
+        if (openFile(&files.fpTrees2, File) == -1)
+        {
+            fprintf(stderr, "Can't open %s.\n", File);
+            exit(-1);
+        }
+    }
+    
+    if (programOptions.doPrintTimes == YES)
+    {
+        if (programOptions.doSimulateData ==YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.timesDir);
+        }
+        else
+        {
+            sprintf(File,"%s/%s_Chain%d", filePaths.resultsDir, filePaths.timesDir, ChainNumber );
+        }
+        mkdir(File,S_IRWXU);
+        if (programOptions.doSimulateData ==YES)
+        {
+            sprintf(File,"%s/%s/%s_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile, paramSetNumber+1, replicate+1);
+        }
+        else
+        {
+            sprintf(File,"%s/%s_Chain%d/%s_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, ChainNumber, filePaths.timesFile, paramSetNumber+1, replicate+1);
+            
+        }
+        //if ((*fpTimes = fopen(File, "w")) == NULL)
+        if (openFile(&files.fpTimes, File) == -1)
+        {
+            fprintf (stderr, "Can't open \"%s\"\n", File);
+            exit(-1);
+        }
+        sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.timesDir);
+        if (programOptions.doSimulateData ==YES)
+        {
+            sprintf(File,"%s/%s/%s_2_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile, paramSetNumber+1, replicate+1);
+        }
+        else
+        {
+            sprintf(File,"%s/%s_Chain%d/%s_2_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, ChainNumber,filePaths.timesFile, paramSetNumber+1, replicate+1);
+            
+        }
+        // sprintf(File,"%s/%s/%s_2_%04d.txt", resultsDir, timesDir, timesFile, replicate+1);
+        
+        //if ((*fpTimes2 = fopen(File, "w")) == NULL)
+        if (openFile(&files.fpTimes2, File) == -1)
+        {
+            fprintf(stderr, "Can't open %s.\n", File);
+            exit(-1);
+        }
+    }
+    
+    
+}
+/********************* PrepareSeparateFilesGenotypes **********************/
+/* Open individual genotypes files to output results */
+void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationAssignNum,
+                                   const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)
+{
+    char File[MAX_NAME];
+    char dir[MAX_NAME];
+    /* contains the simulated tree in Newick format
+     */
+    mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
+    //mkdir("Results",0);
+#ifdef MAC
+    strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
+#else
+    strcpy (dir, "Results/");
+#endif
+    //strcpy (resultsDir, dir);
+    
+    if (programOptions.doSimulateData == YES)
+    {
+        /* contains SNV genotypes for every cell */
+        if (programOptions.doPrintSNVgenotypes == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.SNVgenotypesDir);
+            mkdir(File,S_IRWXU);
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            //sprintf(File,"%s/%s/%s.%04d", resultsDir, SNVgenotypesDir, SNVgenotypesFile, replicate+1);
+            //if ((*fpSNVgenotypes = fopen(File, "w")) == NULL)
+            if (openFile(&files.fpSNVgenotypes, File) == -1)
             {
-                /* contains SNV genotypes for every cell */
-                if (programOptions.doPrintSNVgenotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.SNVgenotypesDir);
-                    mkdir(File,S_IRWXU);
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    //sprintf(File,"%s/%s/%s.%04d", resultsDir, SNVgenotypesDir, SNVgenotypesFile, replicate+1);
-                    //if ((*fpSNVgenotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files.fpSNVgenotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                
-                /* contains haplotypes for variable sites for every cell */
-                if (programOptions.doPrintSNVhaplotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.SNVhaplotypesDir);
-                    mkdir(File,S_IRWXU);
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    // sprintf(File,"%s/%s/%s.%04d", resultsDir, SNVhaplotypesDir, SNVhaplotypesFile, replicate+1);
-                    //if ((*fpSNVhaplotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files.fpSNVhaplotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                
-                /* contains reference haplotypes (before errors)  for every cell */
-                if (programOptions.doPrintTrueHaplotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.trueHaplotypesDir);
-                    mkdir(File,S_IRWXU);
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.trueHaplotypesDir, filePaths.trueHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    
-                    
-                    // sprintf(File,"%s/%s/%s.%04d", resultsDir, trueHaplotypesDir, trueHaplotypesFile, replicate+1);
-                    //if ((*fpTrueHaplotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files.fpTrueHaplotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                
-                /* contains ML haplotypes  for every cell */
-                if (programOptions.doPrintMLhaplotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.MLhaplotypesDir);
-                    mkdir(File,S_IRWXU);
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.MLhaplotypesDir, filePaths.MLhaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    // sprintf(File,"%s/%s/%s.%04d", resultsDir, MLhaplotypesDir, MLhaplotypesFile, replicate+1);
-                    // if ((*fpMLhaplotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files.fpMLhaplotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                
-                /* contains all genotypes (variable or invariable) for every cell */
-                if (programOptions.doPrintFullGenotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.fullGenotypesDir);
-                    mkdir(File,S_IRWXU);
-                    
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullGenotypesDir, filePaths.fullGenotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    //sprintf(File,"%s/%s/%s.%04d", resultsDir, fullGenotypesDir, fullGenotypesFile, replicate+1);
-                    //if ((*fpFullGenotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files.fpFullGenotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                /* contains haplotypes for all sites for every cell */
-                if (programOptions.doPrintFullHaplotypes == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.fullHaplotypesDir);
-                    mkdir(File,S_IRWXU);
-                    
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    //sprintf(File,"%s/%s/%s.%04d", resultsDir, fullHaplotypesDir, fullHaplotypesFile, replicate+1);
-                    //if ((*fpFullHaplotypes = fopen(File, "w")) == NULL)
-                    if (openFile(&files.fpFullHaplotypes, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                /* contains reads counts and log10 normalized genotype likelihoods for every SNV and cell */
-                if (programOptions.doSimulateReadCounts == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.VCFdir);
-                    mkdir(File,S_IRWXU);
-                    
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.VCFdir, filePaths.VCFfile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    //sprintf(File,"%s/%s/%s.%04d", resultsDir, VCFdir, VCFfile, replicate+1);
-                    //if ((*fpVCF = fopen(File, "w")) == NULL)
-                    if (openFile(&files.fpVCF, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
-                /* contains reads counts for every SNV and cell */
-                if (programOptions.doPrintCATG == YES)
-                {
-                    sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.CATGdir);
-                    mkdir(File,S_IRWXU);
-                    
-                    sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.CATGdir, filePaths.CATGfile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-                    // sprintf(File,"%s/%s/%s.%04d", resultsDir, CATGdir, CATGfile, replicate+1);
-                    //if ((*fpCATG = fopen(File, "w")) == NULL)
-                    if (openFile(&files.fpCATG, File) == -1)
-                    {
-                        fprintf (stderr, "Can't open \"%s\"\n", File);
-                        exit(-1);
-                    }
-                }
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
             }
         }
+        
+        /* contains haplotypes for variable sites for every cell */
+        if (programOptions.doPrintSNVhaplotypes == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.SNVhaplotypesDir);
+            mkdir(File,S_IRWXU);
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            // sprintf(File,"%s/%s/%s.%04d", resultsDir, SNVhaplotypesDir, SNVhaplotypesFile, replicate+1);
+            //if ((*fpSNVhaplotypes = fopen(File, "w")) == NULL)
+            if (openFile(&files.fpSNVhaplotypes, File) == -1)
+            {
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
+            }
+        }
+        
+        /* contains reference haplotypes (before errors)  for every cell */
+        if (programOptions.doPrintTrueHaplotypes == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.trueHaplotypesDir);
+            mkdir(File,S_IRWXU);
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.trueHaplotypesDir, filePaths.trueHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            
+            
+            // sprintf(File,"%s/%s/%s.%04d", resultsDir, trueHaplotypesDir, trueHaplotypesFile, replicate+1);
+            //if ((*fpTrueHaplotypes = fopen(File, "w")) == NULL)
+            if (openFile(&files.fpTrueHaplotypes, File) == -1)
+            {
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
+            }
+        }
+        
+        /* contains ML haplotypes  for every cell */
+        if (programOptions.doPrintMLhaplotypes == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.MLhaplotypesDir);
+            mkdir(File,S_IRWXU);
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.MLhaplotypesDir, filePaths.MLhaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            // sprintf(File,"%s/%s/%s.%04d", resultsDir, MLhaplotypesDir, MLhaplotypesFile, replicate+1);
+            // if ((*fpMLhaplotypes = fopen(File, "w")) == NULL)
+            if (openFile(&files.fpMLhaplotypes, File) == -1)
+            {
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
+            }
+        }
+        
+        /* contains all genotypes (variable or invariable) for every cell */
+        if (programOptions.doPrintFullGenotypes == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.fullGenotypesDir);
+            mkdir(File,S_IRWXU);
+            
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullGenotypesDir, filePaths.fullGenotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            //sprintf(File,"%s/%s/%s.%04d", resultsDir, fullGenotypesDir, fullGenotypesFile, replicate+1);
+            //if ((*fpFullGenotypes = fopen(File, "w")) == NULL)
+            if (openFile(&files.fpFullGenotypes, File) == -1)
+            {
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
+            }
+        }
+        /* contains haplotypes for all sites for every cell */
+        if (programOptions.doPrintFullHaplotypes == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.fullHaplotypesDir);
+            mkdir(File,S_IRWXU);
+            
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            //sprintf(File,"%s/%s/%s.%04d", resultsDir, fullHaplotypesDir, fullHaplotypesFile, replicate+1);
+            //if ((*fpFullHaplotypes = fopen(File, "w")) == NULL)
+            if (openFile(&files.fpFullHaplotypes, File) == -1)
+            {
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
+            }
+        }
+        /* contains reads counts and log10 normalized genotype likelihoods for every SNV and cell */
+        if (programOptions.doSimulateReadCounts == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.VCFdir);
+            mkdir(File,S_IRWXU);
+            
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.VCFdir, filePaths.VCFfile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            //sprintf(File,"%s/%s/%s.%04d", resultsDir, VCFdir, VCFfile, replicate+1);
+            //if ((*fpVCF = fopen(File, "w")) == NULL)
+            if (openFile(&files.fpVCF, File) == -1)
+            {
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
+            }
+        }
+        /* contains reads counts for every SNV and cell */
+        if (programOptions.doPrintCATG == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.CATGdir);
+            mkdir(File,S_IRWXU);
+            
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.CATGdir, filePaths.CATGfile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            // sprintf(File,"%s/%s/%s.%04d", resultsDir, CATGdir, CATGfile, replicate+1);
+            //if ((*fpCATG = fopen(File, "w")) == NULL)
+            if (openFile(&files.fpCATG, File) == -1)
+            {
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
+            }
+        }
+    }
+}
 /***************************** InitPopulationsCoalescentEvents*******************************/
 /* InitPopulationsCoalescentEvents*/
 void InitPopulationsCoalescentEvents( int numClones,  vector<Population*> &populations) {
@@ -1876,7 +1876,7 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
     if (p != NULL)
     {
         cell = p->label;
-       
+        
         if (alphabet == DNA)
         {
             //            if (p->isOutgroup == YES)
@@ -1911,8 +1911,8 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
                 anccell = p->anc1->label;
                 for (site=0; site<numSites; site++)
                 {
-//                    p->maternalSequence[site]=p->anc1->maternalSequence[site];
-//                    p->paternalSequence[site]=p->anc1->paternalSequence[site];
+                    //                    p->maternalSequence[site]=p->anc1->maternalSequence[site];
+                    //                    p->paternalSequence[site]=p->anc1->paternalSequence[site];
                     
                     p->maternalSequence.at(site)= p->anc1->maternalSequence.at(site);
                     p->paternalSequence.at(site)= p->anc1->paternalSequence.at(site);
@@ -1920,14 +1920,14 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
             }
         }
         else{
-//            for (site=0; site<numSites; site++){
-//                p->maternalSequence.at(site)=0;
-//                p->paternalSequence.at(site)=0;
-//                p->numbersMutationsUnderSubtreePerSite.at(site)=0;
-//                p->numbersMaternalMutationsPerSite.at(site)=0;
-//                p->numbersPaternalMutationsPerSite.at(site)=0;
-//
-//            }
+            //            for (site=0; site<numSites; site++){
+            //                p->maternalSequence.at(site)=0;
+            //                p->paternalSequence.at(site)=0;
+            //                p->numbersMutationsUnderSubtreePerSite.at(site)=0;
+            //                p->numbersMaternalMutationsPerSite.at(site)=0;
+            //                p->numbersPaternalMutationsPerSite.at(site)=0;
+            //
+            //            }
         }
         InitializeGenomes (p->left, seed,   alphabet,  doUserGenome,  numSites, allSites,  doGeneticSignatures,  cumfreq,triNucFreq, cellNames);
         InitializeGenomes (p->right, seed,  alphabet,  doUserGenome,  numSites, allSites,  doGeneticSignatures,  cumfreq,triNucFreq, cellNames);
@@ -1960,20 +1960,20 @@ double SumBranches (TreeNode *p, double mutationRate)
 /* Builds a genealogy under the structured  ' */ /* this function go by events CA, MIG, CONV */
 
 TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &populations,
-                           int &numNodes,
-                           int numClones,
-                           ProgramOptions &programOptions,
-                           double      cumNumCA,
-                           double meanNumCA,
-                           double cumNumMIG,
-                           double meanNumMIG,
-                           int  &numMIG,
-                           int  &numCA,
-                           double &numEventsTot,
-                           vector<TreeNode *> &nodes, // empty vector
-                           vector<TreeNode *> &treeTips,
-                           TreeNode    *treeRootInit
-                           ) {
+                                int &numNodes,
+                                int numClones,
+                                ProgramOptions &programOptions,
+                                double      cumNumCA,
+                                double meanNumCA,
+                                double cumNumMIG,
+                                double meanNumMIG,
+                                int  &numMIG,
+                                int  &numCA,
+                                double &numEventsTot,
+                                vector<TreeNode *> &nodes, // empty vector
+                                vector<TreeNode *> &treeTips,
+                                TreeNode    *treeRootInit
+                                ) {
     
     int      c, d, i, j, w, k, m, cumIndivid, *activeGametes = NULL, isCoalescence, whichInd,
     firstInd, secondInd, newInd, eventNum, numActiveGametes, foundSuperflousNode,
@@ -2024,16 +2024,16 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &population
     resetMigrationsList( populations,  numClones);
     
     //allocate memory for the treenodes
-//            *nodes = (TreeNode *) malloc ((programOptions.numNodes + 1)* (sizeof(TreeNode)+ 5* programOptions.numSites * sizeof(int) + 2*MAX_NAME * sizeof(char)+ 3 * sizeof(pll_unode_t) + 3*sizeof(pll_tree_edge_t) )); /* nodes */
-//            if (!(*nodes))
-//            {
-//                fprintf (stderr, "Could not allocate nodes (%lu bytes)\n", (programOptions.numNodes+ 1)  * (long) sizeof(TreeNode));
-//                exit (1);
-//            }
-
-//            for (i=0; i< programOptions.TotalNumSequences; i++){
-//                treeTips[i]=NULL;
-//            }
+    //            *nodes = (TreeNode *) malloc ((programOptions.numNodes + 1)* (sizeof(TreeNode)+ 5* programOptions.numSites * sizeof(int) + 2*MAX_NAME * sizeof(char)+ 3 * sizeof(pll_unode_t) + 3*sizeof(pll_tree_edge_t) )); /* nodes */
+    //            if (!(*nodes))
+    //            {
+    //                fprintf (stderr, "Could not allocate nodes (%lu bytes)\n", (programOptions.numNodes+ 1)  * (long) sizeof(TreeNode));
+    //                exit (1);
+    //            }
+    
+    //            for (i=0; i< programOptions.TotalNumSequences; i++){
+    //                treeTips[i]=NULL;
+    //            }
     
     //    treeRootInit = (TreeNode **) calloc(1, sizeof(TreeNode *)); /* nodes pointers */
     //    if (!treeRootInit)
@@ -2047,7 +2047,7 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &population
         p = new TreeNode(programOptions.numSites);
         nodes.push_back(p);
     }
-     AssignCurrentSequencesToPopulation(populations, nodes, programOptions, numClones, numNodes, programOptions.noisy, programOptions.TotalNumSequences, numActiveGametes,  nextAvailable,
+    AssignCurrentSequencesToPopulation(populations, nodes, programOptions, numClones, numNodes, programOptions.noisy, programOptions.TotalNumSequences, numActiveGametes,  nextAvailable,
                                        labelNodes, NULL, NO);
     Population *currentPop;
     Population *fatherPop;
@@ -2085,17 +2085,17 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &population
     //    free (CumSamNodes);
     //   free (activeGametes);
     TreeNode *root = BuildTree(populations,
-                                  currentPop,
-                                  seed,
-                                  programOptions,
-                                  nodes,
-                                  treeTips,
-                                  treeRootInit,
-                                  nextAvailable,
-                                  newInd,
-                                  currentTime,
-                                  labelNodes
-                                  );
+                               currentPop,
+                               seed,
+                               programOptions,
+                               nodes,
+                               treeTips,
+                               treeRootInit,
+                               nextAvailable,
+                               newInd,
+                               currentTime,
+                               labelNodes
+                               );
     
     if (programOptions.noisy > 1)
         fprintf (stderr, "\n\n>> Relabeling nodes on tree... \n\n");
@@ -2129,274 +2129,274 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                         double &currentTime,
                         int &eventNum)
 {
-            int  c, d, i, j, w, k, m, cumIndivid, isCoalescence, whichInd,
-            firstInd, secondInd, newInd,  foundSuperflousNode,
-            isMigration, whichClone, currentNumberAliveClones;
-            double     eventTime;
-            TreeNode  *p, *q, *r;
-            double    ran;
-            double    *cumPopulPart;
-            eventNum = 0;
-            int numSimClones = 0;
-            double ThisRateCA = 0.0;
-            double ThisTimeCA_W = 0.0;
-            double ThisTimeCA_V1 = 0.0;
-            double ThisTimeCA_V2 = 0.0;
-            int numParcialActiveGametes;
-            int choosePairIndividuals;
+    int  c, d, i, j, w, k, m, cumIndivid, isCoalescence, whichInd,
+    firstInd, secondInd, newInd,  foundSuperflousNode,
+    isMigration, whichClone, currentNumberAliveClones;
+    double     eventTime;
+    TreeNode  *p, *q, *r;
+    double    ran;
+    double    *cumPopulPart;
+    eventNum = 0;
+    int numSimClones = 0;
+    double ThisRateCA = 0.0;
+    double ThisTimeCA_W = 0.0;
+    double ThisTimeCA_V1 = 0.0;
+    double ThisTimeCA_V2 = 0.0;
+    int numParcialActiveGametes;
+    int choosePairIndividuals;
+    
+    numParcialActiveGametes = popI->numActiveGametes;
+    //    double CloneDelta = popI->delta;
+    //    double CloneTimeOriginInputSTDPOP = popI->timeOriginSTD;
+    //int numLeftMigrations=popI->numIncomingMigrations;
+    int numMigrations = (popI->numIncomingMigrations); //taking into account also the    time of origin as a migration
+    
+    //    int ThisCloneNumber = popI->index;
+    double timeNextMigration;
+    int indexNextMigration = 0;
+    Population *incomingPop;
+    //    Population *p2;
+    //fprintf (stderr, "\n\n> numMigrations= %d \n", numMigrations);
+    if (programOptions.noisy > 1)
+        fprintf (stderr, "\n\n>> Simulating evolutionary history of clone %d (number active gametes %d, original time to origin %lf)\n", popI->index, popI->numActiveGametes, popI->timeOriginInput);
+    if (programOptions.noisy > 1)
+        fprintf (stderr, "\n\n> Simulating evolutionary history of clone  or order  %d ..\n", popI->order);
+    //fprintf (stderr, "\n\n> Simulating evolutionary history of clone %d ..\n", popI->index);
+    currentTime=0;
+    while (indexNextMigration < numMigrations) {
+        timeNextMigration = popI->immigrantsPopOrderedByModelTime[indexNextMigration].first;
+        //fprintf (stderr, "\n\n> numParcialActiveGametes= %d \n", numParcialActiveGametes);
+        if ( popI->numActiveGametes >= 2) {
+            ThisRateCA = (double)  popI->numActiveGametes * ((double)  popI->numActiveGametes - 1) / 2.0;
+            ThisTimeCA_W = RandomExponential (ThisRateCA, seed) ;
+            ThisTimeCA_V1 = Population::FmodelTstandard (currentTime, popI->timeOriginSTD, popI->delta);
+            ThisTimeCA_V1 = ThisTimeCA_V1 + ThisTimeCA_W;
+            // from standard time to model time, GstandardTmodel(V, T, delta)
+            ThisTimeCA_V2 = Population::GstandardTmodel(ThisTimeCA_V1, popI->timeOriginSTD, popI->delta);
+        }
+        else
+        {
+            ThisTimeCA_V2 = timeNextMigration + 1.0; // it reached a "provisional" MRCA
+            fprintf (stderr, "\n Only 1 active gamete and %d true migrations out of %d true migrations \n", indexNextMigration, numMigrations - 1);
+        }
+        if ( ThisTimeCA_V2 < timeNextMigration)
+        {
+            //choose randomly two lineages to coalesce
+            isCoalescence = YES;
+            isMigration = NO;
+            numCA = numCA + 1;
+            eventNum= eventNum +1;
+            whichClone = popI->index;
+            currentTime = ThisTimeCA_V2; // update current time in model time
+            eventTime = currentTime;
             
-            numParcialActiveGametes = popI->numActiveGametes;
-            //    double CloneDelta = popI->delta;
-            //    double CloneTimeOriginInputSTDPOP = popI->timeOriginSTD;
-            //int numLeftMigrations=popI->numIncomingMigrations;
-            int numMigrations = (popI->numIncomingMigrations); //taking into account also the    time of origin as a migration
-            
-            //    int ThisCloneNumber = popI->index;
-            double timeNextMigration;
-            int indexNextMigration = 0;
-            Population *incomingPop;
-            //    Population *p2;
-            //fprintf (stderr, "\n\n> numMigrations= %d \n", numMigrations);
             if (programOptions.noisy > 1)
-                fprintf (stderr, "\n\n>> Simulating evolutionary history of clone %d (number active gametes %d, original time to origin %lf)\n", popI->index, popI->numActiveGametes, popI->timeOriginInput);
-            if (programOptions.noisy > 1)
-                fprintf (stderr, "\n\n> Simulating evolutionary history of clone  or order  %d ..\n", popI->order);
-            //fprintf (stderr, "\n\n> Simulating evolutionary history of clone %d ..\n", popI->index);
-            currentTime=0;
-            while (indexNextMigration < numMigrations) {
-                timeNextMigration = popI->immigrantsPopOrderedByModelTime[indexNextMigration].first;
-                //fprintf (stderr, "\n\n> numParcialActiveGametes= %d \n", numParcialActiveGametes);
-                if ( popI->numActiveGametes >= 2) {
-                    ThisRateCA = (double)  popI->numActiveGametes * ((double)  popI->numActiveGametes - 1) / 2.0;
-                    ThisTimeCA_W = RandomExponential (ThisRateCA, seed) ;
-                    ThisTimeCA_V1 = Population::FmodelTstandard (currentTime, popI->timeOriginSTD, popI->delta);
-                    ThisTimeCA_V1 = ThisTimeCA_V1 + ThisTimeCA_W;
-                    // from standard time to model time, GstandardTmodel(V, T, delta)
-                    ThisTimeCA_V2 = Population::GstandardTmodel(ThisTimeCA_V1, popI->timeOriginSTD, popI->delta);
-                }
-                else
+            {
+                fprintf (stderr, "\n\n*** Event %3d *** currentTime (model time) = %lf, currentTime (standard time) = %lf\n", eventNum, ThisTimeCA_V2, ThisTimeCA_V1 );
+                fprintf (stderr, "\n\n*** Event %3d *** currentTime (input units) = %lf\n", eventNum, ThisTimeCA_V2);
+            }
+            if (programOptions.noisy == 4)
+                fprintf (stderr, "* Coalescence *\n");
+            MakeCoalescenceEvent(populations, popI, nodes, numClones, seed, programOptions.noisy, numActiveGametes, nextAvailable, labelNodes, currentTime,  programOptions.numNodes);
+        }
+        else
+        {
+            if (indexNextMigration < numMigrations - 1) //indexNextMigration corresponds to one of the true migrations
+            {
+                isCoalescence = NO;
+                isMigration = YES;
+                numMIG = numMIG + 1;
+                eventNum= eventNum +1;
+                currentTime = timeNextMigration;
+                eventTime = currentTime;
+                //update migration times in model time
+                if (programOptions.noisy > 1)
                 {
-                    ThisTimeCA_V2 = timeNextMigration + 1.0; // it reached a "provisional" MRCA
-                    fprintf (stderr, "\n Only 1 active gamete and %d true migrations out of %d true migrations \n", indexNextMigration, numMigrations - 1);
+                    fprintf (stderr, "\n\n*** Event %3d *** *currentTime (model units) = %lf\n", eventNum, ThisTimeCA_V2);
                 }
-                if ( ThisTimeCA_V2 < timeNextMigration)
+                if (programOptions.noisy == 4)
+                {fprintf (stderr, "* Migration *\n");}
+                // newInd = nextAvailable;
+                
+                // r = nodes[newInd];   /* new ancestor */
+                //  r->index = nextAvailable;
+                // r->label = labelNodes;
+                // labelNodes = labelNodes+1;
+                
+                // r->indexCurrentClone = popI->index;
+                
+                // r->orderCurrentClone = popI->order;
+                //r->nodeClass = 4;
+                
+                //    p = *nodes + MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration]; // root of younger clone
+                //incommingPop = *((popI->immigrantsPopOrderedModelTime) + indexNextMigration );
+                
+                //                        if (!incommingPop){
+                //                            fprintf (stderr, "\nError. The incoming population to  poulation %d is empty \n", popI->index);
+                //                            exit (-1);
+                //                        }
+                
+                incomingPop = popI->immigrantsPopOrderedByModelTime[indexNextMigration].second;
+                
+                //r->indexOldClone = incommingPop->index;
+                p = nodes[incomingPop->nodeIdAncestorMRCA];
+                
+                printf( "\n The incoming population %d to  population %d with node %d and time %lf", incomingPop->order, popI->order, p->index, p->timePUnits );
+                
+                //p = incomingPop->MRCA;
+                //p = *nodes + (incommingPop->nodeIdAncesterMRCA); // root of younger clone
+                indexNextMigration = indexNextMigration + 1;
+                p->indexCurrentClone = popI->index;
+                p->indexOldClone = incomingPop->index;
+                p->orderCurrentClone = popI->order;
+                // link the nodes
+                // r->left = p;
+                
+                // r->right = NULL;
+                //choosePairIndividuals = NO;
+                
+                //ChooseRandomIndividual(&firstInd, numClones, popI,  &secondInd, seed, choosePairIndividuals);
+                //q=*nodes + firstInd;
+                //r->right = q;//choose another random living individual of the population
+                
+                //p->anc1 = r;
+                //q->anc1 = r;
+                
+                //connectNodes(p, NULL, r);
+                //p->time = *currentTime;
+                // p->timePUnits = *currentTime * (popI->effectPopSize);
+                
+                //r->time = currentTime;// this is equal to the time of the migration
+                //r->timePUnits = currentTime * (popI->effectPopSize);
+                // nextAvailable=nextAvailable+1; /* 1 node more is available */
+                
+                k = p->indexCurrentClone;
+                incomingPop->numActiveGametes = incomingPop->numActiveGametes - 1; /* now the other clone has 1 less node */
+                // remove node from old clone in list of active gametes and add the new node of the current clone
+                // popI->idsActiveGametes[popI->numActiveGametes]=r->index;//adding the superfluos node
+                popI->idsActiveGametes[popI->numActiveGametes]=p->index;//adding the superfluos node
+                popI->numActiveGametes = popI->numActiveGametes + 1; /* now this clone has 1 more node */
+                
+                fprintf (stderr, "\n After inmigration. pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
+                
+                for(int i=0; i < popI->idsActiveGametes.size();i++)
+                    fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
+                //                if (noisy > 1)
+                //                    fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, popI->index, incommingPop->nodeIdAncesterMRCA, k);
+                //fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, ThisCloneNumber, MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration], k);
+                if (programOptions.noisy > 1)
+                    fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", p->timePUnits);
+                // fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
+                /* memory for number of nodes */
+                if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
                 {
-                    //choose randomly two lineages to coalesce
-                    isCoalescence = YES;
-                    isMigration = NO;
-                    numCA = numCA + 1;
-                    eventNum= eventNum +1;
-                    whichClone = popI->index;
-                    currentTime = ThisTimeCA_V2; // update current time in model time
-                    eventTime = currentTime;
+                    /* ReallocNodes(&numNodes, activeGametes); */
+                    if (programOptions.noisy == 4)
+                        fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
+                    numNodes += INCREMENT_NODES;
+                    /* realloc */
+                    //                            *nodes = (TreeNode *) realloc (*nodes, *numNodes  * (long) sizeof(TreeNode));
+                    //                            if (!(*nodes))
+                    //                            {
+                    //                                fprintf (stderr, "Could not reallocate nodes (%lu bytes)\n", *numNodes  * (long) sizeof(TreeNode));
+                    //                                exit (-1);
+                    //                            }
+                    //                    activeGametes = (int *) realloc (activeGametes, *numNodes * (long) sizeof(int));
+                    //                    if (!activeGametes)
+                    //                    {
+                    //                        fprintf (stderr, "Could not reallocate activeGametes (%lu bytes)\n", *numNodes * (long) sizeof(int));
+                    //                        exit (-1);
+                    //                    }
+                }
+                
+            }
+            else {
+                //origin reached -- create the root
+                currentTime = timeNextMigration;
+                indexNextMigration = indexNextMigration + 1;
+                isCoalescence = NO;
+                isMigration = NO;
+                eventTime = currentTime;
+                if (programOptions.noisy > 1)
+                    fprintf (stderr, "\n\n*** Clone origin ***\n");
+                if (programOptions.noisy == 4)
+                    fprintf (stderr, "Clone origin %d at time (model units) = %lf\n", popI->index, currentTime);
+                if (popI->order < numClones - 1) // do not do it for the last clone
+                {
+                    newInd = nextAvailable;
+                    r = nodes[newInd];    /* new ancestor */
+                    r->index = nextAvailable;
+                    r->label = labelNodes;
+                    labelNodes=labelNodes+1;
+                    r->indexOldClone =r->indexCurrentClone = popI->index;
+                    r->orderCurrentClone = popI->order;
+                    r->effectPopSize=popI->effectPopSize;
+                    popI->nodeIdAncestorMRCA=newInd;
+                    
+                    r->nodeClass = 4;
+                    
+                    firstInd = nextAvailable - 1;
+                    //p = nodes + activeGametes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
+                    p = nodes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
+                    // link the nodes
+                    r->left = p;
+                    r->right = NULL;
+                    p->anc1 = r;
+                    r->time = currentTime;
+                    r->timePUnits = currentTime * popI->effectPopSize;
+                    popI->MRCA = p;
+                    
+                    //connectNodes(p, NULL, r);
+                    //fprintf (stderr, "\n r->index = %d, r->time = %lf\n", r->index, r->time);
+                    /* readjust active nodes */
+                    nextAvailable=nextAvailable+1; /* 1 node more is available */
+                    popI->idsActiveGametes[0] = newInd;//always will be in the 0  position because there is only one left
+                    
+                    //popI->idsGametes[popI->numGametes] = newInd; r is a superflous node and it will be removed so no need to add it
+                    //popI->numGametes = popI->numGametes +1;
                     
                     if (programOptions.noisy > 1)
+                        fprintf (stderr, "Creating origin node, it creates node %d derived from node %d", newInd, firstInd);
+                    if (programOptions.noisy > 1)
+                        fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
+                    /* memory for number of nodes */
+                    if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
                     {
-                        fprintf (stderr, "\n\n*** Event %3d *** currentTime (model time) = %lf, currentTime (standard time) = %lf\n", eventNum, ThisTimeCA_V2, ThisTimeCA_V1 );
-                        fprintf (stderr, "\n\n*** Event %3d *** currentTime (input units) = %lf\n", eventNum, ThisTimeCA_V2);
-                    }
-                    if (programOptions.noisy == 4)
-                        fprintf (stderr, "* Coalescence *\n");
-                    MakeCoalescenceEvent(populations, popI, nodes, numClones, seed, programOptions.noisy, numActiveGametes, nextAvailable, labelNodes, currentTime,  programOptions.numNodes);
-                }
-                else
-                {
-                    if (indexNextMigration < numMigrations - 1) //indexNextMigration corresponds to one of the true migrations
-                    {
-                        isCoalescence = NO;
-                        isMigration = YES;
-                        numMIG = numMIG + 1;
-                        eventNum= eventNum +1;
-                        currentTime = timeNextMigration;
-                        eventTime = currentTime;
-                        //update migration times in model time
-                        if (programOptions.noisy > 1)
-                        {
-                            fprintf (stderr, "\n\n*** Event %3d *** *currentTime (model units) = %lf\n", eventNum, ThisTimeCA_V2);
-                        }
+                        /* ReallocNodes(&numNodes); */
                         if (programOptions.noisy == 4)
-                        {fprintf (stderr, "* Migration *\n");}
-                       // newInd = nextAvailable;
-                        
-                       // r = nodes[newInd];   /* new ancestor */
-                      //  r->index = nextAvailable;
-                       // r->label = labelNodes;
-                       // labelNodes = labelNodes+1;
-                        
-                       // r->indexCurrentClone = popI->index;
-                       
-                       // r->orderCurrentClone = popI->order;
-                        //r->nodeClass = 4;
-                        
-                        //    p = *nodes + MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration]; // root of younger clone
-                        //incommingPop = *((popI->immigrantsPopOrderedModelTime) + indexNextMigration );
-                        
-//                        if (!incommingPop){
-//                            fprintf (stderr, "\nError. The incoming population to  poulation %d is empty \n", popI->index);
-//                            exit (-1);
-//                        }
-                        
-                        incomingPop = popI->immigrantsPopOrderedByModelTime[indexNextMigration].second;
-
-                        //r->indexOldClone = incommingPop->index;
-                        p = nodes[incomingPop->nodeIdAncestorMRCA];
-                        
-                        printf( "\n The incoming population %d to  population %d with node %d and time %lf", incomingPop->order, popI->order, p->index, p->timePUnits );
-                        
-                        //p = incomingPop->MRCA;
-                        //p = *nodes + (incommingPop->nodeIdAncesterMRCA); // root of younger clone
-                        indexNextMigration = indexNextMigration + 1;
-                        p->indexCurrentClone = popI->index;
-                        p->indexOldClone = incomingPop->index;
-                        p->orderCurrentClone = popI->order;
-                        // link the nodes
-                       // r->left = p;
-
-                       // r->right = NULL;
-                        //choosePairIndividuals = NO;
-                        
-                        //ChooseRandomIndividual(&firstInd, numClones, popI,  &secondInd, seed, choosePairIndividuals);
-                        //q=*nodes + firstInd;
-                        //r->right = q;//choose another random living individual of the population
-                        
-                        //p->anc1 = r;
-                        //q->anc1 = r;
-                        
-                        //connectNodes(p, NULL, r);
-                        //p->time = *currentTime;
-                        // p->timePUnits = *currentTime * (popI->effectPopSize);
-                        
-                        //r->time = currentTime;// this is equal to the time of the migration
-                        //r->timePUnits = currentTime * (popI->effectPopSize);
-                       // nextAvailable=nextAvailable+1; /* 1 node more is available */
-                        
-                        k = p->indexCurrentClone;
-                        incomingPop->numActiveGametes = incomingPop->numActiveGametes - 1; /* now the other clone has 1 less node */
-                        // remove node from old clone in list of active gametes and add the new node of the current clone
-                      // popI->idsActiveGametes[popI->numActiveGametes]=r->index;//adding the superfluos node
-                      popI->idsActiveGametes[popI->numActiveGametes]=p->index;//adding the superfluos node
-                        popI->numActiveGametes = popI->numActiveGametes + 1; /* now this clone has 1 more node */
-                        
-                        fprintf (stderr, "\n After inmigration. pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
-                        
-                        for(int i=0; i < popI->idsActiveGametes.size();i++)
-                            fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
-                        //                if (noisy > 1)
-                        //                    fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, popI->index, incommingPop->nodeIdAncesterMRCA, k);
-                        //fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, ThisCloneNumber, MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration], k);
-                        if (programOptions.noisy > 1)
-                            fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", p->timePUnits);
-                        // fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
-                        /* memory for number of nodes */
-                        if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
-                        {
-                            /* ReallocNodes(&numNodes, activeGametes); */
-                            if (programOptions.noisy == 4)
-                                fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
-                            numNodes += INCREMENT_NODES;
-                            /* realloc */
-//                            *nodes = (TreeNode *) realloc (*nodes, *numNodes  * (long) sizeof(TreeNode));
-//                            if (!(*nodes))
-//                            {
-//                                fprintf (stderr, "Could not reallocate nodes (%lu bytes)\n", *numNodes  * (long) sizeof(TreeNode));
-//                                exit (-1);
-//                            }
-                            //                    activeGametes = (int *) realloc (activeGametes, *numNodes * (long) sizeof(int));
-                            //                    if (!activeGametes)
-                            //                    {
-                            //                        fprintf (stderr, "Could not reallocate activeGametes (%lu bytes)\n", *numNodes * (long) sizeof(int));
-                            //                        exit (-1);
-                            //                    }
-                        }
-                        
-                    }
-                    else {
-                        //origin reached -- create the root
-                        currentTime = timeNextMigration;
-                        indexNextMigration = indexNextMigration + 1;
-                        isCoalescence = NO;
-                        isMigration = NO;
-                        eventTime = currentTime;
-                        if (programOptions.noisy > 1)
-                            fprintf (stderr, "\n\n*** Clone origin ***\n");
-                        if (programOptions.noisy == 4)
-                            fprintf (stderr, "Clone origin %d at time (model units) = %lf\n", popI->index, currentTime);
-                        if (popI->order < numClones - 1) // do not do it for the last clone
-                        {
-                            newInd = nextAvailable;
-                            r = nodes[newInd];    /* new ancestor */
-                            r->index = nextAvailable;
-                            r->label = labelNodes;
-                            labelNodes=labelNodes+1;
-                            r->indexOldClone =r->indexCurrentClone = popI->index;
-                            r->orderCurrentClone = popI->order;
-                            r->effectPopSize=popI->effectPopSize;
-                            popI->nodeIdAncestorMRCA=newInd;
-                            
-                            r->nodeClass = 4;
-                            
-                            firstInd = nextAvailable - 1;
-                            //p = nodes + activeGametes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
-                            p = nodes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
-                            // link the nodes
-                            r->left = p;
-                            r->right = NULL;
-                            p->anc1 = r;
-                            r->time = currentTime;
-                            r->timePUnits = currentTime * popI->effectPopSize;
-                            popI->MRCA = p;
-                            
-                            //connectNodes(p, NULL, r);
-                            //fprintf (stderr, "\n r->index = %d, r->time = %lf\n", r->index, r->time);
-                            /* readjust active nodes */
-                            nextAvailable=nextAvailable+1; /* 1 node more is available */
-                            popI->idsActiveGametes[0] = newInd;//always will be in the 0  position because there is only one left
-                            
-                            //popI->idsGametes[popI->numGametes] = newInd; r is a superflous node and it will be removed so no need to add it
-                            //popI->numGametes = popI->numGametes +1;
-                            
-                            if (programOptions.noisy > 1)
-                                fprintf (stderr, "Creating origin node, it creates node %d derived from node %d", newInd, firstInd);
-                            if (programOptions.noisy > 1)
-                                fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
-                            /* memory for number of nodes */
-                            if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
-                            {
-                                /* ReallocNodes(&numNodes); */
-                                if (programOptions.noisy == 4)
-                                    fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
-                                numNodes += INCREMENT_NODES;
-                                /* realloc */
-//                                *nodes = (TreeNode *) realloc (*nodes, *numNodes  * (long) sizeof(TreeNode));
-//                                if (!(*nodes))
-//                                {
-//                                    fprintf (stderr, "Could not reallocate nodes (%lu bytes)\n", *numNodes  * (long) sizeof(TreeNode));
-//                                    exit (-1);
-//                                }
-//
-                            }
-                        }
-                        else  {//origin of oldest pop reached
-                            popI->nodeIdAncestorMRCA=nextAvailable-1;//for the last population, nodeIdAncesterMRCA is the MRCA instead of ancester of MRCA
-                            r = nodes[nextAvailable-1];//popI->idsActiveGametes[0]
-                            r->indexOldClone = r->indexCurrentClone = popI->index;
-                            r->orderCurrentClone = popI->order;
-                            popI->MRCA= r;
-                            fprintf (stderr, "\n origin of the oldest population  %d", popI->nodeIdAncestorMRCA);
-                        }
+                            fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
+                        numNodes += INCREMENT_NODES;
+                        /* realloc */
+                        //                                *nodes = (TreeNode *) realloc (*nodes, *numNodes  * (long) sizeof(TreeNode));
+                        //                                if (!(*nodes))
+                        //                                {
+                        //                                    fprintf (stderr, "Could not reallocate nodes (%lu bytes)\n", *numNodes  * (long) sizeof(TreeNode));
+                        //                                    exit (-1);
+                        //                                }
+                        //
                     }
                 }
-                if (programOptions.noisy > 3)
-                {
-                    fprintf (stderr, "\nActive nodes (%d):",  popI->numActiveGametes);
-                    for (i = 0; i < popI->numActiveGametes; i++)
-                        fprintf (stderr, " %d", popI->idsActiveGametes[i]);
-                    fprintf (stderr, "\t|\tNext node available = %d", nextAvailable);
+                else  {//origin of oldest pop reached
+                    popI->nodeIdAncestorMRCA=nextAvailable-1;//for the last population, nodeIdAncesterMRCA is the MRCA instead of ancester of MRCA
+                    r = nodes[nextAvailable-1];//popI->idsActiveGametes[0]
+                    r->indexOldClone = r->indexCurrentClone = popI->index;
+                    r->orderCurrentClone = popI->order;
+                    popI->MRCA= r;
+                    fprintf (stderr, "\n origin of the oldest population  %d", popI->nodeIdAncestorMRCA);
                 }
             }
-            if (programOptions.noisy > 1)
-                fprintf (stderr, "\n\nEvolutionary history of clone %d is completed \n", popI->index);
         }
+        if (programOptions.noisy > 3)
+        {
+            fprintf (stderr, "\nActive nodes (%d):",  popI->numActiveGametes);
+            for (i = 0; i < popI->numActiveGametes; i++)
+                fprintf (stderr, " %d", popI->idsActiveGametes[i]);
+            fprintf (stderr, "\t|\tNext node available = %d", nextAvailable);
+        }
+    }
+    if (programOptions.noisy > 1)
+        fprintf (stderr, "\n\nEvolutionary history of clone %d is completed \n", popI->index);
+}
 /**************** RelabelNodes **************/
 /*  After getting rid of superfluos node, we
  need to relabel those so they are consecutive
@@ -2424,8 +2424,8 @@ void RelabelNodes(TreeNode *p, int &intLabel)
         }
     }
 }
-        
-        
+
+
 /******************* toNewickString2 ****************/
 /*  Build a string with the Newick representation using the left, right, anc1 pointers  */
 char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObservedCellNames)
@@ -2443,10 +2443,10 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
         {
             strcpy( p->cellName,"healthycell");
             
-          
+            
             if (asprintf(&newickString,  "healthycell:%10.9lf",  (p->anc1->timePUnits - p->timePUnits) * mutationRate)<0)
                 return NULL;
-         
+            
             return newickString;
         }
         else if (p->left == NULL && p->right == NULL)   /* tip of the tree */
@@ -3026,9 +3026,9 @@ double * expand_uniq_rates(int states, const double * uniq_rates, const int * ra
 void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError)
 {
     //pll_state_t pll_map_gt10_2[256];
-
+    
     int i;
- 
+    
     //double * _freqs;
     
     /* find sequences in hash table and link them with the corresponding taxa */
@@ -3301,13 +3301,13 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
         ch = toupper(ch);
         switch (ch)
         {
-          case 'N':
-              if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
-                   {
-                      fprintf(stderr, "PARAMETER ERROR: Bad number of chains (%d)\n\n", (int)argumentInt);
+            case 'N':
+                if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
+                {
+                    fprintf(stderr, "PARAMETER ERROR: Bad number of chains (%d)\n\n", (int)argumentInt);
                     PrintUsage();
-                  }
-                 mcmcOptions.numChains =argumentInt;
+                }
+                mcmcOptions.numChains =argumentInt;
                 break;
             case 'I':
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)

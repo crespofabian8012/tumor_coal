@@ -17,7 +17,7 @@ using namespace std;
 class TreeNode
 {
 public:
-
+    
     TreeNode *left, *right, *anc1, *outgroup;
     int         index, label, isOutgroup;
     double      length, time,lengthModelUnits, timePUnits;

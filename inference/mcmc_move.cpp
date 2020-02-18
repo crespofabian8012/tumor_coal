@@ -32,7 +32,7 @@ string MCMCmove::name() {
 double MCMCmove::numberRejected()
 {
     
-      return this->numberReject;
+    return this->numberReject;
     
 }
 Chain * MCMCmove::getChain()
@@ -41,7 +41,7 @@ Chain * MCMCmove::getChain()
 }
 NewTotalEffectPopSizeMove::NewTotalEffectPopSizeMove(Chain * chain, string nameMove ):MCMCmove(chain, nameMove)
 {
-
+    
 }
 NewProportionsVectorMove::NewProportionsVectorMove(Chain * chain, string nameMove ):MCMCmove(chain, nameMove)
 {
@@ -53,9 +53,9 @@ NewEffectPopSizeMoveForPopulation::NewEffectPopSizeMoveForPopulation(Chain *chai
 }
 void NewTotalEffectPopSizeMove::safeCurrentValue()
 {
-      Chain *chain=getChain();
+    Chain *chain=getChain();
     int i=0;
-     Population *popI;
+    Population *popI;
     chain->oldTotalEffectPopSize = chain->totalEffectPopSize;
     for( i = 0 ; i < chain->numClones; i++)
     {
@@ -79,25 +79,25 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
     double newTotalPopulationSize;
     mcmcOptions.slidingWindowSizeTotalEffectPopSize= 2 * 0.01* (chain->totalEffectPopSize - (chain->totalSampleSize() / mcmcOptions.fixedLambda));
     bool allPopulationPopSizesSet=false;
-   
+    
     do {
         numberAttemps++;
         allPopulationPopSizesSet=true;
         newTotalPopulationSize= chain->proposalSlidingWindow(chain->oldTotalEffectPopSize,  mcmcOptions.slidingWindowSizeTotalEffectPopSize);
-      
+        
         chain->totalEffectPopSize= newTotalPopulationSize;
-          fprintf (stderr, "\n proposed total effect pop size %d \n",chain->totalEffectPopSize );
+        fprintf (stderr, "\n proposed total effect pop size %d \n",chain->totalEffectPopSize );
         chain->updateEffectPopSizesCurrentProportionsVector();
         for( i = 0 ; i < chain->numClones; i++)
         {
-          popI=chain->populations[i];
-          popI->growthRate =popI->delta  / popI->effectPopSize;
-          popI->popSize=popI->effectPopSize * popI->birthRate;
-          popI->deathRate= popI->birthRate - popI->growthRate;
-          popI->numCompletedCoalescences=0;
-          popI->CoalescentEventTimes.clear();
-          popI->immigrantsPopOrderedByModelTime.clear();
-          popI->numIncomingMigrations=0;
+            popI=chain->populations[i];
+            popI->growthRate =popI->delta  / popI->effectPopSize;
+            popI->popSize=popI->effectPopSize * popI->birthRate;
+            popI->deathRate= popI->birthRate - popI->growthRate;
+            popI->numCompletedCoalescences=0;
+            popI->CoalescentEventTimes.clear();
+            popI->immigrantsPopOrderedByModelTime.clear();
+            popI->numIncomingMigrations=0;
             
             if (popI->popSize < popI->sampleSize)
             {
@@ -106,7 +106,7 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
             }
         }
         if (!allPopulationPopSizesSet)
-             fprintf (stderr, "\n The  popSize < sampleSize\n");
+            fprintf (stderr, "\n The  popSize < sampleSize\n");
         if (!allPopulationPopSizesSet)
             break;
         chain->initPopulationMigration();//after setting the timeSTD
@@ -121,16 +121,16 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
     while(!allPopulationPopSizesSet);
     
     if (allPopulationPopSizesSet)
-       fprintf (stderr, "\n new total effect pop size %d \n",chain->totalEffectPopSize );
+        fprintf (stderr, "\n new total effect pop size %d \n",chain->totalEffectPopSize );
 }
 void NewTotalEffectPopSizeMove::rollbackMove()
 {
     Chain *chain=getChain();
     chain->totalEffectPopSize= chain->oldTotalEffectPopSize ;
-     int i=0;
+    int i=0;
     
     Population *popI;
-   
+    
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
@@ -150,8 +150,8 @@ void NewTotalEffectPopSizeMove::rollbackMove()
 }
 double NewTotalEffectPopSizeMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
-     Chain *chain=getChain();
-
+    Chain *chain=getChain();
+    
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     fprintf (stderr, "\n>> log conditional Likelihood tree for the new total effective population size %d(old %d),  of the chain %d is = %lf  \n",chain->totalEffectPopSize, chain->oldTotalEffectPopSize,chain->chainNumber,newLogConditionalLikelihoodTree );
     double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
@@ -174,7 +174,7 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
         printf("\n Rejected new move %s because too many  proposals \n", nameMove.c_str());
         return;
     }
-        
+    
     double logAcceptanceRate =computeLogAcceptanceProb(programOptions, mcmcOptions);//-inf when one sample size is 0 for the new Pair...
     printf("\n logAcceptancerate %lf \n", logAcceptanceRate);
     double randomNumber= randomUniformFromGsl();
@@ -186,15 +186,15 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
         this->numberAccept++;
         Chain *chain=getChain();
         if (chain->currentlogConditionalLikelihoodTree !=newLogConditionalLikelihoodTree)
-             chain->currentlogConditionalLikelihoodTree = newLogConditionalLikelihoodTree;
+            chain->currentlogConditionalLikelihoodTree = newLogConditionalLikelihoodTree;
         if (chain->currentlogConditionalLikelihoodSequences !=newLogConditionalLikelihoodSequences)
-               chain->currentlogConditionalLikelihoodSequences = newLogConditionalLikelihoodSequences;
+            chain->currentlogConditionalLikelihoodSequences = newLogConditionalLikelihoodSequences;
     }
     else
     {
         rollbackMove();
         this->numberReject++;
-         printf("\n Rejected new move %s \n", nameMove.c_str());
+        printf("\n Rejected new move %s \n", nameMove.c_str());
     }
 }
 //////////////////////////////////////////////
@@ -203,7 +203,7 @@ void NewProportionsVectorMove::safeCurrentValue()
     Chain *chain=getChain();
     int i=0;
     Population *popI;
-     chain->oldproportionsVector= chain->proportionsVector;
+    chain->oldproportionsVector= chain->proportionsVector;
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
@@ -235,15 +235,15 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     }
     do {
         allPopulationPopSizesSet=true;
-          numberAttemps++;
+        numberAttemps++;
         randomDirichletFromVector (effectPopSizesvector, chain->proportionsVector);
-//        randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
+        //        randomDirichletFromGsl(chain->numClones, proportionsVectorArray, &(chain->proportionsVector[0]));
         chain->updateEffectPopSizesCurrentProportionsVector();
         for( i = 0 ; i < chain->numClones; i++)
         {
             popI=chain->populations[i];
             popI->x= chain->proportionsVector.at(i);
-           
+            
             popI->growthRate =popI->delta  / popI->effectPopSize;
             
             popI->r =popI->growthRate * chain->totalEffectPopSize;
@@ -259,12 +259,12 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
             {
                 allPopulationPopSizesSet=false;
             }
-         }
+        }
         if (!allPopulationPopSizesSet)
             break;
         chain->initPopulationMigration();//after setting the timeSTD
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
-            chain->filterSortPopulationsCoalescentEvents();
+        chain->filterSortPopulationsCoalescentEvents();
         allPopulationPopSizesSet = chain->checkMigrationsOrder();
         if (numberAttemps >mcmcOptions.maxNumberProposalAttempts)
             break;
@@ -272,8 +272,8 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     while(!allPopulationPopSizesSet);
     if (allPopulationPopSizesSet)
     {
-//        for( i = 0 ; i < chain->numClones; i++)
-//         fprintf (stderr, "\n new proportions vector at %d: %lf \n",i,chain->proportionsVector.at(i) );
+        //        for( i = 0 ; i < chain->numClones; i++)
+        //         fprintf (stderr, "\n new proportions vector at %d: %lf \n",i,chain->proportionsVector.at(i) );
     }
 }
 void NewProportionsVectorMove::rollbackMove()
@@ -292,18 +292,18 @@ void NewProportionsVectorMove::rollbackMove()
         popI->deathRate = popI->oldDeathRate;
         popI->growthRate = popI->oldGrowthRate;
         popI->CoalescentEventTimes = popI->oldCoalescentEventTimes;
-           popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
+        popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
-           popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
+        popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
 double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
-   // ListClonesAccordingTimeToOrigin(chain->populations);
-  newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+    // ListClonesAccordingTimeToOrigin(chain->populations);
+    newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     vector<double> oldConcentrationParameter(chain->numClones);
     vector<double> proposedConcentrationParameter(chain->numClones);
     for(unsigned i = 0 ; i < chain->numClones; i++){
@@ -329,8 +329,8 @@ NewGrowthRateMoveForPopulation::NewGrowthRateMoveForPopulation(Chain *chain,stri
 }
 void NewGrowthRateMoveForPopulation::safeCurrentValue()
 {
-     Chain *chain=getChain();
-   pop->olddelta= pop->delta;
+    Chain *chain=getChain();
+    pop->olddelta= pop->delta;
     Population *popI;
     for( int i = 0 ; i < chain->numClones; i++)
     {
@@ -345,7 +345,7 @@ void NewGrowthRateMoveForPopulation::safeCurrentValue()
 void NewGrowthRateMoveForPopulation::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
-
+    
     double randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato);
     pop->delta =  randomDelta;
     pop->growthRate =pop->delta  / pop->effectPopSize;
@@ -359,16 +359,16 @@ void NewGrowthRateMoveForPopulation::rollbackMove()
 {
     Chain *chain=getChain();
     Population *popI;
-  pop->delta= pop->olddelta;
+    pop->delta= pop->olddelta;
     for(int i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
         popI->FatherPop = popI->oldFatherPop;
         popI->CoalescentEventTimes = popI->oldCoalescentEventTimes;
-          popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
+        popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
-          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
+        popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
@@ -389,7 +389,7 @@ double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &
     
     
     double logAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
-   
+    
     return logAcceptanceRate;
 }
 void NewEffectPopSizeMoveForPopulation::safeCurrentValue()
@@ -409,27 +409,27 @@ void NewEffectPopSizeMoveForPopulation::safeCurrentValue()
 }
 void NewEffectPopSizeMoveForPopulation::rollbackMove()
 {  Chain *chain=getChain();
-   pop->effectPopSize= pop->oldeffectPopSize;
-   chain->totalEffectPopSize =chain->oldTotalEffectPopSize;
+    pop->effectPopSize= pop->oldeffectPopSize;
+    chain->totalEffectPopSize =chain->oldTotalEffectPopSize;
     Population *popI;
     for(int i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
         popI->FatherPop = popI->oldFatherPop;
         popI->CoalescentEventTimes = popI->oldCoalescentEventTimes;
-          popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
+        popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
-          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
+        popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
 void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     int i;
- 
+    
     Chain *chain=getChain();
-
+    
     bool populationPopSizesSet=false;
     double newEffectPopulationSize;
     //int totalSampleSize = chain->totalSampleSize();
@@ -441,15 +441,15 @@ void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOpti
         pop->effectPopSize= newEffectPopulationSize;
         
         chain->totalEffectPopSize =  chain->totalEffectPopSize + pop->effectPopSize - pop->oldeffectPopSize;
-       
+        
         chain->updateEffectPopSizesCurrentProportionsVector();
-     
+        
         pop->growthRate =pop->delta  / pop->effectPopSize;
         pop->popSize=pop->effectPopSize * pop->birthRate;
         pop->deathRate= pop->birthRate - pop->growthRate;
         if (pop->popSize < pop->sampleSize)
         {
-                populationPopSizesSet=false;
+            populationPopSizesSet=false;
         }
         if (!populationPopSizesSet)
             break;
@@ -459,7 +459,7 @@ void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOpti
         populationPopSizesSet = chain->checkMigrationsOrder();
     }
     while(!populationPopSizesSet);
-   
+    
 }
 double NewEffectPopSizeMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions){
     
@@ -520,14 +520,14 @@ void NewTimeOriginOnTreeforPopulationMove::safeCurrentValue()
     //save information for the population
     pop->oldrMRCA =  pop->rMRCA ;//this only changes to population pop
     pop->oldTimeOriginInput = pop->timeOriginInput;
-   
-     //save information for the other populations
+    
+    //save information for the other populations
     for( i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
         popI->oldSampleSize = popI->sampleSize;
-       // popI->oldeffectPopSize = popI->effectPopSize;
-         popI->oldTimeOriginSTD = popI->timeOriginSTD;
+        // popI->oldeffectPopSize = popI->effectPopSize;
+        popI->oldTimeOriginSTD = popI->timeOriginSTD;
         popI->oldFatherPop =  popI->FatherPop;
         popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
         popI->CoalescentEventTimes.clear();
@@ -550,20 +550,20 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove()
     {
         popI=chain->populations[i];
         popI->sampleSize = popI->oldSampleSize;
-       //  popI->effectPopSize = popI->oldeffectPopSize;
+        //  popI->effectPopSize = popI->oldeffectPopSize;
         popI->timeOriginSTD = popI->oldTimeOriginSTD;
         popI->FatherPop = popI->oldFatherPop ; //the father population can change also for other populations
         popI->CoalescentEventTimes = popI->oldCoalescentEventTimes ;
-          popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
+        popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
         popI->oldCoalescentEventTimes.clear();
         popI->immigrantsPopOrderedByModelTime = popI->oldimmigrantsPopOrderedByModelTime;
-          popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
+        popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
 void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
-     Chain *chain=getChain();
+    Chain *chain=getChain();
     //first compute the list of 3 adjacent edges
     //build a cummulative list with the 3 adjacent edges
     //then select at random number between 0 and the sum of the  3 adjacent edges
@@ -573,7 +573,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     double alpha[chain->numClones];
     int numberPoints = chain->numClones -1;
     std::map<pll_rnode_t*, vector<Population*>>  newrmrcaOfPopulation;
-      map<pll_rnode_t*, vector<Population*>>::iterator it;
+    map<pll_rnode_t*, vector<Population*>>::iterator it;
     
     bool isOldestPop = chain->isOldestPopulation(pop, chain->rMRCAPopulation) ;
     
@@ -594,9 +594,9 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     chain->initPopulationsSampleSizes( chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
-            auto pop =  chain->populations[i];
-            alpha[i]= pop->sampleSize ;
-           // fprintf (stderr, "\n New sample size %d for population order %d \n", pop->sampleSize, pop->order );
+        auto pop =  chain->populations[i];
+        alpha[i]= pop->sampleSize ;
+        // fprintf (stderr, "\n New sample size %d for population order %d \n", pop->sampleSize, pop->order );
     }
     chain->initTimeOriginSTD();
     chain->initPopulationMigration();//after setting the timeSTD
@@ -611,11 +611,11 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
     vector<pair<double, pll_tree_edge_t *> > currentAvailableEdges;
     vector<pair<double, pll_tree_edge_t *> > proposedAvailableEdges;
     
-   newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+    newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     double currentSumAvailBranchLengths = chain->computeAdjacentEdges(currentAvailableEdges, chain->currentrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->oldrMRCA);
     
     double newSumAvailBranchLengths =chain->computeAdjacentEdges(proposedAvailableEdges, chain->proposedrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->rMRCA);
-
+    
     double currentProportionsArray[chain->numClones];
     unsigned int currentSampleSizesArray[chain->numClones];
     unsigned int proposedSampleSizesArray[chain->numClones];
@@ -625,17 +625,17 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
         proposedSampleSizesArray[i]= pop->sampleSize ;
         currentSampleSizesArray[i]= pop->oldSampleSize ;
         currentProportionsArray[i]= pop->x;
-
+        
     }
-   
+    
     double currentlogMultinomialProb= logMultinomialProbability(chain->numClones, currentProportionsArray, currentSampleSizesArray);
     
     double proposedlogMultinomialProb=logMultinomialProbability(chain->numClones, currentProportionsArray, proposedSampleSizesArray);
-  
+    
     double numeratorQ=log(pop->oldrMRCA->length) - log(newSumAvailBranchLengths);
-//    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     double denominatorQ= log(pop->rMRCA->length) - log(currentSumAvailBranchLengths);
-//    priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    //    priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
     double sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ+proposedlogMultinomialProb ;
     
@@ -654,35 +654,35 @@ void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue()
     //pop->oldCoalescentEventTimes = pop->CoalescentEventTimes;
     //pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
     //pop->oldSampleSize = pop->sampleSize;
-//    for(unsigned i=0; i< pop->FatherPop->immigrantsPopOrderedByModelTime.size();i++){
-//
-//         fprintf (stderr, "\n inmigrant %d, time %lf to father population order %d of population of order  %d \n", i , pop->FatherPop->immigrantsPopOrderedByModelTime.at(i).first, pop->FatherPop->order, pop->order);
-//
-//    }
+    //    for(unsigned i=0; i< pop->FatherPop->immigrantsPopOrderedByModelTime.size();i++){
+    //
+    //         fprintf (stderr, "\n inmigrant %d, time %lf to father population order %d of population of order  %d \n", i , pop->FatherPop->immigrantsPopOrderedByModelTime.at(i).first, pop->FatherPop->order, pop->order);
+    //
+    //    }
     
-//    for(unsigned i=0; i< pop->CoalescentEventTimes.size();i++){
-//
-//        fprintf (stderr, "\n coalescent %d, time %lf  of population order %d and sample size %d  \n", i , pop->CoalescentEventTimes.at(i), pop->order, pop->sampleSize);
-//
-//    }
-   
+    //    for(unsigned i=0; i< pop->CoalescentEventTimes.size();i++){
+    //
+    //        fprintf (stderr, "\n coalescent %d, time %lf  of population order %d and sample size %d  \n", i , pop->CoalescentEventTimes.at(i), pop->order, pop->sampleSize);
+    //
+    //    }
+    
     pop->FatherPop->oldimmigrantsPopOrderedByModelTime =  pop->FatherPop->immigrantsPopOrderedByModelTime;
-   // pop->FatherPop->immigrantsPopOrderedByModelTime.clear();
+    // pop->FatherPop->immigrantsPopOrderedByModelTime.clear();
     
     pop->oldTimeOriginInput = pop->timeOriginInput;
     pop->oldTimeOriginSTD = pop->timeOriginSTD;
     //save information for the other populations
-//    for( i = 0 ; i < chain->numClones; i++)
-//    {
-//        popI=chain->populations[i];
-//       // popI->oldFatherPop =  pop->FatherPop;
-//        popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
-//        popI->CoalescentEventTimes.clear();
-//        popI->numCompletedCoalescences=0;
-//        popI->oldimmigrantsPopOrderedByModelTime= popI->immigrantsPopOrderedByModelTime;
-//        popI->immigrantsPopOrderedByModelTime.clear();
-//        popI->numIncomingMigrations=0;
-//    }
+    //    for( i = 0 ; i < chain->numClones; i++)
+    //    {
+    //        popI=chain->populations[i];
+    //       // popI->oldFatherPop =  pop->FatherPop;
+    //        popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
+    //        popI->CoalescentEventTimes.clear();
+    //        popI->numCompletedCoalescences=0;
+    //        popI->oldimmigrantsPopOrderedByModelTime= popI->immigrantsPopOrderedByModelTime;
+    //        popI->immigrantsPopOrderedByModelTime.clear();
+    //        popI->numIncomingMigrations=0;
+    //    }
 }
 void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
 {
@@ -702,15 +702,15 @@ void NewTimeOriginOnEdgeforPopulationMove::rollbackMove()
     
     chain->proposedrMRCAPopulation.clear();
     //save information for the other populations
-//    for( i = 0 ; i < chain->numClones; i++)
-//    {
-//        popI=chain->populations[i];
-//        //pop->FatherPop = pop->oldFatherPop ;
-//        pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
-//        pop->oldCoalescentEventTimes.clear();
-//        pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
-//        pop->oldimmigrantsPopOrderedByModelTime.clear();
-//    }
+    //    for( i = 0 ; i < chain->numClones; i++)
+    //    {
+    //        popI=chain->populations[i];
+    //        //pop->FatherPop = pop->oldFatherPop ;
+    //        pop->CoalescentEventTimes = pop->oldCoalescentEventTimes ;
+    //        pop->oldCoalescentEventTimes.clear();
+    //        pop->immigrantsPopOrderedByModelTime = pop->oldimmigrantsPopOrderedByModelTime;
+    //        pop->oldimmigrantsPopOrderedByModelTime.clear();
+    //    }
 }
 void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
@@ -722,23 +722,23 @@ void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programO
     
     chain->chooseNewTimeofOriginOnEdge(pop);
     //chain->initTimeOriginSTD();
-//    chain->initPopulationMigration();//after setting the timeSTD
-//
-//    chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
-//    chain->filterSortPopulationsCoalescentEvents();
+    //    chain->initPopulationMigration();//after setting the timeSTD
+    //
+    //    chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
+    //    chain->filterSortPopulationsCoalescentEvents();
     sort(pop->FatherPop->immigrantsPopOrderedByModelTime.begin(), pop->FatherPop->immigrantsPopOrderedByModelTime.end(), Population::comparePopulationsPairByTimeOrigin);
- 
-//    for (int i = 0; i < pop->FatherPop->immigrantsPopOrderedByModelTime.size(); ++i)
-//        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin input%lf \n", pop->FatherPop->immigrantsPopOrderedByModelTime[i].first,  pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->order , pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->timeOriginInput);
+    
+    //    for (int i = 0; i < pop->FatherPop->immigrantsPopOrderedByModelTime.size(); ++i)
+    //        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin input%lf \n", pop->FatherPop->immigrantsPopOrderedByModelTime[i].first,  pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->order , pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->timeOriginInput);
 }
 double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     
-   newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
+    newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     double currentSumAvailBranchLengths;// chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
     double newSumAvailBranchLengths ;// chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
-   // double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);
+    // double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);
     double numeratorQ =0;
     //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     //double denominatorQ= log(pop->rMRCA->length) + log(currentSumAvailBranchLengths);
@@ -749,7 +749,7 @@ double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOp
     
     double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ;
     
-   double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
+    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
     return LogAcceptanceRate;
 }
 //////////////////////////////////////////
@@ -768,7 +768,7 @@ void NewPairGlobalScaledMutationRateRIMove::safeCurrentValue()
     chain->oldTotalEffectPopSize =  chain->totalEffectPopSize;
     chain->oldtheta = chain->theta;
     chain->safeTreeNodeCurrentTimePUnits();
-
+    
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
         auto pop =  chain->populations[i];
@@ -785,34 +785,34 @@ void NewPairGlobalScaledMutationRateRIMove::safeCurrentValue()
         pop->CoalescentEventTimes.clear();
         pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
         pop->immigrantsPopOrderedByModelTime.clear();
-     
+        
     }
 }
 void NewPairGlobalScaledMutationRateRIMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     double allPopulationPopSizesSet = true;
-   //generate a uniform variable between 0 and 1
+    //generate a uniform variable between 0 and 1
     double randomNumber = randomUniformFromGsl();
     double m1= exp(2 * log(mcmcOptions.paramMultiplierEffectPopSize) *(randomNumber -0.5));
     chain->totalEffectPopSize = m1 * chain->totalEffectPopSize;
     randomNumber= randomUniformFromGsl();
     double m2 = exp(2 * log(mcmcOptions.paramMultiplierMoveTheta) *(randomNumber -0.5));
     chain->mutationRate = m2 * chain->mutationRate;
-    chain->theta = chain->totalEffectPopSize * chain->mutationRate;
+    chain->theta = 2 * chain->totalEffectPopSize * chain->mutationRate;
     
     if (chain->theta != 0)
-      chain->updateNodeScaledTimeForRootedTree(chain->oldtheta / chain->theta);
+        chain->updateNodeScaledTimeForRootedTree(chain->oldtheta / chain->theta);
     else
-       fprintf (stderr, "\n the new theta cannot be 0\n");
+        fprintf (stderr, "\n the new theta cannot be 0\n");
     
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
         auto pop =  chain->populations[i];
         pop->theta = chain->theta * pop->x;
-       
+        
         pop->growthRate =  chain->proposalSlidingWindow(pop->oldGrowthRate, mcmcOptions.slidingWindowSizeGrowtRate);
-    
+        
         pop->r = pop->growthRate * chain->totalEffectPopSize;
         
         pop->delta = pop->r * pop->x ;
@@ -847,7 +847,7 @@ void NewPairGlobalScaledMutationRateRIMove::rollbackMove()
     chain->mutationRate = chain->oldmutationRate;
     chain->totalEffectPopSize =  chain->oldTotalEffectPopSize;
     chain->rollbackTreeNodeCurrentTimePUnits();
-
+    
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
         auto pop =  chain->populations[i];
@@ -905,4 +905,4 @@ double NewPairGlobalScaledMutationRateRIMove::computeLogAcceptanceProb(ProgramOp
     return LogAcceptanceRate;
 }
 
-    
+

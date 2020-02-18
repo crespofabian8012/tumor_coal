@@ -43,7 +43,7 @@ void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *se
     while (mutationsSoFar < numMutations)
     {
         i = RandomUniformTo(numModelSites, seed);
-
+        
         while (((doISMhaploid == NO)  && (allSites[i].numMutations != 0))  ||
                ((doISMhaploid == YES) && (genome == MATERNAL) && (allSites[i].numMutationsMaternal != 0)) ||
                ((doISMhaploid == YES) && (genome == PATERNAL) && (allSites[i].numMutationsPaternal != 0)))
@@ -608,7 +608,7 @@ void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr>
     double    branchLength, Pij[4][4];
     int     cell, anccell, ancstate, newstate;
     
-  
+    
     
     if (p != NULL)
     {
@@ -840,10 +840,10 @@ void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rate
         { fprintf(stderr, "only non ISM sites");
             SimulateISM (treeRoot, genome, YES, seed,DefaultModelSites,numDefaultModelSites, AltModelSites,  numAltModelSites,  totalTreeLength ,  numISMmutations, numFixedMutations, numSNVmaternal,  doSimulateFixedNumMutations,  alphabet, allSites, numMU, cumMij,    altModelMutationRate);
         }
-//        else if (altModel == Mk2)
-//        {
-//            SimulateMk2 (treeRoot, genome, seed, AltModelSites,   numAltModelSites, doUserTree, rateVarAmongSites,  altModelMutationRate, allSites, numMU);
-//        }
+        //        else if (altModel == Mk2)
+        //        {
+        //            SimulateMk2 (treeRoot, genome, seed, AltModelSites,   numAltModelSites, doUserTree, rateVarAmongSites,  altModelMutationRate, allSites, numMU);
+        //        }
         else if (altModel == finiteDNA)
         {
             SimulateFiniteDNA (treeRoot, genome, seed,doJC,  doHKY, doGTR,  doGTnR,  freqR, freqY,  freqAG,  freqCT, titv,  freq, Mij, numAltModelSites, AltModelSites, allSites,   rateVarAmongSites, altModelMutationRate,  numMU,   Root,  Cijk);
@@ -882,9 +882,9 @@ void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rate
             { fprintf(stderr, "pip");
                 SimulateISM (treeRoot, genome, YES, seed,DefaultModelSites,numDefaultModelSites, AltModelSites,  numAltModelSites,  totalTreeLength ,  numISMmutations, numFixedMutations, numSNVmaternal,  doSimulateFixedNumMutations,  alphabet,  allSites, numMU, cumMij,    altModelMutationRate);
             }
-//            else if (altModel == Mk2)
-//            { SimulateMk2 (treeRoot, genome, seed, AltModelSites,   numAltModelSites, doUserTree, rateVarAmongSites,  altModelMutationRate, allSites, numMU);
-//            }
+            //            else if (altModel == Mk2)
+            //            { SimulateMk2 (treeRoot, genome, seed, AltModelSites,   numAltModelSites, doUserTree, rateVarAmongSites,  altModelMutationRate, allSites, numMU);
+            //            }
             else if (altModel == finiteDNA)
             {
                 SimulateFiniteDNA (treeRoot, genome, seed,doJC,  doHKY, doGTR,  doGTnR,  freqR, freqY,  freqAG,  freqCT, titv,  freq, Mij, numAltModelSites,AltModelSites,  allSites,    rateVarAmongSites,  altModelMutationRate, numMU,   Root,  Cijk);

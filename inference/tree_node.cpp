@@ -20,9 +20,9 @@ TreeNode::TreeNode(int numSites)
     right = NULL;
     anc1 = NULL;
     outgroup = NULL;
-//    nodeRight=NULL;
-//    nodeLeft=NULL;
-//    nodeBack=NULL;
+    //    nodeRight=NULL;
+    //    nodeLeft=NULL;
+    //    nodeBack=NULL;
     time = 0;
     timePUnits = 0;
     length = 0;
@@ -65,5 +65,5 @@ void TreeNode::initSequenceVectors(int size){
         
         
     }
-
+    
 }

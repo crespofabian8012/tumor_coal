@@ -59,7 +59,7 @@ public:
     int numIncomingMigrations, numPossibleMigrations;
     bool doEstimateTimeOrigin;
     bool isAlive, CellAssignationCompleted;
-//    double timeMigrationSTDCurrentPop; // TODO: check
+    //    double timeMigrationSTDCurrentPop; // TODO: check
     vector<pair<double, Population *> > immigrantsPopOrderedByModelTime; // migrationTime, Population
     
     vector<pair<double, Population *> > oldimmigrantsPopOrderedByModelTime; // migrationTime, Population
@@ -86,7 +86,7 @@ public:
     Population(int ind, int ord, double timeOriginInput,
                int sampleSize, int popSize, double birthRate,
                double deathRate, bool estimateTOR);
-
+    
     double ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones);
     static double FmodelTstandard (double t, double TOrigin, double delta);
     static double GstandardTmodel (double V, double TOrigin, double delta);
@@ -97,7 +97,7 @@ public:
     int resetMigrationsList();
     static void  UpdateListMigrants( int numClones, Population *PopChild, Population *PopFather  );
     
-  
+    
     void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, long *seed, int choosePairIndividuals);
     void InitCoalescentEvents(int numClones);
     void resetActiveGametes();

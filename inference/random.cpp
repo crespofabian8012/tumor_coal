@@ -295,12 +295,12 @@ double randomUniformFromGsl(){
     return (float)u;
 }
 double randomGammaBoost( double shape, double scale ) {
-//    boost::random_device rd;
-//    std::uint64_t value = rd();
+    //    boost::random_device rd;
+    //    std::uint64_t value = rd();
     //value = (value << 32) | rd();
-//    boost::gamma_distribution<std::uint64_t> dis;
-//    boost::function<std::uint64_t()> gen = boost::bind(dis, boost::ref(rd));
-//    std::uint64_t value = gen();
+    //    boost::gamma_distribution<std::uint64_t> dis;
+    //    boost::function<std::uint64_t()> gen = boost::bind(dis, boost::ref(rd));
+    //    std::uint64_t value = gen();
     boost::mt19937 rng(56) ;
     boost::gamma_distribution<> gd( shape );
     boost::variate_generator<boost::mt19937&,boost::gamma_distribution<> > var_gamma( rng, gd );

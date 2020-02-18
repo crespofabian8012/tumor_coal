@@ -20,83 +20,83 @@ using namespace std;
 Population::Population(int ind, int ord, double timeOriginInput,
                        int sampleSize, int popSize, double birthRate,
                        double deathRate, bool estimateTOR)
+{
+    if (ind >=0)
+        index=ind;
+    else
+        fprintf (stderr, "\n ERROR: Population  index cannot be negative \n");
+    if (ord >= 0)
+        order=ord;
+    else
+        fprintf (stderr, "\n ERROR: Population order cannot be negative \n");
+    
+    if (popSize >= 0)
     {
-        if (ind >=0)
-           index=ind;
-        else
-            fprintf (stderr, "\n ERROR: Population  index cannot be negative \n");
-        if (ord >= 0)
-          order=ord;
-        else
-            fprintf (stderr, "\n ERROR: Population order cannot be negative \n");
-        
-        if (popSize >= 0)
-        {
-            this->popSize=popSize;
-        }
-        else
-            fprintf (stderr, "\n ERROR: Population size cannot be negative \n");
-        
-        if (sampleSize >= 0)
-        {
-           this->sampleSize=sampleSize;
-        }
-        else
-            fprintf (stderr, "\n ERROR: Population sample size cannot be negative \n");
-        
-        if (birthRate >0){
-            this->birthRate =birthRate;
-        }
-        else
-            fprintf (stderr, "\n ERROR: Population birth rate cannot be negative \n");
-      
-        if (deathRate >0){
-            this->deathRate = deathRate;
-        }
-        else
-            fprintf (stderr, "\n ERROR: Population death rate cannot be negative \n");
-     
-        if (birthRate > deathRate)
-        {
-            growthRate = birthRate - deathRate;
-        }
-        else
-            fprintf (stderr, "\n ERROR: Population growth rate cannot be negative \n");
-        
-        if (timeOriginInput >= 0)
-        {
-            this->timeOriginInput = timeOriginInput;
-        }
-        else
-            fprintf (stderr, "\n ERROR: Population time of origin   cannot be negative \n");
-        if (birthRate >=0)
-           effectPopSize = popSize / birthRate;
-        
-        delta= growthRate * effectPopSize;
-        
-        isAlive = YES;
-        
-        timeOriginSTD = timeOriginInput /effectPopSize;
-        
-        numActiveGametes = sampleSize;
-
-        numGametes = sampleSize;
-
-        nodeIdAncestorMRCA = 0;
-        numCompletedCoalescences = 0;
-        nextAvailableIdInmigrant = 0;
-        numIncomingMigrations = 0;
-        numPossibleMigrations = 0;
-        doEstimateTimeOrigin = estimateTOR;
-        
-        MRCA=0;
-        
-        r = 0.0;
-        oldr = 0.0;
-        x = 0.0;
-        oldx = 0.0;
-        theta = 0.0;
-        oldTheta = 0.0;
+        this->popSize=popSize;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population size cannot be negative \n");
+    
+    if (sampleSize >= 0)
+    {
+        this->sampleSize=sampleSize;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population sample size cannot be negative \n");
+    
+    if (birthRate >0){
+        this->birthRate =birthRate;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population birth rate cannot be negative \n");
+    
+    if (deathRate >0){
+        this->deathRate = deathRate;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population death rate cannot be negative \n");
+    
+    if (birthRate > deathRate)
+    {
+        growthRate = birthRate - deathRate;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population growth rate cannot be negative \n");
+    
+    if (timeOriginInput >= 0)
+    {
+        this->timeOriginInput = timeOriginInput;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population time of origin   cannot be negative \n");
+    if (birthRate >=0)
+        effectPopSize = popSize / birthRate;
+    
+    delta= growthRate * effectPopSize;
+    
+    isAlive = YES;
+    
+    timeOriginSTD = timeOriginInput /effectPopSize;
+    
+    numActiveGametes = sampleSize;
+    
+    numGametes = sampleSize;
+    
+    nodeIdAncestorMRCA = 0;
+    numCompletedCoalescences = 0;
+    nextAvailableIdInmigrant = 0;
+    numIncomingMigrations = 0;
+    numPossibleMigrations = 0;
+    doEstimateTimeOrigin = estimateTOR;
+    
+    MRCA=0;
+    
+    r = 0.0;
+    oldr = 0.0;
+    x = 0.0;
+    oldx = 0.0;
+    theta = 0.0;
+    oldTheta = 0.0;
 }
 double Population::ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones)
 {
@@ -117,7 +117,7 @@ double Population::ProbabilityComeFromPopulation(Population *PopJ, vector<Popula
     t = 0.0;
     cum = 0.0;
     // calculate h
-
+    
     t = (timeOriginSTD ) * (effectPopSize) / ( PopJ->effectPopSize);
     h = CalculateH(t, PopJ->timeOriginSTD, PopJ->delta);
     AboveTerm = ( PopJ->popSize) * h;
@@ -167,7 +167,7 @@ double Population::CalculateH (double t, double TOrigin, double delta)
     BelowTerm = b * b;
     //printf ("\nBelowTerm(H) = %lf", BelowTerm);
     if (BelowTerm == 0.0)
-       printf ("\n BelowTerm = 0.0 \n");
+        printf ("\n BelowTerm = 0.0 \n");
     
     H = AboveTerm / BelowTerm;
     //printf ("\nH = %lf", H);
@@ -197,7 +197,7 @@ double Population::LogCalculateH (double t, double TOrigin, double delta)
     
     b = 1.0 - exp(-1.0 * delta * TOrigin);
     BelowTerm = 2.0 * log(b);
-  
+    
     logH = AboveTerm - BelowTerm;
     //printf ("\nH = %lf", H);
     return logH;
@@ -229,8 +229,8 @@ double Population::FmodelTstandard (double t, double TOrigin, double delta)
     if (delta * TOrigin == 0)
         fprintf (stderr, "\n delta * TOrigin == 0 \n");
     
-//    if (delta * (TOrigin - t) == 0)
-//        fprintf (stderr, "\n delta * (TOrigin - t) == 0 \n");
+    //    if (delta * (TOrigin - t) == 0)
+    //        fprintf (stderr, "\n delta * (TOrigin - t) == 0 \n");
     
     b = 1.0 / (1.0 - exp(-1.0 * delta * (TOrigin - t)));
     c = 1.0 / (1.0 - exp(-1.0 * delta * TOrigin));
@@ -254,7 +254,7 @@ double Population::FmodelTstandard (double t, double TOrigin, double delta)
     c = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     
     if ( c == 0.0)
-      fprintf (stderr, "\n  c = 0.0 \n");
+        fprintf (stderr, "\n  c = 0.0 \n");
     if ( delta == 0.0)
         fprintf (stderr, "\n delta  = 0.0 \n");
     
@@ -350,8 +350,8 @@ double Population::GstandardTmodel (double V, double TOrigin, double delta)
 
 void Population::InitListPossibleMigrations(int order)
 {
-//    int j;
-   
+    //    int j;
+    
     this->order = order;
     numPossibleMigrations = order + 1;
     numIncomingMigrations = 1; //the time of origin counts as one migration
@@ -378,27 +378,27 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
         
         fprintf (stderr, "\nError. The father Population  %d for  migration must be older than the Population of origin %d \n", PopFather->index, PopChild->index);
         fprintf (stderr, "\nError. The MRCA node for the father is %d and the MRCA for the child is %d \n", PopFather->rMRCA->node_index, PopChild->rMRCA->node_index);
-         fprintf (stderr, "\nError. The previous  MRCA for the child is %d \n",
-                  PopChild->oldrMRCA->node_index);
+        fprintf (stderr, "\nError. The previous  MRCA for the child is %d \n",
+                 PopChild->oldrMRCA->node_index);
         //exit (-1);
     }
     int updatedNumIncomingMigrations = PopFather->numIncomingMigrations;
     // int lengthMigrationsArray = (int)(PopFather->order) + 1;
     // printf ( "\n lengthMigrationsArray= %d \n", lengthMigrationsArray );
-
+    
     double updatedMigrationTime = (PopChild->timeOriginSTD) * (PopChild->effectPopSize) / (PopFather->effectPopSize);
     if(updatedNumIncomingMigrations + 1 <= PopFather->numPossibleMigrations){
         updatedNumIncomingMigrations = updatedNumIncomingMigrations + 1;
         PopFather->numIncomingMigrations = updatedNumIncomingMigrations;
         PopFather->immigrantsPopOrderedByModelTime.push_back(make_pair(updatedMigrationTime, PopChild));
     }
-
-      sort(PopFather->immigrantsPopOrderedByModelTime.begin(), PopFather->immigrantsPopOrderedByModelTime.end(), comparePopulationsPairByTimeOrigin);
- 
-//     printf("\n pop order  %d choose pop father of order %d \n", PopChild->order, PopFather->order);
-//    for (int i = 0; i < PopFather->immigrantsPopOrderedByModelTime.size(); ++i)
-//        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
-   
+    
+    sort(PopFather->immigrantsPopOrderedByModelTime.begin(), PopFather->immigrantsPopOrderedByModelTime.end(), comparePopulationsPairByTimeOrigin);
+    
+    //     printf("\n pop order  %d choose pop father of order %d \n", PopChild->order, PopFather->order);
+    //    for (int i = 0; i < PopFather->immigrantsPopOrderedByModelTime.size(); ++i)
+    //        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
+    
 }
 
 bool Population::comparePopulationsPairByTimeOrigin(const pair<double, Population *> s1, const pair<double, Population *> s2)
@@ -423,7 +423,7 @@ bool Population::comparePopulationsPairByTimeOrigin(const pair<double, Populatio
 int Population::compare (const void * a, const void * b)
 {
     double *p1 = (double *)a;
-
+    
     double *p2 = (double *)b;
     
     if (*p1 > *p2) return 1;

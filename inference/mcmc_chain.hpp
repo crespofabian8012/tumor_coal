@@ -224,7 +224,7 @@ public:
     int totalSampleSize();
     std::map<pll_rnode_t*, vector<Population*>> chooseAvailableEdgeOnRootedTreeForPopulation(Population *pop, std::map<pll_rnode_t*, vector<Population*>> &mrcaOfPopulation, string &healthyCellLabel);
     double sumAvailableBranchLengths(std::map<pll_rnode_t*, vector<Population*>> currentMRCAPopulation);
-    void chooseNewTimeofOriginOnEdge(Population *pop);
+    std::map<pll_rnode_t*, vector<Population*>> chooseNewTimeofOriginOnEdge(Population *pop);
     void PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
     void writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files,  MCMCoptions &mcmcOptions );
     void writeHeaderOutputChain(  const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files );
@@ -243,6 +243,7 @@ public:
     void samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, long int *seed );
     void updateFatherPopOnSameEdge(std::map<pll_rnode_t*, vector<Population*> > &rmrcaOfPopulation, pll_rnode_t *p, Population * populationOfCurrentNode);
     double sumAdjacentEdges(std::map<pll_rnode_t*, vector<Population*>> currentMRCAPopulation, pll_rnode_t*MRCA, Population *pop);
+    bool isOldestPopulation(Population *pop, std::map<pll_rnode_t*, vector<Population*>> &currentMrcaOfPopulation);
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 };

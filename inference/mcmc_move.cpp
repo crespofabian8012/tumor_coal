@@ -574,17 +574,25 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     int numberPoints = chain->numClones -1;
     std::map<pll_rnode_t*, vector<Population*>>  newrmrcaOfPopulation;
       map<pll_rnode_t*, vector<Population*>>::iterator it;
- 
-    chain->proposedrMRCAPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, chain->rMRCAPopulation, programOptions.healthyTipLabel);
     
+    bool isOldestPop = chain->isOldestPopulation(pop, chain->rMRCAPopulation) ;
+    
+    if (!isOldestPop)
+    {
+        chain->proposedrMRCAPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, chain->rMRCAPopulation, programOptions.healthyTipLabel);
+    }
+    else
+    {
+        chain->proposedrMRCAPopulation=chain->chooseNewTimeofOriginOnEdge(pop);
+
+    }
+
     chain->currentrMRCAPopulation.clear();
     chain->currentrMRCAPopulation.insert(chain->rMRCAPopulation.begin(), chain->rMRCAPopulation.end());
     
     chain->rMRCAPopulation.clear();
     chain->rMRCAPopulation.insert(chain->proposedrMRCAPopulation.begin(), chain->proposedrMRCAPopulation.end());
     
-    
-
     chain->initPopulationsSampleSizes( chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
@@ -592,12 +600,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
             alpha[i]= pop->sampleSize ;
            // fprintf (stderr, "\n New sample size %d for population order %d \n", pop->sampleSize, pop->order );
     }
-   // int totalSampleSize=chain->initialRootedTree->tip_count-1;//not the healthytip
-    //std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](double a) {return a /totalSampleSize; } );
-    //chain->initProportionsVector();
-   // chain->copyProportionsVector(alpha);
-   // chain->generateProportionsVectorFromDirichlet(alpha);
-   // chain->initEffectPopulationSizesFromProportionsVector();
+ 
     chain->initTimeOriginSTD();
     chain->initPopulationMigration();//after setting the timeSTD
     

@@ -41,6 +41,15 @@ public:
     TreeNode();
     void initNumberTipsVector(int numberClones);
     void resetNumberTipsVector(int numberClones);
+    void initSequenceVectors(int size);
+    ~TreeNode()
+    {
+        delete left;
+        delete right;
+        delete anc1;
+        delete outgroup;
+        
+    }
 };
 
 typedef TreeNode* pTreeNode;

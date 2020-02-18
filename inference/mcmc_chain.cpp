@@ -3565,7 +3565,6 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
             MRCAs.insert(MRCA);
             pop->rMRCA = MRCA;
         
-
             u= (TreeNode *)(MRCA->data);
             v= (TreeNode *)(MRCA->parent->data);
            // proposedTime= u->timeInputTreeUnits+ (v->timeInputTreeUnits- u->timeInputTreeUnits)*proportionInsideChosenEdge;
@@ -3606,8 +3605,8 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
         }
         u= (TreeNode *)(pop->rMRCA->data);
         v= (TreeNode *)(pop->rMRCA->parent->data);
-       // proposedTime =  u->timePUnits + (v->timePUnits- u->timePUnits) * randomUniformFromGsl();
-        proposedTime =( v->timePUnits > v->timePUnits)?v->timePUnits:  u->timePUnits;
+       proposedTime =  u->timePUnits + (v->timePUnits - u->timePUnits) * randomUniformFromGsl();
+        //proposedTime =( v->timePUnits > v->timePUnits)?v->timePUnits:  u->timePUnits;
         pop->timeOriginInput =proposedTime ;
         pop->scaledtimeOriginInput = proposedTime / theta;
         
@@ -4197,13 +4196,13 @@ void Chain::computeAvailableEdges( vector<pair<double, pll_tree_edge_t *> > &ava
         }
         else if(mrca->parent != NULL &&  mrca->parent->parent == NULL &&  currentMrcaOfPopulation[mrca].size() >=1 && pop->timeOriginInput == ((TreeNode *)mrca->parent->data)->timePUnits )// if it is the edge from the tumor MRCA to the root and  we have  at least 1 event and is the oldest population(the tiem of origin is the root of the tree)
         {
-            edge = new pll_tree_edge_t();
-            edge->edge.rtree.parent   =  mrca->parent;
-            
-            edge->edge.rtree.parent = mrca->parent->parent;
-            edge->length = mrca->parent->length;
-            sum += mrca->parent->length;
-            availableEdges.push_back(make_pair(mrca->parent->length, edge));
+//            edge = new pll_tree_edge_t();
+//            edge->edge.rtree.parent   =  mrca->parent;
+//            
+//            edge->edge.rtree.parent = mrca->parent->parent;
+//            edge->length = mrca->parent->length;
+//            sum += mrca->parent->length;
+//            availableEdges.push_back(make_pair(mrca->parent->length, edge));
         }
         //left branch
         if (mrca->left != NULL && mrca->parent != NULL &&  mrca->parent->parent != NULL )//not a leaf and not the edge from the tumor MRCA to the root
@@ -4262,9 +4261,7 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseAvailableEdgeOnRootedTr
     
     vector<double> branchLengths;
     vector<pair<double, pll_tree_edge_t *> > availableEdges;
-    
-    //computeAvailableEdges( availableEdges,  currentMrcaOfPopulation, healthyCellLabel);
-    
+
     computeAdjacentEdges( availableEdges, currentMrcaOfPopulation, healthyCellLabel, pop, pop->rMRCA);
     std::map<pll_rnode_t*, vector<Population*>> copyMRCAOfPopulation;
     branchLengths.clear();
@@ -4309,7 +4306,6 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseAvailableEdgeOnRootedTr
         {
             copyMRCAOfPopulation.erase(pop->oldrMRCA);
         }
-            
         
         random =randomUniformFromGsl();
         nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
@@ -4338,35 +4334,31 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseAvailableEdgeOnRootedTr
         else
             proposedTime= v->timeInputTreeUnits+ (u->timeInputTreeUnits- v->timeInputTreeUnits)*(1-proportionInsideChosenEdge);
         
-        //////////////////////////////////////
-       
-        //if the new edge is the edge from the root to the healthy then move the root
-       if(pop->oldrMRCA->parent != NULL &&  pop->oldrMRCA->parent->parent == NULL &&  currentMrcaOfPopulation[pop->oldrMRCA].size() >=2)// && std::string(pop->oldrMRCA->label).compare(healthyCellLabel)!=0)// if it is the edge from the tumor MRCA to the root and  we have more than one event on that edge
-       {
+        /////////////////////////////////////
+  
            pop->timeOriginInput =proposedTime;
            pop->scaledtimeOriginInput = pop->timeOriginInput / theta;
-//           pop->timeOriginInput =pop->timeOriginInput +  proposedTime;
-//           pop->scaledtimeOriginInput = pop->timeOriginInput / theta;
-//
-//           pop->oldrMRCA->length=  pop->oldrMRCA->length + proposedTime ;
-//           if (std::string(pop->oldrMRCA->parent->right->label).compare(healthyCellLabel)==0)
-//              pop->oldrMRCA->parent->right->length = pop->oldrMRCA->parent->right->length - proposedTime;
-//           else if (std::string(pop->oldrMRCA->parent->left->label).compare(healthyCellLabel)==0)
-//               pop->oldrMRCA->parent->left->length = pop->oldrMRCA->parent->left->length - proposedTime;
-           
-       }
-       else{
-           pop->timeOriginInput =proposedTime;
-           pop->scaledtimeOriginInput = pop->timeOriginInput / theta;
-       }
+     
         copyMRCAOfPopulation[MRCA].push_back(pop);
-        
         if (copyMRCAOfPopulation[pop->rMRCA].size()>1)
             sort(copyMRCAOfPopulation[pop->rMRCA].begin(), copyMRCAOfPopulation[pop->rMRCA].end(), comparePopulationsByTimeOrigin);
-        
         printf( "\n MRCA node id %d with time %lf and parent with time %lf was assigned to pop %d with order %d and time of origin %lf, scaled %lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->order,  pop->timeOriginInput, pop->scaledtimeOriginInput );
     }
     return copyMRCAOfPopulation;
+}
+bool Chain::isOldestPopulation(Population *pop, std::map<pll_rnode_t*, vector<Population*>> &currentMrcaOfPopulation)
+{
+    bool result = false ;
+    if  (pop!= NULL && pop->rMRCA->parent!=NULL
+         && pop->rMRCA->parent->parent == NULL )
+    {
+        if(currentMrcaOfPopulation[pop->rMRCA].size()>1  && currentMrcaOfPopulation[pop->rMRCA].back() == pop )
+        {
+            result=true;
+            
+        }
+    }
+    return result;
 }
 double Chain::sumAvailableBranchLengths(std::map<pll_rnode_t*, vector<Population*>> currentMRCAPopulation)
 {
@@ -4401,15 +4393,30 @@ double Chain::sumAdjacentEdges(std::map<pll_rnode_t*, vector<Population*>> curre
     }
     return result;
 }
-void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
+std::map<pll_rnode_t*, vector<Population*>> Chain::chooseNewTimeofOriginOnEdge(Population *pop)
 {
     TreeNode * u, *v;
     double oldMigrationTime;
+    std::map<pll_rnode_t*, vector<Population*>> copyMRCAOfPopulation;
+    copyMRCAOfPopulation.clear();
+    copyMRCAOfPopulation.insert(rMRCAPopulation.begin(), rMRCAPopulation.end());
+    
+    if (copyMRCAOfPopulation[pop->oldrMRCA].size() > 1)
+    {
+        copyMRCAOfPopulation[pop->oldrMRCA].erase(std::remove(copyMRCAOfPopulation[pop->oldrMRCA].begin(), copyMRCAOfPopulation[pop->oldrMRCA].end(), pop), copyMRCAOfPopulation[pop->oldrMRCA].end());
+        
+    }
+    else if (copyMRCAOfPopulation[pop->oldrMRCA].size() == 1)
+    {
+        copyMRCAOfPopulation.erase(pop->oldrMRCA);
+    }
+    
     u= (TreeNode *)( pop->rMRCA->data);
     v= (TreeNode *)( pop->rMRCA->parent->data);
     // double proposedTime= u->timePUnits+ (v->timePUnits- u->timePUnits)*randomUniformFromGsl();
     // double windowSize = min(v->timePUnits - pop->timeOriginInput, pop->timeOriginInput - u->timePUnits);
-    double windowSize = min(v->timePUnits - pop->timeOriginInput, pop->timeOriginInput - u->timePUnits);
+    //double windowSize = min(v->timePUnits - pop->timeOriginInput, pop->timeOriginInput - u->timePUnits);
+    double windowSize = pop->timeOriginInput - u->timePUnits;
     double proposedTime= proposalSlidingWindow(pop->timeOriginInput, windowSize);
     //    if (u->timePUnits ==0.0){
     //        proposedTime= 0.01*(v->timePUnits) +(v->timePUnits-0.01*(v->timePUnits))*randomUniformFromGsl();
@@ -4422,20 +4429,10 @@ void Chain::chooseNewTimeofOriginOnEdge(Population *pop)
     pop->timeOriginInput =proposedTime;
     pop->timeOriginSTD = pop->scaledtimeOriginInput / pop->effectPopSize;
     
-    auto it = std::find_if(  pop->FatherPop->immigrantsPopOrderedByModelTime.begin(),  pop->FatherPop->immigrantsPopOrderedByModelTime.end(),  [&](const pair<double, Population *> &p)
-                           { return p.second->index == pop->index; });
-    if (it ==  pop->FatherPop->immigrantsPopOrderedByModelTime.end())
-    {
-        fprintf (stderr, "\n Error, The population of order %d is not father pop of pop order %d\n",pop->FatherPop->order, pop->order );
-    }
-    else
-    {
-        //update time migration for pop in immigrantsPopOrderedByModelTime of
-        oldMigrationTime =(*it).first;
-        (*it).first=proposedTime / pop->FatherPop->effectPopSize;
-    }
-    //printf( "\n New time origin on edge for population index %d order %d new time %lf, old time %lf and MRCA node %d\n", pop->index, pop->order, pop->timeOriginInput,  pop->oldTimeOriginInput,  pop->rMRCA->node_index );
-    //printf( "\n the new migration time in the father pop order %d is %lf, old time %lf \n",  pop->FatherPop->order, proposedTime / pop->FatherPop->effectPopSize,  oldMigrationTime);
+    if (copyMRCAOfPopulation[pop->rMRCA].size()>1)
+        sort(copyMRCAOfPopulation[pop->rMRCA].begin(), copyMRCAOfPopulation[pop->rMRCA].end(), comparePopulationsByTimeOrigin);
+    
+    return copyMRCAOfPopulation;
 }
 void Chain::PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files)
 {

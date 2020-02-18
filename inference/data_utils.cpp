@@ -1876,8 +1876,8 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
     if (p != NULL)
     {
         cell = p->label;
-   
-        
+       
+        p->initSequenceVectors(numSites);
         if (alphabet == DNA)
         {
             //            if (p->isOutgroup == YES)
@@ -1893,10 +1893,10 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
                             if (ran <= cumfreq[i])
                             {
                                 //p->maternalSequence[site]=p->paternalSequence[site]=i;
-                                p->maternalSequence.push_back(i);
-                                p->paternalSequence.push_back(i);
+                                p->maternalSequence.at(site)=i;
+                                p->paternalSequence.at(site)=i;
                                 
-                                allSites[site].referenceAllele = p->maternalSequence[site];//   // then allSites[site].referenceAllele hosts the reference genome
+                                allSites[site].referenceAllele = p->maternalSequence.at(site);//   // then allSites[site].referenceAllele hosts the reference genome
                                 break;
                             }
                         }
@@ -1915,18 +1915,18 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
 //                    p->maternalSequence[site]=p->anc1->maternalSequence[site];
 //                    p->paternalSequence[site]=p->anc1->paternalSequence[site];
                     
-                    p->maternalSequence.push_back(p->anc1->maternalSequence[site]);
-                    p->paternalSequence.push_back(p->anc1->paternalSequence[site]);
+                    p->maternalSequence.at(site)= p->anc1->maternalSequence.at(site);
+                    p->paternalSequence.at(site)= p->anc1->paternalSequence.at(site);
                 }
             }
         }
         else{
             for (site=0; site<numSites; site++){
-                p->maternalSequence[site]=0;
-                p->paternalSequence[site]=0;
-                p->numbersMutationsUnderSubtreePerSite[site]=0;
-                p->numbersMaternalMutationsPerSite[site]=0;
-                p->numbersPaternalMutationsPerSite[site]=0;
+                p->maternalSequence.at(site)=0;
+                p->paternalSequence.at(site)=0;
+                p->numbersMutationsUnderSubtreePerSite.at(site)=0;
+                p->numbersMaternalMutationsPerSite.at(site)=0;
+                p->numbersPaternalMutationsPerSite.at(site)=0;
                 
             }
         }

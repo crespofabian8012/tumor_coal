@@ -53,3 +53,16 @@ void TreeNode::resetNumberTipsVector(int numberClones)
         numberTipsByPopulation.at(i)=0;
     }
 }
+void TreeNode::initSequenceVectors(int size){
+    for (size_t i = 0; i < size; i++) {
+        
+        maternalSequence.push_back(0);
+        paternalSequence.push_back(0);
+        numbersMutationsUnderSubtreePerSite.push_back(0);
+        numbersMaternalMutationsPerSite.push_back(0);
+        numbersPaternalMutationsPerSite.push_back(0);
+        
+        
+    }
+
+}

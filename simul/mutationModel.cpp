@@ -621,9 +621,9 @@ void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr>
                 
                 anccell = p->anc1->label;
                 if (genome == MATERNAL)
-                    ancstate = p->anc1->maternalSequence[site];
+                    ancstate = p->anc1->maternalSequence.at(site);
                 else
-                    ancstate = p->anc1->paternalSequence[site];
+                    ancstate = p->anc1->paternalSequence.at(site);
                 // }
                 // if (doUserTree == YES)
                 //branchLength = p->branchLength;
@@ -645,9 +645,9 @@ void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr>
                 
                 
                 if (genome ==MATERNAL )
-                    newstate =p->maternalSequence[site]=ChooseUniformState (Pij[ancstate], seed);
+                    newstate =p->maternalSequence.at(site)=ChooseUniformState (Pij[ancstate], seed);
                 else// paternal;
-                    newstate =p->paternalSequence[site]=ChooseUniformState (Pij[ancstate], seed);
+                    newstate =p->paternalSequence.at(site)=ChooseUniformState (Pij[ancstate], seed);
                 //newstate = data[genome][cell][site] = ChooseUniformState (Pij[ancstate], seed);
                 
                 if (newstate != ancstate)

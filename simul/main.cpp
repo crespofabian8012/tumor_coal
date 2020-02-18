@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
     
     // 3. call function to simulate the data and
     // 4.output the files
-    programOptions.numSites = 1;
     float start = clock();
     SimulateData(programOptions, CloneNameBegin, CloneSampleSizeBegin, ClonePopSizeBegin,
                     populations,

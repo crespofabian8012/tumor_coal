@@ -243,7 +243,7 @@ void  randomDirichletFromVector (vector<double> alpha, vector<double> &outputVec
     
     for (i=0; i < alpha.size(); i++){
         
-        current = RandomGamma(alpha.at(i), &seed);
+        //current = RandomGamma(alpha.at(i), &seed);
         current = randomGammaBoost(alpha.at(i), 1);
         outputVector.push_back(current);
         sum=sum+current;

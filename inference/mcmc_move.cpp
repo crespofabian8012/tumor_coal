@@ -585,7 +585,6 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     {
         chain->proposedrMRCAPopulation=chain->chooseNewTimeofOriginOnEdge(pop);
     }
-
     chain->currentrMRCAPopulation.clear();
     chain->currentrMRCAPopulation.insert(chain->rMRCAPopulation.begin(), chain->rMRCAPopulation.end());
     

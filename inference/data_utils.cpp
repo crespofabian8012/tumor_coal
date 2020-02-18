@@ -801,7 +801,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     vector<double> varTimeGMRCA(programOptions.numDataSets);
 
     ////////////////////////////////////////////////////////////////////////////////////////////
-    TreeNode *init_root = new TreeNode();
+    TreeNode *init_root = new TreeNode(programOptions.numSites);
     
     double cumNumCA = 0.0, meanNumCA = 0.0, cumNumMIG = 0.0, meanNumMIG = 0.0;
     double numEventsTot = 0.0, countTMRCA = 0.0,TMRCA = 0.0;
@@ -1877,7 +1877,6 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
     {
         cell = p->label;
        
-        p->initSequenceVectors(numSites);
         if (alphabet == DNA)
         {
             //            if (p->isOutgroup == YES)
@@ -1921,14 +1920,14 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
             }
         }
         else{
-            for (site=0; site<numSites; site++){
-                p->maternalSequence.at(site)=0;
-                p->paternalSequence.at(site)=0;
-                p->numbersMutationsUnderSubtreePerSite.at(site)=0;
-                p->numbersMaternalMutationsPerSite.at(site)=0;
-                p->numbersPaternalMutationsPerSite.at(site)=0;
-                
-            }
+//            for (site=0; site<numSites; site++){
+//                p->maternalSequence.at(site)=0;
+//                p->paternalSequence.at(site)=0;
+//                p->numbersMutationsUnderSubtreePerSite.at(site)=0;
+//                p->numbersMaternalMutationsPerSite.at(site)=0;
+//                p->numbersPaternalMutationsPerSite.at(site)=0;
+//
+//            }
         }
         InitializeGenomes (p->left, seed,   alphabet,  doUserGenome,  numSites, allSites,  doGeneticSignatures,  cumfreq,triNucFreq, cellNames);
         InitializeGenomes (p->right, seed,  alphabet,  doUserGenome,  numSites, allSites,  doGeneticSignatures,  cumfreq,triNucFreq, cellNames);
@@ -2045,7 +2044,7 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &population
     /* set everything to null */
     for (i = 0; i < numNodes; i++)
     {
-        p = new TreeNode();
+        p = new TreeNode(programOptions.numSites);
         nodes.push_back(p);
     }
      AssignCurrentSequencesToPopulation(populations, nodes, programOptions, numClones, numNodes, programOptions.noisy, programOptions.TotalNumSequences, numActiveGametes,  nextAvailable,

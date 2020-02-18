@@ -38,7 +38,7 @@ public:
     bool         isLeaf;
     int numberOfTipsSubTree;
     vector<int> numberTipsByPopulation;
-    TreeNode();
+    TreeNode(int numSites);
     void initNumberTipsVector(int numberClones);
     void resetNumberTipsVector(int numberClones);
     void initSequenceVectors(int size);

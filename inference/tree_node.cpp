@@ -14,7 +14,7 @@ void init_to_empty_str(char str[MAX_NAME])
     }
 }
 
-TreeNode::TreeNode()
+TreeNode::TreeNode(int numSites)
 {
     left = NULL;
     right = NULL;
@@ -39,6 +39,7 @@ TreeNode::TreeNode()
     init_to_empty_str(cellName);
     init_to_empty_str(observedCellName);
     numberOfTipsSubTree=0;
+    initSequenceVectors(numSites);
     
 }
 void TreeNode::initNumberTipsVector(int numberClones)

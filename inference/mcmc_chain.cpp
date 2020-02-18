@@ -143,9 +143,9 @@ void Chain::MakeCoalescenceEvent( Population *population, vector<pll_unode_t *> 
     //    r2->data =  malloc(sizeof(TreeNode));
     //    r3->data =  malloc(sizeof(TreeNode));
     
-    r1->data =  new TreeNode();;
-    r2->data =  new TreeNode();
-    r3->data = new TreeNode();;
+    r1->data =  new TreeNode(0);;
+    r2->data =  new TreeNode(0);
+    r3->data = new TreeNode(0);;
     
     u1= (TreeNode *)(r1->data);
     u2= (TreeNode *)(r2->data);
@@ -489,9 +489,9 @@ void Chain::SimulatePopulation( Population *popI, vector<Population*> &populatio
                     r2->node_index = newInd +1;
                     r3->node_index = newInd +2;
                     
-                    r1->data =  new TreeNode();
-                    r2->data =   new TreeNode();
-                    r3->data =   new TreeNode();
+                    r1->data =  new TreeNode(0);
+                    r2->data =   new TreeNode(0);
+                    r3->data =   new TreeNode(0);
                     
                     u1= (TreeNode *)(r1->data);
                     u2= (TreeNode *)(r2->data);
@@ -868,9 +868,9 @@ pll_unode_t* Chain::BuildTree(vector<Population* > &populations,
         healthyTip2->next = healthyTip3;
         healthyTip3->next =healthyTip1;
         
-        healthyTip1->data =  new TreeNode();
-        healthyTip2->data =  new TreeNode();
-        healthyTip3->data =   new TreeNode();
+        healthyTip1->data =  new TreeNode(0);
+        healthyTip2->data =  new TreeNode(0);
+        healthyTip3->data =   new TreeNode(0);
         
         u1= (TreeNode *)(healthyTip1->data);
         u2= (TreeNode *)(healthyTip2->data);
@@ -3149,7 +3149,7 @@ void Chain::initNodeDataFromTree()
             double coal_time = time + length;
             if (node->data == NULL)
             {
-                node->data =  new TreeNode();
+                node->data =  new TreeNode(0);
                 u1 = (TreeNode *)(node->data);
                 u1->initNumberTipsVector(numClones);
                 u1->timePUnits=time;
@@ -3158,7 +3158,7 @@ void Chain::initNodeDataFromTree()
             }
             if (node->next != NULL &&  node->next->data ==NULL)
             {
-                node->next->data =  new TreeNode();
+                node->next->data =  new TreeNode(0);
                 u2 = (TreeNode *)(node->next->data);
                 u2->initNumberTipsVector(numClones);
                 u2->timePUnits = time;
@@ -3167,7 +3167,7 @@ void Chain::initNodeDataFromTree()
             }
             if (node->next != NULL &&  node->next->next!=NULL && node->next->next->data ==NULL)
             {
-                node->next->next->data = new TreeNode();
+                node->next->next->data = new TreeNode(0);
                 u3 = (TreeNode *)(node->next->next->data);
                 u3->initNumberTipsVector(numClones);
                 u3->timePUnits = time;
@@ -3229,7 +3229,7 @@ void Chain::initNodeDataFromRootedTree()
             double coal_time = time + length;
             if (node->data == NULL)
             {
-                node->data =  new TreeNode();
+                node->data =  new TreeNode(0);
                 u1 = (TreeNode *)(node->data);
                 u1->timePUnits=time;
                 u1->initNumberTipsVector(numClones);
@@ -3271,7 +3271,7 @@ void Chain::rescaleNodeDataFromRootedTree(double scale)
             double coal_time_input_tree_units = time_input_tree_units + length ;
             if (node->data == NULL)
             {
-                node->data =  new TreeNode();
+                node->data =  new TreeNode(0);
                 u1 = (TreeNode *)(node->data);
                 u1->timePUnits= time ;
                 u1->timeInputTreeUnits = time_input_tree_units;
@@ -3512,18 +3512,15 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
                    std::back_inserter(branchLengths), [](auto const& pair){return pair.first;}
                    );
     
-    if (branchLengths.size()>0)
+    if (branchLengths.size()>0 )
     {
-        
         double maxCumBranchLength ;
-       
         vector<double>  cumBranchLengths( branchLengths.size(),0);
         std::partial_sum(branchLengths.begin(), branchLengths.end(), cumBranchLengths.begin(),  plus<double>());
         
         cumBranchLengths.insert(cumBranchLengths.begin(), 0);
         
         maxCumBranchLength = cumBranchLengths.back(); //*std::max_element(cumBranchLengths.begin(), cumBranchLengths.end());
-        
         
         std::transform(cumBranchLengths.begin(), cumBranchLengths.end(), cumBranchLengths.begin(),[maxCumBranchLength](double a) {return a /maxCumBranchLength; } );
         
@@ -3536,7 +3533,8 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
         pll_rnode_t * MRCA;
         double proportionInsideChosenEdge=0.0;
         int assignedPop=0;
-        do{
+        while(assignedPop < numberPoints)
+        {
             //do{
                 random =randomUniformFromGsl();
                 nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
@@ -3582,10 +3580,8 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
             
             if (mrcaOfPopulation[MRCA].size()>1)
                 sort(mrcaOfPopulation[MRCA].begin(), mrcaOfPopulation[MRCA].end(), comparePopulationsByTimeOrigin);
-        
         }
-        while(assignedPop < numberPoints);
-
+       
         Population* pop=getPopulationbyIndex(numClones -1);//for the oldest population
         if (std::string(initialRootedTree->root->right->label).compare(healthyCellLabel)==0)
         {

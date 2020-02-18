@@ -584,7 +584,6 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     else
     {
         chain->proposedrMRCAPopulation=chain->chooseNewTimeofOriginOnEdge(pop);
-
     }
 
     chain->currentrMRCAPopulation.clear();
@@ -600,7 +599,6 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
             alpha[i]= pop->sampleSize ;
            // fprintf (stderr, "\n New sample size %d for population order %d \n", pop->sampleSize, pop->order );
     }
- 
     chain->initTimeOriginSTD();
     chain->initPopulationMigration();//after setting the timeSTD
     

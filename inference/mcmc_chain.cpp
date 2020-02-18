@@ -2414,8 +2414,8 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
         //chain->root = initialRootedTree->root;
         chain->rootRootedTree = initialRootedTree->root;
         chain->root =  chain->initialUnrootedTree->nodes[chain->initialUnrootedTree->tip_count + chain->initialUnrootedTree->inner_count - 1];
-        chain->initPopulationsTipsFromTree(initialTree, NO);
-        chain->initPopulationsTipsFromRootedTree(initialRootedTree, NO);
+        chain->initPopulationsTipsFromTree(initialTree, NO, programOptions.healthyTipLabel);
+        chain->initPopulationsTipsFromRootedTree(initialRootedTree, NO, programOptions.healthyTipLabel);
         chain->initNodeDataFromTree();
         //chain->initNodeDataFromRootedTree();
         chain->rescaleNodeDataFromRootedTree(chain->theta);
@@ -2578,14 +2578,18 @@ void Chain::computeNumberTipsSubTree(pll_unode_t *node, void *data)
 void  Chain::initNumberTipsSubTree(pll_rnode_t *node)
 {
     TreeNode* treeNode= (TreeNode *)(node->data);
-    if (node->left ==NULL)//tip
+    if (node->left ==NULL && treeNode!=NULL)//tip
         treeNode->numberOfTipsSubTree =1;
+    else if(node->left ==NULL && treeNode==NULL){
+        node->data =  new TreeNode(0);
+        ((TreeNode *)(node->data))->numberOfTipsSubTree =1;
+    }
     else {
         initNumberTipsSubTree(node->left);
         initNumberTipsSubTree(node->right);
         TreeNode * treeNodeLeft= (TreeNode *) (node->left->data);
         TreeNode * treeNodeRight= (TreeNode *) (node->right->data);
-        treeNode->numberOfTipsSubTree = treeNodeLeft->numberOfTipsSubTree + treeNodeRight->numberOfTipsSubTree;
+           treeNode->numberOfTipsSubTree = treeNodeLeft->numberOfTipsSubTree + treeNodeRight->numberOfTipsSubTree;
     }
 }
 void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
@@ -3011,7 +3015,7 @@ void updateCoalTimes(Population *pop)
     }
 }
 
-void Chain::initializeCoalescentEventTimesFormSampleSizes(pll_utree_t *utree, vector<int > &sampleSizes )
+void Chain::initializeCoalescentEventTimesFormSampleSizes(pll_utree_t *utree, vector<int > &sampleSizes, string &healthyCellLabel )
 {
     int totalSampleSize=0;
     for (unsigned int i = 0; i < sampleSizes.size(); ++i)
@@ -3025,7 +3029,7 @@ void Chain::initializeCoalescentEventTimesFormSampleSizes(pll_utree_t *utree, ve
         exit(1);
     }
     
-    initPopulationsTipsFromTree(utree, YES);
+    initPopulationsTipsFromTree(utree, YES, healthyCellLabel);
     
     for (unsigned int i = 0; i < numClones; ++i)
     {
@@ -3033,7 +3037,7 @@ void Chain::initializeCoalescentEventTimesFormSampleSizes(pll_utree_t *utree, ve
         updateCoalTimes(pop);
     }
 }
-void Chain::initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnown )
+void Chain::initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnown, string &healthyCellLabel )
 {
     if (utree != NULL)
     {
@@ -3043,7 +3047,7 @@ void Chain::initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnow
             
             
             
-            if (node->label != 0) // only the tips have labels
+            if (node->label != 0 && node->label && std::string(node->label).compare(healthyCellLabel)!=0) // only the tips have labels
             {
                 //cout << node->label << ": " << node->node_index << ", back: " << node->back->node_index << ", next: " << node->next << endl;
                 treeTips.push_back(node);
@@ -3061,7 +3065,7 @@ void Chain::initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnow
         }
     }
 }
-void Chain::initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignationKnown )
+void Chain::initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignationKnown, string &healthyCellLabel )
 {
     if (rtree != NULL)
     {
@@ -3071,7 +3075,7 @@ void Chain::initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignati
             
             
             
-            if (node->label != 0) // only the tips have labels
+            if (node->label != 0 && node->label && std::string(node->label).compare(healthyCellLabel)!=0) // only the tips have labels and distinct from healthy tip
             {
                 //cout << node->label << ": " << node->node_index << ", parent: " <<node->parent->node_index   << endl;
                 rtreeTips.push_back(node);
@@ -3276,7 +3280,7 @@ void Chain::rescaleNodeDataFromRootedTree(double scale)
                 u1->timePUnits= time ;
                 u1->timeInputTreeUnits = time_input_tree_units;
                 u1->initNumberTipsVector(numClones);
-                //printf("updated data for node %d \n", node->node_index);
+                printf("updated data for node %d and time input %lf and scaled time %lf by theta %lf \n", node->node_index, u1->timeInputTreeUnits, u1->timePUnits, scale );
             }
             pll_rnode_t *parent = node->parent;
             if (parent!=NULL && nodes_visited.count(parent) == 0) {
@@ -3574,7 +3578,8 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
             pop->timeOriginInput = proposedTime ;
             pop->scaledtimeOriginInput = proposedTime / theta;
             
-            printf( "\n MRCA node id %d with time %lf and parent with time %lf was assigned to pop %d and time of origin %lf, scaled %lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput, pop->scaledtimeOriginInput );
+
+             printf( "\n MRCA node id %d with input time %lf and scaled %lf and parent with input time %lf and scaled %lf was assigned to the oldest pop %d and time of origin %lf, scaled %lf \n", MRCA->node_index,u->timeInputTreeUnits, u->timePUnits, v->timeInputTreeUnits,  v->timePUnits, pop->index, pop->timeOriginInput, pop->scaledtimeOriginInput  );
             
             mrcaOfPopulation[MRCA].push_back(pop);
             assignedPop++;
@@ -3602,12 +3607,12 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
         }
         u= (TreeNode *)(pop->rMRCA->data);
         v= (TreeNode *)(pop->rMRCA->parent->data);
-        proposedTime =  u->timePUnits + (v->timePUnits - u->timePUnits) * randomUniformFromGsl();
-        //proposedTime =( v->timePUnits > v->timePUnits)?v->timePUnits:  u->timePUnits;
+        proposedTime =  u->timeInputTreeUnits + (v->timeInputTreeUnits - u->timeInputTreeUnits) * randomUniformFromGsl();
+     
         pop->timeOriginInput =proposedTime ;
         pop->scaledtimeOriginInput = proposedTime / theta;
         
-        printf( "\n MRCA node id %d with time %lf and parent with time %lf was assigned to the oldest pop %d and time of origin %lf, scaled %lf \n", pop->rMRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->timeOriginInput, pop->scaledtimeOriginInput  );
+        printf( "\n MRCA node id %d with input time %lf and scaled %lf and parent with input time %lf and scaled %lf was assigned to the oldest pop %d and time of origin %lf, scaled %lf \n", pop->rMRCA->node_index,u->timeInputTreeUnits, u->timePUnits, v->timeInputTreeUnits,  v->timePUnits, pop->index, pop->timeOriginInput, pop->scaledtimeOriginInput  );
         mrcaOfPopulation[pop->rMRCA].push_back(pop);
         if (mrcaOfPopulation[pop->rMRCA].size()>1)
             sort(mrcaOfPopulation[pop->rMRCA].begin(), mrcaOfPopulation[pop->rMRCA].end(), comparePopulationsByTimeOrigin);

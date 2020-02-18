@@ -182,7 +182,7 @@ public:
                   char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes, int currentIteration
                   );
     void newScaledGrowthRateMoveforPopulation( Population *popI, long int *seed,  ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions & mcmcOptions, vector<int> &sampleSizes);
-    void initializeCoalescentEventTimesFormSampleSizes(pll_utree_t *utree, vector<int > &sampleSizes);
+    void initializeCoalescentEventTimesFormSampleSizes(pll_utree_t *utree, vector<int > &sampleSizes, string &healthyCellLabel );
     void initializeMapPopulationAssignFromTree();
     Population * getPopulationbyIndex(int indexPopulation);
     int getPopulationIndex(char * label);
@@ -200,9 +200,9 @@ public:
     void initTotalEffectivePopulationSize(MCMCoptions &mcmcOptions, long int *seed);
     void initPopulationsCoalTimes();
     void initEffectPopulationSizesFromProportionsVector();
-    void initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnown);
+    void initPopulationsTipsFromTree(pll_utree_t *utree, bool assignationKnown, string &healthyCellLabel );
     static void computeNumberTipsSubTree(pll_unode_t *node, void *data);
-    void initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignationKnown );
+    void initPopulationsTipsFromRootedTree(pll_rtree_t *rtree, bool assignationKnown, string &healthyCellLabel  );
     void initNodeDataFromRootedTree();
     void initPopulationCoalescentAndMigrationEventsFromNodeOnRootedTree(pll_rnode_t *p, Population *currentPopulation, std::map<pll_rnode_t*, vector<Population*>> &rmrcaOfPopulation,  string& healthyTipLabel);
     void initPopulationsCoalescentAndMigrationEventsFromRootedTree(std::map<pll_rnode_t*, vector<Population*>> rmrcaOfPopulation, string& healthyTipLabel);

@@ -3,7 +3,7 @@
 
 
 [*** GLOBAL SETTINGS ***]
-[number of replicates (mandatory)]	n10
+[number of replicates (mandatory)]	n1
 [number of sites] s100
 
 [*** POPULATION GENETICS SETTINGS ***]
@@ -11,7 +11,7 @@
 
 [number of clones; clone number, sample size, population size (not effective), birth rate, death rate, time to origin (days, months, years; All clones with 0 = estimated) (mandatory)]
 c1
-	1 20 1000  1  0.99999 50000
+	1 20 10000 1  0.99999 50000
 [c1
 	1 20 1000  1  0.99999999 10000000]
 [c1
@@ -55,7 +55,7 @@ c1
 	3 5 95000 0.4 0.2 127
 	4 4 15000 0.5 0.4 45
 	5 4 90000 0.4 0.1 29]
-[outgroup: No (0), one branch ((1) root-outgroup), two branches ((2) root1-root2, root2-outgroup)] [o0] [o1 0.01] o1
+[outgroup: No (0), one branch ((1) tumorMRCA-torigin,  torigin-outgroup), one longer  branch ((2) tumorMRCA-torigin-root, root-outgroup)] [o0] [o1 0.01] o1
 
 
 [*** OUTPUTS ***]
@@ -69,7 +69,7 @@ c1
 
 [MUTATION MODEL]
 [alphabet 0:binary 1:DNA] b1
-[substitution rate (mandatory)] u9.1e-8
+[substitution rate (mandatory)] u1e-7
 [deletion rate] [d1e-6]
 [CN_LOH rate] [H1e-5]
 [fixed number of true SNVs - ISM] [j100]
@@ -79,7 +79,7 @@ c1
 [proportion of alternative model sites] p1
 [alternative/default model relative mutation rate] [w1]
 [germline SNP rate] [z0.00001]
-   [base frequencies]	f0.3 0.2 0.2 0.3
+   [base frequencies]	f0.2 0.2 0.3 0.3
 [transition/transversion ratio] [t1.7]
 [rate variation among sites] [a1]
 [mutation matrix ACGT x ACGT]                                  r0 1 1 1

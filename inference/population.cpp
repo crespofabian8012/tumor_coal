@@ -254,7 +254,7 @@ double Population::FmodelTstandard (double t, double TOrigin, double delta)
     c = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     
     if ( c == 0.0)
-        fprintf (stderr, "\n  c = 0.0 \n");
+        fprintf (stderr, "\n  c = 0.0, TOrigin = %lf, t = %lf \n", TOrigin, t);
     if ( delta == 0.0)
         fprintf (stderr, "\n delta  = 0.0 \n");
     
@@ -528,10 +528,13 @@ int Population::bbinClones (double dat, double *v, int n)
     return -1;
 }
 double Population::LogDensityTime(double u){
-    double term1 = delta * exp(-1.0 *delta*u);
-    double term2 = 1.0-exp(-1.0 *delta*u);
-    double result = log(delta * term1 /(term2 * term2));
-    result = result - term1/term2;
+    double term1 = exp(-1.0*delta*u);
+    double term2 = delta * term1;
+    double term3 = 1.0-term1;
+    double result = log(delta * term2 /(term3 * term3));
+    result = result - term2/term3;
+    if (term3 ==0 || term2 == 0)
+        fprintf (stderr, "\n LogDensityTime -inf \n ");
     return result;
 }
 double Population::LogProbNoCoalescentEventBetweenTimes(double from, double to, int numberActiveInd)

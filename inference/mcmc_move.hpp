@@ -17,9 +17,11 @@ protected:
     int numberAccept;
     int numberReject;
     int numberAttemps;
+    
     double newLogConditionalLikelihoodTree;
     double newLogConditionalLikelihoodSequences;
 public:
+    bool isInvalidMove;
     string name();
     MCMCmove(Chain *chain, string nameMove);
     virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;

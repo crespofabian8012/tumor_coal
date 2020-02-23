@@ -197,7 +197,7 @@ int main(int argc, char* argv[] )
             }
         }
         chains.at(chainNumber)->currentNumberIerations =currentIteration;
-        if (currentIteration == mcmcOptions.numChains -1)//last iteration
+        if (currentIteration == mcmcOptions.Niterations)//last iteration
             fprintf (stderr, "\n Number accepted moves %d, number of rejected moves %d \n", chains.at(chainNumber)->totalAccepted,chains.at(chainNumber)->totalRejected );
     }
     

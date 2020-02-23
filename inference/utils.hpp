@@ -47,4 +47,7 @@ void computeGenotypesFreq(double freqs[10], pll_msa_t * msa);
 
 void InitNumberNodes(double *TotalBirthRate, double *TotalDeathRate, int *TotalN,  Population **populations, ProgramOptions &programOptions) ;
 
+
+double parameterMultiplierMCMCmove (double lengthInterval);
+
 #endif /* util_h */

@@ -57,7 +57,7 @@ public:
     
     vector<double > proportionsVector;
     vector<double > oldproportionsVector;
-    int totalEffectPopSize;//total effect population size
+    long totalEffectPopSize;//total effect population size
     int oldTotalEffectPopSize;
     //double lambda ;
     double currentlogConditionalLikelihoodTree;

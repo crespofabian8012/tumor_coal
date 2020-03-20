@@ -23,7 +23,7 @@
 #include "eigen.hpp"
 #include "population.hpp"
 #include "tree_node.hpp"
-
+#include "mutationModel.h"
 extern "C"
 {
 #include "libpll/pll.h"
@@ -68,8 +68,8 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
                  vector<Population *> &populations,
                  FilePaths &filePaths,
                  Files &files,
-                 double freq[4],
-                 double Mij[4][4]
+                  double freq[4],
+                  double Mij[4][4]
                  );
 
 // helper function for simulating the data -- called by SimulateData
@@ -83,7 +83,7 @@ void AssignCurrentSequencesToPopulation(vector<Population *> &populations, vecto
                                         int &numActiveGametes, int &nextAvailable,
                                         int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames);
 
-int bbinClones (double dat, double *v, int n);
+int bbinClones (long double dat, long double *v, int n);
 void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  int *secondInd, long *seed, int choosePairIndividuals);
 void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, vector<TreeNode *> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
                           int &labelNodes, double &currentTime, int &numNodes);
@@ -106,7 +106,7 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
 
 void InitPopulationsCoalescentEvents( int numClones,  vector<Population *> &populations) ;
 
-void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGenome, int numSites, vector<SiteStr> &allSites, int doGeneticSignatures, double cumfreq[4], double *triNucFreq, char **cellNames);
+void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGenome, int numSites, vector<SiteStr> &allSites, int doGeneticSignatures, double cumfreq[4], long double *triNucFreq, char **cellNames);
 
 double SumBranches (TreeNode *p, double mutationRate);
 

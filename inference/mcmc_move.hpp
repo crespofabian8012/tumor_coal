@@ -18,8 +18,8 @@ protected:
     int numberReject;
     int numberAttemps;
     
-    double newLogConditionalLikelihoodTree;
-    double newLogConditionalLikelihoodSequences;
+    long double newLogConditionalLikelihoodTree;
+    long double newLogConditionalLikelihoodSequences;
 public:
     bool isInvalidMove;
     string name();
@@ -27,7 +27,7 @@ public:
     virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
     virtual void rollbackMove()=0;
     virtual void safeCurrentValue()=0;
-    virtual double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
+    virtual long  double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
     double numberAccepted();
     double numberRejected();
     Chain * getChain();
@@ -42,7 +42,7 @@ public:
     NewTotalEffectPopSizeMove(Chain *chain, string nameMove);
     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void rollbackMove();
-    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
@@ -52,7 +52,7 @@ public:
     NewProportionsVectorMove(Chain *chain, string nameMove);
     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void rollbackMove();
-    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
@@ -62,7 +62,7 @@ public:
     NewGrowthRateMoveForPopulation(Chain *chain, string nameMove, Population *pop);
     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void rollbackMove();
-    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
@@ -73,7 +73,7 @@ public:
     NewEffectPopSizeMoveForPopulation(Chain *chain, string nameMove, Population *pop);
     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void rollbackMove();
-    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
@@ -84,7 +84,7 @@ public:
     NewTimeOriginOnTreeforPopulationMove(Chain *chain, string nameMove, Population *pop);
     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void rollbackMove();
-    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
@@ -94,7 +94,7 @@ public:
     NewTimeOriginOnEdgeforPopulationMove(Chain *chain, string nameMove, Population *pop);
     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void rollbackMove();
-    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
@@ -104,7 +104,7 @@ public:
     NewPairGlobalScaledMutationRateRIMove(Chain *chain, string nameMove, Population *pop);
     void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void rollbackMove();
-    double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue();
     void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };

@@ -9,7 +9,6 @@
 #define Population_hpp
 
 #include <stdio.h>
-
 #include <vector>
 
 
@@ -30,28 +29,28 @@ public:
     int index; // label of the population {1, 2, 3, ...}
     int order; // population order by time of origin
     int oldOrder; // population order by time of origin
-    double timeOriginSTD; // standardized time of origin
-    double oldTimeOriginSTD; // standardized time of origin
-    double timeOriginInput; // time of origin
-    double oldTimeOriginInput; // time of origin
-    double scaledtimeOriginInput; // time of origin
-    double oldScaledTimeOriginInput; // time of origin
-    double delta; // growth rate * effectPopSize = r * x
-    double olddelta;
-    double r;
-    double oldr;
-    double x;
-    double oldx;
-    double theta;
-    double oldTheta;
-    double effectPopSize;
-    double oldeffectPopSize;
-    double birthRate, deathRate, growthRate;
-    double oldDeathRate, oldGrowthRate;
+    long double timeOriginSTD; // standardized time of origin
+    long double oldTimeOriginSTD; // standardized time of origin
+    long double timeOriginInput; // time of origin
+    long double oldTimeOriginInput; // time of origin
+    long double scaledtimeOriginInput; // time of origin
+    long double oldScaledTimeOriginInput; // time of origin
+    long double delta; // growth rate * effectPopSize = r * x
+    long double olddelta;
+    long double r;
+    long double oldr;
+    long double x;
+    long double oldx;
+    long double theta;
+    long double oldTheta;
+    long double effectPopSize;
+    long double oldeffectPopSize;
+    long double birthRate, deathRate, growthRate;
+    long double oldDeathRate, oldGrowthRate;
     int sampleSize; // number of cells in the population
     int oldSampleSize; // number of cells in the population
-    int popSize; // total number of cells (unknown at inference)
-    int oldPopSize;
+    unsigned long popSize; // total number of cells (unknown at inference)
+    unsigned long oldPopSize;
     int numActiveGametes; // number of (currently) living cells
     int numGametes; // ???
     int numCompletedCoalescences;
@@ -60,9 +59,9 @@ public:
     bool doEstimateTimeOrigin;
     bool isAlive, CellAssignationCompleted;
     //    double timeMigrationSTDCurrentPop; // TODO: check
-    vector<pair<double, Population *> > immigrantsPopOrderedByModelTime; // migrationTime, Population
+    vector<pair<long double, Population *> > immigrantsPopOrderedByModelTime; // migrationTime, Population
     
-    vector<pair<double, Population *> > oldimmigrantsPopOrderedByModelTime; // migrationTime, Population
+    vector<pair<long double, Population *> > oldimmigrantsPopOrderedByModelTime; // migrationTime, Population
     vector<int> idsActiveGametes;
     vector<int> idsGametes;
     int indexFirstObservedCellName;
@@ -79,19 +78,19 @@ public:
     
     Population *FatherPop;
     Population *oldFatherPop;
-    vector<double> CoalescentEventTimes;
-    vector<double> oldCoalescentEventTimes;
+    vector<long double> CoalescentEventTimes;
+    vector<long double> oldCoalescentEventTimes;
     
 public:
-    Population(int ind, int ord, double timeOriginInput,
-               int sampleSize, int popSize, double birthRate,
-               double deathRate, bool estimateTOR);
+    Population(int ind, int ord, long double timeOriginInput,
+               int sampleSize, int popSize, long double birthRate,
+               long double deathRate, bool estimateTOR);
     
-    double ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones);
-    static double FmodelTstandard (double t, double TOrigin, double delta);
-    static double GstandardTmodel (double V, double TOrigin, double delta);
-    static double CalculateH (double t, double TOrigin, double delta);
-    static bool comparePopulationsPairByTimeOrigin(const pair<double, Population *> s1, const pair<double, Population *> s2);
+    long double ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones);
+    static long double FmodelTstandard (long double t, long  double TOrigin, long double delta);
+    static long double GstandardTmodel (long double V, long double TOrigin, long double delta);
+    static long double CalculateH (long double t, long double TOrigin, long double delta);
+    static bool comparePopulationsPairByTimeOrigin(const pair<long double, Population *> s1, const pair<long double, Population *> s2);
     static int compare (const void * a, const void * b);
     void InitListPossibleMigrations(int order);
     int resetMigrationsList();
@@ -101,15 +100,16 @@ public:
     void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, long *seed, int choosePairIndividuals);
     void InitCoalescentEvents(int numClones);
     void resetActiveGametes();
-    static int bbinClones (double dat, double *v, int n);
-    double DensityTime( double u);
-    double LogProbNoCoalescentEventBetweenTimes(double from, double to, int numberActiveInd);
+    static int bbinClones (long double dat, long double *v, int n);
+    long double DensityTime( long double u);
+    long double LogProbNoCoalescentEventBetweenTimes(long double from, long double to, int numberActiveInd);
     void filterAndSortCoalescentEvents();
-    void multiplyCoalescentsEventByFactor(double factor);
-    void multiplyMigrationsTimesByFactor(double factor);
-    double LogDensityTime(double u);
-    static double LogCalculateH (double t, double TOrigin, double delta);
+    void multiplyCoalescentsEventByFactor(long double factor);
+    void multiplyMigrationsTimesByFactor(long double factor);
+    long double LogDensityTime(long double u);
+    static long double LogCalculateH (long double t, long double TOrigin, long double delta);
+    long double LogDensityTime2(long double u);
 private:
-    static bool isNotPositive(double d);
+    static bool isNotPositive(long double d);
 };
 #endif /* Population_hpp */

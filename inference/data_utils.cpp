@@ -721,26 +721,27 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
                  vector<Population *> &populations,
                  FilePaths &filePaths,
                  Files &files,
-                 double freq[4],
-                 double Mij[4][4])
+                  double freq[4],
+                  double Mij[4][4])
 {
     int i,j,z;
     vector<TreeNode *> nodes;
     char *newickString2;
-    double totalTreeLength;
+    long double totalTreeLength;
     int    HEALTHY_ROOT, TUMOR_ROOT;
     int    numISMdeletions, numISMCNLOH;
     int cumNumMUperTree;
     int     numAltModelSites = 0, numDefaultModelSites = 0, numISMmutations = 0, altModel = 0;
     
     double cumfreq[4];
-    double cumMij[4][4];
+    long double cumMij[4][4];
     double Eij[4][4];
     double cumEij[4][4];
     
-    double    kappa = 0.0, beta = 0.0, freqR = 0.0, freqY = 0.0, freqAG = 0.0, freqCT = 0.0;
+    double    kappa = 0.0, beta = 0.0;
+    long double freqR = 0.0, freqY = 0.0, freqAG = 0.0, freqCT = 0.0;
     double    Rmat[6], NRmat[12], Cijk[256], Root[4];
-    double *triNucFreq;
+    long double *triNucFreq=NULL;
     double   cumNumSNVs = 0, cumNumMU = 0, cumNumDEL = 0, cumNumCNLOH = 0, cumCountMLgenotypeErrors = 0;
     double cumNumMUSq = 0, cumNumSNVsSq = 0, cumNumDELSq = 0, cumNumCNLOHSq = 0;
     CellStr     *cell;
@@ -816,6 +817,8 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     InitListPossibleMigrations(populations, programOptions.numClones);
     InitPopulationsCoalescentEvents( programOptions.numClones,  populations);
     
+    double totalTimeMRCAPUnits =0.0;
+    double totalTimeMRCAModelTime = 0.0;
     for (dataSetNum = 0; dataSetNum < programOptions.numDataSets; dataSetNum++)// dataSetNum refers to a simulated tree number
     {
         if (programOptions.doPrintSeparateReplicates == YES)
@@ -860,7 +863,10 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         cumNumCA += numCA;
         cumNumMIG += numMIG;
         // countTMRCA = treeRootInit[0]->timePUnits;
-        countTMRCA = root->timePUnits;
+        countTMRCA = root->left->timePUnits;
+        
+        totalTimeMRCAPUnits +=root->left->timePUnits;
+        totalTimeMRCAModelTime += root->left->time;
         
         //fprintf ( stderr, "\n countTMRCA = %lf\n", countTMRCA);
         varTimeGMRCA[dataSetNum] = countTMRCA;
@@ -970,6 +976,12 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         
     }
     
+      fprintf(stderr, "\n The average time of MRCA in physical  time is %lf \n", totalTimeMRCAPUnits/ programOptions.numDataSets);
+    
+    fprintf(stderr, "\n The average time of MRCA in model time is %lf \n", totalTimeMRCAModelTime/ programOptions.numDataSets);
+    
+
+    
     
     
     for (i=0; i< programOptions.numSites; i++)
@@ -1015,7 +1027,7 @@ void ValidateParameters(ProgramOptions &programOptions,
 }
 /***************** bbinClones *****************/
 /* binary search in the probabilities with clones */
-int bbinClones (double dat, double *v, int n)
+int bbinClones (long double dat, long double *v, int n)
 {
     int init, end, middle;
     
@@ -1190,9 +1202,9 @@ void AssignCurrentSequencesToPopulation(vector<Population *> &populations, vecto
 /* ChooseRandomIndividual  */
 void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  int *secondInd, long *seed, int choosePairIndividuals)
 {
-    double random;
+    long double random;
     int k, w;
-    double *cumPopulPart = (double *) malloc((popI->numActiveGametes + 1)* (long) sizeof(double));
+    long double *cumPopulPart = (long double *) malloc((popI->numActiveGametes + 1)* (long) sizeof(long double));
     if (!cumPopulPart)
     {
         fprintf (stderr, "Could not allocate cumPopulPart (%lu bytes)\n", (popI->numActiveGametes + 1) * (long) sizeof(double));
@@ -1281,7 +1293,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
     
     //fprintf (stderr, "\n r->index = %d, r->time = %lf, ClonePopSizeMeffectBegin[ThisCloneNumber] = %lf, ThisCloneNumber = %d\n", r->index, r->time, ClonePopSizeMeffectBegin[ThisCloneNumber], ThisCloneNumber);
     if (noisy > 1)
-        fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
+        fprintf (stderr, "\t|\tCurrentTime (input units) = %Lf", r->timePUnits);
     /* readjust active nodes */
     
     popI->idsActiveGametes[firstInd] = newInd;
@@ -1545,7 +1557,7 @@ TreeNode *BuildTree(vector<Population* > &populations,
         // healthyRoot->time = p->time * transformingBranchLength ;
         healthyRoot->timePUnits = currentTime * healthyRoot->effectPopSize;
         
-        fprintf (stderr, "\n Time of the healthy root %lf\n",  healthyRoot->timePUnits);
+        fprintf (stderr, "\n Time of the healthy root %Lf\n",  healthyRoot->timePUnits);
         
         p->length = (p->anc1->timePUnits- p->timePUnits);
         //*mutationRate;
@@ -1868,7 +1880,7 @@ void InitPopulationsCoalescentEvents( int numClones,  vector<Population*> &popul
 }
 /********************************** InitializeGenomes ***********************************/
 /* Initialize all genomes with the reference states  */
-void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGenome, int numSites, vector<SiteStr> &allSites, int doGeneticSignatures, double cumfreq[4],double *triNucFreq, char **cellNames)
+void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGenome, int numSites, vector<SiteStr> &allSites, int doGeneticSignatures, double cumfreq[4],long double *triNucFreq, char **cellNames)
 {
     int     i, cell, anccell, site;
     double  ran;
@@ -2158,7 +2170,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
     //    Population *p2;
     //fprintf (stderr, "\n\n> numMigrations= %d \n", numMigrations);
     if (programOptions.noisy > 1)
-        fprintf (stderr, "\n\n>> Simulating evolutionary history of clone %d (number active gametes %d, original time to origin %lf)\n", popI->index, popI->numActiveGametes, popI->timeOriginInput);
+        fprintf (stderr, "\n\n>> Simulating evolutionary history of clone %d (number active gametes %d, original time to origin %Lf)\n", popI->index, popI->numActiveGametes, popI->timeOriginInput);
     if (programOptions.noisy > 1)
         fprintf (stderr, "\n\n> Simulating evolutionary history of clone  or order  %d ..\n", popI->order);
     //fprintf (stderr, "\n\n> Simulating evolutionary history of clone %d ..\n", popI->index);
@@ -2444,7 +2456,7 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
             strcpy( p->cellName,"healthycell");
             
             
-            if (asprintf(&newickString,  "healthycell:%10.9lf",  (p->anc1->timePUnits - p->timePUnits) * mutationRate)<0)
+            if (asprintf(&newickString,  "healthycell:%10.9Lf",  (p->anc1->timePUnits - p->timePUnits) * mutationRate)<0)
                 return NULL;
             
             return newickString;
@@ -2468,7 +2480,7 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
                 return newickString;
             }
             else{
-                if (asprintf(&newickString,   "%s:%10.9lf",  p->cellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate)<0)
+                if (asprintf(&newickString,   "%s:%10.9Lf",  p->cellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate)<0)
                     return NULL;
                 //snprintf(newickString,  size,  "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
                 
@@ -2506,7 +2518,7 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
                 snprintf(buffer, sizeof(buffer), "int_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
                 strcpy( p->cellName,buffer);
                 
-                if (asprintf(&newickString, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate )<0)
+                if (asprintf(&newickString, "(%s,%s):%10.9Lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate )<0)
                     return NULL;
                 //snprintf(newickString, size, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate );
                 free(left);
@@ -3246,7 +3258,7 @@ void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
             cb_destroy(node->data);
     }
 }
-double LogUniformDensity(double value, double from, double to)
+long double LogUniformDensity(long double value, long double from, long double to)
 {
     double result;
     if (value >= exp(from) && value<= exp(to) )
@@ -3256,7 +3268,7 @@ double LogUniformDensity(double value, double from, double to)
     }
     else
     {
-        result=0;
+        result=log(0);
         return result;
     }
 }

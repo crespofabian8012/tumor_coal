@@ -89,7 +89,7 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
         newTotalPopulationSize= chain->proposalSlidingWindow(chain->oldTotalEffectPopSize,  mcmcOptions.slidingWindowSizeTotalEffectPopSize);
         
         chain->totalEffectPopSize= newTotalPopulationSize;
-        fprintf (stderr, "\n proposed total effect pop size %d \n",chain->totalEffectPopSize );
+        //fprintf (stderr, "\n proposed total effect pop size %lu \n",chain->totalEffectPopSize );
         chain->updateEffectPopSizesCurrentProportionsVector();
         for( i = 0 ; i < chain->numClones; i++)
         {
@@ -124,7 +124,7 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
     while(!allPopulationPopSizesSet);
     
     if (allPopulationPopSizesSet)
-        fprintf (stderr, "\n new total effect pop size %d \n",chain->totalEffectPopSize );
+        fprintf (stderr, "\n new total effect pop size %lu \n",chain->totalEffectPopSize );
 }
 void NewTotalEffectPopSizeMove::rollbackMove()
 {
@@ -151,17 +151,19 @@ void NewTotalEffectPopSizeMove::rollbackMove()
     }
     
 }
-double NewTotalEffectPopSizeMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+long double NewTotalEffectPopSizeMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     //fprintf (stderr, "\n>> log conditional Likelihood tree for the new total effective population size %d(old %d),  of the chain %d is = %lf  \n",chain->totalEffectPopSize, chain->oldTotalEffectPopSize,chain->chainNumber,newLogConditionalLikelihoodTree );
-    double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
-    double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
-    double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewTotalEffectivePopulationSize;
-    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
-    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
+    long double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    long double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+   long double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewTotalEffectivePopulationSize;
+   long  double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
+    long double difference=sumLogNumerators - sumLogDenominators;
+    long double LogAcceptanceRate = (difference>=0.0)?0.0: difference;
+   
     return LogAcceptanceRate;
 }
 
@@ -175,18 +177,19 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
         rollbackMove();
         this->numberReject++;
         isInvalidMove = false;
-        //printf("\n Rejected new move %s because too many  proposals \n", nameMove.c_str());
+        printf("\n Rejected new move %s because too many  proposals \n", nameMove.c_str());
         return;
     }
     
-    double logAcceptanceRate =computeLogAcceptanceProb(programOptions, mcmcOptions);//-inf when one sample size is 0 for the new Pair...
-    //printf("\n logAcceptancerate %lf \n", logAcceptanceRate);
-    double randomNumber= randomUniformFromGsl();
-    double logRandom=log(randomNumber);
+   long  double logAcceptanceRate =computeLogAcceptanceProb(programOptions, mcmcOptions);
+   // printf("\n logAcceptancerate %.10Lf \n", logAcceptanceRate);
+    
+    long double randomNumber= randomUniformFromGsl();
+    long double logRandom=log(randomNumber);
     //printf("\n logRandom %lf \n", logRandom);
     if (logRandom < logAcceptanceRate )
     {//accept the move
-        //printf("\n Accepted new move %s \n", nameMove.c_str());
+       // printf("\n Accepted new move %s \n", nameMove.c_str());
         this->numberAccept++;
         Chain *chain=getChain();
         if (chain->currentlogConditionalLikelihoodTree !=newLogConditionalLikelihoodTree)
@@ -198,7 +201,7 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
     {
         rollbackMove();
         this->numberReject++;
-       // printf("\n Rejected new move %s \n", nameMove.c_str());
+      //  printf("\n Rejected new move %s \n", nameMove.c_str());
     }
 }
 //////////////////////////////////////////////
@@ -228,8 +231,8 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     Chain *chain=getChain();
     int i=0;
     Population *popI;
-    double *proportionsVectorArray;
-    vector<double> effectPopSizesvector(chain->numClones);
+    long double *proportionsVectorArray;
+    vector<long double> effectPopSizesvector(chain->numClones);
     bool allPopulationPopSizesSet=false;
     //double totalSampleSize= chain->totalSampleSize();
     for( i = 0 ; i < chain->numClones; i++)
@@ -303,21 +306,21 @@ void NewProportionsVectorMove::rollbackMove()
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
-double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+long double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     // ListClonesAccordingTimeToOrigin(chain->populations);
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
-    vector<double> oldConcentrationParameter(chain->numClones);
-    vector<double> proposedConcentrationParameter(chain->numClones);
+    vector<long double> oldConcentrationParameter(chain->numClones);
+    vector<long double> proposedConcentrationParameter(chain->numClones);
     for(unsigned i = 0 ; i < chain->numClones; i++){
         oldConcentrationParameter.at(i)  = chain->oldproportionsVector.at(i) * chain->totalEffectPopSize;
         proposedConcentrationParameter.at(i)  = chain->proportionsVector.at(i) * chain->totalEffectPopSize;
     }
     
-    double priorDensityNewProportionsVector =  chain->DirichletDensity( chain->proportionsVector, oldConcentrationParameter , chain->numClones);
+   long double priorDensityNewProportionsVector =  chain->DirichletDensity( chain->proportionsVector, oldConcentrationParameter , chain->numClones);
     
-    double priorDensityCurrentProportionsVector = chain->DirichletDensity(chain->oldproportionsVector, proposedConcentrationParameter, chain->numClones);
+    long double priorDensityCurrentProportionsVector = chain->DirichletDensity(chain->oldproportionsVector, proposedConcentrationParameter, chain->numClones);
     
     double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewProportionsVector;
     
@@ -376,25 +379,26 @@ void NewGrowthRateMoveForPopulation::rollbackMove()
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
-double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+long double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     
     //fprintf (stderr, "\n>> New log conditional Likelihood tree after the new total growth rate for population %d,  of the chain %d is = %lf  \n", pop->index, chain->chainNumber, newLogConditionalLikelihoodTree );
     
-    double priorDensityNewScaledGrowthRate =  LogUniformDensity(pop->delta, mcmcOptions.Deltafrom, mcmcOptions.Deltato);
+    long double priorDensityNewScaledGrowthRate =  LogUniformDensity(pop->delta, mcmcOptions.Deltafrom, mcmcOptions.Deltato);
     
-    double priorDensitScaledGrowthRate =  LogUniformDensity(pop->olddelta, mcmcOptions.Deltafrom, mcmcOptions.Deltato);
+    long double priorDensitScaledGrowthRate =  LogUniformDensity(pop->olddelta, mcmcOptions.Deltafrom, mcmcOptions.Deltato);
     
-    double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewScaledGrowthRate;
+    long double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewScaledGrowthRate;
     
-    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensitScaledGrowthRate;
+    long double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensitScaledGrowthRate;
     
     
-    double logAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
+    long double difference=sumLogNumerators - sumLogDenominators;
+    long double LogAcceptanceRate = (difference>=0.0)?0.0: difference;
     
-    return logAcceptanceRate;
+    return LogAcceptanceRate;
 }
 void NewEffectPopSizeMoveForPopulation::safeCurrentValue()
 {    Chain *chain=getChain();
@@ -430,8 +434,7 @@ void NewEffectPopSizeMoveForPopulation::rollbackMove()
 }
 void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
-    int i;
-    
+
     Chain *chain=getChain();
     
     bool populationPopSizesSet=false;
@@ -465,22 +468,23 @@ void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOpti
     while(!populationPopSizesSet);
     
 }
-double NewEffectPopSizeMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions){
+long double NewEffectPopSizeMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions){
     
     Chain *chain=getChain();
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     
     // double slidingWindowSize= 2* (pop->oldeffectPopSize - pop->birthRate * pop->sampleSize);
     
-    double priorDensityNewEffectivePopulationSize= LogUniformDensity(pop->effectPopSize,  mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    long double priorDensityNewEffectivePopulationSize= LogUniformDensity(pop->effectPopSize,  mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
-    double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    long double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
-    double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewEffectivePopulationSize;
+    long double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewEffectivePopulationSize;
     
-    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
+   long  double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
     
-    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
+    long double difference=sumLogNumerators - sumLogDenominators;
+    long double LogAcceptanceRate = (difference>=0.0)?0.0: difference;
     
     return LogAcceptanceRate;
 }
@@ -588,16 +592,12 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     if (!isOldestPop)
     {
         chain->proposedrMRCAPopulation=  chain->chooseAvailableEdgeOnRootedTreeForPopulation(pop, chain->rMRCAPopulation, programOptions.healthyTipLabel);
-        
-       
     }
     else
     {
         chain->proposedrMRCAPopulation=chain->chooseNewTimeofOriginOnEdge(pop);
     }
     bool stillTheOldestPop=  chain->isOldestPopulation(pop, chain->proposedrMRCAPopulation) ;
-    
-   
     
     if (!stillTheOldestPop)
     {
@@ -634,14 +634,11 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
 
             popI->immigrantsPopOrderedByModelTime = popI->oldimmigrantsPopOrderedByModelTime;
             popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
-          
         }
-        
     }
 
-    
 }
-double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     vector<pair<double, pll_tree_edge_t *> > currentAvailableEdges;
@@ -650,17 +647,17 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
     
     bool isOldestPop = chain->isOldestPopulation(pop, chain->rMRCAPopulation);
-    double sumLogNumerators=0.0 ;
+    long double sumLogNumerators=0.0 ;
     
-    double sumLogDenominators=0.0;
+   long double sumLogDenominators=0.0;
     
     if (!isOldestPop)
     {
-        double currentSumAvailBranchLengths = chain->computeAdjacentEdges(currentAvailableEdges, chain->currentrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->oldrMRCA);
+        long double currentSumAvailBranchLengths = chain->computeAdjacentEdges(currentAvailableEdges, chain->currentrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->oldrMRCA);
         
-        double newSumAvailBranchLengths =chain->computeAdjacentEdges(proposedAvailableEdges, chain->proposedrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->rMRCA);
+        long double newSumAvailBranchLengths =chain->computeAdjacentEdges(proposedAvailableEdges, chain->proposedrMRCAPopulation, programOptions.healthyTipLabel, pop, pop->rMRCA);
         
-        double currentProportionsArray[chain->numClones];
+         double currentProportionsArray[chain->numClones];
         unsigned int currentSampleSizesArray[chain->numClones];
         unsigned int proposedSampleSizesArray[chain->numClones];
         for (unsigned int i = 0; i < chain->numClones; ++i)
@@ -671,13 +668,13 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
             currentProportionsArray[i]= pop->x;
             
         }
-        double currentlogMultinomialProb= logMultinomialProbability(chain->numClones, currentProportionsArray, currentSampleSizesArray);
+        long double currentlogMultinomialProb= logMultinomialProbability(chain->numClones, currentProportionsArray, currentSampleSizesArray);
         
-        double proposedlogMultinomialProb=logMultinomialProbability(chain->numClones, currentProportionsArray, proposedSampleSizesArray);
+         long double proposedlogMultinomialProb=logMultinomialProbability(chain->numClones, currentProportionsArray, proposedSampleSizesArray);
         
-        double numeratorQ=log(pop->oldrMRCA->length) - log(newSumAvailBranchLengths);
+        long double numeratorQ=log(pop->oldrMRCA->length) - log(newSumAvailBranchLengths);
         //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
-        double denominatorQ= log(pop->rMRCA->length) - log(currentSumAvailBranchLengths);
+        long double denominatorQ= log(pop->rMRCA->length) - log(currentSumAvailBranchLengths);
         //    priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
         
         sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ+proposedlogMultinomialProb ;
@@ -696,7 +693,11 @@ double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOp
         
     
     
-    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
+    long double difference=sumLogNumerators - sumLogDenominators;
+    long double LogAcceptanceRate = (difference>=0.0)?0.0: difference;
+    if (isinf(LogAcceptanceRate) || isnan(LogAcceptanceRate))
+        fprintf (stderr, "\n isNan LogAcceptanceRate \n");
+    
     return LogAcceptanceRate;
 }
 void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue()
@@ -786,25 +787,27 @@ void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programO
     //    for (int i = 0; i < pop->FatherPop->immigrantsPopOrderedByModelTime.size(); ++i)
     //        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin input%lf \n", pop->FatherPop->immigrantsPopOrderedByModelTime[i].first,  pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->order , pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->timeOriginInput);
 }
-double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+long double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
-    double currentSumAvailBranchLengths;// chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
-    double newSumAvailBranchLengths ;// chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
+    long double currentSumAvailBranchLengths;// chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
+    long double newSumAvailBranchLengths ;// chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
     // double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);
-    double numeratorQ =0;
+    long double numeratorQ =0;
     //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     //double denominatorQ= log(pop->rMRCA->length) + log(currentSumAvailBranchLengths);
-    double denominatorQ= 0;
+    long double denominatorQ= 0;
     //    priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
-    double sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ;
+   long  double sumLogNumerators= newLogConditionalLikelihoodTree +numeratorQ;
     
-    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ;
+    long double sumLogDenominators=chain->currentlogConditionalLikelihoodTree + denominatorQ;
     
-    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
+    long double difference=sumLogNumerators - sumLogDenominators;
+    long double LogAcceptanceRate = (difference>=0.0)?0.0: difference;
+   
     return LogAcceptanceRate;
 }
 //////////////////////////////////////////
@@ -826,85 +829,104 @@ void NewPairGlobalScaledMutationRateRIMove::safeCurrentValue()
     
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
-        auto pop =  chain->populations[i];
-        pop->oldr= pop->r;
-        pop->olddelta= pop->delta;
-        pop->oldTheta =pop->theta;
+        auto popI =  chain->populations[i];
+        popI->oldr= popI->r;
+        popI->olddelta= popI->delta;
+        popI->oldTheta =popI->theta;
+        popI->oldScaledTimeOriginInput= popI->scaledtimeOriginInput ;
+        popI->oldTimeOriginSTD = popI->timeOriginSTD;
         
-        pop->oldeffectPopSize=pop->effectPopSize;
-        pop->oldPopSize = pop->popSize;
-        pop->oldDeathRate = pop->deathRate;
-        pop->oldFatherPop = pop->FatherPop;
-        pop->oldGrowthRate = pop->growthRate;
-        pop->oldCoalescentEventTimes = pop->CoalescentEventTimes;
-        pop->CoalescentEventTimes.clear();
-        pop->oldimmigrantsPopOrderedByModelTime= pop->immigrantsPopOrderedByModelTime;
-        pop->immigrantsPopOrderedByModelTime.clear();
+        popI->oldeffectPopSize=popI->effectPopSize;
+        popI->oldPopSize = popI->popSize;
+        popI->oldDeathRate = popI->deathRate;
+        popI->oldFatherPop = popI->FatherPop;
+        popI->oldGrowthRate = popI->growthRate;
+        popI->oldCoalescentEventTimes = popI->CoalescentEventTimes;
+        popI->CoalescentEventTimes.clear();
+        popI->oldimmigrantsPopOrderedByModelTime= popI->immigrantsPopOrderedByModelTime;
+        popI->immigrantsPopOrderedByModelTime.clear();
     }
 }
 void NewPairGlobalScaledMutationRateRIMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     double allPopulationPopSizesSet = true;
-    //generate a uniform variable between 0 and 1
-    double randomNumber = randomUniformFromGsl();
+   
     double minimumMultiplier = chain->totalEffectPopSize / chain->totalSampleSize();
     double lengthIntervalMultiplier = 0.3;
-    if (minimumMultiplier - (1.0/ minimumMultiplier) <=0.3)
-    {
-        mcmcOptions.paramMultiplierEffectPopSize = minimumMultiplier;
-    }
-    else{
+//    if (minimumMultiplier - (1.0/ minimumMultiplier) <=lengthIntervalMultiplier)
+//    {
+//        mcmcOptions.paramMultiplierEffectPopSize = minimumMultiplier;
+//    }
+//    else{
         mcmcOptions.paramMultiplierEffectPopSize = parameterMultiplierMCMCmove (lengthIntervalMultiplier);
-    }
-    
-    double m1= exp(2 * log(mcmcOptions.paramMultiplierEffectPopSize) *(randomNumber -0.5));
-    chain->totalEffectPopSize = m1 * chain->totalEffectPopSize;
-    
-    fprintf (stderr, "\n proposed new total effec pop size %d, old %d \n", chain->totalEffectPopSize, chain->oldTotalEffectPopSize );
+    //}
+    //generate a uniform variable between 0 and 1
+    double randomNumber = randomUniformFromGsl();
+    long double m1= exp(2 * log(mcmcOptions.paramMultiplierEffectPopSize) *(randomNumber -0.5));
+   chain->totalEffectPopSize = m1 * chain->totalEffectPopSize;
+     //chain->totalEffectPopSize = randomNormalBoost(chain->totalEffectPopSize, 0.1 * chain->totalEffectPopSize);
+    //fprintf (stderr, "\n proposed new total effec pop size %lu, old %lu \n", chain->totalEffectPopSize, chain->oldTotalEffectPopSize );
     
     double newConditionalMutationRate = chain->theta / chain->totalEffectPopSize;
     randomNumber= randomUniformFromGsl();
-    mcmcOptions.paramMultiplierMoveTheta =parameterMultiplierMCMCmove (lengthIntervalMultiplier);
-    double m2 = exp(2 * log(mcmcOptions.paramMultiplierMoveTheta) *(randomNumber -0.5));
+    mcmcOptions.paramMultiplierMutationRate =parameterMultiplierMCMCmove (lengthIntervalMultiplier);
+    long double m2 = exp(2 * log(mcmcOptions.paramMultiplierMutationRate) *(randomNumber -0.5));
     chain->mutationRate = m2 * chain->mutationRate;
+    //chain->mutationRate = randomNormalBoost(chain->mutationRate, 0.1 * chain->mutationRate);
+    //fprintf (stderr, "\n proposed new mutat rate %.15Lf, old %.15Lf \n", chain->mutationRate, chain->oldmutationRate );
     chain->theta =  chain->totalEffectPopSize * chain->mutationRate;
     
+     //fprintf (stderr, "\n proposed new theta %.10Lf, old %.10Lf \n", chain->theta, chain->oldtheta );
     if (chain->theta != 0)
         chain->updateNodeScaledTimeForRootedTree(chain->theta);
     else
         fprintf (stderr, "\n the new theta cannot be 0\n");
     
+    long double m3;
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
-        auto pop =  chain->populations[i];
-        pop->theta = chain->theta * pop->x;
+        auto popI =  chain->populations[i];
+        popI->theta = chain->theta * popI->x;
+        mcmcOptions.paramMultiplierGrowthRate = parameterMultiplierMCMCmove(lengthIntervalMultiplier);
+        randomNumber= randomUniformFromGsl();
+        m3 = exp(2 * log(mcmcOptions.paramMultiplierGrowthRate) *(randomNumber -0.5));
+      //  pop->growthRate =  chain->proposalSlidingWindow(pop->oldGrowthRate, mcmcOptions.slidingWindowSizeGrowtRate);
+        //pop->growthRate =  chain->proposalSlidingWindow(pop->oldGrowthRate, 0.1 * pop->oldGrowthRate);
+        // pop->growthRate = randomNormalBoost(pop->growthRate, 0.1 * pop->growthRate);
+        popI->growthRate = m3 * popI->growthRate ;
+        //fprintf (stderr, "\n proposed growth rate  %.10Lf, old %.10Lf \n",pop->growthRate, pop->oldGrowthRate );
+        popI->r = popI->growthRate * chain->totalEffectPopSize;
         
-        pop->growthRate =  chain->proposalSlidingWindow(pop->oldGrowthRate, mcmcOptions.slidingWindowSizeGrowtRate);
+        //fprintf (stderr, "\n proposed r %.10Lf, old %.10Lf \n", pop->r, pop->oldr );
+        popI->delta = popI->r * popI->x ;
         
-        pop->r = pop->growthRate * chain->totalEffectPopSize;
+      // fprintf (stderr, "\n proposed delta  %.10Lf, old %.10Lf \n", pop->delta, pop->olddelta  );
+        popI->effectPopSize = chain->totalEffectPopSize * popI->x ;
+        //fprintf (stderr, "\n proposed effectPopSize  %.10Lf, old %.10Lf \n", pop->effectPopSize, pop->oldeffectPopSize  );
+        popI->popSize = popI->effectPopSize * popI->birthRate;
         
-        pop->delta = pop->r * pop->x ;
-        pop->effectPopSize = chain->totalEffectPopSize * pop->x ;
-        
-        pop->popSize = pop->effectPopSize * mcmcOptions.fixedLambda;
        
-        if (pop->popSize < pop->sampleSize)
+        popI->scaledtimeOriginInput = popI->timeOriginInput / popI->theta;
+        popI->timeOriginSTD = popI->scaledtimeOriginInput / popI->x;
+    
+         //fprintf (stderr, "\n time origin input   %.10Lf  , scaled by theta %.10Lf, std %.10Lf \n",  pop->timeOriginInput,  pop->scaledtimeOriginInput, pop->timeOriginSTD  );
+        if (popI->popSize < popI->sampleSize)
         {
             isInvalidMove = true;
 //            allPopulationPopSizesSet=false;
             break;
         }
-        pop->deathRate = mcmcOptions.fixedLambda- pop->growthRate;
-        pop->numCompletedCoalescences=0;
-        pop->CoalescentEventTimes.clear();
-        pop->immigrantsPopOrderedByModelTime.clear();
-        pop->numIncomingMigrations=0;
+        popI->deathRate = popI->birthRate- popI->growthRate;
+        popI->numCompletedCoalescences=0;
+        popI->CoalescentEventTimes.clear();
+        popI->immigrantsPopOrderedByModelTime.clear();
+        popI->numIncomingMigrations=0;
         //pop->oldFatherPop = pop->FatherPop;
     }
     if (!allPopulationPopSizesSet)
     {
-        fprintf (stderr, "\n The  popSize %d < sampleSize %d \n", pop->popSize, pop->sampleSize );
+        fprintf (stderr, "\n The  popSize  is less than  sampleSize  \n" );
         
     }
     if (!allPopulationPopSizesSet)
@@ -924,60 +946,87 @@ void NewPairGlobalScaledMutationRateRIMove::rollbackMove()
     if (chain->theta != 0)
         chain->updateNodeScaledTimeForRootedTree(chain->theta);
     
+    
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
-        auto pop =  chain->populations[i];
-        pop->growthRate =pop->oldGrowthRate;
-        pop->effectPopSize = pop->oldeffectPopSize;
-        pop->popSize = pop->oldPopSize;
-        pop->deathRate = pop->oldDeathRate;
-        pop->r= pop->oldr;
-        pop->delta= pop->olddelta;
-        pop->theta =pop->oldTheta;
-        pop->FatherPop = pop->oldFatherPop;
-        pop->CoalescentEventTimes = pop->oldCoalescentEventTimes;
-        pop->numCompletedCoalescences=pop->oldCoalescentEventTimes.size();
-        pop->oldCoalescentEventTimes.clear();
-        pop->immigrantsPopOrderedByModelTime =  pop->oldimmigrantsPopOrderedByModelTime;
-        pop->numIncomingMigrations=pop->oldimmigrantsPopOrderedByModelTime.size();
-        pop->oldimmigrantsPopOrderedByModelTime.clear();
+        auto popI =  chain->populations[i];
+        popI->growthRate =popI->oldGrowthRate;
+        popI->effectPopSize = popI->oldeffectPopSize;
+        popI->popSize = popI->oldPopSize;
+        popI->deathRate = popI->oldDeathRate;
+        popI->r= popI->oldr;
+        popI->delta= popI->olddelta;
+        popI->theta =popI->oldTheta;
+        popI->FatherPop = popI->oldFatherPop;
+        popI->scaledtimeOriginInput = popI->oldScaledTimeOriginInput;
+        popI->timeOriginSTD = popI->oldTimeOriginSTD;
+        popI->CoalescentEventTimes = popI->oldCoalescentEventTimes;
+        popI->numCompletedCoalescences=popI->oldCoalescentEventTimes.size();
+        popI->oldCoalescentEventTimes.clear();
+        popI->immigrantsPopOrderedByModelTime =  popI->oldimmigrantsPopOrderedByModelTime;
+        popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
+        popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
-    
 }
-double NewPairGlobalScaledMutationRateRIMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+long double NewPairGlobalScaledMutationRateRIMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions);
    // fprintf (stderr, "\n>> log conditional Likelihood tree for the new pair  theta and  r %d(old %d),  of the chain %d is = %lf  \n",chain->totalEffectPopSize, chain->oldTotalEffectPopSize,chain->chainNumber,newLogConditionalLikelihoodTree );
     
-    double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    long double priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
-    double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    if (isinf(priorDensityNewTotalEffectivePopulationSize) ||  isnan(priorDensityNewTotalEffectivePopulationSize))
+        fprintf (stderr, "\n isNan NewTotalEffectivePopulationSize \n");
     
-    double priorDensityNewMutationRate= LogUniformDensity(chain->mutationRate, mcmcOptions.MutRatefrom, mcmcOptions.MutRateto);
+    long double priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(chain->oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
-    double priorDensityCurrentNewMutationRate= LogUniformDensity(chain->oldmutationRate, mcmcOptions.MutRatefrom, mcmcOptions.MutRateto);
+    long double priorDensityNewMutationRate= LogUniformDensity(chain->mutationRate, mcmcOptions.MutRatefrom, mcmcOptions.MutRateto);
     
-    double priorDensityNewGrowthRate= 0;
-    double priorDensityCurrentGrowthRate= 0;
+    if (isinf(priorDensityNewMutationRate) ||  isnan(priorDensityNewMutationRate))
+          fprintf (stderr, "\n isNan priorDensityNewMutationRate \n");
     
+    long double priorDensityCurrentNewMutationRate= LogUniformDensity(chain->oldmutationRate, mcmcOptions.MutRatefrom, mcmcOptions.MutRateto);
+    
+    long double priorDensityNewGrowthRate= 0;
+    long double priorDensityCurrentGrowthRate= 0;
+    
+    long double logKernelGrowthRate =0.0;
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
-        auto pop =  chain->populations[i];
-        priorDensityNewGrowthRate +=LogUniformDensity(pop->growthRate, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
-        priorDensityCurrentGrowthRate +=LogUniformDensity(pop->oldGrowthRate, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
+        auto popI =  chain->populations[i];
+        priorDensityNewGrowthRate +=LogUniformDensity(popI->growthRate, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
+        
+        logKernelGrowthRate += log(popI->growthRate / popI->oldGrowthRate);
+        
+        if (isinf(priorDensityNewGrowthRate) ||  isnan(priorDensityNewGrowthRate))
+            fprintf (stderr, "\n isNan DensityNewGrowthRate \n");
+        
+        priorDensityCurrentGrowthRate += LogUniformDensity(popI->oldGrowthRate, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
     }
     
-    double logkernelTotalEffectPopulationSize=log((double)chain->totalEffectPopSize / chain->oldTotalEffectPopSize);//log(multiplier factor)
+    long double logkernelTotalEffectPopulationSize=log((long double)chain->totalEffectPopSize / chain->oldTotalEffectPopSize);//log(multiplier factor)
     
-    double logkernelMutationRate=log(chain->mutationRate /chain->oldmutationRate);//log(multiplier factor)
+   long double logkernelMutationRate=log(chain->mutationRate /chain->oldmutationRate);//log(multiplier factor)
     
-    double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewTotalEffectivePopulationSize+ priorDensityNewMutationRate+ logkernelTotalEffectPopulationSize + logkernelMutationRate + priorDensityNewGrowthRate;
+    //double sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewTotalEffectivePopulationSize+ priorDensityNewMutationRate+ logkernelTotalEffectPopulationSize + logkernelMutationRate + priorDensityNewGrowthRate;
     
-    double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize+priorDensityCurrentNewMutationRate+ priorDensityCurrentGrowthRate;
+    //double sumLogDenominators=chain->currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize+priorDensityCurrentNewMutationRate+ priorDensityCurrentGrowthRate;
     
-    double LogAcceptanceRate = std::min(sumLogNumerators - sumLogDenominators,0.0);
+   long  double sumLogNumerators= priorDensityNewTotalEffectivePopulationSize+ priorDensityNewMutationRate+ + priorDensityNewGrowthRate + logkernelTotalEffectPopulationSize+ logkernelMutationRate+ logKernelGrowthRate;
     
+   long double sumLogDenominators= priorDensityCurrentTotalEffectivePopulationSize+priorDensityCurrentNewMutationRate+ priorDensityCurrentGrowthRate;
+    
+   // if (mcmcOptions.doInferenceWithoutData ==0)
+  //  {
+        sumLogNumerators+= newLogConditionalLikelihoodTree;
+        sumLogDenominators+=chain->currentlogConditionalLikelihoodTree;
+   // }
+    long double difference=sumLogNumerators - sumLogDenominators;
+    long double LogAcceptanceRate = (difference>=0.0)?0.0: difference;
+    
+    if (isinf(LogAcceptanceRate) ||  isnan(LogAcceptanceRate))
+        fprintf (stderr, "\n isNan accept \n");
     return LogAcceptanceRate;
 }
 

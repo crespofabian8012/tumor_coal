@@ -10,14 +10,14 @@
 #include "eigen.hpp"
 #include "random.h"
 
-void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *seed,  vector<int> &DefaultModelSites, int numDefaultModelSites, vector<int> &AltModelSites, int numAltModelSites, double totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet,  vector<SiteStr> &allSites, int  &numMU, double cumMij[4][4], double mutationRate)
+void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *seed,  vector<int> &DefaultModelSites, int numDefaultModelSites, vector<int> &AltModelSites, int numAltModelSites, long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet,  vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4], long double  mutationRate)
 {
     int   i, trials, numMutations, mutationsSoFar;
-    double  totalBranchSum;
-    double cumBranchLength =0;
-    double uniform =0;
+    long double   totalBranchSum;
+    long double  cumBranchLength =0;
+    long double  uniform =0;
     int mutationAdded;
-    double ran=0;
+    long double  ran=0;
     int numModelSites = numDefaultModelSites;
     
     totalBranchSum = totalTreeLength * numModelSites * mutationRate;
@@ -177,10 +177,10 @@ int openFile(FILE **file, char path[MAX_NAME] )
  
  */
 
-void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, double totalTreeLength, vector<SiteStr> &allSites, int  &numMU, double cumMij[4][4],double mutationRate, double &uniform, double &cumBranchLength, double &ran )
+void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, long double  totalTreeLength, vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4],long double  mutationRate, long double  &uniform, long double  &cumBranchLength, long double  &ran )
 {
     
-    //    static double    cumBranchLength, uniform, ran;
+    //    static long double     cumBranchLength, uniform, ran;
     
     int             j, cell, anccell, ancstate;
     
@@ -327,10 +327,10 @@ void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid,
  where this mutation is placed is chosen according to its length.
  0 is the reference (healthy) allele
  */
-void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, double totalTreeLength, vector<SiteStr> &allSites, int  &numMU, double cumMij[4][4], double mutationRate, double &cumBranchLength, double &uniform, int &mutationAdded)
+void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, long double  totalTreeLength, vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4], long double  mutationRate, long double  &cumBranchLength, long double  &uniform, int &mutationAdded)
 {
-    //    static double    cumBranchLength, uniform;
-    //    static double    cumBranchLength, uniform;
+    //    static long double     cumBranchLength, uniform;
+    //    static long double     cumBranchLength, uniform;
     int             cell, anccell;
     //    if (*mutationAdded==YES)
     //        return;
@@ -342,7 +342,7 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
         if ( p->anc1 == NULL)
         {
             cumBranchLength = 0;
-            //            double rUniform=RandomUniform(seed) * totalTreeLength;
+            //            long double  rUniform=RandomUniform(seed) * totalTreeLength;
             uniform = RandomUniform(seed) * totalTreeLength;
             
         }
@@ -440,7 +440,7 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
                 
             }
         }
-        //        double goLeftFirst=RandomUniform(seed);
+        //        long double  goLeftFirst=RandomUniform(seed);
         //        if(goLeftFirst < 0.5)
         //        {
         SimulateISMforSite (p->left, genome, site, doISMhaploid, seed, totalTreeLength, allSites, numMU, cumMij, mutationRate, cumBranchLength, uniform, mutationAdded);
@@ -460,12 +460,12 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
 /* Note that beta is set such that mean substitution rate will be 1.
  E.g., for J-C model, beta=4/3, where 12(1/4)(1/4)(4/3) = 1.      */
 
-void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int doHKY, int doGTR, int doGTnR, double freqR, double freqY, double freqAG, double freqCT, double titv, double freq[4], double Mij[4][4], int numAltModelSites, vector<int> &AltModelSites, vector<SiteStr> &allSites,  int rateVarAmongSites, double altModelMutationRate, int &numMU, double Root[], double Cijk[])
+void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int doHKY, int doGTR, int doGTnR, long double &freqR, long double   &freqY,  long double  &freqAG,  long double  &freqCT,  double  titv,  double  freq[4],  double  Mij[4][4], int numAltModelSites, vector<int> &AltModelSites, vector<SiteStr> &allSites,  int rateVarAmongSites, long double  altModelMutationRate, int &numMU,  double  Root[],  double  Cijk[])
 {
     int     i, j;
-    double beta, kappa;
-    double Qij[16];
-    double mr;
+    long double  beta, kappa;
+    double  Qij[16];
+     double  mr;
     
     if (doJC == YES)
     {
@@ -477,7 +477,7 @@ void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int d
         freqY = freq[C] + freq[T];
         freqAG = freq[A] * freq[G];
         freqCT = freq[C] * freq[T];
-        kappa = (titv*freqR*freqY)/(freqAG+freqCT);
+        kappa = (titv* freqR*freqY)/(freqAG+freqCT);
         beta = 0.5 / (freqR*freqY + kappa*(freqAG+freqCT));
     }
     else if (doGTR == YES || doGTnR == YES)
@@ -494,7 +494,7 @@ void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int d
         }
         EigenREV(mr, Qij, Root, Cijk);
     }
-    
+  
     for (i=0; i<numAltModelSites; i++)
         SimulateFiniteDNAforSite (p,  genome, AltModelSites[i], allSites,  seed,  rateVarAmongSites,  altModelMutationRate, numMU,  doJC,  doHKY,  doGTR,  doGTnR,    beta,    kappa,   freqR,   freqY,   freq,  Root,  Cijk);
     
@@ -504,7 +504,7 @@ void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int d
 /*    JC performs Jukes-Cantor 69 correction */
 /* Note that beta was set such that mean substitution rate will be 1.
  for the JC model, beta=4/3, where 12(1/4)(1/4)(4/3) = 1.      */
-void JCmodel (double Pij[4][4], double branchLength, double beta )
+void JCmodel (long double  Pij[4][4], long double  branchLength, long double  beta )
 {
     int i, j;
     
@@ -523,10 +523,10 @@ void JCmodel (double Pij[4][4], double branchLength, double beta )
 /*********************************** HKY **************************************/
 /*    HKY performs Hasegawa-Kishino-Yano 85 correction */
 
-void HKYmodel (double Pij[4][4], double branchLength, double kappa, double freqR, double freqY, double beta, double freq[4])
+void HKYmodel (long double  Pij[4][4], long double  branchLength, long double  kappa, long double  freqR, long double  freqY, long double  beta,  double  freq[4])
 {
     int            i, j;
-    double        AA1, t, PIj;
+    long double         AA1, t, PIj;
     
     t = branchLength;
     
@@ -553,10 +553,10 @@ void HKYmodel (double Pij[4][4], double branchLength, double kappa, double freqR
 
 
 /*************** GTR **********************/
-void GTRmodel (double Pij[4][4], double branchLength, double Root[], double Cijk[])
+void GTRmodel (long double  Pij[4][4], long double  branchLength,  double  Root[],  double  Cijk[])
 {
     int     i, j, k;
-    double    t, expt[4];
+    long double     t, expt[4];
     
     t = branchLength;
     
@@ -574,7 +574,7 @@ void GTRmodel (double Pij[4][4], double branchLength, double Root[], double Cijk
 
 /********************* FillSubstitutionMatrix **********************/
 /* Sets the apropriate model of nucleotide substitution   */
-void FillSubstitutionMatrix (double ch_prob[4][4], double branchLength, int doJC, int doHKY, int doGTR, int doGTnR, double beta, double kappa, double freqR, double freqY, double freq[4], double Root[], double Cijk[])
+void FillSubstitutionMatrix (long double  ch_prob[4][4], long double  branchLength, int doJC, int doHKY, int doGTR, int doGTnR, long double  beta, long double  kappa, long double  freqR, long double  freqY,  double  freq[4],  double  Root[],  double  Cijk[])
 {
     int i, j;
     
@@ -603,9 +603,10 @@ void FillSubstitutionMatrix (double ch_prob[4][4], double branchLength, int doJC
 
 /************************************* SimulateFiniteDNAforSite **********************************************/
 /* Simulates JC, HKY, GTR or GTRnr for a given site */
-void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr> &allSites,  long int *seed, int rateVarAmongSites, double altModelMutationRate, int &numMU, int doJC, int doHKY, int doGTR, int doGTnR, double beta,  double kappa, double freqR, double freqY, double freq[4], double Root[], double Cijk[])
+void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr> &allSites,  long int *seed, int rateVarAmongSites, long double  altModelMutationRate, int &numMU, int doJC, int doHKY, int doGTR, int doGTnR, long double  beta,  long double  kappa,  long double&  freqR,  long double&  freqY,  double  freq[4],  double  Root[],  double  Cijk[])
 {
-    double    branchLength, Pij[4][4];
+    long double     branchLength;
+    long double Pij[4][4];
     int     cell, anccell, ancstate, newstate;
     
     
@@ -696,7 +697,7 @@ void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr>
 
 
 
-void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphabet, int doUserGenome, int numSites, vector<SiteStr> &allSites, int doGeneticSignatures, double cumfreq[4], double *triNucFreq )
+void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphabet, int doUserGenome, int numSites, vector<SiteStr> &allSites, int doGeneticSignatures,  double  cumfreq[4],  long double  *triNucFreq )
 
 {
     
@@ -704,13 +705,13 @@ void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphab
     
     int            k, n1, n2, n3, rest, site;
     
-    double         *prob4, sum;
+    long double          *prob4, sum;
     
     
     
     /* memory allocations */
     
-    prob4 = (double *) calloc (4, sizeof(double));
+    prob4 = (long double  *) calloc (4, sizeof(double));
     
     if (!prob4)
         
@@ -810,7 +811,7 @@ void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphab
 /* Evolves all sites (maternal and paternal genomes) on the given tree
  We assume that a site will be ISM or Mk in both maternal and paternal genome
  */
-void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rateVarAmongSites, int numSites, vector<SiteStr> &allSites, int doGeneticSignatures, int alphaSites, int  propAltModelSites , int numDefaultModelSites, int numAltModelSites, vector<int> &DefaultModelSites, vector<int> &AltModelSites,  double totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet, int  &numMU, double cumMij[4][4], int altModel, double altModelMutationRate, int doUserTree, int doJC, int doHKY, int doGTR, int doGTnR, double freqR, double freqY, double freqAG, double freqCT, double titv, double freq[4], double Mij[4][4],  double Root[], double Cijk[])
+void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rateVarAmongSites, int numSites, vector<SiteStr> &allSites, int doGeneticSignatures, int alphaSites, int  propAltModelSites , int numDefaultModelSites, int numAltModelSites, vector<int> &DefaultModelSites, vector<int> &AltModelSites,  long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet, int  &numMU, long double  cumMij[4][4], int altModel, long double  altModelMutationRate, int doUserTree, int doJC, int doHKY, int doGTR, int doGTnR, long double  freqR, long double  freqY, long double  freqAG, long double  freqCT, double  titv, double  freq[4], double  Mij[4][4],   double  Root[],  double  Cijk[])
 {
     int i = 0;
     

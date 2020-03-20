@@ -123,7 +123,7 @@ public:
     int doUserTree = 0;
     double doubletRate = 0;
     int equalBaseFreq = 0;
-    double freq = 0;
+    double freq;
     double genotypingError = 0;
     double growthRate = 0;
     double haploidCoverageReduction = 0;
@@ -155,7 +155,7 @@ public:
     double dropoutRate = 0;
     int thereIsEij = 0;
     int numClones = 0;
-    double altModelMutationRate = 0;
+    long double altModelMutationRate = 0;
     int numFixedMutations = 0;
     int TotalNumSequences = 0;
     int doSimulateFromPriors = 0;
@@ -171,16 +171,16 @@ public:
     double numChains;
     double Niterations;
     double thinning;
-    double Deltafrom;
-    double Deltato;
-    double GrowthRatefrom;
-    double GrowthRateto;
-    double MutRatefrom;
-    double MutRateto;
-    double totalEffectPopSizefrom;
-    double totalEffectPopSizeto;
-    double lambdafrom;
-    double lambdato;
+    long double Deltafrom;
+    long double Deltato;
+    long double GrowthRatefrom;
+    long double GrowthRateto;
+    long  double MutRatefrom;
+    long double MutRateto;
+    long double totalEffectPopSizefrom;
+    long double totalEffectPopSizeto;
+    long double lambdafrom;
+    long double lambdato;
     double tuningParameterDirichlet;
     int    startChainsRandomTree;
     int    doTopologicalMoves;
@@ -192,8 +192,13 @@ public:
     double fixedLambda;
     int maxNumberProposalAttempts;
     int numberWarmUpIterations;
-    double paramMultiplierMoveTheta;
-    double paramMultiplierEffectPopSize;
+    long double paramMultiplierMoveTheta;
+    long double paramMultiplierMutationRate;
+    long double paramMultiplierEffectPopSize;
+    long double paramMultiplierGrowthRate;
+    int doInferenceWithoutData;
+    int fixTimeOriginInputTreeUnits;
+    long double lambdaExponentialPriorTime;
 };
 
 typedef struct {

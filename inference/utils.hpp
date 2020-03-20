@@ -18,7 +18,7 @@ void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **O
 
 int CheckMatrixSymmetry(double matrix[4][4]);
 int WhichNucChar (char nucleotide);
-int ChooseUniformState (double *prob, long int *seed);
+int ChooseUniformState ( double *prob, long int *seed);
 char WhichIUPAC (int allele1, int allele2);
 char *WhichGenotypeFromIUPAC (int  iupac);
 int WhichGenotypeChar (char nucleotide);

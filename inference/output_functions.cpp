@@ -85,7 +85,7 @@ void WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObs
             //p->cellName[MAX_NAME]=0;
             //                fprintf (fpTrees, ",outgroup:%10.9lf",p->length);
             //fprintf (fpTrees, ",outgroup:%10.9lf",(p->anc1->time- p->time)*mutationRate);
-            fprintf (fpTrees, "healthycell:%10.9lf",(p->anc1->time- p->time)*mutationRate);
+            fprintf (fpTrees, "healthycell:%10.9Lf",(p->anc1->time- p->time)*mutationRate);
         }
         else if (p->left == NULL && p->right == NULL)        /* tip of the tree */
         {
@@ -98,7 +98,7 @@ void WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObs
             // p->cellName[MAX_NAME]=0;
             //            fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.9lf", p->index,p->indexOldClone,p->indexCurrentClone,(p->anc1->time-p->time)*mutationRate);
             //fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.9lf", p->index,p->indexOldClone,p->indexCurrentClone,(p->anc1->time- p->time)*mutationRate);
-            fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.9lf", p->index,p->indexOldClone,p->indexCurrentClone,(p->anc1->time- p->time)*mutationRate);
+            fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.9Lf", p->index,p->indexOldClone,p->indexCurrentClone,(p->anc1->time- p->time)*mutationRate);
         }
         else                                /* all ancester */
         {
@@ -118,7 +118,7 @@ void WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObs
                 //strncpy( p->cellName,buffer, sizeof(p->cellName)-1);
                 //p->cellName[MAX_NAME]=0;
                 //                 fprintf (fpTrees, "):%10.9lf", (p->anc1->time-p->time)*mutationRate);
-                fprintf (fpTrees, "):%10.9lf", (p->anc1->time- p->time)*mutationRate);
+                fprintf (fpTrees, "):%10.9Lf", (p->anc1->time- p->time)*mutationRate);
                 
                 //                fprintf (fpTrees, ")int_i%05d_C%d_%d:%10.9lf",p->index, p->indexOldClone, p->indexCurrentClone, (p->anc1->time-p->time)*mutationRate);
             }
@@ -152,7 +152,7 @@ void WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cel
             //fprintf (fpTrees2, ",outgroup:%10.9lf", p->length * mutationRate);
             //fprintf (fpTrees2, "healthycell:%10.9lf", p->length * mutationRate);
             //fprintf (fpTrees2, "healthycell:%10.9lf", p->length * mutationRate);
-            fprintf (fpTrees2, "healthycell:%10.9lf", (p->anc1->timePUnits - p->timePUnits) * mutationRate);
+            fprintf (fpTrees2, "healthycell:%10.9Lf", (p->anc1->timePUnits - p->timePUnits) * mutationRate);
         }
         else if (p->left == NULL && p->right == NULL)   /* tip of the tree */
         {
@@ -165,9 +165,9 @@ void WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cel
                     *indexCurrentCell =*indexCurrentCell+1;
             }
             if (doUseObservedCellNames == YES)
-                fprintf (fpTrees2, "%s:%10.9lf", p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
+                fprintf (fpTrees2, "%s:%10.9Lf", p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
             else
-                fprintf (fpTrees2, "%s:%10.9lf", p->cellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
+                fprintf (fpTrees2, "%s:%10.9Lf", p->cellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
             // fprintf (fpTrees2, "%s:%10.9lf", cellNames[*indexCurrentCell], (p->anc1->timePUnits - p->timePUnits)*mutationRate);
             *indexCurrentCell =*indexCurrentCell+1;
         }
@@ -184,7 +184,7 @@ void WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cel
             {
                 //                //fprintf (fpTrees2, "):%8.6f",(p->anc1->time-p->time)*mutationRate);
                 //                fprintf (fpTrees2, ")int_i%05d_C%d:%10.9lf", p->index, p->indexCoalClone, (p->anc1->timePUnits - p->timePUnits)*1);
-                fprintf (fpTrees2, "):%10.9lf",  (p->anc1->timePUnits - p->timePUnits)*mutationRate);
+                fprintf (fpTrees2, "):%10.9Lf",  (p->anc1->timePUnits - p->timePUnits)*mutationRate);
             }
             if (p->anc1 ==NULL)  {
                 //                  fprintf (fpTrees2, ")root_i%05d_C%d_%d:0.00", p->index,p->indexOldClone,p->indexCurrentClone );
@@ -240,19 +240,19 @@ void ListTimes (int j, double mutationRate, vector<TreeNode *> &nodes, FILE *fpT
         p = nodes[i];
         
         if (p->isOutgroup == YES)     /* Outgroup */
-            fprintf (fpTimes, "%13s   %4d   %4d  (%4d %4d %4d) |   %10.4lf      %10.4lf       %10.9lf\n",
+            fprintf (fpTimes, "%13s   %4d   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.9Lf\n",
                      "outgroup", Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits) * mutationRate);
         
         else if (p->anc1 != NULL && p->left != NULL && p->right != NULL)        /* No MRCA, no tip (internal ancester) */
-            fprintf (fpTimes, "%5s_C%dR%d(f)   %4d   %4d  (%4d %4d %4d) |   %10.4lf      %10.4lf       %10.9lf\n",
+            fprintf (fpTimes, "%5s_C%dR%d(f)   %4d   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.9Lf\n",
                      "int", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
         
         else if (p->anc1 != NULL && p->left == NULL && p->right == NULL)        /* tip */
-            fprintf (fpTimes, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.4lf      %10.4lf       %10.9lf\n",
+            fprintf (fpTimes, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.9Lf\n",
                      "tip", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
         
         else if (p->nodeClass == 5 || (p->anc1 == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
-            fprintf (fpTimes, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.4lf      %10.4lf       %10.9lf\n",
+            fprintf (fpTimes, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4lf       %10.9lf\n",
                      "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, 0.0, 0.0);
         
         else
@@ -283,17 +283,17 @@ void ListTimes2 (int j,  double mutationRate, vector<TreeNode *> &nodes,  FILE *
     {
         p = nodes[i];
         if (p->isOutgroup == YES)     /* Outgroup */
-            fprintf (fpTimes2, "%13s   %4d   %4d  (%4d %4d %4d) |   %10.9lf      %10.9lf       %10.9lf\n",
+            fprintf (fpTimes2, "%13s   %4d   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.9Lf\n",
                      "outgroup", Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time) * mutationRate);
         else if (p->anc1 != NULL && p->left != NULL && p->right != NULL)        /* No MRCA, no tip (internal ancester) */
-            fprintf (fpTimes2, "%5s_C%dR%d(f)   %4d   %4d  (%4d %4d %4d) |   %10.9lf      %10.9lf       %10.9lf\n",
+            fprintf (fpTimes2, "%5s_C%dR%d(f)   %4d   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.9Lf\n",
                      "int", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time)*mutationRate);
         else if (p->anc1 != NULL && p->left == NULL && p->right == NULL)        /* tip */
-            fprintf (fpTimes2, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.9lf      %10.9lf       %10.9lf\n",
+            fprintf (fpTimes2, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.9Lf\n",
                      "tip", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time)*mutationRate);
         else if (p->nodeClass == 5 || (p->anc1 == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
-            fprintf (fpTimes2, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.9lf      %10.9lf       %10.9lf\n",
-                     "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, 0.0, 0.0);
+            fprintf (fpTimes2, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9lf       %10.9lf\n",
+                     "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time,0.0, 0.0);
         else
             fprintf (fpTimes2, "");
         i++;

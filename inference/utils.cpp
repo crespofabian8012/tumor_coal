@@ -483,7 +483,6 @@ int WhichGenotypeChar (char nucleotide)
 
 double parameterMultiplierMCMCmove (double lengthInterval)
 {
-    
     double result = 0.0;
     
     result = (lengthInterval)/2.0 + sqrt(1 + (lengthInterval * lengthInterval)* 0.25);

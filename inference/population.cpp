@@ -255,7 +255,7 @@ long double Population::FmodelTstandard (long double t, long double TOrigin, lon
     c = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     
     if ( c == 0.0)
-        fprintf (stderr, "\n  c = 0.0, TOrigin = %Lf, t = %lf \n", TOrigin, t);
+        fprintf (stderr, "\n  c = 0.0, TOrigin = %Lf, t = %Lf \n", TOrigin, t);
     if ( delta == 0.0)
         fprintf (stderr, "\n delta  = 0.0 \n");
     

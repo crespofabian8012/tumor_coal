@@ -1444,13 +1444,13 @@ void Chain::GenerateTimesFromPriorsOriginal(int noisy,  long int *seed) {
             if (ranHere <= TotalProbability)
                 doAcceptTimes = YES;
             if (noisy > 2)
-                printf("\nProbability = %lf (random number = %lf) [#attempt = %d]\n", TotalProbability, ranHere, AttemptsAcceptation);
+                printf("\nProbability = %Lf (random number = %Lf) [#attempt = %d]\n", TotalProbability, ranHere, AttemptsAcceptation);
         }
     }
     if (noisy > 2)
     {
         printf("\nTimes accepted .. \n");
-        printf("\n\nDONE! ranHere = %lf / TotalProbability = %lf [total attempts = %d]\n", ranHere, TotalProbability, AttemptsAcceptation);
+        printf("\n\nDONE! ranHere = %Lf / TotalProbability = %Lf [total attempts = %d]\n", ranHere, TotalProbability, AttemptsAcceptation);
     }
 }
 void Chain::InitChainPopulations( int noisy,  int TotalNumSequences  ) {
@@ -1598,7 +1598,7 @@ char * Chain::toNewickString ( pll_unode_t *p, long double  mutationRate,     in
             strcpy( u->cellName,"healthycell");
             strcpy( p->label,"healthycell");
             //strcat(newickString, "healthycell:%10.9lf", (p->anc1->timePUnits - p->timePUnits) * mutationRate);
-            if (asprintf(&newickString,  "healthycell:%10.9lf",  (u->anc1->timePUnits - u->timePUnits) * mutationRate)<0)
+            if (asprintf(&newickString,  "healthycell:%10.9Lf",  (u->anc1->timePUnits - u->timePUnits) * mutationRate)<0)
                 return NULL;
             // snprintf(newickString,  size,  "healthycell:%10.9lf",  (p->anc1->timePUnits - p->timePUnits) * mutationRate);
             return newickString;
@@ -1618,13 +1618,13 @@ char * Chain::toNewickString ( pll_unode_t *p, long double  mutationRate,     in
             //else{
             if  (doUseObservedCellNames == YES)
             {
-                if (asprintf(&newickString,   "%s:%10.9lf",  u->observedCellName, (u->anc1->timePUnits - u->timePUnits)*mutationRate)<0)
+                if (asprintf(&newickString,   "%s:%10.9Lf",  u->observedCellName, (u->anc1->timePUnits - u->timePUnits)*mutationRate)<0)
                     return NULL;
                 //snprintf(newickString,  size,  "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
                 return newickString;
             }
             else{
-                if (asprintf(&newickString,   "%s:%10.9lf",  u->cellName, (u->anc1->timePUnits - u->timePUnits)*mutationRate)<0)
+                if (asprintf(&newickString,   "%s:%10.9Lf",  u->cellName, (u->anc1->timePUnits - u->timePUnits)*mutationRate)<0)
                     return NULL;
                 //snprintf(newickString,  size,  "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
                 
@@ -1663,7 +1663,7 @@ char * Chain::toNewickString ( pll_unode_t *p, long double  mutationRate,     in
                 snprintf(buffer, sizeof(buffer), "int_i%05d_C%d_%d",  u->index,u->indexOldClone,u->indexCurrentClone);
                 strcpy( u->cellName,buffer);
                 
-                if (asprintf(&newickString, "(%s,%s):%10.9lf", left, right,  (u->anc1->timePUnits - u->timePUnits)*mutationRate )<0)
+                if (asprintf(&newickString, "(%s,%s):%10.9Lf", left, right,  (u->anc1->timePUnits - u->timePUnits)*mutationRate )<0)
                     return NULL;
                 //snprintf(newickString, size, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate );
                 free(left);
@@ -4267,7 +4267,7 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseAvailableEdgeOnRootedTr
         copyMRCAOfPopulation[MRCA].push_back(pop);
         if (copyMRCAOfPopulation[pop->rMRCA].size()>1)
             sort(copyMRCAOfPopulation[pop->rMRCA].begin(), copyMRCAOfPopulation[pop->rMRCA].end(), comparePopulationsByTimeOrigin);
-        printf( "\n MRCA node id %d with time %Lf and parent with time %Lf was assigned to pop %d with order %d and time of origin %lf, scaled %Lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->order,  pop->timeOriginInput, pop->scaledtimeOriginInput );
+        printf( "\n MRCA node id %d with time %Lf and parent with time %Lf was assigned to pop %d with order %d and time of origin %Lf, scaled %Lf \n", MRCA->node_index, u->timePUnits, v->timePUnits, pop->index, pop->order,  pop->timeOriginInput, pop->scaledtimeOriginInput );
     }
     return copyMRCAOfPopulation;
 }

@@ -611,7 +611,7 @@ void InitListClones(vector<Population *> &populations, int numClones, int verbos
         }
         if ( pop->delta <= 0)
         {
-            fprintf (stderr, "PARAMETER ERROR: The growth rate cannot be lower than the death rate(Delta parameter negative, Delta=(%10.9lf)) for population %d\n\n", pop->delta, z);
+            fprintf (stderr, "PARAMETER ERROR: The growth rate cannot be lower than the death rate(Delta parameter negative, Delta=(%10.9Lf)) for population %d\n\n", pop->delta, z);
             PrintUsage();
         }
         
@@ -619,10 +619,10 @@ void InitListClones(vector<Population *> &populations, int numClones, int verbos
         {
             printf("\t\t\t%d\t\t\t", CloneSampleSizeBegin[z ]);
             printf("\t%d\t\t\t", ClonePopSizeBegin[z ]);
-            printf("\t%lf\t\t",  populations[z]->effectPopSize);
-            printf("\t\t\t%lf\t", CloneBirthRateBegin[z ]);
-            printf("\t%lf\t", CloneDeathRateBegin[z ]);
-            printf("\t%lf\t\t",populations[z]->growthRate);
+            printf("\t%Lf\t\t",  populations[z]->effectPopSize);
+            printf("\t\t\t%f\t", CloneBirthRateBegin[z ]);
+            printf("\t%f\t", CloneDeathRateBegin[z ]);
+            printf("\t%Lf\t\t",populations[z]->growthRate);
             //printf("\t%d\t\t", z);
             printf("\n");
         }
@@ -980,7 +980,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     
     fprintf(stderr, "\n The average time of MRCA in model time is %lf \n", totalTimeMRCAModelTime/ programOptions.numDataSets);
     
-
+  fprintf(stderr, "\n The average time until the first coalescent event in model time is %lf \n", totalTimeMRCAPUnits/ programOptions.numDataSets);
     
     
     
@@ -2253,7 +2253,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                 //r->indexOldClone = incommingPop->index;
                 p = nodes[incomingPop->nodeIdAncestorMRCA];
                 
-                printf( "\n The incoming population %d to  population %d with node %d and time %lf", incomingPop->order, popI->order, p->index, p->timePUnits );
+                printf( "\n The incoming population %d to  population %d with node %d and time %Lf", incomingPop->order, popI->order, p->index, p->timePUnits );
                 
                 //p = incomingPop->MRCA;
                 //p = *nodes + (incommingPop->nodeIdAncesterMRCA); // root of younger clone
@@ -2297,7 +2297,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                 //                    fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, popI->index, incommingPop->nodeIdAncesterMRCA, k);
                 //fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, ThisCloneNumber, MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration], k);
                 if (programOptions.noisy > 1)
-                    fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", p->timePUnits);
+                    fprintf (stderr, "\t|\tCurrentTime (input units) = %Lf", p->timePUnits);
                 // fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
                 /* memory for number of nodes */
                 if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
@@ -2370,7 +2370,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                     if (programOptions.noisy > 1)
                         fprintf (stderr, "Creating origin node, it creates node %d derived from node %d", newInd, firstInd);
                     if (programOptions.noisy > 1)
-                        fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
+                        fprintf (stderr, "\t|\tCurrentTime (input units) = %Lf", r->timePUnits);
                     /* memory for number of nodes */
                     if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
                     {
@@ -2474,7 +2474,7 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
             //else{
             if  (doUseObservedCellNames == YES)
             {
-                if (asprintf(&newickString,   "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate)<0)
+                if (asprintf(&newickString,   "%s:%10.9Lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate)<0)
                     return NULL;
                 //snprintf(newickString,  size,  "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
                 return newickString;

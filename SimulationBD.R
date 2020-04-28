@@ -157,6 +157,11 @@ simulate.list.number.ancestors.population=function(sample.size){
   return( unlist(list.populations.sizes))
 }
 #############################################################################################
+#Scenario A with stochastic population size
 sample.size=20
 list.number.ancestors.population=simulate.list.number.ancestors.population(sample.size)
 list.number.ancestors.population
+
+#now we can simulate colescent  times 
+
+#Scenario A1 with deterministic  population size(expected population size)

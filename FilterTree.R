@@ -7,18 +7,18 @@ library(adephylo)
 meanModelTimeMRCA=c(1.303748, 0.989492, 0.286708,  0.051329, 0.007415  )
 path= "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/benchmarking"
 setwd(path)
-path0.1= "ResultsDelta=0.1T=5/trees_dir"
-path1= "ResultsDelta=1T=5/trees_dir"
-path2= "ResultsDelta=2T=5/trees_dir"
-path3= "ResultsDelta=3T=5/trees_dir"
-path4= "ResultsDelta=4T=5/trees_dir"
-path5= "ResultsDelta=5T=5/trees_dir"
-path10= "ResultsDelta=10T=5/trees_dir"
+path0.1= "ResultsDelta=0.1T=5/trees_dir/"
+path1= "ResultsDelta=1T=5/trees_dir/"
+path2= "ResultsDelta=2T=5/trees_dir/"
+path3= "ResultsDelta=3T=5/trees_dir/"
+path4= "ResultsDelta=4T=5/trees_dir/"
+path5= "ResultsDelta=5T=5/trees_dir/"
+path10= "ResultsDelta=10T=5/trees_dir/"
 
 pathslist=list(path0.1,path1, path2, path3, path4, path5, path10)
 listFullPaths=lapply(pathslist, FUN=function(x, path) paste(path,"/" ,x, sep=""), path)
-lapply(listFullPaths, FUN=function(x) system(paste("cd ", x,"; cat trees_0* >> allTrees.tree;")))
-
+#lapply(listFullPaths, FUN=function(x) system(paste("cd ", x,"; cat trees_0* >> allTrees.tree;")))#for the trees in model time
+lapply(listFullPaths, FUN=function(x) system(paste("cd ", str(x),"; cat \"trees_2*\" >> allTreesPhysicalTime.tre;")))#for the trees in physical  time
 
 
 phylo.treeClosest.to = NULL
@@ -65,12 +65,12 @@ saveMostRepresentativeTree<-function(path, AllTreesFileName, Delta,mutation.rate
 }
 
 
-allTrees <- "allTrees.tree"
+allTrees <- "allTreesPhysicalTime.tre"
 Delta.list=c(0.1,1,2,3,4,5,10)
 for (i in 1:length(listFullPaths)){
   path=listFullPaths[[i]]
   delta=Delta.list[i]
   bestTree= saveMostRepresentativeTree(path, allTrees, delta,mutation.rate )
-  write.tree(bestTree,file=paste(path, "/bestTree2.tre", sep=''))
+  write.tree(bestTree,file=paste(path, "/bestTreePhysicalTime.tre", sep=""))
 }
 

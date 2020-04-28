@@ -6,19 +6,21 @@ compute.gamma=function(lambda, mu, rho)
   output= abs(lambda-mu)/max(rho*lambda, mu-(1-rho)*lambda)
   return(output)
 }
-log.conditional.probability.number.ancestor.population=function(num.ancestors.samplekminus1, m, mprime)
+log.conditional.probability.number.ancestor.population=function(k, m, mprime)
   {
-  k= num.ancestors.samplekminus1 +1
-  output=log(k)*log(k-1)+logfact(m-k)+logfact(m+k+1)-logfact(mprime-k+1)-logfact(mprime+k)
-  print(output)
+  #mprime is the number of ancestors of the population the first time there will be  k-1 ancestors in the sample
+  #m is the current number of ancestors of the population and k current sample size
+  #so mprime >= k-1 and also we should expect that mprime <= m
+  output=log(k)+log(k-1)+logfact(m-k)+logfact(m+k-1)-logfact(mprime-k+1)-logfact(mprime+k)
+  #print(output)
   output=output+logfact(mprime)+logfact(mprime-1)- logfact(m)-logfact(m-1)
-  print(output)
+  #print(output)
   return(output)
 }
-conditional.probability.number.ancestor.population.present.time=function(n, m, mprime)
-{
 
-  output=n*(n-1)*(m-k)*fact(mprime)*fact(mprime-1)/ (fact(mprime-n+1)*fact(mprime+n))
+log.conditional.probability.number.ancestor.population.present.time=function(n, mprime)
+{
+  output=log(n)+log(n-1)+logfact(mprime)+logfact(mprime-1)- logfact(mprime-n+1)-logfact(mprime+n)
   return(output)
 }
 fact=function(n){
@@ -97,24 +99,64 @@ density.first.time.k.ancestors = function(delta, gamma, n, time.Origin, times){
   return(output)
 }
 
-get.number.of.ancestors.population.when.k.ancestors.sample=function(k,m)
+get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample=function(k,m)
+  #k and m current sample  and population size respectively
   {
     probs=list()
-    for(i in k:1000*k) 
+    mprime=k
+    #while(sum(unlist(probs)) <= 0.8)
+    i=0
+    for(mprime in k:m)
       {
-      currentProb=log.conditional.probability.number.ancestor.population(k, m,i )
-      print(currentProb)
-      if (exp(currentProb) < 0.00000001)
-      {
-        break;
-        }
+      #print(mprime)
+      currentProb=log.conditional.probability.number.ancestor.population(k, m,mprime )
+      #print(currentProb)
       
-      probs[i]=currentProb
+      probs[mprime-k+1]=exp(currentProb)
+      #mprime=mprime+1
+       
     }
-    output=sample(k:(k+length(probs)), 1, prob= unlist(exp(probs)))
+   # print(sum(unlist(probs)))
+    norm.probabilities= unlist(probs)[1:length(unlist(probs))] / sum(unlist(probs))
+    output=sample(k:m, 1, prob= norm.probabilities)
     return(output)
 }
 
+get.most.probable.number.of.ancestors.population.present.time=function(sample.size)
+{
+  probs=list()
+  #while(sum(unlist(probs)) <= 0.8)
+  i=0
+  for(mprime in sample.size:(1000*sample.size))
+  {
+    #print(mprime)
+    currentProb=log.conditional.probability.number.ancestor.population.present.time(sample.size, mprime)
+    #print(currentProb)
+    probs[mprime-sample.size+1]=exp(currentProb)
+    #mprime=mprime+1
+    
+  }
+ # print(sum(unlist(probs)))
+  norm.probabilities= unlist(probs)[1:length(unlist(probs))] / sum(unlist(probs))
+  output=sample(sample.size:(1000*sample.size), 1, prob= norm.probabilities )
+  return(output)
+}
 
-get.number.of.ancestors.population.when.k.ancestors.sample(3,100)
-
+simulate.list.number.ancestors.population=function(sample.size){
+  population.present.time= get.most.probable.number.of.ancestors.population.present.time(sample.size)
+  current.population.size=population.present.time
+  print(current.population.size)
+  list.populations.sizes=list(current.population.size)
+  for(i in  (sample.size):2)
+  {
+    current.population.size= get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample(i,current.population.size)
+    print(current.population.size)
+    list.populations.sizes[[ length(list.populations.sizes)+1]]=current.population.size
+  }
+  
+  return( unlist(list.populations.sizes))
+}
+#############################################################################################
+sample.size=20
+list.number.ancestors.population=simulate.list.number.ancestors.population(sample.size)
+list.number.ancestors.population

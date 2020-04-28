@@ -9,8 +9,8 @@ compute.gamma=function(lambda, mu, rho)
 log.conditional.probability.number.ancestor.population=function(k, m, mprime)
   {
   #mprime is the number of ancestors of the population the first time there will be  k-1 ancestors in the sample
-  #m is the current number of ancestors of the population and k current sample size
-  #so mprime >= k-1 and also we should expect that mprime <= m
+  #m is the current number of ancestors of the population and k current number of ancestorc in the sample size
+  #so mprime >= k-1 and also we should have that mprime <= m
   output=log(k)+log(k-1)+logfact(m-k)+logfact(m+k-1)-logfact(mprime-k+1)-logfact(mprime+k)
   #print(output)
   output=output+logfact(mprime)+logfact(mprime-1)- logfact(m)-logfact(m-1)
@@ -24,20 +24,10 @@ log.conditional.probability.number.ancestor.population.present.time=function(n, 
   return(output)
 }
 fact=function(n){
-  if(n<=1) return(1)
-  output=1
-  for(i in 1:n) {
-    output = output * i
-  }
-  return(output)
+  return(prod(1:n))
 }
 logfact=function(n){
-  if(n<=1) return(0)
-  output=0
-  for(i in 1:n) {
-    output = output +log(i)
-  }
-  return(output)
+  return(sum(log(1:n)))
 }
 ToStandardTime<-function(t, Time1, Delta )
 {
@@ -68,8 +58,8 @@ sample.conditional.coalescent.time.distribution = function(Delta, alpha, k, m){
 }
 sample.first.coalescent.time.distribution = function(Delta, Gamma, k){
   require(stats)
-  U= rgamma(1, k, 1)
-  T=(-1.0/Delta)* log(1-(Gamma/(U+Gamma)))
+  U= rgamma(1, shape=k, rate=1)
+  T=(-1.0 / Delta) * log(1- (Gamma/(U+Gamma)))
   return(T)
 }
 density.time.origin = function(delta, gamma, n, t){
@@ -111,7 +101,7 @@ get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample
     probs=list()
     mprime=k
     i=0
-    for(mprime in k:m)
+    for(mprime in (k-1):m)
       {
       #print(mprime)
       currentProb=log.conditional.probability.number.ancestor.population(k, m,mprime )
@@ -170,17 +160,19 @@ simulate.colaescent.times.A1=function(lambda, mu, rho,sample.size, list.number.a
       Gamma= sample.size * gamma
       Delta= sample.size * delta
       list.coal.times=list()
-      list.coal.times[1]=sample.first.coalescent.time.distribution(Delta, Gamma, sample.size)
-      u=list.coal.times[1]
+      u=unlist(sample.first.coalescent.time.distribution(Delta, Gamma, sample.size))
+      u=u[[1]]
+      list.coal.times[1]=u
       for(i in  (sample.size-1):2)
         {
-         m= list.number.ancestors.population[i]
-         alpha=1-exp(-Delta*u)
-         u=sample.conditional.coalescent.time.distribution(Delta, alpha, i, m)
-         list.coal.times[length(list.coal.times)+1]=u
+         m= list.number.ancestors.population[sample.size-i]
+         alpha=1 - exp(-1.0 * Delta * u)
+         u=unlist(sample.conditional.coalescent.time.distribution(Delta, alpha, i, m))
+         list.coal.times[length(list.coal.times)+1]=u[[1]]
+         u=u[[1]]
          
         }
-      return(list.coal.times)
+      return(unlist(list.coal.times))
 }
 #############################################################################################
 #Scenario A with stochastic population size
@@ -190,7 +182,7 @@ list.number.ancestors.population
 
 lambda=1
 mu=0.99
-pho= 0.8
+rho= 0.8
 list.coal.times= simulate.colaescent.times.A1(lambda, mu, rho,sample.size, list.number.ancestors.population)
 
 

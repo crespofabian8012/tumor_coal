@@ -60,11 +60,17 @@ ToModelTime<-function(u, Time1, Delta )
     return((1.0/Delta)*log(b)-log(c))
   }
 }
-simulate.distribution = function(Delta, alpha, k, m){
+sample.conditional.coalescent.time.distribution = function(Delta, alpha, k, m){
   require(stats)
      U= rbeta(1, k, m-k+1)
      T=(-1.0/Delta)* log(U/(alpha+(1-alpha)*U))
      return(T)
+}
+sample.first.coalescent.time.distribution = function(Delta, Gamma, k){
+  require(stats)
+  U= rgamma(1, k, 1)
+  T=(-1.0/Delta)* log(1-(Gamma/(U+Gamma)))
+  return(T)
 }
 density.time.origin = function(delta, gamma, n, t){
   exp.delta.t = exp(-1*delta* t)
@@ -104,7 +110,6 @@ get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample
   {
     probs=list()
     mprime=k
-    #while(sum(unlist(probs)) <= 0.8)
     i=0
     for(mprime in k:m)
       {
@@ -142,6 +147,7 @@ get.most.probable.number.of.ancestors.population.present.time=function(sample.si
   return(output)
 }
 
+
 simulate.list.number.ancestors.population=function(sample.size){
   population.present.time= get.most.probable.number.of.ancestors.population.present.time(sample.size)
   current.population.size=population.present.time
@@ -156,12 +162,37 @@ simulate.list.number.ancestors.population=function(sample.size){
   
   return( unlist(list.populations.sizes))
 }
+
+simulate.colaescent.times.A1=function(lambda, mu, rho,sample.size, list.number.ancestors.population)
+  {
+      gamma=compute.gamma(lambda, mu, rho)
+      delta=lambda - mu
+      Gamma= sample.size * gamma
+      Delta= sample.size * delta
+      list.coal.times=list()
+      list.coal.times[1]=sample.first.coalescent.time.distribution(Delta, Gamma, sample.size)
+      u=list.coal.times[1]
+      for(i in  (sample.size-1):2)
+        {
+         m= list.number.ancestors.population[i]
+         alpha=1-exp(-Delta*u)
+         u=sample.conditional.coalescent.time.distribution(Delta, alpha, i, m)
+         list.coal.times[length(list.coal.times)+1]=u
+         
+        }
+      return(list.coal.times)
+}
 #############################################################################################
 #Scenario A with stochastic population size
 sample.size=20
 list.number.ancestors.population=simulate.list.number.ancestors.population(sample.size)
 list.number.ancestors.population
 
-#now we can simulate colescent  times 
+lambda=1
+mu=0.99
+pho= 0.8
+list.coal.times= simulate.colaescent.times.A1(lambda, mu, rho,sample.size, list.number.ancestors.population)
+
+
 
 #Scenario A1 with deterministic  population size(expected population size)

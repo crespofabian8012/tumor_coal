@@ -22,9 +22,8 @@ log.conditional.probability.number.ancestor.population=function(k, m, mprime)
 
 log.conditional.probability.number.ancestor.population.present.time=function(n, mprime)
 {
-  output=log(n)+log(n-1)+logfact(mprime)+logfact(mprime-1)- logfact(mprime-n+1)-logfact(mprime+n)
-    #sum(log((mprime):(mprime-n+1)))+sum(log((mprime-1):(mprime+n)))
-    #logfact(mprime)+logfact(mprime-1)- logfact(mprime-n+1)-logfact(mprime+n)
+  output=log(n)+log(n-1)+log.prod.between(mprime-n+1,mprime)+log.prod.between(mprime+n,mprime-1)
+  #  logfact(mprime)+logfact(mprime-1)- logfact(mprime-n+1)-logfact(mprime+n)
   return(output)
 }
 fact=function(n){

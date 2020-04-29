@@ -11,9 +11,11 @@ log.conditional.probability.number.ancestor.population=function(k, m, mprime)
   #mprime is the number of ancestors of the population the first time there will be  k-1 ancestors in the sample
   #m is the current number of ancestors of the population and k current number of ancestorc in the sample size
   #so mprime >= k-1 and also we should have that mprime <= m
-  output=log(k)+log(k-1)+logfact(m-k)+logfact(m+k-1)-logfact(mprime-k+1)-logfact(mprime+k)
+  #output = log(k) + log(k-1) + logfact(m+k-1) + logfact(m-k) - logfact(mprime+k) -logfact(mprime-k+1)
+  output = log(k) + log(k-1) + log.prod.between(mprime-k+1,m+k-1)  + log.prod.between(mprime+k,m-k) 
   #print(output)
-  output=output+logfact(mprime)+logfact(mprime-1)- logfact(m)-logfact(m-1)
+  #output=output + logfact(mprime) + logfact(mprime-1) - logfact(m) - logfact(m-1)
+  output=output + log.prod.between(m,mprime) + log.prod.between(m-1,mprime-1)
   #print(output)
   return(output)
 }
@@ -21,6 +23,8 @@ log.conditional.probability.number.ancestor.population=function(k, m, mprime)
 log.conditional.probability.number.ancestor.population.present.time=function(n, mprime)
 {
   output=log(n)+log(n-1)+logfact(mprime)+logfact(mprime-1)- logfact(mprime-n+1)-logfact(mprime+n)
+    #sum(log((mprime):(mprime-n+1)))+sum(log((mprime-1):(mprime+n)))
+    #logfact(mprime)+logfact(mprime-1)- logfact(mprime-n+1)-logfact(mprime+n)
   return(output)
 }
 fact=function(n){
@@ -28,6 +32,13 @@ fact=function(n){
 }
 logfact=function(n){
   return(sum(log(1:n)))
+}
+log.prod.between=function(from,to){
+  if (to >=from){
+    return(sum(log(max(from,1):to)))
+  }
+  else
+    return(-1*sum(log(max(to,1):from)))
 }
 ToStandardTime<-function(t, Time1, Delta )
 {
@@ -101,20 +112,19 @@ get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample
     probs=list()
     mprime=k
     i=0
-    for(mprime in (k-1):m)
+    u=runif(1,0,1)
+    #print("u")
+    #print(u)
+    mprime =(k-1)
+    while(sum(unlist(probs)) < u && mprime< m )
       {
-      #print(mprime)
       currentProb=log.conditional.probability.number.ancestor.population(k, m,mprime )
-      #print(currentProb)
+      probs[mprime-(k-1)+1]=exp(currentProb)
       
-      probs[mprime-k+1]=exp(currentProb)
-      #mprime=mprime+1
-       
+      mprime=mprime+1
+      #print(sum(unlist(probs)))
     }
-   # print(sum(unlist(probs)))
-    norm.probabilities= unlist(probs)[1:length(unlist(probs))] / sum(unlist(probs))
-    output=sample(k:m, 1, prob= norm.probabilities)
-    return(output)
+    return(mprime)
 }
 
 get.most.probable.number.of.ancestors.population.present.time=function(sample.size)
@@ -122,19 +132,23 @@ get.most.probable.number.of.ancestors.population.present.time=function(sample.si
   probs=list()
   #while(sum(unlist(probs)) <= 0.8)
   i=0
-  for(mprime in sample.size:(1000*sample.size))
+  probs=list()
+  mprime=k
+  i=0
+  u=runif(1,0,1)
+  #print("u")
+  #print(u)
+  mprime =sample.size
+  while(sum(unlist(probs)) < u )
   {
-    #print(mprime)
     currentProb=log.conditional.probability.number.ancestor.population.present.time(sample.size, mprime)
-    #print(currentProb)
     probs[mprime-sample.size+1]=exp(currentProb)
-    #mprime=mprime+1
     
+    mprime=mprime+1
+    #print(sum(unlist(probs)))
   }
- # print(sum(unlist(probs)))
-  norm.probabilities= unlist(probs)[1:length(unlist(probs))] / sum(unlist(probs))
-  output=sample(sample.size:(1000*sample.size), 1, prob= norm.probabilities )
-  return(output)
+  return(mprime)
+ 
 }
 
 
@@ -153,7 +167,7 @@ simulate.list.number.ancestors.population=function(sample.size){
   return( unlist(list.populations.sizes))
 }
 
-simulate.colaescent.times.A1=function(lambda, mu, rho,sample.size, list.number.ancestors.population)
+simulate.coalescent.times.A1=function(lambda, mu, rho,sample.size, list.number.ancestors.population)
   {
       gamma=compute.gamma(lambda, mu, rho)
       delta=lambda - mu
@@ -183,8 +197,8 @@ list.number.ancestors.population
 lambda=1
 mu=0.99
 rho= 0.8
-list.coal.times= simulate.colaescent.times.A1(lambda, mu, rho,sample.size, list.number.ancestors.population)
-
+list.coal.times= simulate.coalescent.times.A1(lambda, mu, rho,sample.size, list.number.ancestors.population)
+list.coal.times
 
 
 #Scenario A1 with deterministic  population size(expected population size)

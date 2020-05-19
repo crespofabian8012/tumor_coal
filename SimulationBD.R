@@ -4,6 +4,42 @@
 #############################################
 #functions for the cancer case
 # Relative population size
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
 relative <- function(Torigin,Delta,t)
   exp(-Delta*t)*(1-exp(-Delta*(Torigin-t)))^2/(1-exp(-Delta*Torigin))^2
 
@@ -85,11 +121,17 @@ logfact=function(n){
   return(sum(log(1:n)))
 }
 log.prod.between=function(from,to){
-  if (to >=from){
-    return(sum(log(max(from,1):to)))
+  if (min(from, to)>0)
+  {
+    if (to >=from ){
+      return(sum(log(max(from,1):to)))
+    }
+    else 
+      return(-1*sum(log(max(to,1):from)))
+    
   }
-  else
-    return(-1*sum(log(max(to,1):from)))
+ else 
+   return(0)
 }
 ToStandardTime<-function(t, Time1, Delta )
 {
@@ -193,15 +235,23 @@ get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample
   accepted=FALSE
   iteration=1
   while(!accepted){
-    print(paste("iteration",iteration, sep=""))
+    print(paste("iteration",iteration, sep=" "))
     u=runif(1,0,1)
     x= 2*(k-1)/(1-u) - k
     mprime= floor(x)
-    if (mprime <m )
+    if (mprime>0 &&  mprime >=(k-2) && mprime <m )
     {
+      
+      prob= log.prod.between(mprime-k+1,mprime-1)+ log.prod.between(mprime+k, mprime) 
+      prob= exp(prob) * (x+k)*(x+k)
       v=runif(1,0,1)
-      prob= log.prod.between(mprime-k+1,m+k-1)+ log.prod.between(mprime+k,m-k) + log.prod.between(m,mprime) + log.prod.between(m-1,mprime-1)
-      if (prob<v){
+      print(prob)
+      print(paste0(" x = ", x, " v = ", v, " mprime =", mprime, " m = ", m, " k = ", k, sep=" "))
+      if (is.nan(prob) || prob > 3 || iteration > 1000 )
+        {
+        print("joo")
+      }
+      if (v<prob){
         accepted=TRUE
         return(mprime)
       }
@@ -274,13 +324,14 @@ simulate.coalescent.times.A1=function(lambda, mu, rho,sample.size, list.number.a
   return(unlist(list.coal.times))
 }
 #############################################################################################
-sim=10
+sim=1000
 sample.size=20
 lambda=1
 mu=0.99
 rho= 0.8
 list.number.ancestors.population.sim <- array(0,dim=c(sim,sample.size))
 coal.events.times.sim <- array(0,dim=c(sim,sample.size))
+library(future.apply)
 #Scenario A with stochastic population size
 for(i in 1:sim){
   list.number.ancestors.population= simulate.list.number.ancestors.population(sample.size)
@@ -290,21 +341,37 @@ for(i in 1:sim){
   coal.events.times =cumsum(list.coal.times)
   #coal.events.times=c(0,coal.events.times)
   coal.events.times.sim[i,]= coal.events.times
-  print(paste("iteration",str(i), sep=""))
+  print(paste0("finished sim",i, sep=" "))
 }
 
 xx <- colSums(coal.events.times.sim)/sim
 print(xx)
-saveRDS(xx, "~/project3/src/xx.rds")
+saveRDS(xx, "~/project3/test/xx.rds")
+population=colSums(list.number.ancestors.population.sim)/sim
 
-pdf("~/project3/src/plotScenarioAStochastic.pdf")
-plot(1:sample.size,rev(xx),xlab="Origin (i=1), Number of ancestors (i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
+padded.coal.events.times.sim=cbind(rep(0,sim) , coal.events.times.sim)
+padded.list.number.ancestors.population.sim=cbind( list.number.ancestors.population.sim, rep(0,sim))
+rev.padded.coal.events.times.sim<-t(apply(padded.coal.events.times.sim,1,function(x) rev(x)))
+all.times.population=as.vector(t(padded.coal.events.times.sim))
+sample.sizes=rep(0:sample.size,sim)
+rev.padded.list.number.ancestors.population.sim<-t(apply(padded.list.number.ancestors.population.sim,1,function(x) rev(x)))
+population.sizes=as.vector(t(rev.padded.list.number.ancestors.population.sim))
+num.sim=rep(1:(sim), rep(sample.size +1, sim))
+population.dataframe=data.frame(sample.sizes,all.times.population, population.sizes, num.sim)
+
+pdf("~/project3/test/plotScenarioAStochastic5.pdf")
+plot(xx,1:sample.size,ylab="Origin (i=1), Number of ancestors (i>1)",xlab="Time until i-1 ancestors",pch=19,col="orange")
 dev.off()
 
 
-plot(1:sample.size,rev(xx),xlab="Origin (i=1), Number of ancestors (i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
+pdf("~/project3/test/plotScenarioAStochastic2.pdf")
+plot(0:(sample.size-1),xx,xlab="Origin (i=1), Number of ancestors (i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
 
+dev.off()
 
+pdf("~/project3/test/plotScenarioAStochastic3.pdf")
+plot(population,xx,xlab="Origin (i=1), Number of ancestors population(i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
+dev.off()
 #Scenario A with deterministic  population size(expected population size)
 # for (k in 1:length(Torigin)) {
 #   for (i in 1:sim) times[i,] <- modelCoal(n,Torigin[k],Delta)
@@ -314,3 +381,36 @@ plot(1:sample.size,rev(xx),xlab="Origin (i=1), Number of ancestors (i>1)",ylab="
 
 #Scenario B with deterministic  population size(expected population size)
 
+library(ggplot2)
+
+# This example uses the ChickWeight dataset, which comes with ggplot2
+# First plot
+dev.off()
+
+p1 <- ggplot(population.dataframe, aes(x=all.times.population, y=population.sizes, colour=num.sim)) +
+  geom_line() +
+  ylim(0,400)+
+  xlab("Time(forward)") +
+  ylab("Number of population ancestors")+
+  ggtitle("Stochastic opulation growth")
+p1
+
+# Second plot
+p2 <- ggplot(ChickWeight, aes(x=Time, y=weight, colour=Diet)) +
+  geom_point(alpha=.3) +
+  geom_smooth(alpha=.2, size=1) +
+  ggtitle("Fitted growth curve per diet")
+
+# Third plot
+p3 <- ggplot(subset(ChickWeight, Time==21), aes(x=weight, colour=Diet)) +
+  geom_density() +
+  ggtitle("Final weight, by diet")
+
+# Fourth plot
+p4 <- ggplot(subset(ChickWeight, Time==21), aes(x=weight, fill=Diet)) +
+  geom_histogram(colour="black", binwidth=50) +
+  facet_grid(Diet ~ .) +
+  ggtitle("Final weight, by diet") +
+  theme(legend.position="none")        # No legend (redundant in this graph)    
+
+multiplot(p1, p2, p3, p4, cols=2)

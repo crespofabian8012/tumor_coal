@@ -239,21 +239,21 @@ get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample
     u=runif(1,0,1)
     x= 2*(k-1)/(1-u) - k
     mprime= floor(x)
+    iteration= iteration+1
     if (mprime>0 &&  mprime >=(k-2) && mprime <m )
     {
       
       prob= log.prod.between(mprime-k+1,mprime-1)+ log.prod.between(mprime+k, mprime) 
       prob= exp(prob) * (x+k)*(x+k)
       v=runif(1,0,1)
-      print(prob)
-      print(paste0(" x = ", x, " v = ", v, " mprime =", mprime, " m = ", m, " k = ", k, sep=" "))
-      if (is.nan(prob) || prob > 3 || iteration > 1000 )
+  
+      print(paste0(" prob = ", prob, " x = ", x, " v = ", v, " mprime =", mprime, " m = ", m, " k = ", k, sep=" "))
+      if (is.nan(prob) || prob > 3 || iteration > 100 )
         {
         print("joo")
       }
       if (v<prob){
         accepted=TRUE
-        return(mprime)
       }
     }
     else{
@@ -261,7 +261,7 @@ get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample
       iteration= iteration+1
     }
   }
-  
+  return(mprime)
 }
 
 get.most.probable.number.of.ancestors.population.present.time=function(sample.size)
@@ -290,8 +290,8 @@ simulate.list.number.ancestors.population=function(sample.size){
   population.present.time= get.most.probable.number.of.ancestors.population.present.time(sample.size)
   current.population.size=population.present.time
   list.populations.sizes=list(current.population.size)
-  list.populations.sizes = c(list(current.population.size), lapply((sample.size):2, FUN = function(x,current.population.size) 
-    get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample2(x,current.population.size), current.population.size=current.population.size ))
+  list.populations.sizes = c(list(current.population.size), lapply((sample.size):2, FUN =
+    get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample2,m=current.population.size))
   # for(i in  (sample.size):2)
   # {
   #   current.population.size= get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample(i,current.population.size)
@@ -333,6 +333,20 @@ list.number.ancestors.population.sim <- array(0,dim=c(sim,sample.size))
 coal.events.times.sim <- array(0,dim=c(sim,sample.size))
 library(future.apply)
 #Scenario A with stochastic population size
+lapply(1:sim, FUN=function(i, sample.size, lambda, mu, rho, coal.events.times.sim, list.number.ancestors.population.sim){
+    list.number.ancestors.population= simulate.list.number.ancestors.population(sample.size)
+  
+  list.number.ancestors.population.sim[i,]=list.number.ancestors.population
+  list.coal.times= simulate.coalescent.times.A1(lambda, mu, rho,sample.size, list.number.ancestors.population)
+  coal.events.times =cumsum(list.coal.times)
+  #coal.events.times=c(0,coal.events.times)
+  coal.events.times.sim[i,]= coal.events.times
+  print(paste0("finished sim",i, sep=" "))
+      
+    },
+  sample.size=sample.size, lambda=lambda, mu=mu, rho=rho, coal.events.times.sim=coal.events.times.sim,
+  list.number.ancestors.population.sim= list.number.ancestors.population.sim)
+  
 for(i in 1:sim){
   list.number.ancestors.population= simulate.list.number.ancestors.population(sample.size)
   

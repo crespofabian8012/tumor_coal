@@ -237,20 +237,21 @@ get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample
   while(!accepted){
     print(paste("iteration",iteration, sep=" "))
     u=runif(1,0,1)
-    x= 2*(k-1)/(1-u) - k
-    mprime= floor(x)
+    x= 2*(k-1)/(1-u) - 2*(k-1)
+    mprime= k-2+ floor(x)
     iteration= iteration+1
-    if (mprime>0 &&  mprime >=(k-2) && mprime <m )
+    if (mprime>0 &&  mprime >=(k-1) && mprime <m )
     {
       
-      prob= log.prod.between(mprime-k+1,mprime-1)+ log.prod.between(mprime+k, mprime) 
-      prob= exp(prob) * (x+k)*(x+k)
+      log.prob= log.prod.between(mprime-k+1,mprime-1)+ log.prod.between(mprime+k, mprime) 
+      log.prob = log.prob + 2* log(x+2*(k-1))
+      prob= exp(log.prob) 
       v=runif(1,0,1)
   
-      print(paste0(" prob = ", prob, " x = ", x, " v = ", v, " mprime =", mprime, " m = ", m, " k = ", k, sep=" "))
-      if (is.nan(prob) || prob > 3 || iteration > 100 )
+      print(paste0(" log.prob = ", log.prob," prob = ", prob, " x = ", x, " v = ", v, " mprime =", mprime, " m = ", m, " k = ", k, sep=" "))
+      if (is.nan(prob) || prob > 3 || iteration > 500 )
         {
-        print("joo")
+        print("something went wrong!")
       }
       if (v<prob){
         accepted=TRUE
@@ -258,12 +259,59 @@ get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample
     }
     else{
       accepted=FALSE
-      iteration= iteration+1
     }
   }
   return(mprime)
 }
+solve.cumulative.density.number.ancestors.population.present.time=function(u, sample.size)
+{
+  require(rootSolve)
+  fun <- function (x)  exp(log.prod.between(x-sample.size+2,x)+log.prod.between(x+sample.size,x+2)) - u
+  #x <- rootSolve::uniroot.all(fun, c(sample.size-2, 1000*sample.size))
+  x = sample.size 
+  while(fun(x)<0)
+     x=x+1
+  
+  return(x)
 
+}
+solve.cumulative.density.number.ancestors.population=function(u, k,m)
+{
+   require(rootSolve)
+   fun <- function (x)  exp(log.prod.between(x+1-k,x+1)+log.prod.between(x+k,x)+ log.prod.between(m-1,m+k-1) + log.prod.between(m,m-k)) - u
+    #x <- rootSolve::uniroot.all(fun, c(sample.size-2, 1000*sample.size))
+   x = sample.size -1
+   while(fun(x)<0)
+     x=x+1
+   
+   return(x)
+}
+get.most.probable.number.of.ancestors.population.present.time2=function(sample.size)
+{
+
+    u=runif(1,0,1)
+    print(u)
+    mprime=solve.cumulative.density.number.ancestors.population.present.time(u, sample.size)
+    return(mprime)
+  
+}
+get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample3=function(k,m)
+{
+  accepted=FALSE
+  while(!accepted)
+  {
+    u=runif(1,0,1)
+    mprime=solve.cumulative.density.number.ancestors.population(u, k, m)
+    
+      if(mprime <m)
+      {
+        accepted=TRUE
+      }
+ 
+ 
+  }
+  return(mprime)
+}
 get.most.probable.number.of.ancestors.population.present.time=function(sample.size)
 {
   probs=list()
@@ -287,11 +335,11 @@ get.most.probable.number.of.ancestors.population.present.time=function(sample.si
 
 
 simulate.list.number.ancestors.population=function(sample.size){
-  population.present.time= get.most.probable.number.of.ancestors.population.present.time(sample.size)
+  population.present.time= get.most.probable.number.of.ancestors.population.present.time2(sample.size)
   current.population.size=population.present.time
   list.populations.sizes=list(current.population.size)
   list.populations.sizes = c(list(current.population.size), lapply((sample.size):2, FUN =
-    get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample2,m=current.population.size))
+    get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample3,m=current.population.size))
   # for(i in  (sample.size):2)
   # {
   #   current.population.size= get.most.probable.number.of.ancestors.population.when.k.minus.1.ancestors.sample(i,current.population.size)
@@ -324,7 +372,7 @@ simulate.coalescent.times.A1=function(lambda, mu, rho,sample.size, list.number.a
   return(unlist(list.coal.times))
 }
 #############################################################################################
-sim=1000
+sim=10
 sample.size=20
 lambda=1
 mu=0.99
@@ -333,30 +381,24 @@ list.number.ancestors.population.sim <- array(0,dim=c(sim,sample.size))
 coal.events.times.sim <- array(0,dim=c(sim,sample.size))
 library(future.apply)
 #Scenario A with stochastic population size
-lapply(1:sim, FUN=function(i, sample.size, lambda, mu, rho, coal.events.times.sim, list.number.ancestors.population.sim){
-    list.number.ancestors.population= simulate.list.number.ancestors.population(sample.size)
-  
-  list.number.ancestors.population.sim[i,]=list.number.ancestors.population
+invisible(lapply(1:sim, FUN=function(i, sample.size, lambda, mu, rho, coal.events.times.sim, list.number.ancestors.population.sim)
+  {
+ 
+   list.number.ancestors.population= simulate.list.number.ancestors.population(sample.size)
+   print(unlist(list.number.ancestors.population))
+  list.number.ancestors.population.sim[i,] <<-list.number.ancestors.population
   list.coal.times= simulate.coalescent.times.A1(lambda, mu, rho,sample.size, list.number.ancestors.population)
   coal.events.times =cumsum(list.coal.times)
+  print(unlist(coal.events.times))
   #coal.events.times=c(0,coal.events.times)
-  coal.events.times.sim[i,]= coal.events.times
+  coal.events.times.sim[i,] <<- coal.events.times
   print(paste0("finished sim",i, sep=" "))
       
     },
-  sample.size=sample.size, lambda=lambda, mu=mu, rho=rho, coal.events.times.sim=coal.events.times.sim,
-  list.number.ancestors.population.sim= list.number.ancestors.population.sim)
+  sample.size, lambda, mu,rho, coal.events.times.sim=coal.events.times.sim,
+  list.number.ancestors.population.sim=list.number.ancestors.population.sim))
   
-for(i in 1:sim){
-  list.number.ancestors.population= simulate.list.number.ancestors.population(sample.size)
-  
-  list.number.ancestors.population.sim[i,]=list.number.ancestors.population
-  list.coal.times= simulate.coalescent.times.A1(lambda, mu, rho,sample.size, list.number.ancestors.population)
-  coal.events.times =cumsum(list.coal.times)
-  #coal.events.times=c(0,coal.events.times)
-  coal.events.times.sim[i,]= coal.events.times
-  print(paste0("finished sim",i, sep=" "))
-}
+
 
 xx <- colSums(coal.events.times.sim)/sim
 print(xx)

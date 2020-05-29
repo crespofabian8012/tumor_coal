@@ -400,33 +400,39 @@ invisible(lapply(1:sim, FUN=function(i, sample.size, lambda, mu, rho, coal.event
   
 
 
-xx <- colSums(coal.events.times.sim)/sim
-print(xx)
-saveRDS(xx, "~/project3/test/xx.rds")
+mean.events.times <- colSums(coal.events.times.sim)/sim
+mean.number.population.ancestors <- rev(colSums(list.number.ancestors.population.sim)/sim)
+saveRDS(mean.events.times, "~/project3/test/mean.events.times.rds")
+saveRDS(mean.number.population.ancestors, "~/project3/test/mean.events.times.rds")
 population=colSums(list.number.ancestors.population.sim)/sim
 
 padded.coal.events.times.sim=cbind(rep(0,sim) , coal.events.times.sim)
 padded.list.number.ancestors.population.sim=cbind( list.number.ancestors.population.sim, rep(0,sim))
 rev.padded.coal.events.times.sim<-t(apply(padded.coal.events.times.sim,1,function(x) rev(x)))
 all.times.population=as.vector(t(padded.coal.events.times.sim))
-sample.sizes=rep(0:sample.size,sim)
+sample.sizes=rep(0:sample.size,sim+1)
 rev.padded.list.number.ancestors.population.sim<-t(apply(padded.list.number.ancestors.population.sim,1,function(x) rev(x)))
 population.sizes=as.vector(t(rev.padded.list.number.ancestors.population.sim))
-num.sim=rep(1:(sim), rep(sample.size +1, sim))
-population.dataframe=data.frame(sample.sizes,all.times.population, population.sizes, num.sim)
+num.sim=rep(1:(sim), rep(sample.size+1, sim))
+population.dataframe=data.frame(sample.sizes, event.time=c(all.times.population,0,mean.events.times) , 
+                                population.size=c(population.sizes, 0,mean.number.population.ancestors), num.sim=c(num.sim, rep(sim+1,sample.size+1)))
+population.dataframe$simulation= paste0("simulation", population.dataframe$num.sim)
+
 
 pdf("~/project3/test/plotScenarioAStochastic5.pdf")
-plot(xx,1:sample.size,ylab="Origin (i=1), Number of ancestors (i>1)",xlab="Time until i-1 ancestors",pch=19,col="orange")
+plot(mean.events.times,1:sample.size,ylab="Origin (i=1), Number of ancestors (i>1)",xlab="Time until i-1 ancestors",pch=19,col="orange")
+
 dev.off()
 
 
 pdf("~/project3/test/plotScenarioAStochastic2.pdf")
-plot(0:(sample.size-1),xx,xlab="Origin (i=1), Number of ancestors (i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
+plot(0:(sample.size-1),mean.events.times,xlab="Origin (i=1), Number of ancestors (i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
 
 dev.off()
 
 pdf("~/project3/test/plotScenarioAStochastic3.pdf")
-plot(population,xx,xlab="Origin (i=1), Number of ancestors population(i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
+plot(population,mean.events.times,xlab="Origin (i=1), Number of ancestors population(i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
+
 dev.off()
 #Scenario A with deterministic  population size(expected population size)
 # for (k in 1:length(Torigin)) {
@@ -443,13 +449,19 @@ library(ggplot2)
 # First plot
 dev.off()
 
-p1 <- ggplot(population.dataframe, aes(x=all.times.population, y=population.sizes, colour=num.sim)) +
-  geom_line() +
-  ylim(0,400)+
+plot.new()
+p1 <- ggplot(population.dataframe, aes(x=event.time, y=population.size))+
+  geom_line(aes(colour=simulation))+
+  ylim(19,2000)+
+  xlim(0,310)+
   xlab("Time(forward)") +
-  ylab("Number of population ancestors")+
-  ggtitle("Stochastic opulation growth")
-p1
+  ylab("Number of population ancestors") +
+  theme(legend.position = "none") +
+  ggtitle("Stochastic population growth")
+  #geom_point(aes(x=c(0,mean.events.times),y=c(0,mean.number.population.ancestors)), 
+  #     pch = 16,
+  #      colour = "yellow")+
+p1 + theme(legend.position = "none") 
 
 # Second plot
 p2 <- ggplot(ChickWeight, aes(x=Time, y=weight, colour=Diet)) +

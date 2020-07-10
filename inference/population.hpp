@@ -1,16 +1,12 @@
-//
-//  Population.hpp
-//  run
-//
-//  Created by Fausto Fabian Crespo Fernandez on 4/10/19.
-//
+/*
+ * tumor population class
+ */
 
 #ifndef Population_hpp
 #define Population_hpp
 
 #include <stdio.h>
 #include <vector>
-
 
 extern "C"
 {
@@ -33,12 +29,13 @@ public:
     long double oldTimeOriginSTD; // standardized time of origin
     long double timeOriginInput; // time of origin
     long double oldTimeOriginInput; // time of origin
+    long double lowerBoundTimeOriginInput;
     long double scaledtimeOriginInput; // time of origin
     long double oldScaledTimeOriginInput; // time of origin
     long double delta; // growth rate * effectPopSize = r * x
     long double olddelta;
-    long double r;
-    long double oldr;
+    long double deltaT;
+    long double olddeltaT;
     long double x;
     long double oldx;
     long double theta;
@@ -58,19 +55,19 @@ public:
     int numIncomingMigrations, numPossibleMigrations;
     bool doEstimateTimeOrigin;
     bool isAlive, CellAssignationCompleted;
-    //    double timeMigrationSTDCurrentPop; // TODO: check
-    vector<pair<long double, Population *> > immigrantsPopOrderedByModelTime; // migrationTime, Population
+    //    double timeMigrationSTDCurrentPop;
+    std::vector<std::pair<long double, Population *>> immigrantsPopOrderedByModelTime; // migrationTime, Population
     
-    vector<pair<long double, Population *> > oldimmigrantsPopOrderedByModelTime; // migrationTime, Population
-    vector<int> idsActiveGametes;
-    vector<int> idsGametes;
+    std::vector<std::pair<long double, Population *>> oldimmigrantsPopOrderedByModelTime; // migrationTime, Population
+    std::vector<int> idsActiveGametes;
+    std::vector<int> idsGametes;
     int indexFirstObservedCellName;
     int nodeIdAncestorMRCA;
     //pll_unode_t *MRCA;
     TreeNode *MRCA;
-    vector<pll_unode_t *> tips;
-    vector<pll_rnode_t *> rtips;
-    vector<pll_rnode_t *> oldrtips;
+    std::vector<pll_unode_t *> tips;
+    std::vector<pll_rnode_t *> rtips;
+    std::vector<pll_rnode_t *> oldrtips;
     
     pll_unode_t * nodeletMRCA;
     pll_rnode_t * rMRCA;
@@ -78,19 +75,19 @@ public:
     
     Population *FatherPop;
     Population *oldFatherPop;
-    vector<long double> CoalescentEventTimes;
-    vector<long double> oldCoalescentEventTimes;
+    std::vector<long double> CoalescentEventTimes;
+    std::vector<long double> oldCoalescentEventTimes;
     
 public:
     Population(int ind, int ord, long double timeOriginInput,
                int sampleSize, int popSize, long double birthRate,
                long double deathRate, bool estimateTOR);
     
-    long double ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones);
+    long double ProbabilityComeFromPopulation(Population *PopJ, std::vector<Population*> &populations, int numClones);
     static long double FmodelTstandard (long double t, long  double TOrigin, long double delta);
     static long double GstandardTmodel (long double V, long double TOrigin, long double delta);
     static long double CalculateH (long double t, long double TOrigin, long double delta);
-    static bool comparePopulationsPairByTimeOrigin(const pair<long double, Population *> s1, const pair<long double, Population *> s2);
+    static bool comparePopulationsPairByTimeOrigin(const std::pair<long double, Population *> s1, const std::pair<long double, Population *> s2);
     static int compare (const void * a, const void * b);
     void InitListPossibleMigrations(int order);
     int resetMigrationsList();
@@ -109,6 +106,11 @@ public:
     long double LogDensityTime(long double u);
     static long double LogCalculateH (long double t, long double TOrigin, long double delta);
     long double LogDensityTime2(long double u);
+    long double DensityTimeSTD(long double u, long double from);
+    long double LogDensityTimeSTDFrom(long double u, long double from);
+    void setLowerBoundTimeOriginInput(long double from);
+    void restoreOldCoalescentTimes();
+    void restoreOldImmigrationTimes();
 private:
     static bool isNotPositive(long double d);
 };

@@ -1,9 +1,27 @@
-//
-//  Population.cpp
-//  run
-//
-//  Created by Fausto Fabian Crespo Fernandez on 4/10/19.
-//
+/*################################################################################
+ ##
+ ##   Copyright (C) 2018-2020 Fausto Fabian Crespo Fernandez
+ ##
+ ##   This file is part of the tumor_coal C++ library.
+ ##
+ ##   Licensed under the Apache License, Version 2.0 (the "License");
+ ##   you may not use this file except in compliance with the License.
+ ##   You may obtain a copy of the License at
+ ##
+ ##       http://www.apache.org/licenses/LICENSE-2.0
+ ##
+ ##   Unless required by applicable law or agreed to in writing, software
+ ##   distributed under the License is distributed on an "AS IS" BASIS,
+ ##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ##   See the License for the specific language governing permissions and
+ ##   limitations under the License.
+ ##
+ ################################################################################*/
+
+/*
+ * tumor population class
+ */
+
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #include "population.hpp"
 #include "definitions.hpp"
@@ -70,14 +88,17 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     }
     else
         fprintf (stderr, "\n ERROR: Population time of origin   cannot be negative \n");
-    if (birthRate >=0)
+    if (birthRate >0)
         effectPopSize = popSize / birthRate;
     
     delta= growthRate * effectPopSize;
     
     isAlive = YES;
     
-    timeOriginSTD = timeOriginInput /effectPopSize;
+    if (effectPopSize>0)
+      timeOriginSTD = timeOriginInput /effectPopSize;
+    else
+        timeOriginSTD=0;
     
     numActiveGametes = sampleSize;
     
@@ -89,11 +110,12 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     numIncomingMigrations = 0;
     numPossibleMigrations = 0;
     doEstimateTimeOrigin = estimateTOR;
+    lowerBoundTimeOriginInput=0;
     
     MRCA=0;
     
-    r = 0.0;
-    oldr = 0.0;
+    deltaT = 0.0;
+    olddeltaT = 0.0;
     x = 0.0;
     oldx = 0.0;
     theta = 0.0;
@@ -122,12 +144,10 @@ long double Population::ProbabilityComeFromPopulation(Population *PopJ, vector<P
     t = (timeOriginSTD ) * (effectPopSize) / ( PopJ->effectPopSize);
     h = CalculateH(t, PopJ->timeOriginSTD, PopJ->delta);
     AboveTerm = ( PopJ->popSize) * h;
-    //fprintf (stderr, "AboveTerm = %lf\n", AboveTerm);
     j=0;
     for (l = order + 1; l < numClones; l++)
     {
         p = populations[l];
-        //fprintf (stderr, "\ni = %d, j = %d, l = %d\n", i, j, l);
         t = (timeOriginSTD ) * (effectPopSize) / ( p->effectPopSize);
         h = CalculateH(t, p->timeOriginSTD, p->delta);
         
@@ -135,11 +155,9 @@ long double Population::ProbabilityComeFromPopulation(Population *PopJ, vector<P
     }
     
     BelowTerm = cum;
-    //fprintf (stderr, "BelowTerm = %lf\n", BelowTerm);
     
     ProbabilityIJ = AboveTerm / BelowTerm;
-    //fprintf (stderr, "ProbabilityIJ = %lf\n", ProbabilityIJ);
-    
+
     return ProbabilityIJ;
 }
 
@@ -155,24 +173,18 @@ long double Population::CalculateH (long double t, long double TOrigin, long dou
     a = 0.0;
     b = 0.0;
     H = 0.0;
-    
-    //printf ("\nInput(H), t=%lf T=%lf delta=%lf ", t, T, delta);
-    
+
     a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     firstTerm = a * a;
     secondTerm = exp(-1.0 * delta * t);
     AboveTerm = firstTerm * secondTerm;
-    //printf ("\nAboveTerm(H) = %lf (%lf %lf %lf) / delta = %lf, T = %lf, t = %lf", AboveTerm, a, firstTerm, secondTerm, delta, T, t);
-    
     b = 1.0 - exp(-1.0 * delta * TOrigin);
     BelowTerm = b * b;
-    //printf ("\nBelowTerm(H) = %lf", BelowTerm);
     if (BelowTerm == 0.0)
         printf ("\n BelowTerm = 0.0 \n");
     
     H = AboveTerm / BelowTerm;
-    //printf ("\nH = %lf", H);
-    
+ 
     return H;
 }
 long double Population::LogCalculateH (long double t, long double TOrigin, long double delta)
@@ -187,20 +199,18 @@ long double Population::LogCalculateH (long double t, long double TOrigin, long 
     a = 0.0;
     b = 0.0;
     logH = 0.0;
-    
-    //printf ("\nInput(H), t=%lf T=%lf delta=%lf ", t, T, delta);
-    
+
     a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     firstTerm = 2.0 * log(a);
     secondTerm = -1.0 * delta * t;
     AboveTerm = firstTerm + secondTerm;
-    //printf ("\nAboveTerm(H) = %lf (%lf %lf %lf) / delta = %lf, T = %lf, t = %lf", AboveTerm, a, firstTerm, secondTerm, delta, T, t);
+
     
     b = 1.0 - exp(-1.0 * delta * TOrigin);
     BelowTerm = 2.0 * log(b);
     
     logH = AboveTerm - BelowTerm;
-    //printf ("\nH = %lf", H);
+
     return logH;
 }
 
@@ -216,30 +226,7 @@ long double Population::FmodelTstandard (long double t, long double TOrigin, lon
     a = 0.0;
     b = 0.0;
     c = 0.0;
-    
-    /*fprintf (stderr, "t = %lf\n", t);
-     fprintf (stderr, "T = %lf\n", T);
-     fprintf (stderr, "delta = %lf\n", delta);*/
-    
-    a = 1.0 - exp(-1.0 * delta * TOrigin);
-    firstTerm = a * a;
-    //fprintf (stderr, "firstTerm = %lf\n", firstTerm);
-    
-    secondTerm = exp(delta * TOrigin);
-    //fprintf (stderr, "secondTerm = %lf\n", secondTerm);
-    if (delta * TOrigin == 0)
-        fprintf (stderr, "\n delta * TOrigin == 0 \n");
-    
-    //    if (delta * (TOrigin - t) == 0)
-    //        fprintf (stderr, "\n delta * (TOrigin - t) == 0 \n");
-    
-    b = 1.0 / (1.0 - exp(-1.0 * delta * (TOrigin - t)));
-    c = 1.0 / (1.0 - exp(-1.0 * delta * TOrigin));
-    thirdTerm = b - c;
-    //fprintf (stderr, "thirdTerm = %lf\n", thirdTerm);
-    
-    ModelTimeF = firstTerm * secondTerm * thirdTerm;
-    //fprintf (stderr, "ModelTimeF = %lf\n", ModelTimeF);
+
     // New formula from Carsten!
     ModelTimeF = 0.0;
     firstTerm = 0.0;
@@ -279,46 +266,28 @@ long double Population::GstandardTmodel (long double V, long double TOrigin, lon
     c = 0.0;
     d = 0.0;
     e = 0.0;
-    
-    //fprintf (stderr, "\nV = %lf, T = %lf, delta = %lf\n", V, T, delta);
-    
-    
+ 
     firstTerm = TOrigin;
-    //fprintf (stderr, "\nfirstTerm = %lf\n", firstTerm);
-    
+
     secondTerm = 1 / delta;
-    // fprintf (stderr, "secondTerm = %lf\n", secondTerm);
-    
-    
-    //a = 1.0 - exp(-1.0 * delta * T);
+ 
     a =  exp(-1.0 * delta * TOrigin);
     
-    //fprintf (stderr, "a = %lf\n", a);
-    //b = (a * a) * exp(delta * T);
     b = (1 - a) * (1 - a) * (1.0 / a);
-    //fprintf (stderr, "b= %lf\n", b);
-    
-    //c = 1.0 - exp (-1.0 * delta * T);
+
     c = 1 - a;
-    // fprintf (stderr, "c = %lf\n", c);
-    //d = c * exp(delta * T);
+
     d = (1 - a) * (1.0 / a);
-    // fprintf (stderr, "d = %lf\n", d);
     e = V + d;
-    //fprintf (stderr, "e = %lf\n", e);
+
     thirdTerm = log(1 - b / e);
-    //fprintf (stderr, "valueOfLog = %lf\n", thirdTerm);
+
     thirdTerm = log(1 - ((1 - a) * (1 - a) * (1.0 / a)) / (V * delta + (1 - a) * (1.0 / a)));
-    //fprintf (stderr, "ArgumentOfLog = %lf\n", 1 - b/e);
-    //fprintf (stderr, "valueOfLog = %lf\n", thirdTerm);
-    
-    
+
     thirdTerm = log(1 + delta * V - a) - log(1 + (delta * V - 1) * a);
     
-    //StandardTimeG = firstTerm + (secondTerm * thirdTerm);
     StandardTimeG = secondTerm * thirdTerm;
-    //fprintf (stderr, "StandardTimeG = %lf\n", StandardTimeG);
-    
+
     if ( (1 + delta * V - a) <= 0 ||   (1 + (delta * V - 1)*a ) <= 0 ) // do approximation if required
     {
         fprintf (stderr, "\nApplying approximation of math formula to avoid log(0)\n");
@@ -331,19 +300,12 @@ long double Population::GstandardTmodel (long double V, long double TOrigin, lon
         c = 0.0;
         d = 0.0;
         e = 0.0;
-        
         a = 1 / delta;
         b = log(1 + delta * V);
         firstTerm = a * b;
-        //fprintf (stderr, "\nfirstTerm = %lf\n", firstTerm);
-        
-        
         d = (V * V * delta * exp(-1.0 * delta * TOrigin)) / (1 + V);
         secondTerm =  d;
-        //fprintf (stderr, "secondTerm = %lf\n", secondTerm);
-        
         StandardTimeG = firstTerm - secondTerm;
-        //fprintf (stderr, "StandardTimeG = %lf\n", StandardTimeG);
     }
     
     return StandardTimeG;
@@ -351,8 +313,6 @@ long double Population::GstandardTmodel (long double V, long double TOrigin, lon
 
 void Population::InitListPossibleMigrations(int order)
 {
-    //    int j;
-    
     this->order = order;
     numPossibleMigrations = order + 1;
     numIncomingMigrations = 1; //the time of origin counts as one migration
@@ -363,7 +323,6 @@ int Population::resetMigrationsList(){
     
     immigrantsPopOrderedByModelTime.clear();
     InitListPossibleMigrations(this->order);
-    
     return 0;
 }
 void Population::UpdateListMigrants( int numClones, Population *PopChild, Population *PopFather  )
@@ -374,7 +333,6 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
     }
     if (PopFather->order <= PopChild->order )
     {
-        
         fprintf (stderr, "\nError. The father Population of order   %d for  migration must be older than the Population of origin order %d \n", PopFather->order, PopChild->order);
         
         fprintf (stderr, "\nError. The father Population  %d for  migration must be older than the Population of origin %d \n", PopFather->index, PopChild->index);
@@ -384,44 +342,24 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
         //exit (-1);
     }
     int updatedNumIncomingMigrations = PopFather->numIncomingMigrations;
-    // int lengthMigrationsArray = (int)(PopFather->order) + 1;
-    // printf ( "\n lengthMigrationsArray= %d \n", lengthMigrationsArray );
-    
-    //long doubleupdatedMigrationTime = (PopChild->timeOriginSTD) * (PopChild->effectPopSize) / (PopFather->effectPopSize);
+  
     long double updatedMigrationTime = (PopChild->timeOriginSTD) * (PopChild->x) / (PopFather->x);
     if(updatedNumIncomingMigrations + 1 <= PopFather->numPossibleMigrations){
         updatedNumIncomingMigrations = updatedNumIncomingMigrations + 1;
         PopFather->numIncomingMigrations = updatedNumIncomingMigrations;
         PopFather->immigrantsPopOrderedByModelTime.push_back(make_pair(updatedMigrationTime, PopChild));
     }
-    
     sort(PopFather->immigrantsPopOrderedByModelTime.begin(), PopFather->immigrantsPopOrderedByModelTime.end(), comparePopulationsPairByTimeOrigin);
-    
     //     printf("\n pop order  %d choose pop father of order %d \n", PopChild->order, PopFather->order);
     //    for (int i = 0; i < PopFather->immigrantsPopOrderedByModelTime.size(); ++i)
     //        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin %lf \n", PopFather->immigrantsPopOrderedByModelTime[i].first,  PopFather->immigrantsPopOrderedByModelTime[i].second->order , PopFather->immigrantsPopOrderedByModelTime[i].second->timeOriginSTD);
-    
 }
 
 bool Population::comparePopulationsPairByTimeOrigin(const pair<long double, Population *> s1, const pair<long double, Population *> s2)
 {
-    //printf("\n s1: %lf ", s1.first);
-    //printf("\n s2: %lf \n", s2.first);
     return (s1.first < s2.first);
 }
 
-
-//int Population::comparePopulationsByTimeOrigin(const void *s1, const void *s2)
-//{
-//    Population *p1 = *(Population **)s1;
-//    Population *p2 = *(Population **)s2;
-//    if (  p1->timeOriginInput  > p2 ->timeOriginInput)
-//        return 1;
-//    else if (p1->timeOriginInput < p2->timeOriginInput)
-//        return -1;
-//    else
-//        return 0;
-//}
 int Population::compare (const void * a, const void * b)
 {
     long double*p1 = (long double*)a;
@@ -442,7 +380,6 @@ void Population::InitCoalescentEvents(int numClones)
         CoalescentEventTimes.push_back(0);
     }
 }
-
 void Population::resetActiveGametes()
 {
     numCompletedCoalescences = 0;
@@ -469,19 +406,8 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
         cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (numActiveGametes);
     
     w = 0;
-    //    for (k = 0; k < numClones; k++)
-    //    {
-    //        pop = *(populations + k);
-    //        w = w + (pop->numActiveGametes);
-    //        //fprintf (stderr, "\nClone %d with %d gametes. w=%d ", k, pop->numActiveGametes, w);
-    //    }
-    //    if (w != numActiveGametes)
-    //    {
-    //        fprintf (stderr, "\nError. The sum of partial active gametes is different to the total number of gametes, w %d != numActiveGametes %d. In Coalescence.", w, numActiveGametes);
-    //        exit (-1);
-    //    }
+
     random = RandomUniform(seed);
-    //fprintf (stderr, "\nran = %lf ", ran);
     *firstInd = Population::bbinClones(random, cumPopulPart, numActiveGametes)-1;
     w = 0;
     
@@ -531,11 +457,15 @@ int Population::bbinClones (long double dat, long double *v, int n)
 }
 long double Population::LogDensityTime2(long double u){
    boost::multiprecision::cpp_dec_float_50  term1 = exp(-1.0*delta*u);
+    double doubleTerm= term1.convert_to<double>();
     boost::multiprecision::cpp_dec_float_50 term2 = delta * term1;
+    doubleTerm= term2.convert_to<double>();
     boost::multiprecision::cpp_dec_float_50 term3 = 1.0-term1;
     boost::multiprecision::cpp_dec_float_50 result = log(delta * term2 /(term3 * term3));
+    doubleTerm= result.convert_to<double>();
     result = result - term2/term3;
-   
+    doubleTerm= result.convert_to<double>();
+    
     return (long double)result;
 }
 long double Population::LogDensityTime(long double u){
@@ -546,6 +476,27 @@ long double Population::LogDensityTime(long double u){
     result = result - term2/term3;
     if (term3 ==0 || term2 == 0)
         fprintf (stderr, "\n LogDensityTime -inf, result %Lf  \n ", result);
+    return result;
+}
+long double Population::DensityTimeSTD(long double u, long double from){
+    long double term, result;
+    if (u >=from){
+        
+        term=delta*exp(-1.0*delta*(x))/(1-exp(-1.0*delta*(x)));
+        result = delta*term * exp(-1*term) / (1-exp(-1.0*delta*(x)));
+    }
+    else {
+        result=0;
+    }
+    return result;
+}
+long double Population::LogDensityTimeSTDFrom(long double u, long double from){
+    long double  densityFrom, result;
+    densityFrom = DensityTimeSTD(u, from );
+    if (densityFrom ==0)
+        result=log(0);
+    else
+        result=log(densityFrom);
     return result;
 }
 long double Population::LogProbNoCoalescentEventBetweenTimes(long double from, long double to, int numberActiveInd)
@@ -584,3 +535,20 @@ void Population::multiplyMigrationsTimesByFactor(long double factor)
         immigrantsPopOrderedByModelTime.at(j).first = immigrantsPopOrderedByModelTime.at(j).first *factor;
     }
 }
+void Population::setLowerBoundTimeOriginInput(long double from)
+{
+    lowerBoundTimeOriginInput = from;
+    
+}
+void Population::restoreOldCoalescentTimes(){
+    
+    CoalescentEventTimes = oldCoalescentEventTimes ;
+    numCompletedCoalescences= oldCoalescentEventTimes.size();
+}
+void Population::restoreOldImmigrationTimes(){
+    
+    immigrantsPopOrderedByModelTime = oldimmigrantsPopOrderedByModelTime;
+    numIncomingMigrations= oldimmigrantsPopOrderedByModelTime.size();
+}
+
+

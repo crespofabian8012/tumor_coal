@@ -1,9 +1,6 @@
-//
-//  data_types.h
-//  tumor_coal
-//
-//  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
-//
+/*
+ * data types
+ */
 
 #ifndef data_types_h
 #define data_types_h
@@ -13,6 +10,7 @@
 #include <sstream>
 #include <iostream>
 #include "definitions.hpp"
+//class gsl_rng;
 
 using namespace std;
 
@@ -164,41 +162,66 @@ public:
     int numberClonesKnown = 0;
     int MutationAssignNum = 0;
     string healthyTipLabel;
+    //gsl_rng * r;
 };
 
 class MCMCoptions {
 public:
-    double numChains;
-    double Niterations;
-    double thinning;
-    long double Deltafrom;
-    long double Deltato;
-    long double GrowthRatefrom;
-    long double GrowthRateto;
-    long  double MutRatefrom;
-    long double MutRateto;
-    long double totalEffectPopSizefrom;
-    long double totalEffectPopSizeto;
-    long double lambdafrom;
-    long double lambdato;
-    double tuningParameterDirichlet;
-    int    startChainsRandomTree;
-    int    doTopologicalMoves;
-    double slidingWindowSizeTotalEffectPopSize;
-    double slidingWindowSizeGrowtRate;
-    double meanGrowthRate;
-    double dispersion;
-    double tuningParameter;
-    double fixedLambda;
-    int maxNumberProposalAttempts;
-    int numberWarmUpIterations;
-    long double paramMultiplierMoveTheta;
-    long double paramMultiplierMutationRate;
-    long double paramMultiplierEffectPopSize;
-    long double paramMultiplierGrowthRate;
-    int doInferenceWithoutData;
-    int fixTimeOriginInputTreeUnits;
-    long double lambdaExponentialPriorTime;
+     double numChains;
+     double Niterations;
+     double thinning;
+     bool useGSLRandomGenerator;
+     bool splitThetaDeltaTmoves;
+     int numberTumorCells;
+     long double Deltafrom;
+     long double Deltato;
+     long double GrowthRatefrom;
+     long double GrowthRateto;
+     long  double MutRatefrom;
+     long double MutRateto;
+     long double totalEffectPopSizefrom;
+     long double totalEffectPopSizeto;
+     long double lambdafrom;
+     long double lambdato;
+     double tuningParameterDirichlet;
+     int    startChainsRandomTree;
+     int    doTopologicalMoves;
+     int    printChainStateEvery;
+     int    priorsType;//0: logUniform, 1: exponential, 2: powerLaw
+     int    kernelType;//0: multiplier move, 1: normal centered current value,
+     double slidingWindowSizeTotalEffectPopSize;
+     double slidingWindowSizeGrowtRate;
+     double meanGrowthRate;
+     double dispersion;
+     double tuningParameter;
+     double fixedLambda;
+     int maxNumberProposalAttempts;
+     int numberWarmUpIterations;
+     long double paramMultiplierMoveTheta;
+     long double paramMultiplierMutationRate;
+     long double paramMultiplierEffectPopSize;
+     long double paramMultiplierGrowthRate;
+     long double paramMultiplierTheta;
+     long double paramMultiplierTimeOriginOldestPop;
+     bool noData;//1: without data(just priors), 0: with data
+      int useSequencesLikelihood;//1: true, 0 false
+     int verbose;// 0 nothing, 1, 2 more verbose
+     int fixTimeOriginInputTreeUnits;
+     long double lambdaExponentialPriorTime;
+     long double lambdaExponentialPriorMutationRate;
+      long double lambdaExponentialPriorTotalEffectivePopSize;
+      long double lambdaExponentialPriorGrowthRate;
+     long double sigmaNormalKernelTimeofOrigin;
+     long double parameterPowerLawDistributionTotalEffectPopSize;
+     long double parameterPowerLawDistributionMutationRate;
+     long double parameterPowerLawDistributionGrowthRate;
+     long double parameterPowerLawDistributionTimeOriginInputOldestPop;
+     long double sigmaNormalKernelTotalEffectivePopulationSize;
+     long double sigmaNormalKernelMutationRate;
+     long double sigmaNormalKernelGrowthRate;
+     double lengthIntervalMultiplier ;
+     double lengthIntervalMultiplierTimeOriginOldestPop;
+     double upperBoundTimeOriginInputOldestPop;
 };
 
 typedef struct {
@@ -232,7 +255,7 @@ typedef struct {
     char  inputTreeFile[500];
     char  inputGenotypeFileFasta[500];
     char  inputGenotypeFilePhylip[500];
-} FilePaths;
+}FilePaths;
 
 typedef struct {
     FILE *fpTrees;

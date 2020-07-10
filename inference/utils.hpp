@@ -1,18 +1,40 @@
-//
-//  util.h
-//  TumorCellCoal
-//
-//  Created by Fausto Fabian Crespo Fernandez on 7/8/19.
-//  Copyright © 2019 Fausto Fabian Crespo Fernandez. All rights reserved.
-//
+/*################################################################################
+ ##
+ ##   Copyright (C) 2018-2020 Fausto Fabian Crespo Fernandez
+ ##
+ ##   This file is part of the tumor_coal C++ library.
+ ##
+ ##   Licensed under the Apache License, Version 2.0 (the "License");
+ ##   you may not use this file except in compliance with the License.
+ ##   You may obtain a copy of the License at
+ ##
+ ##       http://www.apache.org/licenses/LICENSE-2.0
+ ##
+ ##   Unless required by applicable law or agreed to in writing, software
+ ##   distributed under the License is distributed on an "AS IS" BASIS,
+ ##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ##   See the License for the specific language governing permissions and
+ ##   limitations under the License.
+ ##
+ ################################################################################*/
 
-#ifndef util_h
-#define util_h
+/*
+ * utils functions
+ */
+#ifndef utils_h
+#define utils_h
+#include <vector>
+
 
 #include "data_types.hpp"
 #include "population.hpp"
 #include "tree_node.hpp"
 
+
+//class ProgramOptions;
+//class TreeNode;
+//class Population;
+//using namespace std;
 void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions);
 void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions);
 
@@ -39,7 +61,7 @@ double DistanceBetweenSFS(int* SFS1, int*SFS, int numSNVs,  int numSites);
 int computeTajimaD(TreeNode **treeTips,  int numSites, int numCells);
 
 double ComputeESS(double *weights, int numberWeights);
-void computeUnfoldedISMSFS(int numSites,SiteStr* allSites,int numSNVs, int* SNVsites, int* SFS, int *numberDifferences);
+//void computeUnfoldedISMSFS(int numSites,SiteStr* allSites,int numSNVs, int* SNVsites, int* SFS, int *numberDifferences);
 
 void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptions &programOptions ) ;
 
@@ -50,4 +72,4 @@ void InitNumberNodes(double *TotalBirthRate, double *TotalDeathRate, int *TotalN
 
 double parameterMultiplierMCMCmove (double lengthInterval);
 
-#endif /* util_h */
+#endif /* utils_h */

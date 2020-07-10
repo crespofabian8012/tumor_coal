@@ -1,15 +1,5 @@
-
-extern "C"
-{
-#include "libpll/pll.h"
-#include "libpll/pll_tree.h"
-#include "libpll/pll_optimize.h"
-#include "libpll/pllmod_algorithm.h"
-#include "libpll/pllmod_common.h"
-}
-
-#ifndef macros_h
-#define macros_h
+#ifndef definitions_h
+#define definitions_h
 
 /* Macros */
 #define PROGRAM_NAME    "TumorCoal"
@@ -177,4 +167,4 @@ extern "C"
 #define HOMO(state)   (state<4)
 #define HETERO(state) (state>3)
 
-#endif /* macros_h */
+#endif /* definitions_h */

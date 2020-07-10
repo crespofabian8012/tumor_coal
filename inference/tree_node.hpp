@@ -1,18 +1,34 @@
-//
-//  tree_node.hpp
-//  simul
-//
-//  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
-//
+/*################################################################################
+ ##
+ ##   Copyright (C) 2018-2020 Fausto Fabian Crespo Fernandez
+ ##
+ ##   This file is part of the tumor_coal C++ library.
+ ##
+ ##   Licensed under the Apache License, Version 2.0 (the "License");
+ ##   you may not use this file except in compliance with the License.
+ ##   You may obtain a copy of the License at
+ ##
+ ##       http://www.apache.org/licenses/LICENSE-2.0
+ ##
+ ##   Unless required by applicable law or agreed to in writing, software
+ ##   distributed under the License is distributed on an "AS IS" BASIS,
+ ##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ##   See the License for the specific language governing permissions and
+ ##   limitations under the License.
+ ##
+ ################################################################################*/
+
+/*
+ * tree node
+ */
 
 #ifndef tree_node_hpp
 #define tree_node_hpp
 
 #include <vector>
 
-#include "definitions.hpp"
+#include  "definitions.hpp"
 
-using namespace std;
 
 class TreeNode
 {
@@ -28,16 +44,16 @@ public:
     //indexCoalClone;
     long double      effectPopSize;
     long double      oldeffectPopSize;
-    char        cellName[MAX_NAME];
-    char        observedCellName[MAX_NAME];
-    vector<int>        maternalSequence;
-    vector<int>        paternalSequence;
-    vector<int>        numbersMutationsUnderSubtreePerSite;
-    vector<int>        numbersMaternalMutationsPerSite;
-    vector<int>        numbersPaternalMutationsPerSite;
+    char        cellName[200];
+    char        observedCellName[200];
+    std::vector<int>        maternalSequence;
+    std::vector<int>        paternalSequence;
+    std::vector<int>        numbersMutationsUnderSubtreePerSite;
+    std::vector<int>        numbersMaternalMutationsPerSite;
+    std::vector<int>        numbersPaternalMutationsPerSite;
     bool         isLeaf;
     int numberOfTipsSubTree;
-    vector<int> numberTipsByPopulation;
+    std::vector<int> numberTipsByPopulation;
     TreeNode(int numSites);
     void initNumberTipsVector(int numberClones);
     void resetNumberTipsVector(int numberClones);

@@ -7,6 +7,7 @@
 #include <vector>
 #include "tree_node.hpp"
 
+
 void init_to_empty_str(char str[MAX_NAME])
 {
     for (size_t i = 0; i < MAX_NAME; i++) {

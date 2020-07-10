@@ -1,11 +1,9 @@
-//
 //  data_utils.cpp
 //  tumor_coal
 //
 //  Created by Fausto Fabian Crespo Fernandez on 1/10/19.
 //  Copyright © 2019 Fausto Fabian Crespo Fernandez. All rights reserved.
 //
-
 #include "data_utils.hpp"
 
 #include <stdio.h>
@@ -28,6 +26,7 @@
 #include "utils.hpp"
 #include <algorithm>
 
+
 /***************************** ReadParametersFromFile *******************************/
 /* Reads parameter values from the parameter file */
 
@@ -49,6 +48,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
     double    sumPi;
     double argumentDouble;
     double argumentDouble1;
+    long double argumentLong;
     int argumentInt;
     long int argumentLongInt;
     
@@ -165,8 +165,8 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                         }
                         if (z == 5)
                         {
-                            fscanf(stdin, "%f", &argument);
-                            CloneDeathRateBegin.push_back((double) argument);
+                            fscanf(stdin, "%Lf", &argumentLong);
+                            CloneDeathRateBegin.push_back((double) argumentLong);
                         }
                         if (z == 6)
                         {
@@ -771,17 +771,11 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         }
     }
     
-    /* allocate memory for site information (equal for maternal and paternal) */
-    //SiteStr* allSites = (SiteStr*) calloc (programOptions.numSites, sizeof(SiteStr));
+
     vector<SiteStr> allSites(programOptions.numSites);
-    //    if (!allSites)
-    //    {
-    //        fprintf (stderr, "Could not allocate the allSites structure\n");
-    //        exit (-1);
-    //    }
+   
     for (i=0; i< programOptions.numSites; i++)
     {
-        //allSites[i].alternateAlleles = (int *) calloc (4, sizeof(int));
         allSites[i].alternateAlleles = new int[4];
         if (!allSites[i].alternateAlleles)
         {
@@ -962,13 +956,42 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
                 fclose(files.fpTimes);
                 fclose(files.fpTimes2);
             }
-            if (programOptions.doPrintTrueHaplotypes ==YES)
+            if (programOptions.doPrintTrueHaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
-                if (programOptions.doPrintSeparateReplicates == YES)
-                    fclose(files.fpTrueHaplotypes);
-                
-            }
             
+                    fclose(files.fpTrueHaplotypes);
+           
+            }
+            if (programOptions.doPrintMLhaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
+            {
+         
+                fclose(files.fpMLhaplotypes);
+          
+            }
+            if (programOptions.doPrintSNVhaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
+            {
+ 
+                fclose(files.fpSNVhaplotypes);
+         
+            }
+            if (programOptions.doPrintFullGenotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
+            {
+      
+                fclose(files.fpFullGenotypes);
+         
+            }
+            if (programOptions.doPrintCATG ==YES && programOptions.doPrintSeparateReplicates == YES)
+            {
+
+                fclose(files.fpCATG);
+            }
+            if (programOptions.doSimulateReadCounts ==YES && programOptions.doPrintSeparateReplicates == YES)
+            {
+                
+                fclose(files.fpVCF);
+               
+            }
+          
             
         }/* end of mutation simulation process */
         
@@ -980,7 +1003,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     
     fprintf(stderr, "\n The average time of MRCA in model time is %lf \n", totalTimeMRCAModelTime/ programOptions.numDataSets);
     
-  fprintf(stderr, "\n The average time until the first coalescent event in model time is %lf \n", totalTimeMRCAPUnits/ programOptions.numDataSets);
+ 
     
     
     
@@ -1094,7 +1117,7 @@ Population* ChooseFatherPopulation(vector<Population*> &populations, int numClon
         
     }
     // now selecting the ancestral clone
-    ran = RandomUniform(seed);
+    ran = randomUniformFromGsl();
     //fprintf (stderr, "\n ran = %lf ", ran);
     int w = -1;
     for (k = 1; k < numClones ; k++)
@@ -1228,7 +1251,7 @@ void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  i
     //        fprintf (stderr, "\nError. The sum of partial active gametes is different to the total number of gametes, w %d != numActiveGametes %d. In Coalescence.", w, numActiveGametes);
     //        exit (-1);
     //    }
-    random = RandomUniform(seed);
+    random = randomUniformFromGsl();
     //fprintf (stderr, "\nran = %lf ", ran);
     *firstInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
     w = 0;
@@ -1243,7 +1266,7 @@ void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  i
         
         do//choose randomly another individual to coalesce
         {
-            random = RandomUniform(seed);
+            random = randomUniformFromGsl();
             *secondInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
             
         } while (*firstInd == *secondInd  );
@@ -1583,7 +1606,7 @@ TreeNode *BuildTree(vector<Population* > &populations,
         healthyTip->anc1 = healthyRoot;
         healthyRoot->right = healthyTip;
         
-        double  healthyTipBranchLengthRatio = RandomUniform(seed);
+        double  healthyTipBranchLengthRatio = randomUniformFromGsl();
         
         
         //we put the  time of healthy tip inside the tree root and 0
@@ -1898,7 +1921,7 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
                 {
                     for (site=0; site<numSites; site++)
                     {
-                        ran = RandomUniform(seed);
+                        ran =  randomUniformFromGsl();
                         for (i=0; i<4; i++)
                         {
                             if (ran <= cumfreq[i])
@@ -2029,31 +2052,12 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &population
     ThisCloneNumberMigrations = -1;
     ThisM = -1;
     
-    
     //*numNodes = 2 * TotalNumSequences * numClones+ 1; // (2 * TotalNumSequences) + numClones(superfluos) - 1, but let's allocate some more..
     currentNumberAliveClones = numClones;
     
     resetMigrationsList( populations,  numClones);
     
-    //allocate memory for the treenodes
-    //            *nodes = (TreeNode *) malloc ((programOptions.numNodes + 1)* (sizeof(TreeNode)+ 5* programOptions.numSites * sizeof(int) + 2*MAX_NAME * sizeof(char)+ 3 * sizeof(pll_unode_t) + 3*sizeof(pll_tree_edge_t) )); /* nodes */
-    //            if (!(*nodes))
-    //            {
-    //                fprintf (stderr, "Could not allocate nodes (%lu bytes)\n", (programOptions.numNodes+ 1)  * (long) sizeof(TreeNode));
-    //                exit (1);
-    //            }
-    
-    //            for (i=0; i< programOptions.TotalNumSequences; i++){
-    //                treeTips[i]=NULL;
-    //            }
-    
-    //    treeRootInit = (TreeNode **) calloc(1, sizeof(TreeNode *)); /* nodes pointers */
-    //    if (!treeRootInit)
-    //    {
-    //        fprintf (stderr, "Could not allocate treeRootInit (%lu bytes)\n", 1  * (long) sizeof(TreeNode));
-    //        exit (1);
-    //    }
-    /* set everything to null */
+   
     for (i = 0; i < numNodes; i++)
     {
         p = new TreeNode(programOptions.numSites);
@@ -2094,8 +2098,7 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &population
         }
         i = i + 1;
     }
-    //    free (CumSamNodes);
-    //   free (activeGametes);
+   
     TreeNode *root = BuildTree(populations,
                                currentPop,
                                seed,
@@ -2180,7 +2183,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
         //fprintf (stderr, "\n\n> numParcialActiveGametes= %d \n", numParcialActiveGametes);
         if ( popI->numActiveGametes >= 2) {
             ThisRateCA = (double)  popI->numActiveGametes * ((double)  popI->numActiveGametes - 1) / 2.0;
-            ThisTimeCA_W = RandomExponential (ThisRateCA, seed) ;
+            ThisTimeCA_W = RandomExponential (ThisRateCA, seed, true) ;
             ThisTimeCA_V1 = Population::FmodelTstandard (currentTime, popI->timeOriginSTD, popI->delta);
             ThisTimeCA_V1 = ThisTimeCA_V1 + ThisTimeCA_W;
             // from standard time to model time, GstandardTmodel(V, T, delta)
@@ -3258,19 +3261,39 @@ void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
             cb_destroy(node->data);
     }
 }
+/***************************** LogUniformDensity *******************************/
+/* Log Uniform distribution density */
+
 long double LogUniformDensity(long double value, long double from, long double to)
 {
     double result;
     if (value >= exp(from) && value<= exp(to) )
     {
-        result = 1 / (value * (to-from));
-        return log(result);
+        result = -log(value) - log(to-from);
+        return result;
     }
     else
     {
         result=log(0);
         return result;
     }
+}
+
+
+
+/***************************** LogPowerLawDistibutionDensity *******************************/
+/* Log Power Law distribution density */
+long double LogPowerLawDistibutionDensity(long double a, long double value, long double from){
+    
+    if (value < from)
+        return log(0);
+   
+    long double firstTerm=log(a);
+    long double secondTerm=2*log(1+a*(value-from));
+    long double fullTerm= a / (1 + a*(value-from))*(1 + a*(value-from));
+    long double logfullTerm= firstTerm -secondTerm;
+    long double result=logfullTerm;
+    return result;
 }
 /***************************** ReadMCMCParametersFromFile *******************************/
 /* Reads parameter values from the parameter file */
@@ -3493,4 +3516,91 @@ int countTrueVariants (vector<TreeNode *> &nodes,  int numSites, int numCells, T
         allSites[site].numberDiffReference=numberDiff;
     }
     return nVariants;
+}
+long double computeParamPowerDistribQuantileUntil(long double areaUntilb, long double b, long double from)
+{
+    
+  if (areaUntilb >=0 && areaUntilb <=1)
+  {
+      long double result=areaUntilb/ ((1.0 -areaUntilb)*(b-from) );
+    return result;
+    
+   }
+  else
+    return 0;
+}
+void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions ){
+    //programOptions
+    programOptions.numberClonesKnown=YES;
+    programOptions.populationSampleSizesKnown = YES;
+    
+    programOptions.doUseGenotypes = YES;
+    programOptions.doUseFixedTree =NO;
+    programOptions.seed = 1248697;
+    
+    programOptions.mutationRate= 9.1e-8;
+    programOptions.doUsefixedMutationRate=0;
+    programOptions.doSimulateData=NO;
+    
+    programOptions.doUseFixedTree = YES;
+    
+    mcmcOptions.slidingWindowSizeTotalEffectPopSize = 20000;
+    mcmcOptions.slidingWindowSizeGrowtRate=0.01;
+    mcmcOptions.tuningParameter = 1;
+    
+    mcmcOptions.totalEffectPopSizefrom = 7;
+    mcmcOptions.totalEffectPopSizeto = 11;
+    //mcmcOptions.MutRatefrom = -20;
+    //mcmcOptions.MutRateto = -10;
+    mcmcOptions.MutRatefrom = -20;
+    mcmcOptions.MutRateto = -3;
+    mcmcOptions.Deltafrom = -4;
+    mcmcOptions.Deltato = 1;
+    mcmcOptions.fixedLambda=1;
+    mcmcOptions.priorsType =1; //0: log uniform, 1: exponential priors, 2: power law
+    mcmcOptions.kernelType = 0;//0: multiplier move, 1: normal
+    
+    
+  mcmcOptions.sigmaNormalKernelTotalEffectivePopulationSize = 300;
+    mcmcOptions.sigmaNormalKernelMutationRate =  0.0000000001 ;
+    mcmcOptions.sigmaNormalKernelGrowthRate=0.00001;
+    //mcmcOptions.lambdaExponentialPriorMutationRate=10000000;
+    mcmcOptions.lambdaExponentialPriorMutationRate=100;
+    //mcmcOptions.lambdaExponentialPriorMutationRate=0.0000001;
+    //mcmcOptions.lambdaExponentialPriorTotalEffectivePopSize=0.0001;
+    
+    //mcmcOptions.lambdaExponentialPriorGrowthRate= 0.01;
+    mcmcOptions.lambdaExponentialPriorGrowthRate= 0.01;
+    // mcmcOptions.lambdaExponentialPriorGrowthRate= 0.00001;
+    mcmcOptions.GrowthRatefrom = -20;
+    mcmcOptions.GrowthRateto = 1;
+    mcmcOptions.parameterPowerLawDistributionTotalEffectPopSize=0.9;
+    mcmcOptions.parameterPowerLawDistributionMutationRate= 5000;
+    mcmcOptions.parameterPowerLawDistributionGrowthRate=100;
+    mcmcOptions.parameterPowerLawDistributionTimeOriginInputOldestPop=1000;
+    mcmcOptions.sigmaNormalKernelTimeofOrigin=0.001;
+    mcmcOptions.lengthIntervalMultiplier = 0.7;
+    
+    programOptions.seqErrorRate=programOptions.sequencingError=0;
+    programOptions.dropoutRate=programOptions.ADOrate=0;
+    
+    mcmcOptions.paramMultiplierMoveTheta = 3;
+    mcmcOptions.paramMultiplierEffectPopSize = 2;
+    //mcmcOptions.Niterations = 10000000;
+    mcmcOptions.numberWarmUpIterations = mcmcOptions.Niterations / 2.0;
+    mcmcOptions.numberWarmUpIterations = 0;
+    mcmcOptions.useSequencesLikelihood =0;
+    
+    mcmcOptions.verbose = 0;
+    mcmcOptions.printChainStateEvery=10000;
+    mcmcOptions.paramMultiplierGrowthRate = parameterMultiplierMCMCmove(mcmcOptions.lengthIntervalMultiplier);
+    mcmcOptions.paramMultiplierTheta =parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplier);
+    
+   // mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop = 0.008;
+    mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop = 0.7;
+    mcmcOptions.paramMultiplierTimeOriginOldestPop =parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop);
+    
+    mcmcOptions.upperBoundTimeOriginInputOldestPop = 5;
+    
+   // mcmcOptions.splitThetaDeltaTmoves= true;
 }

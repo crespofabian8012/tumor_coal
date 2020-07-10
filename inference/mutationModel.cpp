@@ -5,12 +5,17 @@
 //  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
 //
 
+
 #include "mutationModel.h"
+
+
 
 #include "eigen.hpp"
 #include "random.h"
 
-void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *seed,  vector<int> &DefaultModelSites, int numDefaultModelSites, vector<int> &AltModelSites, int numAltModelSites, long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet,  vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4], long double  mutationRate)
+
+
+void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *seed,  std::vector<int> &DefaultModelSites, int numDefaultModelSites, std::vector<int> &AltModelSites, int numAltModelSites, long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet,  std::vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4], long double  mutationRate)
 {
     int   i, trials, numMutations, mutationsSoFar;
     long double   totalBranchSum;
@@ -42,14 +47,14 @@ void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *se
     mutationAdded=NO;
     while (mutationsSoFar < numMutations)
     {
-        i = RandomUniformTo(numModelSites, seed);
+        i = RandomUniformTo(numModelSites, seed, true);
         
         while (((doISMhaploid == NO)  && (allSites[i].numMutations != 0))  ||
                ((doISMhaploid == YES) && (genome == MATERNAL) && (allSites[i].numMutationsMaternal != 0)) ||
                ((doISMhaploid == YES) && (genome == PATERNAL) && (allSites[i].numMutationsPaternal != 0)))
         {
             //            fprintf (stderr, "\n\n site %d again!", i);
-            i = RandomUniformTo(numModelSites, seed);
+            i = RandomUniformTo(numModelSites, seed, true);
             if (trials++ > 1000*numModelSites)
             {
                 fprintf (stderr, "\n\n ERROR: after %d trials cannot find an unmuted site",1000*numModelSites);
@@ -66,7 +71,7 @@ void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *se
             SimulateISMforSite (treeRoot, genome, i, doISMhaploid, seed, totalTreeLength, allSites, numMU,cumMij,mutationRate ,  cumBranchLength,  uniform,  mutationAdded);
         }
         mutationsSoFar++;
-#ifdef MYDEBUG
+
         fprintf (stderr, "\nmutations = %d   mutations so far = %d\n",numMutations, mutationsSoFar);
         fprintf (stderr, "\n position = %d ",i);
         if (allSites[i].numMutations > 1)
@@ -79,8 +84,6 @@ void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *se
             if (allSites[i].numMutations > 0)
                 fprintf (stderr, "%2d[%d,%d,%d ] ",i, allSites[i].numMutations, allSites[i].numMutationsMaternal, allSites[i].numMutationsPaternal);
         }
-#endif
-        
     }
 }
 
@@ -646,9 +649,9 @@ void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr>
                 
                 
                 if (genome ==MATERNAL )
-                    newstate =p->maternalSequence[site]=ChooseUniformState (Pij[ancstate], seed);
+                    newstate =p->maternalSequence[site]=ChooseUniformState (Pij[ancstate], seed, true);
                 else// paternal;
-                    newstate =p->paternalSequence[site]=ChooseUniformState (Pij[ancstate], seed);
+                    newstate =p->paternalSequence[site]=ChooseUniformState (Pij[ancstate], seed, true);
                 //newstate = data[genome][cell][site] = ChooseUniformState (Pij[ancstate], seed);
                 
                 if (newstate != ancstate)
@@ -727,7 +730,7 @@ void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphab
     
     /* choose first trinucleotide */
     
-    chosenTriNucleotide = ChooseUniformState(triNucFreq, seed);
+    chosenTriNucleotide = ChooseUniformState(triNucFreq, seed, true);
     
     
     
@@ -783,7 +786,7 @@ void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphab
         
         
         
-        nextNucleotide = ChooseUniformState(prob4, seed);
+        nextNucleotide = ChooseUniformState(prob4, seed, true);
         
         p->maternalSequence[site]=p->paternalSequence[site]= allSites[site].referenceAllele = nextNucleotide;
         
@@ -817,7 +820,7 @@ void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rate
     
     if (rateVarAmongSites == YES)
         for (i=0; i<numSites; i++)
-            allSites[i].rateMultiplier = RandomGamma (alphaSites, seed) / alphaSites;
+            allSites[i].rateMultiplier = RandomGamma (alphaSites, seed, true) / alphaSites;
     
     if (propAltModelSites == 0)/* only default model (ISM diploid) sites */
     {

@@ -5,7 +5,6 @@
 //  Created by David Posada on 21/11/2017.
 //  Everything below is shamelessly taken from Yang's Paml package */
 //
-
 #include "eigen.hpp"
 
 int EigenREV (double mr, double Qij[], double Root[], double Cijk[])

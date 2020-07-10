@@ -1,9 +1,6 @@
-//
-//  constants.h
-//  tumor_coal
-//
-//  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
-//
+/*
+ * constants definition
+ */
 
 #ifndef constants_h
 #define constants_h

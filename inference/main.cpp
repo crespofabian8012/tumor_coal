@@ -1,3 +1,27 @@
+/*################################################################################
+ ##
+ ##   Copyright (C) 2018-2020 Fausto Fabian Crespo Fernandez
+ ##
+ ##   This file is part of the tumor_coal C++ library.
+ ##
+ ##   Licensed under the Apache License, Version 2.0 (the "License");
+ ##   you may not use this file except in compliance with the License.
+ ##   You may obtain a copy of the License at
+ ##
+ ##       http://www.apache.org/licenses/LICENSE-2.0
+ ##
+ ##   Unless required by applicable law or agreed to in writing, software
+ ##   distributed under the License is distributed on an "AS IS" BASIS,
+ ##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ##   See the License for the specific language governing permissions and
+ ##   limitations under the License.
+ ##
+ ################################################################################*/
+
+/*
+ * MCMC inference of scaled growth rates
+ */
+
 #include <iostream>
 #include <string>
 #include <stdarg.h>
@@ -27,10 +51,12 @@ extern "C"
 #include <search.h>
 #include <time.h>
 using namespace std;
+//#include <gsl/gsl_sf_bessel.h>
+//#include <gsl/gsl_randist.h>
+//#include <gsl/gsl_cdf.h>
 
 int main(int argc, char* argv[] )
 {
-
     FILE *input_file;
     char* input_path;
     //    char *fileName; //="Houetal_HS.fasta";
@@ -43,16 +69,32 @@ int main(int argc, char* argv[] )
     Files files;
     FilePaths filePaths;
     MCMCoptions mcmcOptions;
-    vector<double> varTimeGMRCA;
-    if (argc <= 2)
+    
+    mcmcOptions.noData = true;
+    mcmcOptions.useGSLRandomGenerator = true;
+    mcmcOptions.splitThetaDeltaTmoves=false;
+    
+//    const gsl_rng_type * T;
+//    gsl_rng * r;
+//    gsl_rng_env_setup();
+//    T= gsl_rng_ranmar;
+//    r = gsl_rng_alloc (T);
+    setDefaultOptions(programOptions, mcmcOptions);
+    
+    if (argc <= 2 )//only a path to a MCMC configuration file
         input_path = argv[1];
-    else{
-        fprintf (stderr, "\nERROR: No parameters specified (use command  parameter file)");
-        PrintUsage();
+    else
+    {//many options from console
+        
+        if (!mcmcOptions.noData)
+        {
+            fprintf (stderr, "\nERROR: No parameters specified (use command  parameter file)");
+            PrintUsage();
+        }
     }
     
-    // 1. call function to parse the input file
-    if (argc <= 2)
+    // 1. call function to parse the MCMC configuration file
+    if (argc <= 2)//only a path to a MCMC configuration file
     {
         if ((input_file = freopen(input_path, "r", stdin)) != NULL)
         {
@@ -60,94 +102,65 @@ int main(int argc, char* argv[] )
         }
         else
         {
-            fprintf (stderr, "\nERROR: No parameters specified (use command line or parameter file)");
-            exit(-1);
+            if (!mcmcOptions.noData)
+            {
+                
+                fprintf (stderr, "\nERROR: No parameters specified (use command line or parameter file)");
+                exit(-1);
+            }
         }
     }
-    programOptions.numberClonesKnown=YES;
-    programOptions.populationSampleSizesKnown = YES;
-    mcmcOptions.slidingWindowSizeTotalEffectPopSize = 20000;
-    mcmcOptions.slidingWindowSizeGrowtRate=0.01;
-    programOptions.doUseGenotypes = YES;
-    programOptions.doUseFixedTree =NO;
-    programOptions.seed = 1248697;
+   
     
-    programOptions.mutationRate= 9.1e-8;
-    programOptions.doUsefixedMutationRate=0;
-    programOptions.doSimulateData=NO;
+   // std::map<std::string,int> tipsLabelling;
+    //std::map<pll_unode_t, Population> tipsAssign;
     
-    std::map<std::string,int> tipsLabelling;
-    std::map<pll_unode_t, Population> tipsAssign;
-    
-    mcmcOptions.tuningParameter = 1;
-    
-    mcmcOptions.totalEffectPopSizefrom = 7;
-    mcmcOptions.totalEffectPopSizeto = 11;
-    mcmcOptions.MutRatefrom = -20;
-    mcmcOptions.MutRateto = -13;
-    mcmcOptions.Deltafrom = -4;
-    mcmcOptions.Deltato = 1;
-    mcmcOptions.fixedLambda=1;
-    
-    mcmcOptions.GrowthRatefrom = -20;
-    mcmcOptions.GrowthRateto = log(0.2);
-    //mcmcOptions.GrowthRateto = log(log(2));//maximum growth rate of log(2) = 0.6931472
-    
-    programOptions.seqErrorRate=programOptions.sequencingError=0;
-    programOptions.dropoutRate=programOptions.ADOrate=0;
-    
-    vector<int> sampleSizes(programOptions.numClones);
+    std::vector<int> sampleSizes(programOptions.numClones);
     
     //2. initialize data structures
     //    /* set file dirs and names */
     InitFilesPathsOptions(filePaths, programOptions);
     //
     //    //3. do inference
-    
-    // programOptions.numClones = 3;
-    
-    //    //char *fileName ="Nietal_HS.fasta";
-    
-    fileNameFasta = filePaths.inputGenotypeFileFasta;
-    ReadParametersFromFastaFile(fileNameFasta,  programOptions);
-    vector<vector<int> > ObservedData;
+ 
     
     char *ObservedCellNames[programOptions.numCells];
-    ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
+    pll_msa_t *msa;
     
-    programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
-    programOptions.numCells = programOptions.TotalNumSequences;
-    programOptions.doUseFixedTree = YES;
-    
-    if (programOptions.numberClonesKnown==YES)
+   
+        if (mcmcOptions.useSequencesLikelihood ==1)
+        {
+            fileNameFasta = filePaths.inputGenotypeFileFasta;
+        ReadParametersFromFastaFile(fileNameFasta,  programOptions);
+        std::vector<std::vector<int> > ObservedData;
+        
+        ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
+        programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
+        programOptions.numCells = programOptions.TotalNumSequences;
+        fileNamePhylip =filePaths.inputGenotypeFilePhylip;
+        msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
+        if (!msa)
+            fprintf (stderr, "Error reading phylip file \n");
+        }
+        treefileName = filePaths.inputTreeFile;
+    if ((treefileName != NULL) && (treefileName[0] == '\0'))
     {
-       // mcmcOptions.totalEffectPopSizefrom = round(log(10*programOptions.numCells));
-       // mcmcOptions.totalEffectPopSizeto = round(log(200*programOptions.numCells ));
+        fprintf (stderr, "\nERROR: No tree file  specified (use command line or parameter file)");
+        exit(-1);
     }
+   
     
-    fileNamePhylip =filePaths.inputGenotypeFilePhylip;
-    pll_msa_t *msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
-    if (!msa)
-        fprintf (stderr, "Error reading phylip file \n");
-    
-    vector<Chain*> chains(mcmcOptions.numChains);
-    
-    treefileName = filePaths.inputTreeFile;
-
-    string healthyTipLabel = "healthycell";
+    std::string healthyTipLabel = "healthycell";
     programOptions.healthyTipLabel ="healthycell";
     
     int currentIteration;
-    //mcmcOptions.thinning  = 5000;
-    //mcmcOptions.maxNumberProposalAttempts=10;
     int sampleEvery = mcmcOptions.thinning;
-    mcmcOptions.paramMultiplierMoveTheta = 3;
-    mcmcOptions.paramMultiplierEffectPopSize = 2;
-    //mcmcOptions.Niterations = 10000000;
-    mcmcOptions.numberWarmUpIterations = mcmcOptions.Niterations / 2.0;
     
-    mcmcOptions.doInferenceWithoutData =0;
-    //candidate for parallelizing
+    vector<Chain*> chains(mcmcOptions.numChains);
+
+    
+    //parallelizing
+    float start = clock();
 #pragma parallel for default(shared) private(chainNumber, currentIteration) firstprivate(files)
     for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
     {
@@ -158,16 +171,17 @@ int main(int argc, char* argv[] )
         chains.at(chainNumber)->PrepareFiles(filePaths, programOptions, chains.at(chainNumber)->files, chainNumber);
         chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,
                                                        chains.at(chainNumber)->files );
-      
+        //chains.at(chainNumber)->iniListMoves();
         for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
         {
-            fprintf (stderr, "\n Chain #%d, Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration );
+            if (currentIteration % mcmcOptions.printChainStateEvery == 0 || currentIteration >= (mcmcOptions.Niterations-1))
+                fprintf (stderr, "\n Chain #%d, Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration +1);
             chains.at(chainNumber)->currentNumberIerations =currentIteration;
             chains.at(chainNumber)->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, chains.at(chainNumber)->files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
             
             if (currentIteration % sampleEvery == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
             {
-                chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
+                chains.at(chainNumber)->writeMCMCState(  currentIteration+1, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
                 //in the future i will write trees to a nexus file
                 ////PrintTrees(currentIteration, &(chains[chainNumber].root), 
             }
@@ -175,17 +189,42 @@ int main(int argc, char* argv[] )
         chains.at(chainNumber)->currentNumberIerations =currentIteration;
         if (currentIteration >= mcmcOptions.Niterations -1)//last iteration
             {
-                chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
+              //  chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
                 
                 fprintf (stderr, "\n Number accepted moves %d, number of rejected moves %d \n", chains.at(chainNumber)->totalAccepted,chains.at(chainNumber)->totalRejected );
+                
+                string priorsType;
+                if (mcmcOptions.priorsType==0)
+                    priorsType="log uniform";
+                else if(mcmcOptions.priorsType==1)
+                    priorsType="exponential";
+                else
+                    priorsType="power law";
+                
+                string kernelType;
+                if (mcmcOptions.kernelType==0)
+                    kernelType="multiplier";
+                else //(mcmcOptions.priorsType==1)
+                    kernelType="normal";
+              
+                 printf ("\n Use of %s priors and %s kernels \n", priorsType.c_str(), kernelType.c_str());
             
             fclose(chains.at(chainNumber)->files.fplog);
             //chains.at(chainNumber)->closeFiles(filePaths,programOptions, files, chainNumber);
         }
     }
     //close files
-    //fclose(files.fplog);
-    pll_msa_destroy(msa);
+    if (!mcmcOptions.noData && mcmcOptions.useSequencesLikelihood ==1)
+       pll_msa_destroy(msa);
+    
+    fprintf(stderr, "\n\n*** Program finished ***");
+    /* execution time */
+    double secs = (double)(clock() - start) / CLOCKS_PER_SEC;
+    
+    fprintf(stderr, "\n\n_________________________________________________________________");
+    fprintf(stderr, "\nTime processing: %G seconds\n", secs);
+    fprintf(stderr, "\nIf you need help type '-?' in the command line of the program\n");
+    return 0;
     return 0;
 }
 

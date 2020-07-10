@@ -1,16 +1,34 @@
-//
-//  output_functions.cpp
-//  simul
-//
-//  Created by Fausto Fabian Crespo Fernandez on 2019-10-08.
-//
+/*################################################################################
+ ##
+ ##   Copyright (C) 2018-2020 Fausto Fabian Crespo Fernandez
+ ##
+ ##   This file is part of the tumor_coal C++ library.
+ ##
+ ##   Licensed under the Apache License, Version 2.0 (the "License");
+ ##   you may not use this file except in compliance with the License.
+ ##   You may obtain a copy of the License at
+ ##
+ ##       http://www.apache.org/licenses/LICENSE-2.0
+ ##
+ ##   Unless required by applicable law or agreed to in writing, software
+ ##   distributed under the License is distributed on an "AS IS" BASIS,
+ ##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ##   See the License for the specific language governing permissions and
+ ##   limitations under the License.
+ ##
+ ################################################################################*/
 
+/*
+ * output functions
+ */
 #include "output_functions.hpp"
-
 #include "utils.hpp"
+
+
 
 /***************************** PrintUsage *******************************/
 /* Prints a short description of program usage */
+using namespace std;
 void PrintUsage()
 {
     fprintf (stderr, "\n\nUsage: %s%s []", PROGRAM_NAME, VERSION_NUMBER);
@@ -199,7 +217,7 @@ void WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cel
 /* Prints to timesfile a detailed description of
  the tree: nodes, times, branch lengths */
 
-void PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, vector<TreeNode *> &nodes,  int thereisOutgroup)
+void PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector<TreeNode *> &nodes,  int thereisOutgroup)
 {
     /* there isn't recombination */
     fprintf (fpTimes, "\n\nDataset %d", replicate + 1);
@@ -214,7 +232,7 @@ void PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, vector<Tree
 /* Prints to timesfile a detailed description of
  the tree: nodes, times, branch lengths */
 
-void PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  vector<TreeNode *> &nodes,  int thereisOutgroup)
+void PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vector<TreeNode *> &nodes,  int thereisOutgroup)
 {
     /* there isn't recombination */
     fprintf (fpTimes2, "\n\nDataset %d", replicate + 1);
@@ -229,7 +247,7 @@ void PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  vector<Tr
 /********************** ListTimes ************************/
 /* Writes a given tree description from ListTimes   */
 
-void ListTimes (int j, double mutationRate, vector<TreeNode *> &nodes, FILE *fpTimes, int thereisOutgroup)
+void ListTimes (int j, double mutationRate, std::vector<TreeNode *> &nodes, FILE *fpTimes, int thereisOutgroup)
 {
     /* It does not list superfluous nodes */
     TreeNode  *p;
@@ -273,7 +291,7 @@ void ListTimes (int j, double mutationRate, vector<TreeNode *> &nodes, FILE *fpT
 /********************** ListTimes2 ************************/
 /* Writes a given tree description from ListTimes   */
 
-void ListTimes2 (int j,  double mutationRate, vector<TreeNode *> &nodes,  FILE *fpTimes2, int thereisOutgroup)
+void ListTimes2 (int j,  double mutationRate, std::vector<TreeNode *> &nodes,  FILE *fpTimes2, int thereisOutgroup)
 {
     /* It does not list superfluous nodes */
     TreeNode  *p;
@@ -334,7 +352,7 @@ TreeNode *getHealthyTip(TreeNode *treeRootInit)
 
 /***************************** PrintTrueFullHaplotypes *******************************/
 /* Prints observed/ML haplotypes for all sites (variable + invariable) to a file */
-void PrintTrueFullHaplotypes (FILE *fp, vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName)
+void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName)
 {
     int         i, j;
     char *temp;

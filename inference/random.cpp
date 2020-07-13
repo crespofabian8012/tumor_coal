@@ -335,7 +335,7 @@ void  randomDirichletFromVector (vector<long double> alpha, vector<long double> 
 {   int i;
     long double sum=0.0;
     long double current;
-    long int seed =0;
+    //long int seed =0;
     // *outputVector = malloc(vectorSize * sizeof(double));
     // if (*outputVector == NULL)
     //     return;
@@ -370,7 +370,7 @@ void   randomDirichletFromGsl(int vectorSize,  double  alpha[], long double  *th
     T = gsl_rng_ranlux389; // Generator setup
     T = gsl_rng_default;
     r = gsl_rng_alloc(T);
-    //gsl_rng_set(r, mySeed);
+    gsl_rng_set(r, mySeed);
     //unsigned long mySeed2 =gsl_rng_uniform_int( r, mySeed);
     //unsigned long mySeed2 = ((int)randomUniformFromGsl() )* mySeed;
     //gsl_rng_set(r, mySeed2);

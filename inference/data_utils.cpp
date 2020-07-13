@@ -1,3 +1,23 @@
+/*################################################################################
+ ##
+ ##   Copyright (C) 2018-2020 Fausto Fabian Crespo Fernandez
+ ##
+ ##   This file is part of the tumor_coal C++ library.
+ ##
+ ##   Licensed under the Apache License, Version 2.0 (the "License");
+ ##   you may not use this file except in compliance with the License.
+ ##   You may obtain a copy of the License at
+ ##
+ ##       http://www.apache.org/licenses/LICENSE-2.0
+ ##
+ ##   Unless required by applicable law or agreed to in writing, software
+ ##   distributed under the License is distributed on an "AS IS" BASIS,
+ ##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ##   See the License for the specific language governing permissions and
+ ##   limitations under the License.
+ ##
+ ################################################################################*/
+
 //  data_utils.cpp
 //  tumor_coal
 //
@@ -731,20 +751,25 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     int    HEALTHY_ROOT, TUMOR_ROOT;
     int    numISMdeletions, numISMCNLOH;
     int cumNumMUperTree;
-    int     numAltModelSites = 0, numDefaultModelSites = 0, numISMmutations = 0, altModel = 0;
+    int     numAltModelSites = 0, numDefaultModelSites = 0, numISMmutations = 0;
+    //int altModel = 0;
     
     double cumfreq[4];
     long double cumMij[4][4];
     double Eij[4][4];
     double cumEij[4][4];
     
-    double    kappa = 0.0, beta = 0.0;
+    //double    kappa = 0.0, beta = 0.0;
     long double freqR = 0.0, freqY = 0.0, freqAG = 0.0, freqCT = 0.0;
-    double    Rmat[6], NRmat[12], Cijk[256], Root[4];
+    //double    Rmat[6], NRmat[12];
+    double Cijk[256], Root[4];
     long double *triNucFreq=NULL;
-    double   cumNumSNVs = 0, cumNumMU = 0, cumNumDEL = 0, cumNumCNLOH = 0, cumCountMLgenotypeErrors = 0;
-    double cumNumMUSq = 0, cumNumSNVsSq = 0, cumNumDELSq = 0, cumNumCNLOHSq = 0;
-    CellStr     *cell;
+    //double   cumNumSNVs = 0;
+    double cumNumMU = 0;
+    //double cumNumDEL = 0, cumNumCNLOH = 0, cumCountMLgenotypeErrors = 0;
+    double cumNumMUSq = 0;
+    //double cumNumSNVsSq = 0, cumNumDELSq = 0, cumNumCNLOHSq = 0;
+    //CellStr     *cell;
     
     
     if ( programOptions.alphabet == DNA)
@@ -803,7 +828,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
     int        numCA = 0, numMIG = 0;
     int dataSetNum;
     long int seedFirst =  programOptions.seed;
-    int  numMU = 0, numDEL = 0, numCNLOH = 0, numProposedMU = 0, numSNVs = 0, numFixedMutations = 0, numSNVmaternal = 0;
+    int  numMU = 0, numDEL = 0, numProposedMU = 0, numFixedMutations = 0, numSNVmaternal = 0;
     programOptions.doUseObservedCellNames=NO;
     //int ***data;
     ValidateParameters(programOptions,CloneNameBegin , CloneSampleSizeBegin, ClonePopSizeBegin);
@@ -1576,7 +1601,7 @@ TreeNode *BuildTree(vector<Population* > &populations,
         //        healthyRoot->time = currentTime +  transformingBranchLength/mutationRate;
         healthyRoot->time = currentTime;
         
-        int transformingBranchLength=1.001;
+        //int transformingBranchLength=1.001;
         // healthyRoot->time = p->time * transformingBranchLength ;
         healthyRoot->timePUnits = currentTime * healthyRoot->effectPopSize;
         
@@ -2010,15 +2035,13 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, vector<Population *> &population
                                 TreeNode    *treeRootInit
                                 ) {
     
-    int      c, d, i, j, w, k, m, cumIndivid, *activeGametes = NULL, isCoalescence, whichInd,
-    firstInd, secondInd, newInd, eventNum, numActiveGametes, foundSuperflousNode,
+    int      c,  i,  m, cumIndivid, isCoalescence, whichInd,
+     newInd, eventNum, numActiveGametes,
     isMigration, whichClone, currentNumberAliveClones;
     int     labelNodes;
     double    currentTime, eventTime;
-    TreeNode  *p, *q, *r;
-    double    ran;
-    double    *cumPopulPart;
-    int     *numParcialActiveGametes, *CumSamNodes;
+    TreeNode  *p;
+    int     *numParcialActiveGametes;
     int         *fromClone;
     int         ThisCloneNumber, ThisOriginCloneNumber;
     double      minValue;
@@ -2144,21 +2167,19 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                         double &currentTime,
                         int &eventNum)
 {
-    int  c, d, i, j, w, k, m, cumIndivid, isCoalescence, whichInd,
-    firstInd, secondInd, newInd,  foundSuperflousNode,
-    isMigration, whichClone, currentNumberAliveClones;
+    int   i, k, isCoalescence,
+    firstInd, newInd,
+    isMigration, whichClone;
     double     eventTime;
-    TreeNode  *p, *q, *r;
-    double    ran;
-    double    *cumPopulPart;
+    TreeNode  *p,  *r;
+  
     eventNum = 0;
-    int numSimClones = 0;
+  
     double ThisRateCA = 0.0;
     double ThisTimeCA_W = 0.0;
     double ThisTimeCA_V1 = 0.0;
     double ThisTimeCA_V2 = 0.0;
     int numParcialActiveGametes;
-    int choosePairIndividuals;
     
     numParcialActiveGametes = popI->numActiveGametes;
     //    double CloneDelta = popI->delta;
@@ -2451,7 +2472,6 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
     char *left=NULL;
     char *right=NULL;
     char *outgroup =NULL;
-    char *temp =NULL;
     if (p != NULL)
     {
         if (p->isOutgroup == YES)     /* Outgroup */
@@ -3290,7 +3310,7 @@ long double LogPowerLawDistibutionDensity(long double a, long double value, long
    
     long double firstTerm=log(a);
     long double secondTerm=2*log(1+a*(value-from));
-    long double fullTerm= a / (1 + a*(value-from))*(1 + a*(value-from));
+    //long double fullTerm= a / (1 + a*(value-from))*(1 + a*(value-from));
     long double logfullTerm= firstTerm -secondTerm;
     long double result=logfullTerm;
     return result;
@@ -3301,14 +3321,13 @@ long double LogPowerLawDistibutionDensity(long double a, long double value, long
 void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCoptions &mcmcOptions)
 
 {
-    int   j, z;
+    int   j;
     char  ch;
     float   argument;
-    double    sumPi;
-    double argumentDouble;
-    double argumentDouble1;
+
+
     int argumentInt;
-    long int argumentLongInt;
+
     string argumentString;
     
     /* Used:  */

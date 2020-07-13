@@ -51,26 +51,23 @@ extern "C"
 #include <search.h>
 #include <time.h>
 using namespace std;
-//#include <gsl/gsl_sf_bessel.h>
-//#include <gsl/gsl_randist.h>
-//#include <gsl/gsl_cdf.h>
+
 
 int main(int argc, char* argv[] )
 {
     FILE *input_file;
     char* input_path;
-    //    char *fileName; //="Houetal_HS.fasta";
-    //    char *fileNamePhylip ;//="Houetal_HS1.phylips";
+ 
     char *fileNameFasta ;//= argv[2];
     char *fileNamePhylip ;//= argv[3];
     char *treefileName; //= argv[4];
     
     ProgramOptions programOptions;
-    Files files;
+    //Files files;
     FilePaths filePaths;
     MCMCoptions mcmcOptions;
     
-    mcmcOptions.noData = true;
+    mcmcOptions.noData = false;
     mcmcOptions.useGSLRandomGenerator = true;
     mcmcOptions.splitThetaDeltaTmoves=false;
     
@@ -80,7 +77,13 @@ int main(int argc, char* argv[] )
 //    T= gsl_rng_ranmar;
 //    r = gsl_rng_alloc (T);
     setDefaultOptions(programOptions, mcmcOptions);
-    
+    if (argc == 1 )
+    {
+      
+            fprintf (stderr, "\nERROR: No parameters specified (use command  parameter file)");
+            PrintUsage();
+        
+    }
     if (argc <= 2 )//only a path to a MCMC configuration file
         input_path = argv[1];
     else
@@ -161,37 +164,42 @@ int main(int argc, char* argv[] )
     
     //parallelizing
     float start = clock();
-#pragma parallel for default(shared) private(chainNumber, currentIteration) firstprivate(files)
-    for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
+ omp_set_num_threads(mcmcOptions.numChains);
+    // vector<gsl_rng_alloc > random_generators;
+//#pragma omp parallel
     {
-        
-        chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  treefileName, healthyTipLabel);
-        chains.at(chainNumber)->chainNumber =chainNumber;
-        
-        chains.at(chainNumber)->PrepareFiles(filePaths, programOptions, chains.at(chainNumber)->files, chainNumber);
-        chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,
-                                                       chains.at(chainNumber)->files );
-        //chains.at(chainNumber)->iniListMoves();
-        for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
+ //       int ID = omp_get_thread_num();
+//#pragma omp for
+        for(int chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
         {
-            if (currentIteration % mcmcOptions.printChainStateEvery == 0 || currentIteration >= (mcmcOptions.Niterations-1))
-                fprintf (stderr, "\n Chain #%d, Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration +1);
-            chains.at(chainNumber)->currentNumberIerations =currentIteration;
-            chains.at(chainNumber)->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, chains.at(chainNumber)->files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
+            chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, &programOptions.seed, ObservedCellNames, msa,  treefileName, healthyTipLabel);
+            chains.at(chainNumber)->chainNumber =chainNumber;
             
-            if (currentIteration % sampleEvery == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
+            chains.at(chainNumber)->PrepareFiles(filePaths, programOptions, chains.at(chainNumber)->files, chainNumber);
+            chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,
+                                                           chains.at(chainNumber)->files );
+            chains.at(chainNumber)->initListMoves();
+            for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
             {
-                chains.at(chainNumber)->writeMCMCState(  currentIteration+1, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
-                //in the future i will write trees to a nexus file
-                ////PrintTrees(currentIteration, &(chains[chainNumber].root), 
-            }
-        }
-        chains.at(chainNumber)->currentNumberIerations =currentIteration;
-        if (currentIteration >= mcmcOptions.Niterations -1)//last iteration
-            {
-              //  chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
+                if (currentIteration % mcmcOptions.printChainStateEvery == 0 || currentIteration >= (mcmcOptions.Niterations-1))
+                    fprintf (stderr, "\n Chain #%d, Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration +1);
+                chains.at(chainNumber)->currentNumberIerations =currentIteration;
+                chains.at(chainNumber)->runChain(mcmcOptions,  &(programOptions.seed),  filePaths, chains.at(chainNumber)->files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
                 
-                fprintf (stderr, "\n Number accepted moves %d, number of rejected moves %d \n", chains.at(chainNumber)->totalAccepted,chains.at(chainNumber)->totalRejected );
+                if (currentIteration % sampleEvery == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
+                {
+                    chains.at(chainNumber)->writeMCMCState(  currentIteration+1, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
+                    //in the future i will write trees to a nexus file
+                    ////PrintTrees(currentIteration, &(chains[chainNumber].root),
+                }
+            }
+            chains.at(chainNumber)->currentNumberIerations =currentIteration;
+            if (currentIteration >= mcmcOptions.Niterations -1)//last iteration
+            {
+                //  chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
+               
+                
+                chains.at(chainNumber)->printMovesSummary();
                 
                 string priorsType;
                 if (mcmcOptions.priorsType==0)
@@ -206,13 +214,17 @@ int main(int argc, char* argv[] )
                     kernelType="multiplier";
                 else //(mcmcOptions.priorsType==1)
                     kernelType="normal";
-              
-                 printf ("\n Use of %s priors and %s kernels \n", priorsType.c_str(), kernelType.c_str());
-            
-            fclose(chains.at(chainNumber)->files.fplog);
-            //chains.at(chainNumber)->closeFiles(filePaths,programOptions, files, chainNumber);
+                
+                printf ("\n Use of %s priors and %s kernels \n", priorsType.c_str(), kernelType.c_str());
+                
+                fclose(chains.at(chainNumber)->files.fplog);
+                //chains.at(chainNumber)->closeFiles(filePaths,programOptions, files, chainNumber);
+            }
         }
+        
     }
+    //for default(shared) private(chainNumber, currentIteration) firstprivate(files)
+
     //close files
     if (!mcmcOptions.noData && mcmcOptions.useSequencesLikelihood ==1)
        pll_msa_destroy(msa);

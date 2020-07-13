@@ -1,15 +1,12 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgsl -fopenmp  -std=c++17  -stdlib=libc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++17 -stdlib=libc++")
 include_directories(/usr/local/opt/llvm/include ${CMAKE_SOURCE_DIR}/install/include/ /usr/local/include/
 /usr/local/include/gsl )
 
 message(${CMAKE_SOURCE_DIR})
 
-
 file( GLOB SRCS *.cpp *.hpp *.c *.h)
 add_executable(run ${SRCS}) # create the executable file
-add_library(libTumorCoal STATIC ${SRCS})
-
-
+add_library(libTumorCoal STATIC ${SRCS}  )
 
 find_package (PkgConfig REQUIRED)
 find_package (GSL REQUIRED)
@@ -26,12 +23,10 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-
-
-target_link_libraries(run ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a ${Boost_LIBRARIES}  GSL::gsl OpenMP::OpenMP_CXX)
+target_link_libraries(run ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a ${Boost_LIBRARIES} GSL::gsl  OpenMP::OpenMP_CXX)
 
 target_link_libraries(libTumorCoal
-    ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a  GSL::gsl OpenMP::OpenMP_CXX)
+    ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a   GSL::gsl OpenMP::OpenMP_CXX)
 message(${CMAKE_SOURCE_DIR})
 INSTALL(TARGETS run DESTINATION ${CMAKE_SOURCE_DIR}/)
 INSTALL(TARGETS libTumorCoal DESTINATION bin)

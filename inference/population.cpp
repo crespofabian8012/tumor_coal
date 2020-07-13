@@ -479,11 +479,14 @@ long double Population::LogDensityTime(long double u){
     return result;
 }
 long double Population::DensityTimeSTD(long double u, long double from){
-    long double term, result;
+    long double  result=1.0;
+    long double term1 = exp(-1.0*delta*u);
+    long double term2 = delta * term1;
+    long double term3 = 1.0-term1;
     if (u >=from){
         
-        term=delta*exp(-1.0*delta*(x))/(1-exp(-1.0*delta*(x)));
-        result = delta*term * exp(-1*term) / (1-exp(-1.0*delta*(x)));
+        result = delta * term2 /(term3 * term3);
+        result = result * exp( -1 * term2/term3);
     }
     else {
         result=0;

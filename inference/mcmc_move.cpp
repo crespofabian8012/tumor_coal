@@ -198,8 +198,11 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
     if (isInvalidMove){
         rollbackMove(programOptions,mcmcOptions);
         this->numberReject++;
-        if (mcmcOptions.verbose>=2)
+       // printf("\n Number of invalid moves %s \n", nameMove.c_str());
+        isInvalidMove=false;
+        if (mcmcOptions.verbose>=2){
             printf("\n Rejected new move %s \n", nameMove.c_str());
+        }
         return;
     }
     
@@ -267,7 +270,7 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
     Chain *chain=getChain();
     int i=0;
     Population *popI;
-    long double *proportionsVectorArray;
+    //long double *proportionsVectorArray;
     std::vector<long double> effectPopSizesvector(chain->numClones);
     bool allPopulationPopSizesSet=false;
     //double totalSampleSize= chain->totalSampleSize();
@@ -633,7 +636,6 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove(ProgramOptions &programO
             popI->numIncomingMigrations=popI->oldimmigrantsPopOrderedByModelTime.size();
             popI->oldimmigrantsPopOrderedByModelTime.clear();
         }
-        
       }
     }
 }
@@ -660,7 +662,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     else
     {
         chain->proposedrMRCAPopulation=chain->chooseNewTimeofOriginOnEdge(pop,mcmcOptions);
-         if (pop->timeOriginInput <pop->lowerBoundTimeOriginInput)
+         if (pop->timeOriginInput < pop->lowerBoundTimeOriginInput)
              isInvalidMove = true;
     }
     bool stillTheOldestPop=  chain->isOldestPopulation(pop, chain->proposedrMRCAPopulation) ;
@@ -683,6 +685,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
         
     }
     else{//still the oldest population
+        //save current dictionary MRCA-population
         chain->currentrMRCAPopulation.clear();
         chain->currentrMRCAPopulation.insert(chain->rMRCAPopulation.begin(), chain->rMRCAPopulation.end());
         
@@ -716,7 +719,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
 long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
-    TreeNode *u, *v;
+   
     std::vector<pair<double, pll_tree_edge_t *> > currentAvailableEdges;
     std::vector<pair<double, pll_tree_edge_t *> > proposedAvailableEdges;
     
@@ -772,17 +775,20 @@ long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(Prog
         {
             if (pop->timeOriginInput >=pop->lowerBoundTimeOriginInput)
             {
-             sumLogNumerators= pop->LogDensityTimeSTDFrom( pop->timeOriginSTD, 0);
-             sumLogDenominators=pop->LogDensityTimeSTDFrom( pop->oldTimeOriginSTD, 0);
+            // sumLogNumerators= pop->LogDensityTime2( pop->timeOriginSTD);
+            // sumLogDenominators=pop->LogDensityTime2( pop->oldTimeOriginSTD);
+            sumLogNumerators=pop->LogDensityTimeSTDFrom(pop->timeOriginSTD,0);
+            sumLogDenominators=pop->LogDensityTimeSTDFrom( pop->oldTimeOriginSTD,0);
                 
              if(mcmcOptions.kernelType ==0)//multiplier move
              {
-                    sumLogNumerators += log(( mcmcOptions.upperBoundTimeOriginInputOldestPop-pop->timeOriginInput)/ ( mcmcOptions.upperBoundTimeOriginInputOldestPop-pop->oldTimeOriginInput));
-                    sumLogNumerators += log((pop->timeOriginInput - pop->lowerBoundTimeOriginInput)/ (pop->oldTimeOriginInput-pop->lowerBoundTimeOriginInput));
+                    sumLogNumerators += log((pop->timeOriginSTD)/ ( pop->oldTimeOriginSTD));
+                 
               }
             }
             else
             {
+                 fprintf (stderr, "\n The move is invalid you should not compute acceptance rate \n");
                   sumLogNumerators= log(0);
                   sumLogDenominators= log(0);
             }
@@ -807,9 +813,8 @@ long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(Prog
 }
 void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
-    Chain *chain=getChain();
-    int i=0;
-    Population *popI;
+    //Chain *chain=getChain();
+  
     //save information for the population
     //pop->oldFatherPop =  pop->FatherPop;
     //pop->oldCoalescentEventTimes = pop->CoalescentEventTimes;
@@ -849,7 +854,7 @@ void NewTimeOriginOnEdgeforPopulationMove::rollbackMove(ProgramOptions &programO
 {
     Chain *chain=getChain();
  
-    Population *popI;
+    //Population *popI;
     //save information for the population
     
     pop->FatherPop->immigrantsPopOrderedByModelTime = pop->FatherPop->oldimmigrantsPopOrderedByModelTime;
@@ -897,8 +902,8 @@ long double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(Prog
     Chain *chain=getChain();
     
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions,mcmcOptions);
-    long double currentSumAvailBranchLengths;// chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
-    long double newSumAvailBranchLengths ;// chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
+    //long double currentSumAvailBranchLengths;// chain->sumAvailableBranchLengths(chain->rMRCAPopulation);
+    //long double newSumAvailBranchLengths ;// chain->sumAvailableBranchLengths(chain->proposedrMRCAPopulation);
     // double numeratorQ=log(pop->oldrMRCA->length) + log(newSumAvailBranchLengths);
     long double numeratorQ =0;
     //    priorDensityNewTotalEffectivePopulationSize = LogUniformDensity(chain->totalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
@@ -918,6 +923,7 @@ long double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(Prog
 //////////////////////////////////////////
 NewGlobalScaledMutationRateMove::NewGlobalScaledMutationRateMove(Chain *chain,std::string nameMove,  Population *pop):MCMCmove(chain, nameMove)
 {
+    
     this->pop =pop;
 }
 void NewGlobalScaledMutationRateMove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
@@ -979,7 +985,7 @@ void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOption
     if (mcmcOptions.verbose>=2)
       fprintf (stderr, "\n proposed new theta %.10Lf, old %.10Lf \n", chain->theta, chain->oldtheta );
     
-    if (chain->theta != 0 &&  (!mcmcOptions.noData))
+    if (!mcmcOptions.noData)
         chain->updateNodeScaledTimeForRootedTree(chain->theta);
     else{
         if (chain->theta == 0)
@@ -1042,6 +1048,8 @@ void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOption
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         bool allPopulationPopSizesSet = chain->checkMigrationsOrder();
+        if (!allPopulationPopSizesSet)
+            fprintf (stderr, "\n The immigrants order is incorrect"  );
     }
 }
 void NewGlobalScaledMutationRateMove::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
@@ -1060,9 +1068,9 @@ void NewGlobalScaledMutationRateMove::rollbackMove(ProgramOptions &programOption
         popI->scaledtimeOriginInput = popI->oldScaledTimeOriginInput;
         popI->timeOriginSTD = popI->oldTimeOriginSTD;
   
-         if (!mcmcOptions.splitThetaDeltaTmoves)
+         //if (!mcmcOptions.splitThetaDeltaTmoves)
             popI->deltaT= popI->olddeltaT;
-        if (!mcmcOptions.splitThetaDeltaTmoves)
+       // if (!mcmcOptions.splitThetaDeltaTmoves)
             popI->delta= popI->olddelta;
         
         if (!mcmcOptions.noData )
@@ -1185,7 +1193,7 @@ long double NewGlobalScaledMutationRateMove::computeLogAcceptanceProb(ProgramOpt
     sumLogDenominators+=priorDensityCurrentGrowthRate;
     
    if (!mcmcOptions.noData)
-   {  fprintf (stderr, "\n Log likelihood tree included!\n");
+   {  //fprintf (stderr, "\n Log likelihood tree included!\n");
         newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions, mcmcOptions);
         sumLogNumerators+= newLogConditionalLikelihoodTree;
         sumLogDenominators+=chain->currentlogConditionalLikelihoodTree;
@@ -1278,7 +1286,7 @@ long double NewGlobalScaledGrowthRateForPopulationMove::computeLogAcceptanceProb
 }
 void NewGlobalScaledGrowthRateForPopulationMove::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
-    Chain *chain=getChain();
+   // Chain *chain=getChain();
 
    // for (unsigned int i = 0; i < chain->numClones; ++i)
   //  {
@@ -1352,8 +1360,8 @@ void NewGlobalScaledGrowthRateForPopulationMove::makeProposal(ProgramOptions &pr
                 fprintf (stderr, "\n time origin input   %.10Lf  , scaled by theta %.10Lf, std %.10Lf \n",  pop->timeOriginInput,  pop->scaledtimeOriginInput, pop->timeOriginSTD  );
             if (pop->popSize < pop->sampleSize)
             {
-                isInvalidMove = true;
-                //            allPopulationPopSizesSet=false;
+                // isInvalidMove = true;
+                // allPopulationPopSizesSet=false;
                 //break;
             }
             pop->numCompletedCoalescences=0;
@@ -1369,11 +1377,13 @@ void NewGlobalScaledGrowthRateForPopulationMove::makeProposal(ProgramOptions &pr
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         bool allPopulationPopSizesSet = chain->checkMigrationsOrder();
+        if (!allPopulationPopSizesSet)
+            fprintf (stderr, "\n The inmigrations order is incorrect \n" );
     }
 }
 void NewGlobalScaledGrowthRateForPopulationMove::safeCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
-    Chain *chain=getChain();
+  
     //for (unsigned int i = 0; i < chain->numClones; ++i)
    // {
         //auto popI =  chain->populations[i];

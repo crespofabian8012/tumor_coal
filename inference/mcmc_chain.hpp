@@ -93,7 +93,7 @@ public:
     std::vector<double> sampledTotalEffectPopSize;
     std::vector<std::vector<double> > sampledPoportionVector;
     Files files;
-
+    vector<MCMCmove*>  moves;
     //std::vector<pll_edge_node_t*> edges;
 public:
     
@@ -196,6 +196,8 @@ public:
     static Chain *initializeChain( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, std::vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, char* treefileName, string& healthyTipLabel);
     
     
+    vector<MCMCmove *> extracted();
+    
     void runChain(   MCMCoptions &opt,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
                   char* ObservedCellNames[], pll_msa_t * msa, std::vector<int> &sampleSizes, int currentIteration
                   );
@@ -268,7 +270,8 @@ public:
     void drawModelTimeOriginFromConditionalDensity(Population * oldestPop, MCMCoptions &mcmcOptions);
     void addOldestPopulation(std::map<pll_rnode_t*, std::vector<Population*> > &mrcaOfPopulation, string &healthyCellLabel, MCMCoptions &mcmcOptions);
     void initOriginTimeOldestPopulation( string &healthyCellLabel, MCMCoptions &mcmcOptions);
-    void  initListMoves(std::vector<MCMCmove*> &moves);
+    void  initListMoves();
+    void printMovesSummary();
     
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);

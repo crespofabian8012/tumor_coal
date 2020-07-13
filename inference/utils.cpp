@@ -37,8 +37,7 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
     kseq_t *seq;
     int l1;
     
-    int  seqlength=0;
-    int index;
+    
     int max_length=0.0;
     int numberSeq;
     
@@ -89,9 +88,7 @@ void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **O
     char *currentQual;
     int  seqlength=0;
     char *t;
-    int index,i;
-    int max_length=0.0;
-    int numberSeq;
+   
     vector<int> v;
     if ((fastaFile = freopen(fileName, "r", stdin)) != NULL){
         seq = kseq_init(fileno(fastaFile));
@@ -107,7 +104,7 @@ void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **O
             currentSeq=seq->seq.s;
             // for ( t= currentSeq; *t != '\0'; t++) {
             vector<int> v;
-            for ( index= 0; index < l1; index++) {
+            for ( int index= 0; index < l1; index++) {
                 t= currentSeq+index;
                 if (programOptions.doUseGenotypes == NO) // use sequences
                     v.push_back( WhichNucChar(*t));

@@ -65,7 +65,7 @@ typedef boost::random::independent_bits_engine<boost::random::mt19937, 256, boos
  ones are hard to find. Communications of the ACM, 31(10):1192-1201.
  */
 
-long double  RandomUniform (long int *seed)
+long double  Random::RandomUniform (long int *seed)
 {
     long int  lo, hi, test;
     
@@ -92,22 +92,22 @@ long double  RandomUniform (long int *seed)
  Calling rndgamma1() if s<1 or rndgamma2() if s>1 or exponential if s=1
  */
 
-long double     RandomGamma (long double  shape, long int *seed, bool useGSlgenerator)
+long double     Random::RandomGamma (long double  shape, long int *seed, bool useGSlgenerator)
 {
     long double  gammaNumber = 0;
     
     if (shape <= 0)
         fprintf (stderr, "ERROR: problems with gamma variable generation, shape < 0");
     else if (shape < 1)
-        gammaNumber = RandomGamma1 (shape, seed, useGSlgenerator );
+        gammaNumber = Random::RandomGamma1 (shape, seed, useGSlgenerator );
     else if (shape > 1)
-        gammaNumber = RandomGamma2 (shape, seed, useGSlgenerator);
+        gammaNumber = Random::RandomGamma2 (shape, seed, useGSlgenerator);
     else
-        gammaNumber = -log (randomUniformFromGsl());
+        gammaNumber = -log (Random::randomUniformFromGsl());
     return (gammaNumber);
 }
 /*************** RandomGamma1 ***************/
-long double  RandomGamma1 (long double  s, long int *seed, bool useGSlgenerator)
+long double  Random::RandomGamma1 (long double  s, long int *seed, bool useGSlgenerator)
 {
     /* Random standard gamma for s<1
      switching method
@@ -153,7 +153,7 @@ long double  RandomGamma1 (long double  s, long int *seed, bool useGSlgenerator)
     return (x);
 }
 /*************** RandomGamma2 ***************/
-long double  RandomGamma2 (long double  s, long int *seed, bool useGSlgenerator)
+long double  Random::RandomGamma2 (long double  s, long int *seed, bool useGSlgenerator)
 {
     /* Random standard gamma for s>1
      Best's (1978) t distribution method
@@ -194,7 +194,7 @@ long double  RandomGamma2 (long double  s, long int *seed, bool useGSlgenerator)
  mean lambda.
  */
 
-int RandomPoisson (long double  lambda, long int *seed)
+int Random::RandomPoisson (long double  lambda, long int *seed)
 {
     int        poissonNumber;
     long double     sum;
@@ -216,7 +216,7 @@ int RandomPoisson (long double  lambda, long int *seed)
  mean lambda.
  */
 
-long double  RandomExponential (long double  lambda, long int *seed, bool useGSlgenerator)
+long double  Random::RandomExponential (long double  lambda, long int *seed, bool useGSlgenerator)
 {
     long double   exponentialNumber, U;
     
@@ -236,14 +236,14 @@ long double  RandomExponential (long double  lambda, long int *seed, bool useGSl
 /* Generates a random number from a Exponential distibution with
  mean lambda and with the 0 swifted to the  value from.
  */
-long double  RandomExponentialStartingFrom (long double  lambda, long double from, bool useGSlgenerator)
+long double  Random::RandomExponentialStartingFrom (long double  lambda, long double from, bool useGSlgenerator, gsl_rng *randomGenerator)
 {
     //from value have to be positive
     long double   exponentialNumber, U;
     
     do{
          if (useGSlgenerator)
-           U = randomUniformFromGsl();
+           U = randomUniformFromGsl2(randomGenerator);
         else
             U = randomUniformBoost();
     }
@@ -258,7 +258,7 @@ long double  RandomExponentialStartingFrom (long double  lambda, long double fro
 /* Generates a random number from a RandomPowerLaw distibution with
  parametrr a>0 and with the 0 swifted to the  value from.
  */
-long double  RandomPowerLawDistribution (long double  a, long double from, bool useGSlgenerator)
+long double  Random::RandomPowerLawDistribution (long double  a, long double from, bool useGSlgenerator)
 {
     //from value have to be positive
     long double   output, U;
@@ -274,7 +274,7 @@ long double  RandomPowerLawDistribution (long double  a, long double from, bool 
 /********************** RandomUniformTo ****************************/
 /* it returns random uniform in range 0...max-1          */
 
-int RandomUniformTo (int max, long int *seed,  bool useGSlgenerator)
+int Random::RandomUniformTo (int max, long int *seed,  bool useGSlgenerator)
 {
     long double     U;
     //rd = randomUniformFromGsl();
@@ -287,7 +287,7 @@ int RandomUniformTo (int max, long int *seed,  bool useGSlgenerator)
 
 /************************************* ChooseUniformState **********************************************/
 /* Chooses uniformy a random state according to a vector of state probabilities */
-int ChooseUniformState (long double  *prob, long int *seed,  bool useGSlgenerator)
+int Random::ChooseUniformState (long double  *prob, long int *seed,  bool useGSlgenerator)
 {
     int            chosenState;
     long double         U, cumProb;
@@ -310,7 +310,7 @@ int ChooseUniformState (long double  *prob, long int *seed,  bool useGSlgenerato
 
 /*************** RandomDirichlet ***************/
 //first generates random samples from a gamma and then divide each value by the sum
-void  RandomDirichlet (long double  s, int vectorSize, vector<double> &outputVector, long int *seed)
+void  Random::RandomDirichlet (long double  s, int vectorSize, vector<double> &outputVector, long int *seed)
 {   int i;
     long double  sum=0.0;
     long double  current;
@@ -331,7 +331,7 @@ void  RandomDirichlet (long double  s, int vectorSize, vector<double> &outputVec
 }
 /*************** RandomDirichlet ***************/
 //first generates random samples from a gamma and then divide each value by the sum
-void  randomDirichletFromVector (vector<long double> alpha, vector<long double> &outputVector)
+void  Random::randomDirichletFromVector (vector<long double> alpha, vector<long double> &outputVector)
 {   int i;
     long double sum=0.0;
     long double current;
@@ -353,7 +353,7 @@ void  randomDirichletFromVector (vector<long double> alpha, vector<long double> 
         // *(*outputVector + i)= *(*outputVector + i)/sum;
     }
 }
-void   randomDirichletFromGsl(int vectorSize,  double  alpha[], long double  *theta)
+void   Random::randomDirichletFromGsl(int vectorSize,  double  alpha[], long double  *theta)
 {
     long double  thetaDouble[vectorSize];
     for (unsigned int i = 0; i < vectorSize; ++i){
@@ -380,54 +380,70 @@ void   randomDirichletFromGsl(int vectorSize,  double  alpha[], long double  *th
        }
     gsl_rng_free (r);
 }
-long double  RandomLogUniform( long double  from, long double  to,  bool useGSlgenerator){
+
+long double  Random::RandomLogUniform( long double  from, long double  to,  bool useGSlgenerator, gsl_rng * randomGenerator){
     long double U;
     
        if (useGSlgenerator)
-            U = randomUniformFromGsl();
+            U = randomUniformFromGsl2(randomGenerator);
         else
             U = randomUniformBoost();
         
     return(exp(from + U*(to -from)));
 }
 // from https://stackoverflow.com/questions/9768519/gsl-uniform-random-number-generator
-long double  randomUniformFromGsl(){
+long double  Random::randomUniformFromGsl(){
     const gsl_rng_type * T;
    gsl_rng * r;
     gsl_rng_env_setup();
     struct timeval tv; // Seed generation based on time
    gettimeofday(&tv,0);
     unsigned long mySeed = tv.tv_sec + tv.tv_usec;
-//    // mySeed =125673899;
     T= gsl_rng_ranmar;
      r = gsl_rng_alloc (T);
    // printf ("seed = %lu\n", gsl_rng_default_seed);
     gsl_rng_set(r, mySeed);
     long double  u = gsl_rng_uniform(r); // Generate it!
     gsl_rng_free (r);
-    //fprintf (stderr, "\n random gsl:  %.10Lf \n", u);
     return u;
     
 }
-long double  randomUniformFromGsl2(gsl_rng * r){
-    //    const gsl_rng_type * T;
-    //    gsl_rng * r;
-    //    gsl_rng_env_setup();
+long double  Random::randomUniformFromGsl2(gsl_rng * r){
+  
     struct timeval tv; // Seed generation based on time
      gettimeofday(&tv,0);
     unsigned long mySeed = tv.tv_sec + tv.tv_usec;
-    //    // mySeed =125673899;
-    //    T= gsl_rng_ranmar;
-    //    r = gsl_rng_alloc (T);
-    // printf ("seed = %lu\n", gsl_rng_default_seed);
     gsl_rng_set(r, mySeed);
     long double  u = gsl_rng_uniform(r); // Generate it!
-    gsl_rng_free (r);
     //fprintf (stderr, "\n random gsl:  %.10Lf \n", u);
     return u;
     
 }
-long double  randomGammaBoost( long double  shape, long double  scale ) {
+void Random::allocateListRandomNumbersGenerators(vector<gsl_rng * > &vec)
+{
+    const gsl_rng_type * T;
+    gsl_rng_env_setup();
+    struct timeval tv; // Seed generation based on time
+    unsigned long mySeed;
+    for(unsigned int i=0; i < vec.size(); i++)
+    {
+        gettimeofday(&tv,0);
+        mySeed = tv.tv_sec + tv.tv_usec;
+        T= gsl_rng_ranmar;
+        vec.at(i) = gsl_rng_alloc (T);
+        gsl_rng_set(vec.at(i), mySeed);
+        
+    }
+}
+void Random::freeListRandomNumbersGenerators(vector<gsl_rng * > &vec)
+{
+    for(unsigned int i=0; i < vec.size(); i++)
+    {
+      gsl_rng_free (vec.at(i));
+        
+    }
+}
+long double  Random::randomGammaBoost( long double  shape, long double  scale ) {
     //    boost::random_device rd;
     //    std::uint64_t value = rd();
     //value = (value << 32) | rd();
@@ -439,7 +455,7 @@ long double  randomGammaBoost( long double  shape, long double  scale ) {
     boost::variate_generator<boost::mt19937&,boost::gamma_distribution<> > var_gamma( rng, gd );
     return scale*var_gamma();
 }
-long double  randomGammaBoost2( long double  mean , long double  variance )
+long double  Random::randomGammaBoost2( long double  mean , long double  variance )
 {
     const long double  shape = ( mean * mean )/variance;
     long double  scale = variance/mean;
@@ -449,11 +465,11 @@ long double  randomGammaBoost2( long double  mean , long double  variance )
     boost::variate_generator<boost::mt19937&,boost::gamma_distribution<> > var_gamma( rng, gd );
     return scale*var_gamma();
 }
-long double  logMultinomialProbability(const  size_t size, const  double  *p, const unsigned int *n )
+long double  Distributions::logMultinomialProbability(const  size_t size, const  double  *p, const unsigned int *n )
 {
     return gsl_ran_multinomial_lnpdf(size, p, n);
 }
-long  double   randomNormalBoost(long double mean, long double sigma){
+long  double   Random::randomNormalBoost(long double mean, long double sigma){
     
     boost::mt19937 rng(57);
     
@@ -464,7 +480,7 @@ boost::random::independent_bits_engine<boost::mt19937, 50L * 1000L / 301L, boost
     long double result = mean +(long double)normal_dist(gen);
     return result;
 }
-long  double   randomNormalGreaterThan(long double mean, long double sigma, long double from)
+long  double   Random::randomNormalGreaterThan(long double mean, long double sigma, long double from)
 {
     long  double result= randomNormalBoost(mean, sigma);
     
@@ -475,14 +491,14 @@ long  double   randomNormalGreaterThan(long double mean, long double sigma, long
     return result;
 }
 /********************* RandomDensityModelTimeOrigin ********************/
-long double  RandomDensityModelTimeOrigin (long double  lambda, bool useGSlgenerator, long double from)
+long double  Random::RandomDensityModelTimeOrigin (long double  lambda, bool useGSlgenerator, long double from, gsl_rng * randomGenerator)
 {
     //from value have to be positive
     long double   result, U;
     
     do{
         if (useGSlgenerator)
-            U = randomUniformFromGsl();
+            U = randomUniformFromGsl2(randomGenerator);
         else
             U = randomUniformBoost();
     }
@@ -493,7 +509,7 @@ long double  RandomDensityModelTimeOrigin (long double  lambda, bool useGSlgener
 }
 /***************************** LogExponentialDensity *******************************/
 /* Log Exponential distribution density */
-long double LogExponentialDensity(long double lambda, long double value, long double from)
+long double Distributions::LogExponentialDensity(long double lambda, long double value, long double from)
 {
     double result=0.0;
     
@@ -514,7 +530,7 @@ long double LogExponentialDensity(long double lambda, long double value, long do
     }
     
 }
-long double randomUniformBoost()
+long double Random::randomUniformBoost()
 {
     
  boost::random::independent_bits_engine<boost::random::mt19937, 50L*1000L/301L, cpp_int> gen;
@@ -527,7 +543,7 @@ long double randomUniformBoost()
     
 }
 /********************* RandomExponentialExponential********************/
-long double  RandomExponentialExponential (long double  lambda, bool useGSlgenerator, long double from)
+long double  Random::RandomExponentialExponential (long double  lambda, bool useGSlgenerator, long double from)
 {
     //from value have to be positive
     long double   result, U;
@@ -541,5 +557,36 @@ long double  RandomExponentialExponential (long double  lambda, bool useGSlgener
     while (U == 1);
     
     result = from +  lambda* U /(1-U);
+    return result;
+}
+/***************************** LogUniformDensity *******************************/
+/* Log Uniform distribution density */
+
+long double Distributions::LogUniformDensity(long double value, long double from, long double to)
+{
+    double result;
+    if (value >= exp(from) && value<= exp(to) )
+    {
+        result = -log(value) - log(to-from);
+        return result;
+    }
+    else
+    {
+        result=log(0);
+        return result;
+    }
+}
+/***************************** LogPowerLawDistibutionDensity *******************************/
+/* Log Power Law distribution density */
+long double Distributions::LogPowerLawDistibutionDensity(long double a, long double value, long double from){
+    
+    if (value < from)
+        return log(0);
+    
+    long double firstTerm=log(a);
+    long double secondTerm=2*log(1+a*(value-from));
+    //long double fullTerm= a / (1 + a*(value-from))*(1 + a*(value-from));
+    long double logfullTerm= firstTerm -secondTerm;
+    long double result=logfullTerm;
     return result;
 }

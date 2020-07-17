@@ -20,20 +20,20 @@
 #define ISMhap					0
 #define Mk						1
 #define finiteDNA				2
-
-#define A						0
-#define C						1
-#define G						2
-#define T						3
-#define N                       4
-#define R                       5
-#define ADO						9
-#define DELETION				7
-#define M                       6
-#define S                       8
-#define Y                       10
-#define K                       11
-
+namespace Definitions{
+    static const int  A = 0;
+    static const int  C = 1;
+    static const int  G = 2;
+    static const int  T= 3;
+    static const int  N = 4;
+    static const int  R = 5;
+    static const int  ADO = 9;
+    static const int  DELETION	= 7;
+    static const int  M = 6;
+    static const int S = 8;
+    static const int Y = 10;
+    static const int K = 11;
+};
 
 //#define genotypes
 #define AA                      0

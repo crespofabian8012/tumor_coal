@@ -52,12 +52,14 @@ extern "C"
 
 #include <boost/algorithm/string.hpp>
 
+
 #include "mcmc_chain.hpp"
 #include "data_utils.hpp"
 #include "definitions.hpp"
 #include "eigen.hpp"
 #include "tree_node.hpp"
 #include "random.h"
+#include "utils.hpp"
 #include "constants.hpp"
 #include "mcmc_move.hpp"
 
@@ -101,6 +103,8 @@ Chain::Chain( int chainNumber,
     
     theta = 0.0;
     oldtheta = 0.0;
+    initProportionsVector();
+   
     
 }
 int Chain::setInitialTreeFromNewick(char * NewickString){
@@ -283,7 +287,7 @@ void Chain::SimulatePopulation( Population *popI, vector<Population*> &populatio
         //fprintf (stderr, "\n\n> numParcialActiveGametes= %d \n", numParcialActiveGametes);
         if ( popI->numActiveGametes >= 2) {
             ThisRateCA = (double)  popI->numActiveGametes * ((double) popI->numActiveGametes - 1) / 2.0;
-            ThisTimeCA_W = RandomExponential (ThisRateCA, seed, true) ;
+            ThisTimeCA_W = Random::RandomExponential (ThisRateCA, seed, true) ;
             ThisTimeCA_V1 = Population::FmodelTstandard (currentTime, popI->timeOriginSTD, popI->delta);
             ThisTimeCA_V1 = ThisTimeCA_V1 + ThisTimeCA_W;
             // from standard time to model time, GstandardTmodel(V, T, delta)
@@ -898,6 +902,8 @@ pll_unode_t* Chain::BuildTree(vector<Population* > &populations,
     return treeRootInit;
 }
 pll_unode_t * Chain::MakeCoalescenceTree (long int *seed,
+                                          gsl_rng * randomGenerator,
+                                          pll_msa_t *msa,
                                           int &numNodes,
                                           int numClones,
                                           ProgramOptions &programOptions,
@@ -921,7 +927,7 @@ pll_unode_t * Chain::MakeCoalescenceTree (long int *seed,
     int     labelNodes;
     long double     currentTime, eventTime;
     pll_unode_t  *p;
-    
+    TreeNode *t;
     
     int     *numParcialActiveGametes;
     int         *fromClone;
@@ -966,27 +972,27 @@ pll_unode_t * Chain::MakeCoalescenceTree (long int *seed,
         pop->resetMigrationsList();
     }
     //resetMigrationsList( populations,  numClones);
+
     
-    //allocate memory for the nodes
-    //    nodes = (pll_unode_t *) malloc (3*(programOptions->numNodes + 1)* (sizeof(pll_unode_t) + 2*MAX_NAME * sizeof(char) + sizeof(TreeNode) )); /* nodes */
-    //    if (!(nodes))
-    //    {
-    //        fprintf (stderr, "Could not allocate nodes (%lu bytes)\n", 3*(programOptions->numNodes+ 1)  * (long) sizeof(pll_unode_t));
-    //        exit (1);
-    //    }
-    
-    for (i=0; i< programOptions.TotalNumSequences; i++){
-        treeTips[i]=NULL;
+    for (i=0; i< msa->count; i++){
+        p=new pll_unode_t();
+        p->label = msa->label[i];
+        p->next =NULL;
+        p->back=NULL;
+        t = new TreeNode(msa->length);
+        
+        t->paternalSequence = Utils::SequenceToIntegers(msa->sequence, msa->length);
+        t->maternalSequence =  Utils::SequenceToIntegers(msa->sequence, msa->length);
+        p->data = new TreeNode(msa->length);
+        treeTips.push_back(p);
+        nodes.push_back(p);
     }
     
-    for (i = 0; i < numNodes; i++)
+    for (i = 0; i < (numNodes - programOptions.TotalNumSequences); i++)
     {
-        //p = (*nodes + i);
         p = new pll_unode_t();
         nodes.push_back(p);
-        
     }
-    
     
     AssignSequencesToPopulations( programOptions, numNodes, programOptions.noisy, programOptions.TotalNumSequences, numActiveGametes,  nextAvailable,
                                  labelNodes, ObservedCellNames, programOptions.doUseObservedCellNames, sampleSizes);
@@ -1059,7 +1065,7 @@ Population* Chain::ChooseFatherPopulation( int numClones, Population  *PopChild,
         
     }
     // now selecting the ancestral clone
-    ran =  randomUniformFromGsl();
+    ran =  Random::randomUniformFromGsl();
     //fprintf (stderr, "\n ran = %lf ", ran);
     int w = -1;
     for (k = 1; k < numClones ; k++)
@@ -1215,7 +1221,7 @@ void Chain::generateProportionsVectorFromDirichlet(long double  alpha[]){
         theta[i]=0;
     }
     vector<long double> alphaVector(alpha, alpha + numClones);
-    randomDirichletFromVector(alphaVector, outputVector);
+    Random::randomDirichletFromVector(alphaVector, outputVector);
     //randomDirichletFromGsl(numClones, alpha, theta);
     for (int i=0; i< numClones; i++)
     {
@@ -1233,26 +1239,26 @@ void Chain::copyProportionsVector(long double  alpha[]){
     }
     
 }
-void Chain::initTotalEffectivePopulationSize(MCMCoptions &mcmcOptions, long int *seed)
+void Chain::initTotalEffectivePopulationSize(MCMCoptions &mcmcOptions, gsl_rng* randomGenerator)
 {
     
     int currentTotalSampleSize = mcmcOptions.numberTumorCells;
     
     if(mcmcOptions.priorsType==0)
-        totalEffectPopSize = RandomLogUniform(mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto, mcmcOptions.useGSLRandomGenerator);
+        totalEffectPopSize = Random::RandomLogUniform(mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto, mcmcOptions.useGSLRandomGenerator, randomGenerator);
     else if(mcmcOptions.priorsType==1)
-        totalEffectPopSize = RandomExponentialStartingFrom(mcmcOptions.lambdaExponentialPriorTotalEffectivePopSize, currentTotalSampleSize/mcmcOptions.fixedLambda, mcmcOptions.useGSLRandomGenerator);
+        totalEffectPopSize = Random::RandomExponentialStartingFrom(mcmcOptions.lambdaExponentialPriorTotalEffectivePopSize, currentTotalSampleSize/mcmcOptions.fixedLambda, mcmcOptions.useGSLRandomGenerator, randomGenerator);
     else
-        totalEffectPopSize = RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionTotalEffectPopSize, currentTotalSampleSize/mcmcOptions.fixedLambda, mcmcOptions.useGSLRandomGenerator);
+        totalEffectPopSize = Random::RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionTotalEffectPopSize, currentTotalSampleSize/mcmcOptions.fixedLambda, mcmcOptions.useGSLRandomGenerator);
     //printf("\n initial total effect pop size %d \n", totalEffectPopSize);
 }
-void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed)
+void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, gsl_rng* randomGenerator)
 {
     Population* popI;
     int i;
     long double  randomDelta;
-    mutationRate = RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, mcmcOptions.useGSLRandomGenerator);
-    initTotalEffectivePopulationSize(mcmcOptions, seed);
+    mutationRate = Random::RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, mcmcOptions.useGSLRandomGenerator, NULL);
+    initTotalEffectivePopulationSize(mcmcOptions,  randomGenerator);
     initProportionsVector();
     //long double  lambda = 1;
     SetPopulationsBirthRate(mcmcOptions.fixedLambda);
@@ -1265,7 +1271,7 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
         generateProportionsVectorFromDirichlet(alpha);
         if (programOptions.populationSampleSizesKnown == NO)
         {
-            InitPopulationSampleSizes(populations, programOptions.numCells, programOptions.numClones,proportionsVector, seed);
+            InitPopulationSampleSizes(populations, programOptions.numCells, programOptions.numClones,proportionsVector,  randomGenerator);
         }
         //else fill the sample  sizes
         else{
@@ -1281,7 +1287,7 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
             {
                 popI=populations[i];
                 do {
-                    randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato, mcmcOptions.useGSLRandomGenerator);
+                    randomDelta = Random::RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato, mcmcOptions.useGSLRandomGenerator, NULL);
                     //popI->delta = chain->proportionsVector[i] * randomDelta;
                     popI->delta =  randomDelta;
                     popI->growthRate =popI->delta  / popI->effectPopSize;
@@ -1292,7 +1298,7 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
             }
         }
         ListClonesAccordingTimeToOrigin(populations);
-        GenerateTimesFromPriorsOriginal(programOptions.noisy,  seed);
+        GenerateTimesFromPriorsOriginal(programOptions.noisy,  randomGenerator);
         ListClonesAccordingTimeToOrigin(populations);
         
         initPopulationMigration();
@@ -1311,15 +1317,16 @@ void Chain::initEffectPopulationSizesFromProportionsVector(){
         //printf("\n initial effect pop size  for pop index %d  is %lf \n", popI->index,popI->effectPopSize);
     }
 }
-void Chain::initTimeOriginSTD(MCMCoptions &mcmcOptions){
+void Chain::initTimeOriginSTDYoungerPopulations(MCMCoptions &mcmcOptions){
     int i;
     Population *popI;
+    Population* oldestPop=getPopulationbyIndex(numClones -1);
     for( i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
-        if (popI->x !=0)
+        if (popI!= oldestPop && popI->x !=0)
             popI->timeOriginSTD = popI->scaledtimeOriginInput /  popI->x;
-        else
+        if (popI->x ==0 && mcmcOptions.verbose>=2)
             printf("\n error effective  pop size proportion  size is 0 \n");
         if (mcmcOptions.verbose>=2)
             printf("\n population %d with order %d  has  time origin std of: %Lf and input: %Lf\n", popI->index, popI->order, popI->timeOriginSTD, popI->timeOriginInput );
@@ -1361,7 +1368,7 @@ void Chain::ListClonesAccordingTimeToOrigin(vector<Population *> &populations)
     //    qsort(populations, numClones, sizeof(Population), comparePopulationsByTimeOrigin);
 }
 
-void Chain::GenerateTimesFromPriorsOriginal(int noisy,  long int *seed) {
+void Chain::GenerateTimesFromPriorsOriginal(int noisy,  gsl_rng* randomGenerator) {
     long double     *Uvector;
     int i, j, m,  l;
     long double     TotalProbability, LocalProbability, aboveTerm, belowTerm, ranHere;
@@ -1395,8 +1402,8 @@ void Chain::GenerateTimesFromPriorsOriginal(int noisy,  long int *seed) {
             {
                 popJ = populations[j];
                 Uvector[j] = 0;
-                Uvector[j] =  randomUniformFromGsl();
-                rand = randomUniformFromGsl();
+                Uvector[j] =  Random::randomUniformFromGsl();
+                rand = Random::randomUniformFromGsl();
                 popJ->timeOriginSTD= (1/ popJ->delta)*log(1-(popJ->delta / log(rand)));
                 //popJ->timeMigrationSTDCurrentPop= popJ->timeOriginSTD ;
                 // popJ->timeOriginInput=proportionsVector[j]*popJ->timeOriginSTD;
@@ -1435,7 +1442,7 @@ void Chain::GenerateTimesFromPriorsOriginal(int noisy,  long int *seed) {
                     TotalProbability = TotalProbability * LocalProbability;
                 
             }
-            ranHere =  randomUniformFromGsl();
+            ranHere =  Random::randomUniformFromGsl2(randomGenerator);
             if (ranHere <= TotalProbability)
                 doAcceptTimes = YES;
             if (noisy > 2)
@@ -1501,7 +1508,7 @@ void Chain::RelabelNodes(pll_unode_t *p, int &intLabel)
         }
     }
 }
-void Chain::InitPopulationSampleSizes(vector<Population*> populations, int TotalSampleSize, int numClones, vector<long double> &proportionsVector, long int *seed)
+void Chain::InitPopulationSampleSizes(vector<Population*> populations, int TotalSampleSize, int numClones, vector<long double> &proportionsVector, gsl_rng* randomGenerator)
 {
     int i,j;
     Population  *popJ;
@@ -1522,7 +1529,7 @@ void Chain::InitPopulationSampleSizes(vector<Population*> populations, int Total
     }
     for (i = 0; i < TotalSampleSize; i++)
     {
-        rand= randomUniformFromGsl();
+        rand= Random::randomUniformFromGsl2(randomGenerator);
         for (j = 1; j <= numClones;j ++)
         {
             popJ = populations[ j-1 ];
@@ -1691,50 +1698,61 @@ char * Chain::toNewickString ( pll_unode_t *p, long double  mutationRate,     in
     }
     return newickString;
 }
-/************************ LogConditionalLikelihoodTree ***********************/
-/*  LogConditionalLikelihoodTree */
-long double  Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions, MCMCoptions &mcmcOptions  )
-{
+long double Chain::SumLogDensitiesTimeOriginSTDPopulations() {
     Population* popI;
-    Population* popJ;
-    Population* fatherPop;
-    long double product=0;
-    unsigned int i, j;
+    
     long double temp;
+    long double result = 0;
+    unsigned int i;
+    
     for ( i = 0; i < numClones; i++)
     {
         popI=populations[i];
-        temp=popI->LogDensityTimeSTDFrom( popI->timeOriginSTD, popI->lowerBoundTimeOriginInput);
+        temp=popI->LogDensityTimeSTDFrom( popI->timeOriginSTD, 0);
         if (isnan(temp) || isinf(temp))
             fprintf (stderr, "\n isNan temp LogDensityTime, Delta: %Lf, T:%Lf \n",popI->delta ,popI->timeOriginSTD);
-        product = product + temp;
+        result = result + temp;
         // fprintf (stderr, "\n Product log Density Time   = %lf after pop order %d,  popI->LogDensityTime( popI->timeOriginSTD) %lf,  popI->timeOriginSTD: %lf, popI->delta: %lf\n", product, popI->order, popI->LogDensityTime( popI->timeOriginSTD), popI->timeOriginSTD,popI->delta );
     }
-    for ( j = 0; j < numClones-1 ; j++)
+    return result;
+}
+
+long double Chain::SumLogProbFatherPopulations() {
+    
+    Population *fatherPop;
+    Population *popJ;
+    long double  result=0;
+    long double temp;
+    for ( unsigned int j = 0; j < numClones-1 ; j++)
     {
         popJ = populations[j ];
-        if (popJ->FatherPop !=NULL){
+        if (popJ->FatherPop !=NULL)
+        {
             fatherPop = popJ->FatherPop;
-            product = product + log( fatherPop->popSize);
+            result = result + log( fatherPop->popSize);
             temp=popJ->timeOriginSTD * popJ->x / fatherPop->x;
             temp=Population::LogCalculateH(temp, fatherPop->timeOriginSTD, fatherPop->delta);
-            product = product  + temp;
+            result = result  + temp;
             // fprintf (stderr, "\n Product calculate H    = %lf after pop order %d \n", product, popJ->order);
         }
         if(popJ->order < numClones-1 && popJ->FatherPop == NULL)
             fprintf (stderr, "\n the pop with order %d has father pop null\n",popJ->order );
     }
-    //for ( i = 0; i < numClones; i++)
-    //  {
-    //     popI=*(populations + i );
-    // fprintf (stderr, "\n Product before  = %lf \n", product);
-    
-    product = product + LogDensityCoalescentTimesForPopulation2();
-    
-    //}
-    // fprintf (stderr, "\n Product after  = %lf \n", product);
-    
-    return product;
+    return(result);
+}
+
+/************************ LogConditionalLikelihoodTree ***********************/
+/*  LogConditionalLikelihoodTree */
+long double  Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions, MCMCoptions &mcmcOptions  )
+{
+
+    long double result;
+    result =SumLogDensitiesTimeOriginSTDPopulations();
+    result= result + SumLogProbFatherPopulations();
+        // fprintf (stderr, "\n Product after  = %lf \n", result);
+    result = result + LogDensityCoalescentTimesForPopulation2();
+
+    return result;
 }
 /************************ LogDensityCoalescentTimesForPopulation ***********************/
 /*  LogDensityCoalescentTimesForPopulation */
@@ -2342,35 +2360,152 @@ void Chain::dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
     }
 }
 
-void Chain::initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions) {
+void Chain::initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, gsl_rng * randomGenerator) {
     if (programOptions.doUsefixedMutationRate)
         theta = programOptions.mutationRate;
     else
     {
         if(mcmcOptions.priorsType==0)
         {
-            theta = RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, mcmcOptions.useGSLRandomGenerator);
+            theta = Random::RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, mcmcOptions.useGSLRandomGenerator, randomGenerator);
             
         }
         else if(mcmcOptions.priorsType==1)
         {
-            theta = RandomExponentialStartingFrom( mcmcOptions.lambdaExponentialPriorMutationRate, 0, mcmcOptions.useGSLRandomGenerator);
+            theta = Random::RandomExponentialStartingFrom( mcmcOptions.lambdaExponentialPriorMutationRate, 0, mcmcOptions.useGSLRandomGenerator, randomGenerator);
         }
         
         else{
             
-            theta = RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionMutationRate, 0, mcmcOptions.useGSLRandomGenerator);
+            theta = Random::RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionMutationRate, 0, mcmcOptions.useGSLRandomGenerator);
             
         }
     }
 }
 
-Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, long int *seed, char* ObservedCellNames[], pll_msa_t *msa, char* treefileName, string& healthyTipLabel)
+void Chain::initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions) {
+    
+    char *rootedNewick2;
+    rootedNewick2 =  pll_rtree_export_newick(initialRootedTree->root,NULL);
+    
+    //newickString2 = chain->toNewickString ( chain->root, chain->mutationRate,     programOptions.doUseObservedCellNames);
+    //printf("\n newick = %s  \n", rootedNewick2);
+    
+    if (!mcmcOptions.noData)
+    {
+        long double result=0;
+        currentlogSumDensitiesTimeOriginSTDPopulations =SumLogDensitiesTimeOriginSTDPopulations();
+        result=currentlogSumDensitiesTimeOriginSTDPopulations;
+    currentlogProbFatherPopulations=SumLogProbFatherPopulations();
+        result= result + currentlogProbFatherPopulations;
+        currentlogDensityCoalescentTimesForPopulation= LogDensityCoalescentTimesForPopulation2();
+        result = result + currentlogDensityCoalescentTimesForPopulation;
+        currentlogConditionalLikelihoodTree= result;
+        // if (mcmcOptions.verbose>=2)
+        printf ( "Initial log likelihood of the tree of chain %d is:  %Lf \n",0, currentlogConditionalLikelihoodTree );
+        if (mcmcOptions.useSequencesLikelihood ==1)
+        {
+            currentlogConditionalLikelihoodSequences= LogConditionalLikelihoodSequences( msa,  rootedNewick2, programOptions, seqErrorRate, dropoutRate);
+            free(rootedNewick2);
+            rootedNewick2=NULL;
+        }
+        else
+        {
+            currentlogConditionalLikelihoodSequences=0;
+        }
+        if (mcmcOptions.verbose>=2)
+            fprintf (stderr, "Initial log likelihood of the sequences of chain %d  is = %Lf  \n", 0,currentlogConditionalLikelihoodSequences );
+    }
+}
+
+void Chain::initPopulationsProportions() {
+    for (unsigned int i = 0; i < numClones; ++i)
+    {
+        auto popI =  populations[i];
+        popI->x = proportionsVector[i];
+        popI->theta = popI->x * theta;
+        popI->delta = popI->deltaT * popI->x;
+    }
+}
+
+void Chain::initChainTree( std::string &healthyTipLabel, MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions ) {
+    
+    if (initialRootedTree->inner_count > 1)
+        initialUnrootedTree = pll_rtree_unroot(initialRootedTree);
+    //chain->initialUnrootedTree = pll_utree_parse_newick(treefileName);
+    
+    rootRootedTree = initialRootedTree->root;
+    root =initialUnrootedTree->nodes[initialUnrootedTree->tip_count + initialUnrootedTree->inner_count - 1];
+    
+    mcmcOptions.numberTumorCells =initialUnrootedTree->tip_count-1;
+  
+    pll_utree_reset_template_indices(root, initialUnrootedTree->tip_count);
+    
+    initPopulationsTipsFromTree(initialUnrootedTree, NO, programOptions.healthyTipLabel);
+    initPopulationsTipsFromRootedTree(initialRootedTree, NO, programOptions.healthyTipLabel);
+    initNodeDataFromTree();
+    rescaleNodeDataFromRootedTree(theta );
+    initNumberTipsSubTree(rootRootedTree);
+    
+    // pll_utree_traverse_apply(chain->initialUnrootedTree->vroot, NULL, Chain::computeNumberTipsSubTree, chain->root->data);
+    
+    
+    initBranches(healthyTipLabel, edgeLengths, edges);
+   
+    //std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
+    // std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](long double  a) {return a /totalSampleSize; } );
+}
+vector<long double> Chain::initVectorSampleSizes(std::string &healthyTipLabel, MCMCoptions &mcmcOptions, ProgramOptions &programOptions){
+    
+    bool existsZeroSampleSizePop=false;
+    vector<long double> alpha(numClones);
+    
+    vector<double> branchLengths;
+    existsZeroSampleSizePop=false;
+    
+    
+    existsZeroSampleSizePop= initPopulationsSampleSizes( rMRCAPopulation, healthyTipLabel);
+    
+    //int totalSampleSize=chain->initialRootedTree->tip_count-1;//not including the healthytip
+    
+    for (unsigned int i = 0; i < numClones; ++i)
+    {
+        auto popI =  populations[i];
+        if (existsZeroSampleSizePop)
+            alpha.at(i)= popI->sampleSize+1;//this is for avoid to pass  a sample size 0 to the Dirichlet and get a effective population size of 0
+        else
+            alpha.at(i)= popI->sampleSize;
+        if (popI->sampleSize == 0)
+            printf("\n population %d and order %d with sample size 0:  %d \n", popI->index,popI->order,popI->sampleSize);
+    }
+    return alpha;
+}
+void Chain::initMRCAOldestPopulation(string& healthyTipLabel)
 {
-    long double  totalTreeLength;
+    Population* oldestPop=getPopulationbyIndex(numClones -1);
+    TreeNode *u;
+    if (std::string(initialRootedTree->root->right->label).compare(healthyTipLabel)==0)
+    {
+        oldestPop->rMRCA =initialRootedTree->root->left;
+    }
+    else  if (std::string(initialRootedTree->root->left->label).compare(healthyTipLabel)==0)
+    {
+        oldestPop->rMRCA =initialRootedTree->root->right;
+    }
+    else{
+        //this should not happen
+        oldestPop->rMRCA =initialRootedTree->root;
+        u= (TreeNode *)(initialRootedTree->root->data);
+        printf( "\n Error, the healthy cell is not a direct child of the tree root \n"  );
+    }
+}
+
+Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, gsl_rng * randomGenerator, char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, string& healthyTipLabel)
+{
+  
     int        numCA, numMIG;
     long double       cumNumCA = 0.0, meanNumCA = 0.0, cumNumMIG = 0.0, meanNumMIG = 0.0, numEventsTot;
-    
+    long int *seed;
     char * rootedNewick2;
     Chain *chain=new Chain(0, programOptions.numClones, 1, programOptions.mutationRate, programOptions.seqErrorRate, programOptions.dropoutRate);
     
@@ -2380,14 +2515,23 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
     }
     chain->InitChainPopulations( programOptions.noisy, programOptions.TotalNumSequences );
     
-    chain->initMutationRate( mcmcOptions, programOptions);
+    chain->initMutationRate( mcmcOptions, programOptions, randomGenerator);
     //if (mcmcOptions.verbose>=2)
         fprintf(stderr, "\n initial theta %.10Lf \n",chain->theta );
+    chain->samplePopulationGrowthRateFromPriors(mcmcOptions, randomGenerator );
     
+    chain->SetPopulationsBirthRate(mcmcOptions.fixedLambda);
     
     if (programOptions.doUseFixedTree == NO)
     {
+        Population* oldestPop=chain->getPopulationbyIndex(chain->numClones -1);
+        oldestPop->timeOriginSTD  =   Random::RandomDensityModelTimeOrigin (oldestPop->delta, mcmcOptions.useGSLRandomGenerator, 0, randomGenerator );
+        
+
+    
         chain->root = chain->MakeCoalescenceTree (seed,
+                                                 randomGenerator,
+                                                  msa,
                                                   chain->numNodes,
                                                   chain->numClones,
                                                   programOptions,
@@ -2400,113 +2544,49 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
                                                   numEventsTot,
                                                   ObservedCellNames, sampleSizes
                                                   ) ;
+        
+        //generate the newick representation of the simulated tree
+        //
+        rootedNewick2 = chain->toNewickString ( chain->root, chain->mutationRate,     programOptions.doUseObservedCellNames);
+        printf("\n newick = %s  \n", rootedNewick2);
+        chain->initialRootedTree = pll_rtree_parse_newick(rootedNewick2);
+        chain->initChainTree( healthyTipLabel, mcmcOptions, msa, programOptions);
+        free(rootedNewick2);
+        rootedNewick2=NULL;
     }
     else
     {
-        chain->samplePopulationGrowthRateFromPriors(mcmcOptions, seed );
-        
-        //if (!mcmcOptions.noData){
-        
-        chain->initialRootedTree = pll_rtree_parse_newick(treefileName);
+        chain->initialRootedTree = initialRootedTree;
         if (chain->initialRootedTree ==NULL)
         {
             fprintf(stderr, "\n There was an error reading the tree file! \n" );
             exit(-1);
         }
-        if (chain->initialRootedTree->inner_count > 1)
-            chain->initialUnrootedTree = pll_rtree_unroot(chain->initialRootedTree);
-        //chain->initialUnrootedTree = pll_utree_parse_newick(treefileName);
+         Population* oldestPop=chain->getPopulationbyIndex(chain->numClones -1);
+       
+        chain->initChainTree( healthyTipLabel, mcmcOptions, msa, programOptions);
+        vector<long double> alpha;
         
-        chain->rootRootedTree = chain->initialRootedTree->root;
-        chain->root = chain->initialUnrootedTree->nodes[chain->initialUnrootedTree->tip_count + chain->initialUnrootedTree->inner_count - 1];
-        mcmcOptions.numberTumorCells =chain->initialUnrootedTree->tip_count-1;
+        chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree( chain->edgeLengths, programOptions.numClones -1,  healthyTipLabel, mcmcOptions, randomGenerator);
+        alpha=chain->initVectorSampleSizes(healthyTipLabel, mcmcOptions, programOptions);
+        Random::randomDirichletFromVector (alpha, chain->proportionsVector);
+        chain->initPopulationsProportions();
         
-        //chain->initTotalEffectivePopulationSize(mcmcOptions, seed);
-        //if (mcmcOptions.verbose>=2)
-        //  fprintf(stderr, "\n initial  total effective population size %lu \n", chain->totalEffectPopSize );
+        TreeNode *u= (TreeNode *)(oldestPop->rMRCA->data);
+        oldestPop->setLowerBoundTimeOriginInput(u->timeInputTreeUnits);
         
-        chain->oldtheta = 0.0;
-        chain->SetPopulationsBirthRate(mcmcOptions.fixedLambda);
-        
-        pll_utree_reset_template_indices(chain->root, chain->initialUnrootedTree->tip_count);
-        
-        chain->initPopulationsTipsFromTree(chain->initialUnrootedTree, NO, programOptions.healthyTipLabel);
-        chain->initPopulationsTipsFromRootedTree(chain->initialRootedTree, NO, programOptions.healthyTipLabel);
-        chain->initNodeDataFromTree();
-        chain->rescaleNodeDataFromRootedTree(chain->theta );
-        chain->initNumberTipsSubTree(chain->rootRootedTree);
-        // pll_utree_traverse_apply(chain->initialUnrootedTree->vroot, NULL, Chain::computeNumberTipsSubTree, chain->root->data);
-        //std::map<pll_unode_t*, Population*> mrcaOfPopulation=chain->chooseTimeOfOriginsOnTree( seed);
-        bool existsZeroSampleSizePop=false;
-        vector<long double> alpha(chain->numClones);
-        int numberPoints = chain->numClones -1;
-        vector<double> branchLengths;
-        chain->initBranches(healthyTipLabel, chain->edgeLengths, chain->edges);
-        
-        mcmcOptions.lambdaExponentialPriorTime =((TreeNode*) chain->rootRootedTree->data)->timeInputTreeUnits;
-        
-        existsZeroSampleSizePop=false;
-        chain->rMRCAPopulation.clear();
-        chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree( chain->edgeLengths, numberPoints,  healthyTipLabel, mcmcOptions);
-        
-        existsZeroSampleSizePop= chain->initPopulationsSampleSizes( chain->rMRCAPopulation, healthyTipLabel);
-        
-        //int totalSampleSize=chain->initialRootedTree->tip_count-1;//not including the healthytip
-        
-        for (unsigned int i = 0; i < chain->numClones; ++i)
-        {
-            auto popI =  chain->populations[i];
-            if (existsZeroSampleSizePop)
-                alpha.at(i)= popI->sampleSize+1;//this is for avoid to pass  a sample size 0 to the Dirichlet and get a effective population size of 0
-            else
-                alpha.at(i)= popI->sampleSize;
-            if (popI->sampleSize == 0)
-                printf("\n population %d and order %d with sample size 0:  %d \n", popI->index,popI->order,popI->sampleSize);
-        }
-        
-        //std::transform(alpha, alpha + chain->numClones , alpha,std::bind2nd(std::divides<double>(),totalSampleSize));
-        // std::transform(alpha, alpha + chain->numClones , alpha,[totalSampleSize](long double  a) {return a /totalSampleSize; } );
-        chain->initProportionsVector();
-        randomDirichletFromVector (alpha, chain->proportionsVector);
-        
-        for (unsigned int i = 0; i < chain->numClones; ++i)
-        {
-            auto popI =  chain->populations[i];
-            popI->x = chain->proportionsVector[i];
-            popI->theta = popI->x * chain->theta;
-            popI->delta = popI->deltaT * popI->x;
-        }
+        oldestPop->timeOriginSTD =   Random::RandomDensityModelTimeOrigin (oldestPop->delta, mcmcOptions.useGSLRandomGenerator, oldestPop->lowerBoundTimeOriginInput/ (chain->theta * oldestPop->x), randomGenerator);
         chain->initOriginTimeOldestPopulation(healthyTipLabel, mcmcOptions);
-        //chain->initEffectPopulationSizesFromProportionsVector();
+
         chain->ListClonesAccordingTimeToOrigin(chain->populations);
-        chain->initTimeOriginSTD(mcmcOptions);
+        chain->initTimeOriginSTDYoungerPopulations(mcmcOptions);
         chain->initPopulationMigration();//after setting the timeSTD
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         
-        totalTreeLength = chain->SumBranches2(chain->rootRootedTree, chain->mutationRate);
+        // totalTreeLength = SumBranches2(rootRootedTree, mutationRate);
         
-        rootedNewick2 =  pll_rtree_export_newick(chain->initialRootedTree->root,NULL);
-        
-        //newickString2 = chain->toNewickString ( chain->root, chain->mutationRate,     programOptions.doUseObservedCellNames);
-        //printf("\n newick = %s  \n", rootedNewick2);
-        if (!mcmcOptions.noData)
-        {
-            chain->currentlogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree( programOptions,mcmcOptions);
-           // if (mcmcOptions.verbose>=2)
-                printf ( "Initial log likelihood of the tree of chain %d is:  %Lf \n",0, chain->currentlogConditionalLikelihoodTree );
-            if (mcmcOptions.useSequencesLikelihood ==1)
-            { chain->currentlogConditionalLikelihoodSequences= chain->LogConditionalLikelihoodSequences( msa,  rootedNewick2, programOptions, chain->seqErrorRate, chain->dropoutRate);
-            }
-            else
-            {
-                chain->currentlogConditionalLikelihoodSequences=0;
-            }
-            if (mcmcOptions.verbose>=2)
-                fprintf (stderr, "Initial log likelihood of the sequences of chain %d  is = %Lf  \n", 0,chain->currentlogConditionalLikelihoodSequences );
-        }
-        free(rootedNewick2);
-        rootedNewick2=NULL;
+        chain->initLogLikelihoods(mcmcOptions, msa, programOptions);
         
     }//else
     return chain;
@@ -2548,22 +2628,26 @@ void  Chain::initListMoves()
         NewProportionsVectorMove *newProportionsVector= new NewProportionsVectorMove(this, "new Proportions Vector Move");
         moves.push_back(newProportionsVector );
     }
-    NewGlobalScaledMutationRateMove *newPairGlobalScaledMutationRateRIMove;
+    NewGlobalScaledMutationRateMove *newGlobalScaledMutationRateMove;
+    NewGlobalScaledGrowthRateForPopulationMove *newGlobalScaledGrowthRateMove;
     NewTimeOriginOnTreeforPopulationMove *newTimeOriginOnTreeforPopulationMove ;
     
     //Pair of theta and r move
-    newPairGlobalScaledMutationRateRIMove= new NewGlobalScaledMutationRateMove(this, "new Pair Global scaled mutation rate(theta) and scaled growth rate(deltaT) Move", NULL);
-    moves.push_back(newPairGlobalScaledMutationRateRIMove);
+    newGlobalScaledMutationRateMove= new NewGlobalScaledMutationRateMove(this, "new Pair Global scaled mutation rate(theta) and scaled growth rate(deltaT) Move", NULL);
+    moves.push_back(newGlobalScaledMutationRateMove);
     for( int i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
+        
+        newGlobalScaledGrowthRateMove =  new NewGlobalScaledGrowthRateForPopulationMove(this, "new global scaled growth rate(deltaT)", popI);
+        moves.push_back(newGlobalScaledGrowthRateMove);
         
         newTimeOriginOnTreeforPopulationMove= new NewTimeOriginOnTreeforPopulationMove(this, "new Time of Origin Move on Tree for population", popI);
         moves.push_back(newTimeOriginOnTreeforPopulationMove);
     }
 }
 
-void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
+void Chain::runChain(   MCMCoptions &mcmcOptions,  gsl_rng *randomGenerator,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
                      char* ObservedCellNames[], pll_msa_t * msa, vector<int> &sampleSizes, int currentIteration
                      ){
     
@@ -2576,7 +2660,7 @@ void Chain::runChain(   MCMCoptions &mcmcOptions,  long int *seed,  FilePaths &f
     {
         currentMove=  *it;
         //fprintf (stderr, "\n>> started  move %s ", currentMove->name().c_str());
-        currentMove->move(programOptions, mcmcOptions);
+        currentMove->move(programOptions, mcmcOptions, randomGenerator);
         // fprintf (stderr, "\n>> finished  move %s \n", currentMove->name().c_str());
     }
     //moves.clear();
@@ -3161,7 +3245,7 @@ void Chain::rollbackTreeNodeCurrentTimePUnits(){
         u->timePUnits = u->oldtimePUnits;
     }
 }
-std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int *seed)
+std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( gsl_rng * randomGenerator)
 {
     
     int numberPoints= numClones -1;
@@ -3231,7 +3315,7 @@ std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int 
         int  nextEvent;
         do{
             
-            random =randomUniformFromGsl();
+            random =Random::randomUniformFromGsl2(randomGenerator);
             nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
             pll_unode_t * ancestorMRCA;
             if (edges.at(nextEvent)->length != branchLengths.at(nextEvent -1))
@@ -3265,7 +3349,7 @@ std::map<pll_unode_t*, Population*>  Chain::chooseTimeOfOriginsOnTree( long int 
             mrcaOfPopulation[ancestorMRCA->back]=pop;
             u= (TreeNode *)(ancestorMRCA->data);
             v= (TreeNode *)(ancestorMRCA->back->data);
-            long double  proposedTime= v->timeInputTreeUnits+ (u->timeInputTreeUnits- v->timeInputTreeUnits)*randomUniformFromGsl();
+            long double  proposedTime= v->timeInputTreeUnits+ (u->timeInputTreeUnits- v->timeInputTreeUnits)*Random::randomUniformFromGsl2(randomGenerator);
             
             if (proposedTime<=0)
                 printf( "time of origin is positive");
@@ -3339,7 +3423,7 @@ void Chain::initBranches(string& healthyCellLabel,vector<pair<double, pll_tree_e
         visitedNodes.insert(node);
     }
 }
-std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTree( vector<pair<double, pll_tree_edge_t *> > edgeLengths, int numberPoints, string &healthyCellLabel, MCMCoptions &mcmcOptions)
+std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTree( vector<pair<double, pll_tree_edge_t *> > edgeLengths, int numberPoints, string &healthyCellLabel, MCMCoptions &mcmcOptions, gsl_rng * randomGenerator)
 {
     std::unordered_set<pll_rnode_t *>  ancestorsOfTimeOfOrigins(numberPoints);
     std::unordered_set<pll_rnode_t *>  MRCAs(numberPoints);
@@ -3384,7 +3468,7 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
         while(assignedPop < numberPoints)
         {
             //do{
-            random =randomUniformFromGsl();
+            random =Random::randomUniformFromGsl2(randomGenerator);
             nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
             //}
             // while(std::find(eventIds.begin(), eventIds.end(), nextEvent) != eventIds.end());
@@ -3414,7 +3498,7 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
             u= (TreeNode *)(MRCA->data);
             v= (TreeNode *)(MRCA->parent->data);
             // proposedTime= u->timeInputTreeUnits+ (v->timeInputTreeUnits- u->timeInputTreeUnits)*proportionInsideChosenEdge;
-            proposedTime= u->timeInputTreeUnits+ (v->timeInputTreeUnits- u->timeInputTreeUnits)*randomUniformFromGsl();
+            proposedTime= u->timeInputTreeUnits+ (v->timeInputTreeUnits- u->timeInputTreeUnits)*Random::randomUniformFromGsl2(randomGenerator);
             
             if (proposedTime<=0)
                 printf( "time of origin is positive");
@@ -3464,63 +3548,22 @@ void Chain::addOldestPopulation(std::map<pll_rnode_t*, vector<Population*> > &mr
 }
 void Chain::initOriginTimeOldestPopulation( string &healthyCellLabel, MCMCoptions &mcmcOptions){
     TreeNode *u, *v;
-    long double  proposedTime;
+ 
     Population* oldestPop=getPopulationbyIndex(numClones -1);//for the oldest population
-    if (std::string(initialRootedTree->root->right->label).compare(healthyCellLabel)==0)
-    {
-        oldestPop->rMRCA =initialRootedTree->root->left;
-    }
-    else  if (std::string(initialRootedTree->root->left->label).compare(healthyCellLabel)==0)
-    {
-        oldestPop->rMRCA =initialRootedTree->root->right;
-    }
-    else{
-        //this should not happen
-        oldestPop->rMRCA =initialRootedTree->root;
-        u= (TreeNode *)(initialRootedTree->root->data);
-        printf( "\n Error, the healthy cell is not a direct child of the tree root \n"  );
-    }
-    u= (TreeNode *)(oldestPop->rMRCA->data);
-    v= (TreeNode *)(oldestPop->rMRCA->parent->data);
-    oldestPop->setLowerBoundTimeOriginInput(u->timeInputTreeUnits);
-    // if (mcmcOptions.priorsType==0)
-    // { proposedTime =  u->timeInputTreeUnits + (v->timeInputTreeUnits - u->timeInputTreeUnits) * randomUniformFromGsl();
-    
-    // }
-    // proposedTime = v->timeInputTreeUnits ;//just for testing by fixing the time of origin
-    //        long double lambdaExponentialPriorTime = 1.0 /v->timeInputTreeUnits;
-    
-    //        if (mcmcOptions.priorsType==1)
-    //        { proposedTime = RandomExponentialStartingFrom(lambdaExponentialPriorTime,u->timeInputTreeUnits, mcmcOptions.useGSLRandomGenerator);
-    //        }
-    //
-    //        double quantileUntil=0.9; mcmcOptions.parameterPowerLawDistributionTimeOriginInputOldestPop= computeParamPowerDistribQuantileUntil(quantileUntil, 2*(v->timeInputTreeUnits), u->timeInputTreeUnits);
-    //        if (mcmcOptions.priorsType==2)
-    //        { proposedTime = RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionTimeOriginInputOldestPop,u->timeInputTreeUnits, mcmcOptions.useGSLRandomGenerator);
-    //        }
-   // do{
-    proposedTime =   RandomDensityModelTimeOrigin (oldestPop->delta, mcmcOptions.useGSLRandomGenerator, oldestPop->lowerBoundTimeOriginInput/ (theta * oldestPop->x) );
-    // proposedTime=v->timeInputTreeUnits;
-    
-    //oldestPop->timeOriginInput =proposedTime ;//this time is multiplied  by mutation rate
-   // oldestPop->scaledtimeOriginInput =  oldestPop->timeOriginInput / theta;
-    //oldestPop->timeOriginSTD = oldestPop->scaledtimeOriginInput / oldestPop->x;
-    oldestPop->timeOriginSTD =proposedTime;
+  
      oldestPop->scaledtimeOriginInput = oldestPop->timeOriginSTD * oldestPop->x;
     oldestPop->timeOriginInput =oldestPop->scaledtimeOriginInput *theta;
-    // }
-    // while(oldestPop->timeOriginInput< oldestPop->lowerBoundTimeOriginInput);
-    
+    u= (TreeNode *)(oldestPop->rMRCA->data);
+    v= (TreeNode *)(oldestPop->rMRCA->parent->data);
     if (mcmcOptions.verbose>=1)
        printf( "\n MRCA node id %d with input time %.10Lf and scaled %.10Lf and parent with input time %.10Lf and scaled %.10Lf was assigned to the oldest pop %d and time of origin %.10Lf, scaled %.10Lf std %.10Lf \n", oldestPop->rMRCA->node_index,u->timeInputTreeUnits, u->timePUnits, v->timeInputTreeUnits,  v->timePUnits, oldestPop->index, oldestPop->timeOriginInput, oldestPop->scaledtimeOriginInput,  oldestPop->timeOriginSTD  );
     //update the father node of the MRCA if needed
     if (v->timeInputTreeUnits < oldestPop->timeOriginInput){
-        printf( "\n updated node from %.10Lf to %.10Lf", v->timeInputTreeUnits, proposedTime);
+        printf( "\n updated node from %.10Lf to %.10Lf", v->timeInputTreeUnits, oldestPop->timeOriginSTD);
         v->timeInputTreeUnits = oldestPop->timeOriginInput;
         v->timePUnits =  v->timeInputTreeUnits / theta;
         oldestPop->rMRCA->parent->length =  v->timeInputTreeUnits - u->timeInputTreeUnits ;
         oldestPop->rMRCA->length= v->timeInputTreeUnits - u->timeInputTreeUnits;
-        
     }
     
 }
@@ -3802,7 +3845,7 @@ void Chain::samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *
     for( i = 0 ; i < numClones; i++)
     {
         popI=populations[i];
-        randomDelta = RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato, mcmcOptions.useGSLRandomGenerator);
+        randomDelta = Random::RandomLogUniform(mcmcOptions.Deltafrom, mcmcOptions.Deltato, mcmcOptions.useGSLRandomGenerator, NULL);
         //popI->delta = chain->proportionsVector[i] * randomDelta;
         popI->delta =  randomDelta;
         popI->growthRate =popI->delta  / popI->effectPopSize;
@@ -3810,7 +3853,7 @@ void Chain::samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *
         popI->deathRate= popI->birthRate - popI->growthRate;
     }
 }
-void Chain::samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, long int *seed )
+void Chain::samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, gsl_rng * randomGenerator )
 {
     int i;
     Population *popI;
@@ -3820,16 +3863,16 @@ void Chain::samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, long 
         popI=populations[i];
         if (mcmcOptions.priorsType ==0)
         {
-            randomGrowthRate = RandomLogUniform(mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto, mcmcOptions.useGSLRandomGenerator);
+            randomGrowthRate = Random::RandomLogUniform(mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto, mcmcOptions.useGSLRandomGenerator, randomGenerator);
         }
         if (mcmcOptions.priorsType ==2)
         {
-            randomGrowthRate =RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionGrowthRate, 0, mcmcOptions.useGSLRandomGenerator);
+            randomGrowthRate =Random::RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionGrowthRate, 0, mcmcOptions.useGSLRandomGenerator);
             
         }
         if (mcmcOptions.priorsType ==1)
         {
-            randomGrowthRate =RandomExponentialStartingFrom(mcmcOptions.lambdaExponentialPriorGrowthRate,0, mcmcOptions.useGSLRandomGenerator);
+            randomGrowthRate =Random::RandomExponentialStartingFrom(mcmcOptions.lambdaExponentialPriorGrowthRate,0, mcmcOptions.useGSLRandomGenerator, randomGenerator);
         }
         
         popI->deltaT =  randomGrowthRate;
@@ -3910,14 +3953,14 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
     //    printf("\n newick after move= %s  \n", newickString2);
     //    free(newickString2);
     //    newickString2=NULL;
-    long double  priorDensityNewTotalEffectivePopulationSize= LogUniformDensity(newTotalEffectPopulationSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
-    long double  priorDensityCurrentTotalEffectivePopulationSize= LogUniformDensity(oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    long double  priorDensityNewTotalEffectivePopulationSize= Distributions::LogUniformDensity(newTotalEffectPopulationSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
+    long double  priorDensityCurrentTotalEffectivePopulationSize= Distributions::LogUniformDensity(oldTotalEffectPopSize, mcmcOptions.totalEffectPopSizefrom, mcmcOptions.totalEffectPopSizeto);
     
     long double  sumLogNumerators= newLogConditionalLikelihoodTree +priorDensityNewTotalEffectivePopulationSize;
     
     long double  sumLogDenominators=currentlogConditionalLikelihoodTree +priorDensityCurrentTotalEffectivePopulationSize;
     
-    long double  randomNumber= randomUniformFromGsl();
+    long double  randomNumber= Random::randomUniformFromGsl();
     
     long double  LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
     if (log(randomNumber) < LogAcceptanceRate )
@@ -3941,7 +3984,7 @@ void Chain::newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions,
 long double   Chain::proposalSlidingWindow( long double  oldvalue,  long double  windowSize)
 {
     long double  newvalue =0;
-    newvalue = oldvalue + (randomUniformFromGsl()-0.5) * 0.5 * windowSize ;//windowSize is the distance  from the minimum to the  maximum value
+    newvalue = oldvalue + (Random::randomUniformFromGsl()-0.5) * 0.5 * windowSize ;//windowSize is the distance  from the minimum to the  maximum value
     if (newvalue <0 )
         newvalue = -  newvalue;
     return newvalue;
@@ -3995,7 +4038,7 @@ void Chain::newProportionsVectorMove(ProgramOptions &programOptions, char *Obser
     
     long double  sumLogDenominators=currentlogConditionalLikelihoodTree +priorDensityCurrentProportionsVector;
     
-    long double  randomNumber= randomUniformFromGsl();
+    long double  randomNumber= Random::randomUniformFromGsl();
     
     long double  LogAcceptanceRate = (sumLogNumerators - sumLogDenominators) >0? (sumLogNumerators - sumLogDenominators) :0;
     
@@ -4027,7 +4070,7 @@ void Chain::proposalProportionsVector(vector<long double  > &newProportionsvecto
         vectorForGamma[i]= tuningParameter * proportionsVector[i];
     }
     double  *proportionsVectorArray=(double  *)&proportionsVector[0];
-    randomDirichletFromGsl(numClones, proportionsVectorArray, &newProportionsvector[0]);
+    Random::randomDirichletFromGsl(numClones, proportionsVectorArray, &newProportionsvector[0]);
     
 }
 long double  Chain::DirichletDensity(vector<long double> &proportionsVector,  vector<long double> &concentrationVector, int sizeVector)
@@ -4226,7 +4269,7 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseAvailableEdgeOnRootedTr
             copyMRCAOfPopulation.erase(pop->oldrMRCA);
         }
         
-        random =randomUniformFromGsl();
+        random =Random::randomUniformFromGsl();
         nextEvent = bbinClones(random, cumBranchLengthsArray, cumBranchLengths.size());
         MRCA =availableEdges.at(nextEvent-1).second->edge.rtree.child;
         
@@ -4312,7 +4355,7 @@ long double  Chain::sumAdjacentEdges(std::map<pll_rnode_t*, vector<Population*>>
     }
     return result;
 }
-std::map<pll_rnode_t*, vector<Population*>> Chain::chooseNewTimeofOriginOnEdge(Population *pop, MCMCoptions &mcmcOptions)
+std::map<pll_rnode_t*, vector<Population*>> Chain::chooseNewTimeofOriginOnEdge(Population *pop, MCMCoptions &mcmcOptions, gsl_rng* randomGenerator)
 {
     TreeNode * u, *v;
     double m;
@@ -4332,14 +4375,14 @@ std::map<pll_rnode_t*, vector<Population*>> Chain::chooseNewTimeofOriginOnEdge(P
     
     if(mcmcOptions.kernelType ==1)
     {
-        proposedTime= randomNormalGreaterThan(pop->timeOriginInput, mcmcOptions.sigmaNormalKernelTimeofOrigin, u->timeInputTreeUnits);
+        proposedTime= Random::randomNormalGreaterThan(pop->timeOriginInput, mcmcOptions.sigmaNormalKernelTimeofOrigin, u->timeInputTreeUnits);
     }
     else if(mcmcOptions.kernelType ==0)
     {
         if(mcmcOptions.useGSLRandomGenerator)
-            randomNumber= randomUniformFromGsl();
+            randomNumber= Random::randomUniformFromGsl2(randomGenerator);
         else
-            randomNumber= randomUniformBoost();
+            randomNumber= Random::randomUniformBoost();
         
         m = exp(2 * log(mcmcOptions.paramMultiplierTimeOriginOldestPop) *(randomNumber -0.5));
         
@@ -4576,9 +4619,9 @@ void Chain::updateNodeInfoOldestPopulation(Population * oldestPop, double newMRC
     oldestPop->rMRCA->length =  v->timeInputTreeUnits - u->timeInputTreeUnits ;
     
 }
-void Chain::drawModelTimeOriginFromConditionalDensity(Population * oldestPop, MCMCoptions &mcmcOptions){
+void Chain::drawModelTimeOriginFromConditionalDensity(Population * oldestPop, MCMCoptions &mcmcOptions,  gsl_rng * randomGenerator){
     
-    long double modelTimeOriginOldestPop=RandomDensityModelTimeOrigin(oldestPop->delta, mcmcOptions.useGSLRandomGenerator,  oldestPop->lowerBoundTimeOriginInput );
+    long double modelTimeOriginOldestPop=Random::RandomDensityModelTimeOrigin(oldestPop->delta, mcmcOptions.useGSLRandomGenerator,  oldestPop->lowerBoundTimeOriginInput,  randomGenerator );
     
     oldestPop->timeOriginSTD = modelTimeOriginOldestPop;
     

@@ -27,12 +27,10 @@
 
 #include "mutationModel.h"
 
-
-
 #include "eigen.hpp"
 #include "random.h"
 
-
+using namespace Definitions;
 
 void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *seed,  std::vector<int> &DefaultModelSites, int numDefaultModelSites, std::vector<int> &AltModelSites, int numAltModelSites, long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet,  std::vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4], long double  mutationRate)
 {
@@ -56,7 +54,7 @@ void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *se
     }
     
     do{
-        numMutations = RandomPoisson (totalBranchSum, seed);
+        numMutations = Random::RandomPoisson (totalBranchSum, seed);
     }while( numISMmutations + numMutations > (ploidyFactor * numModelSites));
     
     
@@ -66,14 +64,14 @@ void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *se
     mutationAdded=NO;
     while (mutationsSoFar < numMutations)
     {
-        i = RandomUniformTo(numModelSites, seed, true);
+        i = Random::RandomUniformTo(numModelSites, seed, true);
         
         while (((doISMhaploid == NO)  && (allSites[i].numMutations != 0))  ||
                ((doISMhaploid == YES) && (genome == MATERNAL) && (allSites[i].numMutationsMaternal != 0)) ||
                ((doISMhaploid == YES) && (genome == PATERNAL) && (allSites[i].numMutationsPaternal != 0)))
         {
             //            fprintf (stderr, "\n\n site %d again!", i);
-            i = RandomUniformTo(numModelSites, seed, true);
+            i = Random::RandomUniformTo(numModelSites, seed, true);
             if (trials++ > 1000*numModelSites)
             {
                 fprintf (stderr, "\n\n ERROR: after %d trials cannot find an unmuted site",1000*numModelSites);
@@ -222,7 +220,7 @@ void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid,
             
             cumBranchLength = 0;
             
-            uniform = RandomUniform(seed) * totalTreeLength;
+            uniform = Random::RandomUniform(seed) * totalTreeLength;
             
         }
         
@@ -278,7 +276,7 @@ void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid,
                 
             {
                 
-                ran = RandomUniform(seed) * cumMij[ancstate][3];
+                ran = Random::RandomUniform(seed) * cumMij[ancstate][3];
                 
                 for (j=0; j<4; j++)
                     
@@ -365,7 +363,7 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
         {
             cumBranchLength = 0;
             //            long double  rUniform=RandomUniform(seed) * totalTreeLength;
-            uniform = RandomUniform(seed) * totalTreeLength;
+            uniform = Random::RandomUniform(seed) * totalTreeLength;
             
         }
         else
@@ -485,6 +483,7 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
 void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int doHKY, int doGTR, int doGTnR, long double &freqR, long double   &freqY,  long double  &freqAG,  long double  &freqCT,  double  titv,  double  freq[4],  double  Mij[4][4], int numAltModelSites, vector<int> &AltModelSites, vector<SiteStr> &allSites,  int rateVarAmongSites, long double  altModelMutationRate, int &numMU,  double  Root[],  double  Cijk[])
 {
     int     i, j;
+ 
     long double  beta, kappa;
     double  Qij[16];
      double  mr;
@@ -495,10 +494,11 @@ void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int d
     }
     else if (doHKY == YES)
     {
-        freqR = freq[A] + freq[G];
-        freqY = freq[C] + freq[T];
-        freqAG = freq[A] * freq[G];
-        freqCT = freq[C] * freq[T];
+       
+        freqR = freq[Definitions::A] + freq[Definitions::G];
+        freqY = freq[Definitions::C] + freq[Definitions::T];
+        freqAG = freq[Definitions::A] * freq[Definitions::G];
+        freqCT = freq[Definitions::C] * freq[Definitions::T];
         kappa = (titv* freqR*freqY)/(freqAG+freqCT);
         beta = 0.5 / (freqR*freqY + kappa*(freqAG+freqCT));
     }
@@ -668,9 +668,9 @@ void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr>
                 
                 
                 if (genome ==MATERNAL )
-                    newstate =p->maternalSequence[site]=ChooseUniformState (Pij[ancstate], seed, true);
+                    newstate =p->maternalSequence[site]=Random::ChooseUniformState (Pij[ancstate], seed, true);
                 else// paternal;
-                    newstate =p->paternalSequence[site]=ChooseUniformState (Pij[ancstate], seed, true);
+                    newstate =p->paternalSequence[site]=Random::ChooseUniformState (Pij[ancstate], seed, true);
                 //newstate = data[genome][cell][site] = ChooseUniformState (Pij[ancstate], seed);
                 
                 if (newstate != ancstate)
@@ -749,7 +749,7 @@ void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphab
     
     /* choose first trinucleotide */
     
-    chosenTriNucleotide = ChooseUniformState(triNucFreq, seed, true);
+    chosenTriNucleotide = Random::ChooseUniformState(triNucFreq, seed, true);
     
     
     
@@ -805,7 +805,7 @@ void SimulateTriNucFreqGenome (int cell, long int *seed, TreeNode *p, int alphab
         
         
         
-        nextNucleotide = ChooseUniformState(prob4, seed, true);
+        nextNucleotide = Random::ChooseUniformState(prob4, seed, true);
         
         p->maternalSequence[site]=p->paternalSequence[site]= allSites[site].referenceAllele = nextNucleotide;
         
@@ -839,7 +839,7 @@ void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rate
     
     if (rateVarAmongSites == YES)
         for (i=0; i<numSites; i++)
-            allSites[i].rateMultiplier = RandomGamma (alphaSites, seed, true) / alphaSites;
+            allSites[i].rateMultiplier = Random::RandomGamma (alphaSites, seed, true) / alphaSites;
     
     if (propAltModelSites == 0)/* only default model (ISM diploid) sites */
     {
@@ -885,7 +885,7 @@ void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rate
         
         for (i=0; i<numSites; i++)
         {
-            if (RandomUniform (seed) < propAltModelSites)
+            if (Random::RandomUniform (seed) < propAltModelSites)
                 AltModelSites[numAltModelSites++] = i;
             else
                 DefaultModelSites[numDefaultModelSites++] = i;

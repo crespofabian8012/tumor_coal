@@ -33,7 +33,7 @@
 #include <stdarg.h>
 #include <search.h>
 #include <time.h>
-
+#include <gsl/gsl_rng.h>
 
 #include "data_types.hpp"
 #include "definitions.hpp"
@@ -188,12 +188,12 @@ int set_tipclv_custom_error_model(pll_partition_t * partition,
                                   const char * sequence,
                                   double _seq_error_rate,
                                   double _dropout_rate);
-double LogUniformDensity(double value, double from, double to);
+
 void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCoptions &mcmcOptions);
 void computeUnfoldedISMSFS(int numSites,std::vector<SiteStr> &allSites,int numSNVs, std::vector<int> &SNVsites, std::vector<int> &SFS, std::vector<int> &numberDifferences);
 int countTrueVariants (std::vector<TreeNode *> &nodes,  int numSites, int numCells, TreeNode *HEALTHY_ROOT, std::vector<SiteStr> &allSites, std::vector<int> &variantSites, std::vector<int> &SNVsites );
 
-long double LogPowerLawDistibutionDensity(long double a, long double value, long double from);
+
 long double computeParamPowerDistribQuantileUntil(long double areaUntilb, long double b, long double from);
 void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions );
 #endif /* data_utils_hpp */

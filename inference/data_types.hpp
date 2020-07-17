@@ -30,7 +30,7 @@
 #include <sstream>
 #include <iostream>
 #include "definitions.hpp"
-//class gsl_rng;
+
 
 using namespace std;
 

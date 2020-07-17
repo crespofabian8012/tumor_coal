@@ -116,10 +116,17 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     
     deltaT = 0.0;
     olddeltaT = 0.0;
-    x = 0.0;
+    x = 1.0;
     oldx = 0.0;
     theta = 0.0;
     oldTheta = 0.0;
+    oldOrder=0;
+    oldScaledTimeOriginInput=0.0;
+    olddelta=0.0;
+    oldeffectPopSize =0.0;
+    oldDeathRate=0.0;
+    oldPopSize=0.0;
+    oldGrowthRate =0.0;
 }
 long double Population::ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones)
 {
@@ -407,7 +414,7 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
     
     w = 0;
 
-    random = RandomUniform(seed);
+    random = Random::RandomUniform(seed);
     *firstInd = Population::bbinClones(random, cumPopulPart, numActiveGametes)-1;
     w = 0;
     
@@ -420,7 +427,7 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
         
         do//choose randomly another individual to coalesce
         {
-            random = RandomUniform(seed);
+            random = Random::RandomUniform(seed);
             *secondInd = Population::bbinClones(random, cumPopulPart, numActiveGametes)-1;
             
         } while (*firstInd == *secondInd  );

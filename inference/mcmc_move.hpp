@@ -47,7 +47,7 @@ public:
     bool isInvalidMove;
     std::string name();
     MCMCmove(Chain *chain, std::string nameMove);
-    virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
+    virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator)=0;
     virtual void rollbackMove( ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
     virtual void safeCurrentValue( ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
     virtual long  double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
@@ -55,7 +55,7 @@ public:
     double numberRejected();
     Chain * getChain();
 public:
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
     
     // virtual ~MCMCmove()=0;
 };
@@ -63,82 +63,82 @@ public:
 class NewTotalEffectPopSizeMove:public MCMCmove{
 public:
     NewTotalEffectPopSizeMove(Chain *chain, std::string nameMove);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
     void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
 };
 
 class NewProportionsVectorMove:public MCMCmove{
 public:
     NewProportionsVectorMove(Chain *chain, std::string nameMove);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
     void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
 };
 class NewGrowthRateMoveForPopulation:public MCMCmove{
     Population *pop;
 public:
     NewGrowthRateMoveForPopulation(Chain *chain, std::string nameMove, Population *pop);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
     void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
 };
 
 class NewEffectPopSizeMoveForPopulation:public MCMCmove{//this is not used since we can change the total effective population size and the proportions vector to achieve the same
     Population *pop;
 public:
     NewEffectPopSizeMoveForPopulation(Chain *chain, std::string nameMove, Population *pop);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
     void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
 };
 
 class NewTimeOriginOnTreeforPopulationMove:public MCMCmove{
     Population *pop;
 public:
     NewTimeOriginOnTreeforPopulationMove(Chain *chain, std::string nameMove, Population *pop);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
     void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
 };
 class NewTimeOriginOnEdgeforPopulationMove:public MCMCmove{
     Population *pop;
 public:
     NewTimeOriginOnEdgeforPopulationMove(Chain *chain, std::string nameMove, Population *pop);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
     void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
 };
 class NewGlobalScaledMutationRateMove:public MCMCmove{
     Population *pop;
 public:
     NewGlobalScaledMutationRateMove(Chain *chain, std::string nameMove, Population *pop);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
     void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
 };
 class NewGlobalScaledGrowthRateForPopulationMove:public MCMCmove{
     Population *pop;
 public:
     NewGlobalScaledGrowthRateForPopulationMove(Chain *chain, std::string nameMove, Population *pop);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
     void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
 };
 #endif /* mcmc_move_hpp */

@@ -329,7 +329,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 }
                 //*thereIsMij = YES;
                 programOptions.thereIsMij=YES;
-                if (CheckMatrixSymmetry (Mij) == YES)
+                if (Utils::CheckMatrixSymmetry (Mij) == YES)
                 {
                     
                     //programOptions.doJC = NO;
@@ -1142,7 +1142,7 @@ Population* ChooseFatherPopulation(vector<Population*> &populations, int numClon
         
     }
     // now selecting the ancestral clone
-    ran = randomUniformFromGsl();
+    ran = Random::randomUniformFromGsl();
     //fprintf (stderr, "\n ran = %lf ", ran);
     int w = -1;
     for (k = 1; k < numClones ; k++)
@@ -1177,13 +1177,7 @@ void AssignCurrentSequencesToPopulation(vector<Population *> &populations, vecto
     int indexFirstObservedCellName;
     
     vector<int> CumSumNodes(numClones+1);
-    //int*  CumSamNodes = (int *) malloc ((numClones + 1)* (long) sizeof(int)); /* cumulative of samples in clones */
-    
-    //            if (!CumSamNodes)
-    //            {
-    //                fprintf (stderr, "Could not allocate CumSamNodes (%lu bytes)\n", (numNodes + 1) * (long) sizeof(int));
-    //                exit (1);
-    //            }
+   
     
     CumSumNodes[0] = 0;
     
@@ -1276,7 +1270,7 @@ void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  i
     //        fprintf (stderr, "\nError. The sum of partial active gametes is different to the total number of gametes, w %d != numActiveGametes %d. In Coalescence.", w, numActiveGametes);
     //        exit (-1);
     //    }
-    random = randomUniformFromGsl();
+    random = Random::randomUniformFromGsl();
     //fprintf (stderr, "\nran = %lf ", ran);
     *firstInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
     w = 0;
@@ -1291,7 +1285,7 @@ void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  i
         
         do//choose randomly another individual to coalesce
         {
-            random = randomUniformFromGsl();
+            random = Random::randomUniformFromGsl();
             *secondInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
             
         } while (*firstInd == *secondInd  );
@@ -1631,7 +1625,7 @@ TreeNode *BuildTree(vector<Population* > &populations,
         healthyTip->anc1 = healthyRoot;
         healthyRoot->right = healthyTip;
         
-        double  healthyTipBranchLengthRatio = randomUniformFromGsl();
+        double  healthyTipBranchLengthRatio = Random::randomUniformFromGsl();
         
         
         //we put the  time of healthy tip inside the tree root and 0
@@ -1946,7 +1940,7 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
                 {
                     for (site=0; site<numSites; site++)
                     {
-                        ran =  randomUniformFromGsl();
+                        ran =  Random::randomUniformFromGsl();
                         for (i=0; i<4; i++)
                         {
                             if (ran <= cumfreq[i])
@@ -2204,7 +2198,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
         //fprintf (stderr, "\n\n> numParcialActiveGametes= %d \n", numParcialActiveGametes);
         if ( popI->numActiveGametes >= 2) {
             ThisRateCA = (double)  popI->numActiveGametes * ((double)  popI->numActiveGametes - 1) / 2.0;
-            ThisTimeCA_W = RandomExponential (ThisRateCA, seed, true) ;
+            ThisTimeCA_W = Random::RandomExponential (ThisRateCA, seed, true) ;
             ThisTimeCA_V1 = Population::FmodelTstandard (currentTime, popI->timeOriginSTD, popI->delta);
             ThisTimeCA_V1 = ThisTimeCA_V1 + ThisTimeCA_W;
             // from standard time to model time, GstandardTmodel(V, T, delta)
@@ -3281,40 +3275,8 @@ void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
             cb_destroy(node->data);
     }
 }
-/***************************** LogUniformDensity *******************************/
-/* Log Uniform distribution density */
-
-long double LogUniformDensity(long double value, long double from, long double to)
-{
-    double result;
-    if (value >= exp(from) && value<= exp(to) )
-    {
-        result = -log(value) - log(to-from);
-        return result;
-    }
-    else
-    {
-        result=log(0);
-        return result;
-    }
-}
 
 
-
-/***************************** LogPowerLawDistibutionDensity *******************************/
-/* Log Power Law distribution density */
-long double LogPowerLawDistibutionDensity(long double a, long double value, long double from){
-    
-    if (value < from)
-        return log(0);
-   
-    long double firstTerm=log(a);
-    long double secondTerm=2*log(1+a*(value-from));
-    //long double fullTerm= a / (1 + a*(value-from))*(1 + a*(value-from));
-    long double logfullTerm= firstTerm -secondTerm;
-    long double result=logfullTerm;
-    return result;
-}
 /***************************** ReadMCMCParametersFromFile *******************************/
 /* Reads parameter values from the parameter file */
 
@@ -3516,12 +3478,12 @@ int countTrueVariants (vector<TreeNode *> &nodes,  int numSites, int numCells, T
         numberDiff=0;
         for (cell=0; cell<numCells; cell++)
         {    p= nodes.at(cell);
-            if (p->maternalSequence[site] != DELETION && p->maternalSequence[site] != HEALTHY_ROOT->maternalSequence[site])
+            if (p->maternalSequence[site] != Definitions::DELETION && p->maternalSequence[site] != HEALTHY_ROOT->maternalSequence[site])
             {
                 isVariant=YES;
                 numberDiff++;
             }
-            if (p->paternalSequence[site] != DELETION && p->paternalSequence[site] != HEALTHY_ROOT->paternalSequence[site])
+            if (p->paternalSequence[site] != Definitions::DELETION && p->paternalSequence[site] != HEALTHY_ROOT->paternalSequence[site])
             {
                 isVariant=YES;
                 numberDiff++;
@@ -3561,7 +3523,7 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     programOptions.doUsefixedMutationRate=0;
     programOptions.doSimulateData=NO;
     
-    programOptions.doUseFixedTree = YES;
+    programOptions.doUseFixedTree = NO;
     
     mcmcOptions.slidingWindowSizeTotalEffectPopSize = 20000;
     mcmcOptions.slidingWindowSizeGrowtRate=0.01;
@@ -3612,12 +3574,12 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     
     mcmcOptions.verbose = 0;
     mcmcOptions.printChainStateEvery=10000;
-    mcmcOptions.paramMultiplierGrowthRate = parameterMultiplierMCMCmove(mcmcOptions.lengthIntervalMultiplier);
-    mcmcOptions.paramMultiplierTheta =parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplier);
+    mcmcOptions.paramMultiplierGrowthRate = Utils::parameterMultiplierMCMCmove(mcmcOptions.lengthIntervalMultiplier);
+    mcmcOptions.paramMultiplierTheta =Utils::parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplier);
     
    // mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop = 0.008;
     mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop = 0.7;
-    mcmcOptions.paramMultiplierTimeOriginOldestPop =parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop);
+    mcmcOptions.paramMultiplierTimeOriginOldestPop =Utils::parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop);
     
     mcmcOptions.upperBoundTimeOriginInputOldestPop = 5;
     

@@ -377,7 +377,7 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
                             temp=p->cellName;
                         fprintf (fp,"%-12s ", temp);
                         for (j=0; j<numSites; j++)
-                            fprintf (fp, "%c", WhichIUPAC(p->maternalSequence[j],p->paternalSequence[j]));
+                            fprintf (fp, "%c", Utils::WhichIUPAC(p->maternalSequence[j],p->paternalSequence[j]));
                         fprintf (fp,"\n");
                         
                     }
@@ -386,7 +386,7 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
             
             fprintf (fp,"%-12s ", healthyTip->observedCellName);
             for (j=0; j<numSites; j++)
-                fprintf (fp, "%c", WhichIUPAC(healthyTip->maternalSequence[j],healthyTip->paternalSequence[j]));
+                fprintf (fp, "%c", Utils::WhichIUPAC(healthyTip->maternalSequence[j],healthyTip->paternalSequence[j]));
             fprintf (fp,"\n");
         }
         else // print maternal and paternal DNA haplotypes
@@ -403,11 +403,11 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
                             temp=p->cellName;
                         fprintf (fp,"m%-12s ", temp);
                         for (j=0; j<numSites; j++)
-                            fprintf (fp, "%c", WhichNuc(p->maternalSequence[j]));
+                            fprintf (fp, "%c", Utils::WhichNuc(p->maternalSequence[j]));
                         fprintf (fp,"\n");
                         fprintf (fp,"p%-12s ", temp);
                         for (j=0; j<numSites; j++)
-                            fprintf (fp, "%c", WhichNuc(p->paternalSequence[j]));
+                            fprintf (fp, "%c", Utils::WhichNuc(p->paternalSequence[j]));
                         fprintf (fp,"\n");
                     }
                 }
@@ -418,7 +418,7 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
                 fprintf (fp,"m%-12s ", healthyTip->cellName);
             
             for (j=0; j<numSites; j++)
-                fprintf (fp, "%c", WhichNuc(healthyTip->maternalSequence[j]));
+                fprintf (fp, "%c", Utils::WhichNuc(healthyTip->maternalSequence[j]));
             fprintf (fp,"\n");
             if (doUseObservedCellName == YES)
                 fprintf (fp,"p%-12s ", healthyTip->observedCellName);
@@ -426,7 +426,7 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
                 fprintf (fp,"p%-12s ", healthyTip->cellName);
             
             for (j=0; j<numSites; j++)
-                fprintf (fp, "%c", WhichNuc(healthyTip->paternalSequence[j]));
+                fprintf (fp, "%c", Utils::WhichNuc(healthyTip->paternalSequence[j]));
             fprintf (fp,"\n");
             
         }
@@ -447,7 +447,7 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
                     
                     fprintf (fp,"%-12s", temp);
                     for (j=0; j<numSites; j++)
-                        fprintf (fp, "%c", WhichConsensusBinary(p->maternalSequence[j],p->paternalSequence[j]));
+                        fprintf (fp, "%c", Utils::WhichConsensusBinary(p->maternalSequence[j],p->paternalSequence[j]));
                     fprintf (fp,"\n");
                 }
             }
@@ -470,7 +470,7 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
                         numAddedTips++;
                         fprintf (fp,"%-12s ", temp);
                         for (j=0; j<numSites; j++)
-                            fprintf (fp, "%c", WhichMut(p->maternalSequence[j]+p->paternalSequence[j]));
+                            fprintf (fp, "%c", Utils::WhichMut(p->maternalSequence[j]+p->paternalSequence[j]));
                         fprintf (fp,"\n");
                     }
                 }
@@ -483,7 +483,7 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
                 fprintf (fp,"%-12s ", healthyTip->cellName);
             
             for (j=0; j<numSites; j++)
-                fprintf (fp, "%c", WhichMut(healthyTip->maternalSequence[j]+healthyTip->paternalSequence[j]));
+                fprintf (fp, "%c", Utils::WhichMut(healthyTip->maternalSequence[j]+healthyTip->paternalSequence[j]));
             fprintf (fp,"\n");
             
             

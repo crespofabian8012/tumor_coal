@@ -31,7 +31,7 @@ KSEQ_INIT(int, read);
 
 /************************ ReadParametersFromFastaFile ***********************/
 /*  ReadParametersFromFastaFile */
-void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions){
+void Utils::ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions){
     //read fasta
     FILE *fastaFile;
     kseq_t *seq;
@@ -79,7 +79,7 @@ void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions)
 }
 /************************ ReadFastaFile ***********************/
 /*  ReadFastaFile */
-void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions){
+void Utils::ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions){
     FILE *fastaFile;
     kseq_t *seq;
     int l1;
@@ -183,7 +183,7 @@ void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **O
  
  */
 
-char WhichIUPAC (int allele1, int allele2)
+char Utils::WhichIUPAC (int allele1, int allele2)
 {
     if (allele1 == 0)
     {
@@ -195,9 +195,9 @@ char WhichIUPAC (int allele1, int allele2)
             return ('R');
         else if (allele2 == 3)    //AT
             return ('W');
-        else if (allele2 == ADO)    //A?
+        else if (allele2 == Definitions::ADO)    //A?
             return ('a');
-        else if (allele2 == DELETION)    //A–
+        else if (allele2 == Definitions::DELETION)    //A–
             return ('a');
         else
             return ('N');
@@ -212,9 +212,9 @@ char WhichIUPAC (int allele1, int allele2)
             return ('S');
         else if (allele2 == 3)    //CT
             return ('Y');
-        else if (allele2 == ADO)    //C?
+        else if (allele2 == Definitions::ADO)    //C?
             return ('c');
-        else if (allele2 == DELETION)    //C–
+        else if (allele2 == Definitions::DELETION)    //C–
             return ('c');
         else
             return ('N');
@@ -229,9 +229,9 @@ char WhichIUPAC (int allele1, int allele2)
             return ('G');
         else if (allele2 == 3)    //GT
             return ('K');
-        else if (allele2 == ADO)    //G?
+        else if (allele2 == Definitions::ADO)    //G?
             return ('g');
-        else if (allele2 == DELETION)    //G–
+        else if (allele2 == Definitions::DELETION)    //G–
             return ('g');
         else
             return ('N');
@@ -246,14 +246,14 @@ char WhichIUPAC (int allele1, int allele2)
             return ('K');
         else if (allele2 == 3)    //TT
             return ('T');
-        else if (allele2 == ADO)    //T?
+        else if (allele2 == Definitions::ADO)    //T?
             return ('t');
-        else if (allele2 == DELETION)    //T–
+        else if (allele2 == Definitions::DELETION)    //T–
             return ('t');
         else
             return ('N');
     }
-    else if (allele1 == ADO)
+    else if (allele1 == Definitions::ADO)
     {
         if (allele2 == 0)        //?A
             return ('a');
@@ -263,14 +263,14 @@ char WhichIUPAC (int allele1, int allele2)
             return ('g');
         else if (allele2 == 3)    //?T
             return ('t');
-        else if (allele2 == ADO)    //??
+        else if (allele2 == Definitions::ADO)    //??
             return ('-');
-        else if (allele2 == DELETION)    //?-
+        else if (allele2 == Definitions::DELETION)    //?-
             return ('-');
         else
             return ('N');
     }
-    else if (allele1 == DELETION)
+    else if (allele1 == Definitions::DELETION)
     {
         if (allele2 == 0)        //-A
             return ('a');
@@ -280,9 +280,9 @@ char WhichIUPAC (int allele1, int allele2)
             return ('g');
         else if (allele2 == 3)    //-T
             return ('t');
-        else if (allele2 == ADO)    //-?
+        else if (allele2 == Definitions::ADO)    //-?
             return ('-');
-        else if (allele2 == DELETION)    //--
+        else if (allele2 == Definitions::DELETION)    //--
             return ('-');
         else
             return ('N');
@@ -294,15 +294,15 @@ char WhichIUPAC (int allele1, int allele2)
 /********************* WhichMut ************************/
 /* Returns character representation for binary data */
 
-char WhichMut (int state)
+char Utils::WhichMut (int state)
 {
     if (state == 0)
         return ('0');
     else if (state == 1)
         return ('1');
-    else if (state == ADO)
+    else if (state == Definitions::ADO)
         return ('?');
-    else if (state == DELETION)
+    else if (state == Definitions::DELETION)
         return ('-');
     else
         return ('N');
@@ -324,7 +324,7 @@ char WhichMut (int state)
  _/_ => -
  */
 
-char WhichConsensusBinary (int allele1, int allele2)
+char Utils::WhichConsensusBinary (int allele1, int allele2)
 {
     if (allele1 == 0)
     {
@@ -332,9 +332,9 @@ char WhichConsensusBinary (int allele1, int allele2)
             return ('0');
         else if (allele2 == 1)    //01
             return ('1');
-        else if (allele2 == ADO)    //0?
+        else if (allele2 == Definitions::ADO)    //0?
             return ('0');
-        else if (allele2 == DELETION)    //0-
+        else if (allele2 == Definitions::DELETION)    //0-
             return ('0');
         else
             return ('N');
@@ -345,35 +345,35 @@ char WhichConsensusBinary (int allele1, int allele2)
             return ('1');
         else if (allele2 == 1)    //11
             return ('2');
-        else if (allele2 == ADO)    //1?
+        else if (allele2 == Definitions::ADO)    //1?
             return ('2');
-        else if (allele2 == DELETION)    //0-
+        else if (allele2 == Definitions::DELETION)    //0-
             return ('2');
         else
             return ('N');
     }
-    else if (allele1 == ADO)
+    else if (allele1 == Definitions::ADO)
     {
         if (allele2 == 0)        //?0
             return ('0');
         else if (allele2 == 1)    //?1
             return ('2');
-        else if (allele2 == ADO)    //??
+        else if (allele2 == Definitions::ADO)    //??
             return ('-');
-        else if (allele2 == DELETION)    //?-
+        else if (allele2 == Definitions::DELETION)    //?-
             return ('-');
         else
             return ('N');
     }
-    else if (allele1 == DELETION)
+    else if (allele1 == Definitions::DELETION)
     {
         if (allele2 == 0)        //-0
             return ('0');
         else if (allele2 == 1)    //-1
             return ('2');
-        else if (allele2 == ADO)    //-?
+        else if (allele2 == Definitions::ADO)    //-?
             return ('-');
-        else if (allele2 == DELETION)    //--
+        else if (allele2 == Definitions::DELETION)    //--
             return ('-');
         else
             return ('N');
@@ -385,19 +385,19 @@ char WhichConsensusBinary (int allele1, int allele2)
 /********************* WhichNuc ************************/
 /* Returns character representation for nucleotides */
 
-char WhichNuc (int nucleotide)
+char Utils::WhichNuc (int nucleotide)
 {
-    if (nucleotide == A)
+    if (nucleotide == Definitions::A)
         return ('A');
-    else if (nucleotide == C)
+    else if (nucleotide == Definitions::C)
         return ('C');
-    else if (nucleotide == G)
+    else if (nucleotide == Definitions::G)
         return ('G');
-    else if (nucleotide == T)
+    else if (nucleotide == Definitions::T)
         return ('T');
-    else if (nucleotide == ADO)
+    else if (nucleotide == Definitions::ADO)
         return ('?');
-    else if (nucleotide == DELETION)
+    else if (nucleotide == Definitions::DELETION)
         return ('-');
     else
         return ('N');
@@ -406,7 +406,7 @@ char WhichNuc (int nucleotide)
 /************************ CheckMatrixSymmetry **************************/
 /* Checks whether a given matrix is symmetric */
 
-int CheckMatrixSymmetry(double matrix[4][4])
+int Utils::CheckMatrixSymmetry(double matrix[4][4])
 {
     int i,j;
     
@@ -420,24 +420,24 @@ int CheckMatrixSymmetry(double matrix[4][4])
 /********************* WhichNucChar ************************/
 /* Returns integer representation for character nucleotudes */
 
-int WhichNucChar (char nucleotide)
+int Utils::WhichNucChar (char nucleotide)
 {
     if (nucleotide == 'A')
-        return (A);
+        return (Definitions::A);
     else if (nucleotide == 'C')
-        return (C);
+        return (Definitions::C);
     else if (nucleotide == 'G')
-        return (G);
+        return (Definitions::G);
     else if (nucleotide == 'T')
-        return (T);
+        return (Definitions::T);
     else if (nucleotide == '?')
-        return (ADO);
+        return (Definitions::ADO);
     else if (nucleotide == '-')
-        return (DELETION);
+        return (Definitions::DELETION);
     else if (nucleotide == 'N')
-        return (N);
+        return (Definitions::N);
     else if (nucleotide == 'R')
-        return (R);
+        return (Definitions::R);
     else
     {
         fprintf (stderr, "\nERROR in WhichNucChar: nucleotide = %c\n",  nucleotide);
@@ -448,7 +448,7 @@ int WhichNucChar (char nucleotide)
 /********************* WhichGenotypeChar ************************/
 /* Returns integer representation for character nucleotudes */
 
-int WhichGenotypeChar (char nucleotide)
+int Utils::WhichGenotypeChar (char nucleotide)
 {
     if (nucleotide == 'A')
         return (AA);
@@ -463,7 +463,7 @@ int WhichGenotypeChar (char nucleotide)
     else if (nucleotide == '-')
         return (__);
     else if (nucleotide == 'N')
-        return (N);
+        return (Definitions::N);
     else if (nucleotide == 'R')
         return (AG);
     else if (nucleotide == 'M')
@@ -494,10 +494,34 @@ int WhichGenotypeChar (char nucleotide)
 /********************* parameterMultiplierMCMCmove ************************/
 
 
-double parameterMultiplierMCMCmove (double lengthInterval)
+double Utils::parameterMultiplierMCMCmove (double lengthInterval)
 {
     double result = 0.0;
     
     result = (lengthInterval)/2.0 + sqrt(1 + (lengthInterval * lengthInterval)* 0.25);
     return result;
+}
+/********************* SequenceToIntegers ************************/
+
+vector<int> Utils::SequenceToIntegers(char ** sequence, int length)
+{
+    vector<int> result(length);
+    for(unsigned int i=0; i< length; i++)
+    {
+        result[i]=WhichNucChar(*sequence[i]);
+        
+    }
+    return(result);
+}
+/********************* GenotypesToIntegers ************************/
+
+vector<int> Utils::GenotypesToIntegers(char ** sequence, int length)
+{
+    vector<int> result(length);
+    for(unsigned int i=0; i< length; i++)
+    {
+        result[i]=WhichGenotypeChar (*sequence[i]);
+        
+    }
+    return(result);
 }

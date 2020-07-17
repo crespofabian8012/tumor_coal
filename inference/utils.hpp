@@ -35,41 +35,45 @@
 //class TreeNode;
 //class Population;
 //using namespace std;
-void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions);
-void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions);
+struct Utils
+{
+static void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions);
+static void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions);
 
-int CheckMatrixSymmetry(double matrix[4][4]);
-int WhichNucChar (char nucleotide);
-int ChooseUniformState ( double *prob, long int *seed);
-char WhichIUPAC (int allele1, int allele2);
-char *WhichGenotypeFromIUPAC (int  iupac);
-int WhichGenotypeChar (char nucleotide);
-char WhichNuc (int nucleotide);
-char WhichConsensusBinary (int allele1, int allele2);
-char WhichMut (int state);
-void  normalizeVector(double *vector, int length);
-int compareIntDescending(const void *a, const void *b);
-int CompareGenotypes (int a1, int a2, int b1, int b2);
+static int CheckMatrixSymmetry(double matrix[4][4]);
+static int WhichNucChar (char nucleotide);
+static vector<int> SequenceToIntegers(char ** sequence, int length);
+static vector<int> GenotypesToIntegers(char ** sequence, int length);
+static int ChooseUniformState ( double *prob, long int *seed);
+static char WhichIUPAC (int allele1, int allele2);
+static char *WhichGenotypeFromIUPAC (int  iupac);
+static int WhichGenotypeChar (char nucleotide);
+static char WhichNuc (int nucleotide);
+static char WhichConsensusBinary (int allele1, int allele2);
+static char WhichMut (int state);
+static void  normalizeVector(double *vector, int length);
+static int compareIntDescending(const void *a, const void *b);
+static int CompareGenotypes (int a1, int a2, int b1, int b2);
 
-double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
+static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);
 
 static void unscale(double * prob, unsigned int times);
 
-double DistanceBetweenSFS(int* SFS1, int*SFS, int numSNVs,  int numSites);
+static double DistanceBetweenSFS(int* SFS1, int*SFS, int numSNVs,  int numSites);
 
 
-int computeTajimaD(TreeNode **treeTips,  int numSites, int numCells);
+static int computeTajimaD(TreeNode **treeTips,  int numSites, int numCells);
 
-double ComputeESS(double *weights, int numberWeights);
+static double ComputeESS(double *weights, int numberWeights);
 //void computeUnfoldedISMSFS(int numSites,SiteStr* allSites,int numSNVs, int* SNVsites, int* SFS, int *numberDifferences);
 
-void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptions &programOptions ) ;
+static void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptions &programOptions ) ;
 
-void computeGenotypesFreq(double freqs[10], pll_msa_t * msa);
+static void computeGenotypesFreq(double freqs[10], pll_msa_t * msa);
 
-void InitNumberNodes(double *TotalBirthRate, double *TotalDeathRate, int *TotalN,  Population **populations, ProgramOptions &programOptions) ;
+static void InitNumberNodes(double *TotalBirthRate, double *TotalDeathRate, int *TotalN,  Population **populations, ProgramOptions &programOptions) ;
 
 
-double parameterMultiplierMCMCmove (double lengthInterval);
-
+static double parameterMultiplierMCMCmove (double lengthInterval);
+};
 #endif /* utils_h */

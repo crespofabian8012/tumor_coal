@@ -917,7 +917,8 @@ pll_unode_t * Chain::MakeCoalescenceTree (long int *seed,
                                           //                           pll_unode_t** nodes,
                                           //                           pll_unode_t** treeTips,
                                           //                           pll_unode_t    **treeRootInit,
-                                          char* ObservedCellNames[],
+                                          std::vector<std::vector<int> > ObservedData,
+                                            char* ObservedCellNames[],
                                           vector<int> &sampleSizes
                                           ) {
     
@@ -942,6 +943,7 @@ pll_unode_t * Chain::MakeCoalescenceTree (long int *seed,
     int         ThisCloneNumberMigrations, ThisM;
     int nextAvailable;
     Population *pop;
+ 
     
     /* defaults */
     isCoalescence = NO;
@@ -969,6 +971,7 @@ pll_unode_t * Chain::MakeCoalescenceTree (long int *seed,
     //InitListPossibleMigrations(populations, numClones);
     for (i = 0; i < numClones; i++){
         pop =populations[i];
+        pop->sampleSize= sampleSizes[i];
         pop->resetMigrationsList();
     }
     //resetMigrationsList( populations,  numClones);
@@ -980,9 +983,9 @@ pll_unode_t * Chain::MakeCoalescenceTree (long int *seed,
         p->next =NULL;
         p->back=NULL;
         t = new TreeNode(msa->length);
+       
+        t->genotypeSequence = ObservedData[i];
         
-        t->paternalSequence = Utils::SequenceToIntegers(msa->sequence, msa->length);
-        t->maternalSequence =  Utils::SequenceToIntegers(msa->sequence, msa->length);
         p->data = new TreeNode(msa->length);
         treeTips.push_back(p);
         nodes.push_back(p);
@@ -1138,8 +1141,6 @@ void Chain::AssignSequencesToPopulations(
             {
                 //fprintf (stderr,"\ncumIndivid=%d <= CumSamNodes[i]=%d, in clone %d\n", cumIndivid, CumSamNodes[i], pop->index);
                 pop->idsActiveGametes.push_back(j);
-                
-                
                 pop->idsGametes.push_back(j);
                 pop->numGametes=pop->numGametes+1;
                 
@@ -1147,8 +1148,7 @@ void Chain::AssignSequencesToPopulations(
                 u->indexCurrentClone = currentPopIndex;
                 u->effectPopSize= pop->effectPopSize;
                 u->orderCurrentClone = pop->order;
-                
-                
+    
                 if (programOptions.doUseObservedCellNames)
                     strcpy( u->observedCellName,ObservedCellNames[indexFirstObservedCellName + pop->numActiveGametes ]);
                 pop->numActiveGametes=pop->numActiveGametes+1;
@@ -1212,6 +1212,18 @@ void Chain::initProportionsVector(){
         oldproportionsVector.push_back(0);
     }
     
+}
+void Chain::initProportionsVectorFromSampleSizes(vector<int> sampleSizes)
+{
+    int sum =0;
+    for (size_t i = 0; i < numClones; i++)
+    {
+        sum+=sampleSizes.at(i);
+    }
+    for (size_t i = 0; i < numClones; i++)
+    {
+        proportionsVector.at(i) =(long double)sampleSizes.at(i) / sum ;
+    }
 }
 void Chain::generateProportionsVectorFromDirichlet(long double  alpha[]){
     
@@ -1481,13 +1493,20 @@ void Chain::RelabelNodes(pll_unode_t *p, int &intLabel)
 {
     if (p != NULL)
     {
+        TreeNode *u=NULL;
+        TreeNode *u1=NULL;
+        TreeNode *u2=NULL;
+        if (p->data !=NULL)
+          u= (TreeNode *)(p->data);
+        if (p->next  !=NULL && p->next->data!=NULL )
+           u1= (TreeNode *)(p->next->data);
+        if (p->next !=NULL && p->next->next!=NULL && p->next->next->data!=NULL )
+           u2= (TreeNode *)(p->next->next->data);
         
-        TreeNode *u= (TreeNode *)(p->data);
-        TreeNode *u1= (TreeNode *)(p->next->data);
-        TreeNode *u2= (TreeNode *)(p->next->next->data);
-        
-        RelabelNodes (p->next->back, intLabel);
-        RelabelNodes (p->next->next->back, intLabel);
+        if (u1!=NULL)
+           RelabelNodes (p->next->back, intLabel);
+        if (u2!=NULL)
+           RelabelNodes (p->next->next->back, intLabel);
         /*RelabelNodes (p->outgroup);*/
         // if (p->left == NULL && p->right == NULL) /* is tip */
         if (p->back != NULL && p->next->back == NULL) /* is tip */
@@ -1496,14 +1515,27 @@ void Chain::RelabelNodes(pll_unode_t *p, int &intLabel)
             //  p->label = (*intLabel);
             // *intLabel=*intLabel+1;
             //p->label = p->index ;
-            
-            u->label =u1->label= u2->label= u->index ;
+            if (u!=NULL)
+            {
+                u->label =u->index;
+                if (u1!=NULL)
+                    u1->label=u->index ;
+                if (u2!=NULL)
+                  u2->label= u->index ;
+            }
         }
         else                  /* all ancester */
         {
             //p->label = intLabel++;
             // p->label = intLabel;
-            u->label =u1->label= u2->label= intLabel ;
+            if (u!=NULL)
+            {
+                u->label =u->index;
+                if (u1!=NULL)
+                    u1->label=u->index ;
+                if (u2!=NULL)
+                    u2->label= u->index ;
+            }
             intLabel=intLabel+1;
         }
     }
@@ -2418,7 +2450,7 @@ void Chain::initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, Program
     }
 }
 
-void Chain::initPopulationsProportions() {
+void Chain::initPopulationsThetaDelta() {
     for (unsigned int i = 0; i < numClones; ++i)
     {
         auto popI =  populations[i];
@@ -2500,7 +2532,7 @@ void Chain::initMRCAOldestPopulation(string& healthyTipLabel)
     }
 }
 
-Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, gsl_rng * randomGenerator, char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, string& healthyTipLabel)
+Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, gsl_rng * randomGenerator, std::vector<std::vector<int> > ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, string& healthyTipLabel)
 {
   
     int        numCA, numMIG;
@@ -2526,9 +2558,8 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
     {
         Population* oldestPop=chain->getPopulationbyIndex(chain->numClones -1);
         oldestPop->timeOriginSTD  =   Random::RandomDensityModelTimeOrigin (oldestPop->delta, mcmcOptions.useGSLRandomGenerator, 0, randomGenerator );
-        
-
-    
+        chain->initProportionsVectorFromSampleSizes(sampleSizes);
+        chain->initPopulationsThetaDelta();
         chain->root = chain->MakeCoalescenceTree (seed,
                                                  randomGenerator,
                                                   msa,
@@ -2542,7 +2573,9 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
                                                   numMIG,
                                                   numCA,
                                                   numEventsTot,
-                                                  ObservedCellNames, sampleSizes
+                                                  ObservedData,
+                                                  ObservedCellNames,
+                                                  sampleSizes
                                                   ) ;
         
         //generate the newick representation of the simulated tree
@@ -2570,7 +2603,7 @@ Chain *Chain::initializeChain(   ProgramOptions &programOptions,  MCMCoptions &m
         chain->rMRCAPopulation = chain->initTimeOfOriginsOnRootedTree( chain->edgeLengths, programOptions.numClones -1,  healthyTipLabel, mcmcOptions, randomGenerator);
         alpha=chain->initVectorSampleSizes(healthyTipLabel, mcmcOptions, programOptions);
         Random::randomDirichletFromVector (alpha, chain->proportionsVector);
-        chain->initPopulationsProportions();
+        chain->initPopulationsThetaDelta();
         
         TreeNode *u= (TreeNode *)(oldestPop->rMRCA->data);
         oldestPop->setLowerBoundTimeOriginInput(u->timeInputTreeUnits);

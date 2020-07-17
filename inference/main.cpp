@@ -176,7 +176,7 @@ int main(int argc, char* argv[] )
         for(chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
         {
             currentRandomGenerator =randomGenerators.at(chainNumber);
-            chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, currentRandomGenerator, ObservedCellNames, msa,  initialRootedTree, healthyTipLabel);
+            chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, currentRandomGenerator, ObservedData,ObservedCellNames, msa,  initialRootedTree, healthyTipLabel);
             chains.at(chainNumber)->chainNumber =chainNumber;
             chains.at(chainNumber)->PrepareFiles(filePaths, programOptions, chains.at(chainNumber)->files, chainNumber);
             chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,

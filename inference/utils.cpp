@@ -518,9 +518,10 @@ vector<int> Utils::SequenceToIntegers(char ** sequence, int length)
 vector<int> Utils::GenotypesToIntegers(char ** sequence, int length)
 {
     vector<int> result(length);
+    char * c;
     for(unsigned int i=0; i< length; i++)
-    {
-        result[i]=WhichGenotypeChar (*sequence[i]);
+    {   c=sequence[i];
+        result[i]=WhichGenotypeChar (*c);
         
     }
     return(result);

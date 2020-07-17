@@ -160,6 +160,7 @@ public:
                                        int  &numMIG,
                                        int  &numCA,
                                        long double  &numEventsTot,
+                                       std::vector<std::vector<int> > ObservedData,
                                        char* ObservedCellNames[],
                                        std::vector<int> &sampleSizes
                                        );
@@ -199,7 +200,8 @@ public:
     
  
     
-    static Chain *initializeChain( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, std::vector<int> &sampleSizes, gsl_rng* randomGenerator, char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, string& healthyTipLabel);
+    static Chain *initializeChain( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, std::vector<int> &sampleSizes, gsl_rng* randomGenerator, std::vector<std::vector<int>> ObservedData,
+                                  char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, string& healthyTipLabel);
     
     
    
@@ -221,6 +223,7 @@ public:
     void initPopulationsCoalescentAndMigrationEvents(std::map<pll_unode_t*, Population*> mrcaOfPopulation );
     void initPopulationCoalescentAndMigrationEventsFromRootNodeOnTree(pll_unode_t *p, Population *population, std::map<pll_unode_t*, Population*> mrcaOfPopulation );
     void initProportionsVector();
+    void initProportionsVectorFromSampleSizes(vector<int> sampleSizes);
     void generateProportionsVectorFromDirichlet(long double alpha[]);
     void initPopulationMigration();
     void initTotalEffectivePopulationSize(MCMCoptions &mcmcOptions, gsl_rng* randomGenerator);
@@ -288,7 +291,7 @@ public:
     long double SumLogProbFatherPopulations() ;
     void initMRCAOldestPopulation(string& healthyTipLabel);
     vector<long double> initVectorSampleSizes(std::string &healthyTipLabel, MCMCoptions &mcmcOptions, ProgramOptions &programOptions);
-    void initPopulationsProportions();
+    void initPopulationsThetaDelta();
     
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);

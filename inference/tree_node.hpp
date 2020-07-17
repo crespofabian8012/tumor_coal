@@ -48,9 +48,11 @@ public:
     char        observedCellName[200];
     std::vector<int>        maternalSequence;
     std::vector<int>        paternalSequence;
+    std::vector<int>        genotypeSequence;
     std::vector<int>        numbersMutationsUnderSubtreePerSite;
     std::vector<int>        numbersMaternalMutationsPerSite;
     std::vector<int>        numbersPaternalMutationsPerSite;
+    
     bool         isLeaf;
     int numberOfTipsSubTree;
     std::vector<int> numberTipsByPopulation;

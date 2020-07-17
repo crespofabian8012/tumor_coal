@@ -168,7 +168,7 @@ compareExponentialPriorsPosterior=function(chainPath_List,number.iterations,perc
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
           legend.title = element_blank(),
           legend.position = c(.30,.70),
-          legend.text.align = 0)+
+          legend.text.align = 0)+ theme_bw()+
            annotation_custom(grob1)
         #+
          # scale_colour_manual(values = c("red"), labels = c("Theor. Prior"))
@@ -186,7 +186,7 @@ compareExponentialPriorsPosterior=function(chainPath_List,number.iterations,perc
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
           legend.title = element_blank(),
           legend.position = c(.30,.90),
-          legend.text.align = 0)+
+          legend.text.align = 0)+ theme_bw()+
     scale_colour_manual( values=c('green','blue' ), labels=c(expression('Prior'),expression('Posterior')))+
     annotation_custom(grob2)
     
@@ -198,7 +198,7 @@ compareExponentialPriorsPosterior=function(chainPath_List,number.iterations,perc
           plot.title = element_text(size=15, face="bold", vjust=2),
           axis.title.x=element_text(size=10,face="bold",vjust=-0.5,hjust=0.5),
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
-          legend.text.align = 0)+
+          legend.text.align = 0)+ theme_bw()+
           scale_fill_manual( values=c('green','blue'), labels=c(expression('Prior'),expression('Posterior')))
   
   ggpubr::ggarrange(g1, g2, g3, 
@@ -208,7 +208,7 @@ compareExponentialPriorsPosterior=function(chainPath_List,number.iterations,perc
   ggsave(paste(path_to_save, "/",column_name, ".png", sep=""))
 
 }
-plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_to_compare,  column_name, path_to_save)
+plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_to_compare,thinning_values_to_compare, column_name, path_to_save)
 {
   require(data.table)
   require(dplyr)
@@ -242,6 +242,7 @@ plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_t
   lags,column_name)
   
   thinning= max(unlist(list.autocorr))
+  thinnig = max(thinning, thinning_values_to_compare)
   print(thinning)
   
   
@@ -281,6 +282,9 @@ plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_t
   
   if (!is.null(values_to_compare) && length(values_to_compare)>0)
     {
+    indexes<-seq(0,length(values_to_compare),thinning)
+    values_to_compare=values_to_compare[indexes]
+    
     all.dat<-data.frame( Posterior=log(posterior_values), PosteriorR=log(values_to_compare))
      color.values=c('blue', 'green')
      distrib.labels=c(expression('Posterior'),expression('PosteriorR'))
@@ -326,7 +330,7 @@ plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_t
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
           legend.title = element_blank(),
           legend.position = "bottom",
-          legend.text.align = 0)+
+          legend.text.align = 0)+ theme_bw()+
           annotation_custom(grob1)
  
   
@@ -342,7 +346,7 @@ plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_t
           legend.title = element_blank(),
           legend.position ="bottom",
           legend.text.align = 0)+
-         annotation_custom(grob2)+
+         annotation_custom(grob2)+ theme_bw()+
     scale_colour_manual( values=color.values, labels=distrib.labels)
   
   g3<-ggplot(data.melted,aes(x=variable, y=value, fill=variable)) + geom_boxplot()+
@@ -353,7 +357,7 @@ plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_t
           plot.title = element_text(size=15, face="bold", vjust=2),
           axis.title.x=element_text(size=10,face="bold",vjust=-0.5,hjust=0.5),
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
-          legend.text.align = 0)+
+          legend.text.align = 0)+ theme_bw()+
     scale_fill_manual( values=color.values, labels=distrib.labels)
   
   ggpubr::ggarrange(g1, g2, g3, 
@@ -386,7 +390,8 @@ get.thinning=function(chain_data,number.iterations, lags, threshold_corr){
   }
   
 }
-thin.chain.data=function(chain_data,number.iterations, percent_burn_in, thinning){
+thin.chain.data=function(chain_data,number.iterations, percent_burn_in, thinning)
+{
   if (length(chain_data)>0 && thinning >1 && percent_burn_in >=0 && percent_burn_in< 1 )
   {
     mcmc_data<-mcmc(data= chain_data, start = 1, end = number.iterations, thin = 1)
@@ -396,7 +401,6 @@ thin.chain.data=function(chain_data,number.iterations, percent_burn_in, thinning
     thinned_data=chain_data_after_burn_in[indexes]
     return(thinned_data)
   }
-  
 }
 
 thinning=100

@@ -29,6 +29,7 @@
 
 #include "data_types.hpp"
 #include "data_utils.hpp"
+#include "output_functions.hpp"
 
 using namespace std;
 
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
         input_path = argv[1];
     else{
         fprintf (stderr, "\nERROR: No parameters specified (use command line or parameter file)");
-        PrintUsage();
+        Output::PrintUsage();
     }
     
     // 1. call function to parse the input file
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
     else
     {
         fprintf (stderr, "\nERROR: No parameters specified (use command line or parameter file)");
-        PrintUsage();
+        Output::PrintUsage();
     }
 
     // 2. create and initialize data structures

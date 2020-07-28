@@ -45,6 +45,8 @@ TreeNode::TreeNode(int numSites)
     //    nodeBack=NULL;
     time = 0;
     timePUnits = 0;
+    scaledByThetaTimeInputTreeUnits=0;
+    timeInputTreeUnits=0;
     length = 0;
     lengthModelUnits = 0;
     index = 0;
@@ -79,6 +81,7 @@ void TreeNode::initSequenceVectors(int size){
         
         maternalSequence.push_back(0);
         paternalSequence.push_back(0);
+        genotypeSequence.push_back(0);
         numbersMutationsUnderSubtreePerSite.push_back(0);
         numbersMaternalMutationsPerSite.push_back(0);
         numbersPaternalMutationsPerSite.push_back(0);

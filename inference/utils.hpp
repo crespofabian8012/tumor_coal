@@ -37,7 +37,7 @@
 //using namespace std;
 struct Utils
 {
-static void ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions);
+static void ReadParametersFromFastaFile(char *fileName, int &numCells, int &TotalNumSequences, int &numSites);
 static void ReadFastaFile(char *fileName, vector<vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions);
 
 static int CheckMatrixSymmetry(double matrix[4][4]);
@@ -75,5 +75,11 @@ static void InitNumberNodes(double *TotalBirthRate, double *TotalDeathRate, int 
 
 
 static double parameterMultiplierMCMCmove (double lengthInterval);
+    
+static   char * cb_serialize(const pll_rnode_t * node);
+
+static  char * rTreeToNewick(const pll_rnode_t * root,
+                             char * (*cb_serialize)(const pll_rnode_t *));
+static char* appendCharToCharArray(char* array, char a);
 };
 #endif /* utils_h */

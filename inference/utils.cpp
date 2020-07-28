@@ -31,7 +31,7 @@ KSEQ_INIT(int, read);
 
 /************************ ReadParametersFromFastaFile ***********************/
 /*  ReadParametersFromFastaFile */
-void Utils::ReadParametersFromFastaFile(char *fileName, ProgramOptions &programOptions){
+void Utils::ReadParametersFromFastaFile(char *fileName, int &numCells, int &TotalNumSequences, int &numSites){
     //read fasta
     FILE *fastaFile;
     kseq_t *seq;
@@ -56,16 +56,16 @@ void Utils::ReadParametersFromFastaFile(char *fileName, ProgramOptions &programO
             }
         }
         
-        programOptions.numSites=max_length;
+        numSites=max_length;
         if (numberSeq >=1){
             // *numCells =numberSeq;//not counting the healthy cell
-            programOptions.numCells=numberSeq;
-            programOptions.TotalNumSequences=numberSeq;
+            numCells=numberSeq;
+            TotalNumSequences=numberSeq;
         }
         else{
             //   *numCells =0;
-            programOptions.numCells=numberSeq;
-            programOptions.TotalNumSequences=numberSeq;
+           numCells=numberSeq;
+           TotalNumSequences=numberSeq;
         }
         kseq_destroy(seq);
         fclose(fastaFile);
@@ -73,7 +73,7 @@ void Utils::ReadParametersFromFastaFile(char *fileName, ProgramOptions &programO
     else{
         
         fprintf (stderr, "\nERROR: Can't read fasta file.");
-        PrintUsage();
+        Output::PrintUsage();
         
     }
 }
@@ -525,4 +525,28 @@ vector<int> Utils::GenotypesToIntegers(char ** sequence, int length)
         
     }
     return(result);
+}
+/********************* cb_serialize ************************/
+
+char * Utils::cb_serialize(const pll_rnode_t * node){
+    char * newick=NULL;
+    if (!node) return NULL;
+    if (node->left ==NULL && node->right==NULL)
+       asprintf(&newick, "%s:%.15f", node->label , node->length);
+    else
+       asprintf(&newick, "%s:%.15f", "" , node->length);
+    return(newick);
+}
+/********************* appendCharToCharArray ************************/
+char* Utils::appendCharToCharArray(char* array, char a)
+{
+    size_t len = strlen(array);
+    
+    char* ret = new char[len+2];
+    
+    strcpy(ret, array);
+    ret[len] = a;
+    ret[len+1] = '\0';
+    
+    return ret;
 }

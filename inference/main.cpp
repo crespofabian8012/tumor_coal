@@ -38,6 +38,7 @@
 #include "definitions.hpp"
 #include "utils.hpp"
 #include "constants.hpp"
+#include "output_functions.hpp"
 
 #include <gsl/gsl_randist.h>
 
@@ -61,6 +62,7 @@ int main(int argc, char* argv[] )
 {
     FILE *input_file;
     char* input_path;
+    int k=0;
     
     char *fileNameFasta ;//= argv[2];
     char *fileNamePhylip ;//= argv[3];
@@ -80,7 +82,7 @@ int main(int argc, char* argv[] )
     {
         
         fprintf (stderr, "\nERROR: No parameters specified (use command  parameter file)");
-        PrintUsage();
+        Output::PrintUsage();
     }
     if (argc <= 2 )//only a path to a MCMC configuration file
         input_path = argv[1];
@@ -90,7 +92,7 @@ int main(int argc, char* argv[] )
         if (!mcmcOptions.noData)
         {
             fprintf (stderr, "\nERROR: No parameters specified (use command  parameter file)");
-            PrintUsage();
+            Output::PrintUsage();
         }
     }
     
@@ -121,19 +123,22 @@ int main(int argc, char* argv[] )
     InitFilesPathsOptions(filePaths, programOptions);
     //
     //    //3. do inference
-    char *ObservedCellNames[programOptions.numCells];
+
     pll_msa_t *msa;
     
     
     //    if (mcmcOptions.useSequencesLikelihood ==1)
     //   {
     fileNameFasta = filePaths.inputGenotypeFileFasta;
-    Utils::ReadParametersFromFastaFile(fileNameFasta,  programOptions);
+    Utils::ReadParametersFromFastaFile(fileNameFasta,  programOptions.numCells, programOptions.TotalNumSequences, programOptions.numSites);
     std::vector<std::vector<int> > ObservedData;
     
+    char *ObservedCellNames[programOptions.numCells];
     Utils::ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
     programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
     programOptions.numCells = programOptions.TotalNumSequences;
+    
+    programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
     
     if (programOptions.numClones==1)
         sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
@@ -165,30 +170,57 @@ int main(int argc, char* argv[] )
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
     
     float start = clock();
-    unsigned int chainNumber;
-    unsigned int currentSimulation;
-    programOptions.doUseFixedTree=NO;
-    
-    //#pragma omp parallel default(shared) shared(treefileName) private(chainNumber, currentIteration)
-    //omp_set_num_threads(mcmcOptions.numChains);
+    unsigned int chainNumber=0;
+  
+    programOptions.doUseFixedTree=YES;
+    int maxNumberThreads = omp_get_max_threads();
+    int iterationToComputeThinnig= floor(mcmcOptions.percentIterationsToComputeThinnig * mcmcOptions.Niterations);
+    mcmcOptions.iterationToComputeThinnig= 10000;
+    fprintf (stderr, "\n max number of threads %d \n", omp_get_max_threads());
+    vector<int> lags={100, 200, 500, 1000, 2000};
+    long double autocorr=0.0;
+    mcmcOptions.thresholdAutoCorrelation=0.01;
+    mcmcOptions.doThinning=false;
+    clock_t begin = omp_get_wtime();
+   //#pragma omp parallel shared(programOptions,mcmcOptions,filePaths, sampleSizes, initialRootedTree, healthyTipLabel, ObservedData,ObservedCellNames, msa) private(chainNumber, currentIteration,currentRandomGenerator, lags, iterationToComputeThinnig)
+   // omp_set_num_threads(maxNumberThreads);
     {
-        //#pragma omp for
+   //   #pragma omp for
         for(chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
         {
             currentRandomGenerator =randomGenerators.at(chainNumber);
             chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, currentRandomGenerator, ObservedData,ObservedCellNames, msa,  initialRootedTree, healthyTipLabel);
             chains.at(chainNumber)->chainNumber =chainNumber;
             chains.at(chainNumber)->PrepareFiles(filePaths, programOptions, chains.at(chainNumber)->files, chainNumber);
+            
             chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,
                                                            chains.at(chainNumber)->files );
             chains.at(chainNumber)->initListMoves();
             for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
             {
+                if (currentIteration  == 0)//print initial values(iteration 0)
+                {
+                    chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
+                
+                }
                 if (currentIteration % mcmcOptions.printChainStateEvery == 0 || currentIteration >= (mcmcOptions.Niterations-1))
-                    fprintf (stderr, "\n Chain #%d, Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration +1);
+                    fprintf (stderr, "\n Chain #%d, Starting Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration +1);
                 chains.at(chainNumber)->currentNumberIerations =currentIteration;
                 chains.at(chainNumber)->runChain(mcmcOptions,  currentRandomGenerator,  filePaths, chains.at(chainNumber)->files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
-                if (currentIteration % sampleEvery == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
+                if (currentIteration==  mcmcOptions.iterationToComputeThinnig)
+                {
+                    k=0;
+                    autocorr=chains.at(chainNumber)->autoCorrelation(lags.at(0), chains.at(chainNumber)->posteriorT);
+                    while (autocorr > mcmcOptions.thresholdAutoCorrelation){
+                         k++;
+                         autocorr=chains.at(chainNumber)->autoCorrelation(lags.at(k), chains.at(chainNumber)->posteriorT);
+                    }
+                    fprintf (stderr, "\n Chain #%d, thinnig %d \n", chains.at(chainNumber)->chainNumber ,lags.at(k));
+                    if (mcmcOptions.doThinning){
+                      chains.at(chainNumber)->thinning =lags.at(k);
+                    }
+                }
+                if (currentIteration % chains.at(chainNumber)->thinning == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
                 {
                     chains.at(chainNumber)->writeMCMCState(  currentIteration+1, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
                     //in the future i will write trees to a nexus file
@@ -212,21 +244,51 @@ int main(int argc, char* argv[] )
                 else //(mcmcOptions.priorsType==1)
                     kernelType="normal";
                 printf ("\n Use of %s priors and %s kernels \n", priorsType.c_str(), kernelType.c_str());
-                fclose(chains.at(chainNumber)->files.fplog);
+                chains.at(chainNumber)->closeFiles(programOptions);
                 //chains.at(chainNumber)->closeFiles(filePaths,programOptions, files, chainNumber);
             }
+            //chains.at(chainNumber)->moves.clear();
+            //delete chains.at(chainNumber);
         }
     }
+    
     Random::freeListRandomNumbersGenerators(randomGenerators);
+   
+    for (auto ptr : chains)
+    {
+        for (auto ptr1 : ptr->populations)
+        {
+            delete ptr1;
+        }
+        ptr->populations.clear();
+        for (auto ptr2 : ptr->rnodes)
+        {
+            delete (TreeNode*)(ptr2->data);
+            delete ptr2;
+        }
+        ptr->rnodes.clear();
+        for (auto ptr3 : ptr->edges)
+        {
+            delete ptr3;
+        }
+        ptr->edges.clear();
+        ptr->moves.clear();
+        
+        //ptr->moves.clear();
+        delete ptr;
+    }
+    chains.clear();
     //for default(shared) private(chainNumber, currentIteration) firstprivate(files)
     //close files
     if (!mcmcOptions.noData && mcmcOptions.useSequencesLikelihood ==1)
         pll_msa_destroy(msa);
+    clock_t end = omp_get_wtime();
+    double elapsed_time = double(end - begin);
     fprintf(stderr, "\n\n*** Program finished ***");
     /* execution time */
     double secs = (double)(clock() - start) / CLOCKS_PER_SEC;
     fprintf(stderr, "\n\n_________________________________________________________________");
-    fprintf(stderr, "\nTime processing: %G seconds\n", secs);
+    fprintf(stderr, "\n sSerial Time processing: %G seconds and parallel Time processing %G \n", secs, elapsed_time  );
     fprintf(stderr, "\nIf you need help type '-?' in the command line of the program\n");
     return 0;
     return 0;

@@ -1,23 +1,3 @@
-/*################################################################################
- ##
- ##   Copyright (C) 2018-2020 Fausto Fabian Crespo Fernandez
- ##
- ##   This file is part of the tumor_coal C++ library.
- ##
- ##   Licensed under the Apache License, Version 2.0 (the "License");
- ##   you may not use this file except in compliance with the License.
- ##   You may obtain a copy of the License at
- ##
- ##       http://www.apache.org/licenses/LICENSE-2.0
- ##
- ##   Unless required by applicable law or agreed to in writing, software
- ##   distributed under the License is distributed on an "AS IS" BASIS,
- ##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- ##   See the License for the specific language governing permissions and
- ##   limitations under the License.
- ##
- ################################################################################*/
-
 //  data_utils.cpp
 //  tumor_coal
 //
@@ -102,7 +82,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 1)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad number of replicates (%d)\n\n", (int)argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.numDataSets =argumentInt;
                 break;
@@ -110,7 +90,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%lu bytes", &argumentLongInt) != 1 || argumentLongInt < 0)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad seed (#) (%d)\n\n", (int)argumentLongInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.userSeed =argumentLongInt;
                 break;
@@ -120,21 +100,21 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%f", &argument) != 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad haplid/diploid chosen (x) (%d)\n\n", (int) argument);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 //*Nscaling = (int) argument;
                 programOptions.Nscaling =(int) argument;
                 if (programOptions.Nscaling < 1 || programOptions.Nscaling > 2)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Haploid/diplod option (x) (1-2) (%d)\n\n", programOptions.Nscaling);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 break;
             case 'C':
                 if (fscanf(stdin, "%f", &argument) != 1 || argument <= 0)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad number of clones (must be 1 or higher) (%d)\n\n", (int) argument);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 //*numClones = (int) argument;
                 programOptions.numClones=(int) argument;
@@ -154,7 +134,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                             if ( CloneNameBegin[j]  <= 0 ||  CloneNameBegin[j]  >  programOptions.numClones)
                             {
                                 fprintf (stderr, "PARAMETER ERROR: Bad number for clone %d (should be higher than 0 and lower than the number of clones %d) (%d)\n\n", j,  programOptions.numClones, CloneNameBegin[j] );
-                                PrintUsage();
+                                Output::PrintUsage();
                             }
                         }
                         if (z == 2)
@@ -165,7 +145,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                             if (CloneSampleSizeBegin[j] < 0)
                             {
                                 fprintf (stderr, "PARAMETER ERROR: Bad sample size for clone %d (should not be negative) (%d)\n\n", j, CloneSampleSizeBegin[j] );
-                                PrintUsage();
+                                Output::PrintUsage();
                             }
                         }
                         if (z == 3)
@@ -175,7 +155,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                             if (ClonePopSizeBegin[j] < 0)
                             {
                                 fprintf (stderr, "PARAMETER ERROR: Bad population size for clone %d (should be higher than 0) (%d)\n\n", j, ClonePopSizeBegin[j] );
-                                PrintUsage();
+                                Output::PrintUsage();
                             }
                         }
                         if (z == 4)
@@ -195,7 +175,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                             if (CloneTimeOriginInput[j]  < 0)
                             {
                                 fprintf (stderr, "PARAMETER ERROR: Bad time to origin for clone %d (should not be negative) (%lf)\n\n", j,  CloneTimeOriginInput[j] );
-                                PrintUsage();
+                                Output::PrintUsage();
                             }
                         }
                         
@@ -210,7 +190,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%lf", &argumentDouble) != 1)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad mutation rate (%f) \n\n", argumentDouble);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.mutationRate=  (double) argumentDouble;
                 break;
@@ -219,7 +199,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%f", &argument) !=1 || argument < 0  || argument > 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad alphabet (%d)\n\n", (int) argument);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 //*alphabet = (int) argument;
                 programOptions.alphabet =(int) argument;
@@ -229,7 +209,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%d",  &argumentInt) != 1 || argumentInt < 0)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad noisy value (%d)\n\n", (int) argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.noisy =(int) argumentInt;
                 break;
@@ -238,7 +218,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%lf", &argumentDouble) !=1 ||argumentDouble < 0 ||argumentDouble > 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad allelic dropout rate (%f)\n\n", argumentDouble);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.ADOrate =(double) argumentDouble;
                 break;
@@ -246,13 +226,13 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%d", &argumentInt) < 0 )
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad selection for outgroup %d (0: No outgroup, 1 outgroup with one branch, 2 outgroup with two branches\n\n", argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.outgroupSelection = argumentInt;
                 if ( programOptions.outgroupSelection != 0 &&  programOptions.outgroupSelection != 1 &&  programOptions.outgroupSelection != 2)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad selection for outgroup %d (0: No outgroup, 1 outgroup with one branch, 2 outgroup with two branches\n\n",  programOptions.outgroupSelection);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 
                 if ( programOptions.outgroupSelection == 0)
@@ -270,7 +250,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                     if (fscanf(stdin, "%lf", &argumentDouble) < 0)
                     {
                         fprintf(stderr, "PARAMETER ERROR: Bad outgroup branch length (Root-Sample) value (%f)\n\n", argumentDouble);
-                        PrintUsage();
+                        Output::PrintUsage();
                     }
                     programOptions.outgroupBranchLength_RootSample=argumentDouble;
                 }
@@ -281,20 +261,20 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                     if (fscanf(stdin, "%lf", &argumentDouble) < 0)
                     {
                         fprintf(stderr, "PARAMETER ERROR: Bad outgroup branch length (Root1-Root2) value (%f)\n\n", argumentDouble);
-                        PrintUsage();
+                        Output::PrintUsage();
                     }
                     programOptions.outgroupBranchLength_Root1Root2=argumentDouble;
                     if (fscanf(stdin, "%lf", &argumentDouble) < 0)
                     {
                         fprintf(stderr, "PARAMETER ERROR: Bad outgroup branch length (Root2-Sample) value (%f)\n\n", argumentDouble);
-                        PrintUsage();
+                        Output::PrintUsage();
                     }
                     programOptions.outgroupBranchLength_RootSample=argumentDouble;
                 }
                 else
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad selection for outgroup %d (0: No outgroup, 1 outgroup with one branch, 2 outgroup with two branches\n\n", argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 //outgroupBranchLength_RootSample = 0;
                 break;
@@ -302,7 +282,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%lf", &argumentDouble) !=1 || argumentDouble < 0 || argumentDouble > 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad allelic imbalance (%f)\n\n", argumentDouble);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.allelicImbalance=argumentDouble;
                 break;
@@ -310,7 +290,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (programOptions.doHKY == YES)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Cannot specify a mutation matrix (GTR model) and a ti/tv (HKY model) at the same time\n\n");
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 if (fscanf(stdin, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf  %lf %lf %lf %lf",
                            &Mij[0][0], &Mij[0][1], &Mij[0][2], &Mij[0][3],
@@ -319,13 +299,13 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                            &Mij[3][0], &Mij[3][1], &Mij[3][2], &Mij[3][3])!=16)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad general rate matrix (-rx x x x x x x x x x x) (AA AC AG AT CA CC CG CT GA GC GG GT TA TC TG TT)\n\n");
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 
                 if (Mij[0][0] != 0  || Mij[1][1] != 0 || Mij[2][2] != 0 || Mij[3][3] != 0)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad general rate matrix: diagonals should be 0 \n\n");
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 //*thereIsMij = YES;
                 programOptions.thereIsMij=YES;
@@ -354,25 +334,25 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%lf", &argumentDouble) !=1 || argumentDouble < 0 || argumentDouble > 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad proportion of alternative model sites (%f)\n\n", argumentDouble);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.propAltModelSites=argumentDouble;
                 if (programOptions.propAltModelSites < 0 || programOptions.propAltModelSites > 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad proportion of alternative model sites (%f). It has to be between 0 and 1\n\n", programOptions.propAltModelSites);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 if (programOptions.propAltModelSites > 0 && programOptions.altModel != ISMhap && programOptions.doSimulateFixedNumMutations == YES)
                 {
                     fprintf (stderr, "PARAMETER ERROR: You cannot specify a proportion of non-ISM  sites bigger than zero if the number of mutations is fixed\n\n");
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 if (programOptions.alphabet == DNA && programOptions.propAltModelSites > 0)
                 {
                     if (programOptions.altModel == Mk)
                     {
                         fprintf (stderr, "PARAMETER ERROR: The DNA alphabet and the alt model (%d) specified are incompatible", (int) programOptions.altModel);
-                        PrintUsage();
+                        Output::PrintUsage();
                     }
                 }
                 else if (programOptions.alphabet == BINARY && programOptions.propAltModelSites > 0)
@@ -380,7 +360,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                     if (programOptions.altModel == finiteDNA)
                     {
                         fprintf (stderr, "PARAMETER ERROR: The binary alphabet and the alt model (%d) specified are incompatible", (int) programOptions.altModel);
-                        PrintUsage();
+                        Output::PrintUsage();
                     }
                 }
                 break;
@@ -388,7 +368,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%f", &argument) !=1 || argument < 0 || argument > 2)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad alternative mutation model (%d)\n\n", (int) argument);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.altModel = (int) argument;
                 if (programOptions.alphabet == DNA && programOptions.propAltModelSites > 0)
@@ -396,7 +376,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                     if (programOptions.altModel == Mk)
                     {
                         fprintf (stderr, "PARAMETER ERROR: The DNA alphabet and the model (%d) specified are incompatible", (int) argument);
-                        PrintUsage();
+                        Output::PrintUsage();
                     }
                 }
                 else if (programOptions.alphabet == BINARY && programOptions.propAltModelSites > 0)
@@ -404,7 +384,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                     if (programOptions.altModel == finiteDNA)
                     {
                         fprintf (stderr, "PARAMETER ERROR: The binary alphabet and the model (%d) specified are incompatible", (int) argument);
-                        PrintUsage();
+                        Output::PrintUsage();
                     }
                 }
                 break;
@@ -433,7 +413,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%lf %lf %d", &argumentDouble, &argumentDouble1, &argumentInt) != 3)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad mean/var/model amplification error (%f ; %f ; model=%d)\n\n",argumentDouble, argumentDouble1, argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.meanAmplificationError= argumentDouble;
                 programOptions.varAmplificationError= argumentDouble1;
@@ -442,24 +422,24 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if ( programOptions.meanAmplificationError < 0 ||  programOptions.meanAmplificationError > 1)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad mean amplification error (%f)\n\n",  programOptions.meanAmplificationError);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 if ( programOptions.varAmplificationError < 0 || ( programOptions.meanAmplificationError > 0 &&  programOptions.varAmplificationError >= ( programOptions.meanAmplificationError * (1.0 -  programOptions.meanAmplificationError))))
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad variance amplification error (%f); it has to be < mean*(1-mean)\n\n",  programOptions.meanAmplificationError);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 if ( programOptions.simulateOnlyTwoTemplates != 0 &&  programOptions.simulateOnlyTwoTemplates != 1)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad simulateOnlyTwoTemplates error (%d); it has to be 0 (assume 4 templates) or 1 (assume 2 templates)",  programOptions.simulateOnlyTwoTemplates);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 break;
             case 'E':
                 if (fscanf(stdin, "%lf",  &argumentDouble) !=1 ||  argumentDouble < 0 ||  argumentDouble > 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad sequencing error (%f)\n\n",  argumentDouble);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.sequencingError= argumentDouble;
                 break;
@@ -467,7 +447,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%f", &argument) !=1 || argument < 0 )
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad number of sites (%d)\n\n", (int) argument);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.numSites= (int)argument;
                 break;
@@ -496,7 +476,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%f", &argument) !=1 || argument < 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad number of mutations (%d)\n\n", (int) argument);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.numFixedMutations = (int) argument;
                 //programOptions.doSimulateFixedNumMutations = YES;
@@ -504,14 +484,14 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (programOptions.propAltModelSites > 0 && programOptions.altModel != ISMhap)
                 {
                     fprintf (stderr, "PARAMETER ERROR: You cannot specify a fixed number of mutations if there is any non-ISM  site. Set the proportion of non-ISM diploid sites to zero\n\n");
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 break;
             case 'F':
                 if (fscanf(stdin, "%lf %lf %lf %lf", &freq[0], &freq[1], &freq[2], &freq[3])!=4)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad Base Frequencies\n\n");
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 else if (freq[0] == freq[1] == freq[2] == freq[3])
                     programOptions.equalBaseFreq = YES;
@@ -527,16 +507,16 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 }
                 break;
             case '?':
-                PrintUsage();
+                Output::PrintUsage();
                 break;
                 /*case 'H':
-                 PrintUsage();
+                 Output::PrintUsage();
                  break;*/
             case 'V':
                 if (fscanf(stdin, "%lf", &argumentDouble)!=1 || argumentDouble <= 0)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad coverage dispersion (%f)\n\n", argumentDouble);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.rateVarCoverage = YES;
                 break;
@@ -544,7 +524,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%lf", &argumentDouble)!=1 || argumentDouble < 0)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad germline SNP rate (%f)\n\n", argumentDouble);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.SNPrate = YES;
                 break;
@@ -553,7 +533,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (fscanf(stdin, "%f", &argument) !=1 || argument < 1)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Bad sequencing coverage (%d)\n\n", (int) argument);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.coverage = (int) argument;
                 if (programOptions.coverage > 0){
@@ -564,12 +544,12 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 if (programOptions.genotypingError > 0 && programOptions.doSimulateReadCounts == YES)
                 {
                     fprintf (stderr, "PARAMETER ERROR: Cannot specify a coverage larger than 0, which implies read count generation, and a genotyping error at the same time\n\n");
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 break;
             default :
                 fprintf(stderr, "PARAMETER ERROR: Incorrect parameter: %c\n\n", ch);
-                PrintUsage();
+                Output::PrintUsage();
                 break;
         }
         ch = fgetc(stdin);
@@ -627,12 +607,12 @@ void InitListClones(vector<Population *> &populations, int numClones, int verbos
         if ((z + 1) != CloneNameBegin[z])
         {
             fprintf (stderr, "PARAMETER ERROR: Check order of clones. Clone (%d) in order is different to (%d). (d)\n\n", z, CloneNameBegin[z]);
-            PrintUsage();
+            Output::PrintUsage();
         }
         if ( pop->delta <= 0)
         {
             fprintf (stderr, "PARAMETER ERROR: The growth rate cannot be lower than the death rate(Delta parameter negative, Delta=(%10.9Lf)) for population %d\n\n", pop->delta, z);
-            PrintUsage();
+            Output::PrintUsage();
         }
         
         if (verbose > 1)
@@ -895,18 +875,18 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         /*************** output files *************/
         newickString2=NULL;
         newickString2 = toNewickString2 ( root, programOptions.mutationRate,     programOptions.doUseObservedCellNames);
-        printf("\n newick = %s  \n", newickString2);
+        //printf("\n newick = %s  \n", newickString2);
         
         if (programOptions.doPrintTrees == YES)
         {
             
-            PrintTrees(dataSetNum, root, files.fpTrees, programOptions.mutationRate, programOptions.doUseObservedCellNames);
-            PrintTrees2(dataSetNum, root, files.fpTrees2, programOptions.mutationRate, NULL, NO);
+            Output::PrintTrees(dataSetNum, root, files.fpTrees, programOptions.mutationRate, programOptions.doUseObservedCellNames);
+            Output::PrintTrees2(dataSetNum, root, files.fpTrees2, programOptions.mutationRate, NULL, NO);
         }
         if (programOptions.doPrintTimes == YES)
         {
-            PrintTimes(dataSetNum, files.fpTimes, programOptions.mutationRate, nodes, programOptions.thereisOutgroup);
-            PrintTimes2(dataSetNum, files.fpTimes2, programOptions.mutationRate, nodes, programOptions.thereisOutgroup);
+            Output::PrintTimes(dataSetNum, files.fpTimes, programOptions.mutationRate, nodes, programOptions.thereisOutgroup);
+            Output::PrintTimes2(dataSetNum, files.fpTimes2, programOptions.mutationRate, nodes, programOptions.thereisOutgroup);
         }
         if (programOptions.noisy > 1)
         {
@@ -966,7 +946,7 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpTrueHaplotypes, "[#%d]\n", z+1);
                 //
-                PrintTrueFullHaplotypes (files.fpTrueHaplotypes,  nodes, root , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, programOptions.numSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
+                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes,  nodes, root , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, programOptions.numSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
             }
             
             if (programOptions.doPrintTrees ==YES && programOptions.doPrintSeparateReplicates == YES)
@@ -1064,12 +1044,12 @@ void ValidateParameters(ProgramOptions &programOptions,
         if (programOptions.numClones <  CloneNameBegin[j] )
         {
             fprintf (stderr, "PARAMETER ERROR: Clon (%d) is higher than the number of clones (%d). (d)\n\n",  CloneNameBegin[j], programOptions.numClones);
-            PrintUsage();
+            Output::PrintUsage();
         }
         if ( CloneSampleSizeBegin[j] > ClonePopSizeBegin[j] )
         {
             fprintf (stderr, "PARAMETER ERROR: Clone (%d) cannot have sample size (%d) higher than population size (%d). (d)\n\n", j, CloneSampleSizeBegin[j] , ClonePopSizeBegin[j]);
-            PrintUsage();
+            Output::PrintUsage();
         }
     }
 }
@@ -1308,8 +1288,8 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
     ChooseRandomIndividual(&firstInd, numClones, popI,  &secondInd, seed, choosePairIndividuals);
     
     newInd = nextAvailable;
-    //if (noisy > 1)
-    fprintf (stderr, "\n Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
+    if (noisy > 1)
+      fprintf (stderr, "\n Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
     
     
     /*  set pointers between nodes */
@@ -1358,10 +1338,10 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
     
     popI->numCompletedCoalescences= popI->numCompletedCoalescences+1;
     
-    fprintf (stderr, "\n pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
+    //fprintf (stderr, "\n pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
     
-    for(int i=0; i < popI->idsActiveGametes.size();i++)
-        fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
+   // for(int i=0; i < popI->idsActiveGametes.size();i++)
+   //     fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
     /* memory for number of nodes */
     if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
     {
@@ -1369,19 +1349,7 @@ void MakeCoalescenceEvent(vector<Population*> &populations, Population *popI, ve
         if (noisy == 4)
             fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
         numNodes += INCREMENT_NODES;
-        /* realloc */
-        //                *nodes = (TreeNode *) realloc (*nodes, *numNodes  * (long) sizeof(TreeNode) );
-        //                if (!(*nodes))
-        //                {
-        //                    fprintf (stderr, "Could not reallocate nodes (%lu bytes)\n", *numNodes  * (long) sizeof(TreeNode));
-        //                    exit (-1);
-        //                }
-        //                popI->idsActiveGametes = (int *) realloc (popI->idsActiveGametes, *numNodes * (long) sizeof(int));
-        //                if (!(popI->idsActiveGametes))
-        //                {
-        //                    fprintf (stderr, "Could not reallocate idsActiveGametes for the current population(%lu bytes)\n", *numNodes * (long) sizeof(int));
-        //                    exit (-1);
-        //                }
+
     }
 }
 /********************** BuildTree************************/
@@ -1520,7 +1488,7 @@ TreeNode *BuildTree(vector<Population* > &populations,
             else
             {
                 fprintf (stderr, "You should not be here, I think\n");
-                fprintf (stderr, "%d %d-- %d %d %d\n", Index(p), j, Index(p->left), Index(p->right), Index(p->anc1));
+                fprintf (stderr, "%d %d-- %d %d %d\n", Output::Index(p), j, Output::Index(p->left), Output::Index(p->right), Output::Index(p->anc1));
             }
             if (p->anc1 != NULL)
             {//update length field
@@ -1572,7 +1540,7 @@ TreeNode *BuildTree(vector<Population* > &populations,
         else
         {
             fprintf (stderr, "\n\nError simulationg the outgroup. Check input settings\n");
-            PrintUsage();
+            Output::PrintUsage();
         }
         //TreeNode* healthyRoot = *nodes + *nextAvailable;
         TreeNode* healthyRoot = nodes[nextAvailable];
@@ -1599,7 +1567,7 @@ TreeNode *BuildTree(vector<Population* > &populations,
         // healthyRoot->time = p->time * transformingBranchLength ;
         healthyRoot->timePUnits = currentTime * healthyRoot->effectPopSize;
         
-        fprintf (stderr, "\n Time of the healthy root %Lf\n",  healthyRoot->timePUnits);
+        //fprintf (stderr, "\n Time of the healthy root %Lf\n",  healthyRoot->timePUnits);
         
         p->length = (p->anc1->timePUnits- p->timePUnits);
         //*mutationRate;
@@ -2207,7 +2175,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
         else
         {
             ThisTimeCA_V2 = timeNextMigration + 1.0; // it reached a "provisional" MRCA
-            fprintf (stderr, "\n Only 1 active gamete and %d true migrations out of %d true migrations \n", indexNextMigration, numMigrations - 1);
+           // fprintf (stderr, "\n Only 1 active gamete and %d true migrations out of %d true migrations \n", indexNextMigration, numMigrations - 1);
         }
         if ( ThisTimeCA_V2 < timeNextMigration)
         {
@@ -2307,10 +2275,10 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                 popI->idsActiveGametes[popI->numActiveGametes]=p->index;//adding the superfluos node
                 popI->numActiveGametes = popI->numActiveGametes + 1; /* now this clone has 1 more node */
                 
-                fprintf (stderr, "\n After inmigration. pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
+               // fprintf (stderr, "\n After inmigration. pop of order  %d, number of Active gametes %d ", popI->order, popI->numActiveGametes);
                 
-                for(int i=0; i < popI->idsActiveGametes.size();i++)
-                    fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
+                //for(int i=0; i < popI->idsActiveGametes.size();i++)
+                //    fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
                 //                if (noisy > 1)
                 //                    fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, popI->index, incommingPop->nodeIdAncesterMRCA, k);
                 //fprintf (stderr, "Migration, creating node %d (clone %d) derived from node %d (clone %d)", newInd, ThisCloneNumber, MatrixMigrationIDnodeMRCA[ThisCloneNumber][doAmigration], k);
@@ -2412,7 +2380,7 @@ void SimulatePopulation( Population *popI, vector<Population*> &populations,
                     r->indexOldClone = r->indexCurrentClone = popI->index;
                     r->orderCurrentClone = popI->order;
                     popI->MRCA= r;
-                    fprintf (stderr, "\n origin of the oldest population  %d", popI->nodeIdAncestorMRCA);
+                    //fprintf (stderr, "\n origin of the oldest population  %d", popI->nodeIdAncestorMRCA);
                 }
             }
         }
@@ -2873,7 +2841,7 @@ double * expand_uniq_rates(int states, const double * uniq_rates, const int * ra
 //    if (NewickString == NULL)
 //    {
 //        fprintf (stderr, "\nERROR: The newick representation of the tree cannot be empty\n\n");
-//        PrintUsage();
+//        Output::PrintUsage();
 //        return 0;
 //    }
 //    
@@ -2921,7 +2889,7 @@ double * expand_uniq_rates(int states, const double * uniq_rates, const int * ra
 //        printf("Original sequence (alignment) length : %d\n", msa->length);
 //    else{
 //        fprintf (stderr, "\nERROR: The multiple sequence alignment is empty\n\n");
-//        PrintUsage();
+//        Output::PrintUsage();
 //        return 0;
 //    }
 //    
@@ -3321,7 +3289,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad number of chains (%d)\n\n", (int)argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 mcmcOptions.numChains =argumentInt;
                 break;
@@ -3329,7 +3297,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad number of iterations (%d)\n\n", (int)argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 mcmcOptions.Niterations =argumentInt;
                 break;
@@ -3337,7 +3305,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad number of thinni g iterations (%d)\n\n", (int)argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 mcmcOptions.thinning =argumentInt;
                 break;
@@ -3345,7 +3313,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad max number of proposal before rejection  (%d)\n\n", (int)argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 mcmcOptions.maxNumberProposalAttempts =argumentInt;
                 break;
@@ -3353,7 +3321,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0 || argumentInt > 1)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad option user fixed tree  (%d)\n\n", (int)argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.doUseFixedTree =argumentInt;
                 break;
@@ -3361,7 +3329,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad  number of clones  (%d)\n\n", (int)argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.numClones =argumentInt;
                 break;
@@ -3369,7 +3337,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
                 if (fscanf(stdin, "%d", &argumentInt) != 1 || argumentInt < 0 || argumentInt > 1)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad option number of clones known  (%d)\n\n", (int)argumentInt);
-                    PrintUsage();
+                    Output::PrintUsage();
                 }
                 programOptions.numberClonesKnown =argumentInt;
                 break;
@@ -3432,7 +3400,7 @@ void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &fileP
                 break;
             default :
                 fprintf(stderr, "PARAMETER ERROR: Incorrect parameter: %c\n\n", ch);
-                PrintUsage();
+                Output::PrintUsage();
                 break;
         }
         ch = fgetc(stdin);
@@ -3514,10 +3482,14 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     //programOptions
     programOptions.numberClonesKnown=YES;
     programOptions.populationSampleSizesKnown = YES;
+    programOptions.doPrintTimes = NO;
     
+    programOptions.doUseObservedCellNames =1;
     programOptions.doUseGenotypes = YES;
     programOptions.doUseFixedTree =NO;
     programOptions.seed = 1248697;
+    programOptions.thereisOutgroup = YES;
+    programOptions.outgroupSelection =1;
     
     programOptions.mutationRate= 9.1e-8;
     programOptions.doUsefixedMutationRate=0;
@@ -3568,7 +3540,7 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     mcmcOptions.paramMultiplierMoveTheta = 3;
     mcmcOptions.paramMultiplierEffectPopSize = 2;
     //mcmcOptions.Niterations = 10000000;
-    mcmcOptions.numberWarmUpIterations = mcmcOptions.Niterations / 2.0;
+    //mcmcOptions.numberWarmUpIterations = mcmcOptions.Niterations / 2.0;
     mcmcOptions.numberWarmUpIterations = 0;
     mcmcOptions.useSequencesLikelihood =0;
     
@@ -3582,6 +3554,7 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     mcmcOptions.paramMultiplierTimeOriginOldestPop =Utils::parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop);
     
     mcmcOptions.upperBoundTimeOriginInputOldestPop = 5;
+    mcmcOptions.percentIterationsToComputeThinnig=0.1;
     
    // mcmcOptions.splitThetaDeltaTmoves= true;
 }

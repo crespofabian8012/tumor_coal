@@ -127,6 +127,10 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     oldDeathRate=0.0;
     oldPopSize=0.0;
     oldGrowthRate =0.0;
+    oldTimeOriginSTD=0.0;
+    oldTimeOriginInput=0.0;
+    indexFirstObservedCellName=0;
+    scaledtimeOriginInput=0.0;
 }
 long double Population::ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones)
 {
@@ -383,16 +387,47 @@ int Population::compare (const void * a, const void * b)
 void Population::InitCoalescentEvents(int numClones)
 {
     int j = 0;
+    assert(sampleSize >0);
     for (j = 0; j < sampleSize + numClones - 2; j++) {
         CoalescentEventTimes.push_back(0);
     }
 }
-void Population::resetActiveGametes()
+void Population::InitIdsActiveGametes()
 {
+    int j = 0;
+    assert(sampleSize >0);
+    for (j = 0; j < sampleSize ; j++) {
+        idsActiveGametes.push_back(0);
+    }
+}
+
+void Population::InitIdsGametes(int numClones)
+{
+    int j = 0;
+   
+    assert(sampleSize >0);
+    for (j = 0; j < (2* sampleSize + numClones - 2) ; j++) {
+        idsGametes.push_back(0);
+    }
+}
+void Population::InitRTips()
+{
+    int j = 0;
+    assert(sampleSize >0);
+    for (j = 0; j < sampleSize  ; j++) {
+        rtips.push_back(NULL);
+    }
+}
+void Population::resetGametesCounters() {
     numCompletedCoalescences = 0;
     nodeIdAncestorMRCA = 0;
     numActiveGametes=0;
     numGametes=0;
+}
+
+void Population::resetActiveGametes()
+{
+    resetGametesCounters();
     idsActiveGametes.clear();
     idsGametes.clear();
 }
@@ -434,6 +469,46 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
     }
     free (cumPopulPart);
     cumPopulPart=NULL;
+}
+void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, gsl_rng *randomGenerator, int choosePairIndividuals)
+{
+    long double random;
+    int k, w;
+    //long double*cumPopulPart = (long double*) malloc((numActiveGametes + 1)* (long) sizeof(double));
+    vector<long double> cumPopulPart(numActiveGametes + 1);
+//    if (!cumPopulPart)
+//    {
+//        fprintf (stderr, "Could not allocate cumPopulPart (%lu bytes)\n", (numActiveGametes + 1) * (long) sizeof(double));
+//        exit (-1);
+//    }
+    cumPopulPart[0] = 0;
+    for (k = 1; k <= numActiveGametes; k++)
+        cumPopulPart[k] = 0;
+    for (k = 1; k <= numActiveGametes; k++)
+        cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (numActiveGametes);
+    
+    w = 0;
+    
+    random = Random::randomUniformFromGsl2(randomGenerator);
+    *firstInd = Population::bbinClones(random, &cumPopulPart[0], numActiveGametes)-1;
+    w = 0;
+    
+    if (*firstInd >= numActiveGametes || *firstInd < 0 ) /* checking */
+    {
+        fprintf (stderr, "\n\nERROR: firstInd out of range!\n");
+        exit (-1);
+    }
+    if (choosePairIndividuals== YES && numActiveGametes > 1) {
+        
+        do//choose randomly another individual to coalesce
+        {
+            random = Random::randomUniformFromGsl2(randomGenerator);
+            *secondInd = Population::bbinClones(random, &cumPopulPart[0], numActiveGametes)-1;
+            
+        } while (*firstInd == *secondInd  );
+    }
+   // free (cumPopulPart);
+   // cumPopulPart=NULL;
 }
 /***************** bbinClones *****************/
 /* binary search in the probabilities with clones */

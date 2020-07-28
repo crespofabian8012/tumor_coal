@@ -41,11 +41,17 @@ public:
     int numClones;
     int oldnumClones;
     int gammaParam;
+    int thinning;
     int currentNumberIerations;
+    int currentNumberEdgesRootedTree;
     int totalAccepted;
     int totalRejected;
     pll_unode_t *root;
     pll_rnode_t *rootRootedTree;
+    pll_rnode_t *healthyTip;
+    
+    std::string initialValuesString;
+    
     std::vector<pll_unode_t*> nodes;
     std::vector<pll_unode_t*> treeTips;
     
@@ -53,6 +59,7 @@ public:
     std::vector<pll_rnode_t*> rtreeTips;
     
     pll_unode_t *oldroot;
+    
     std::vector<pll_unode_t *>oldnodes;
     std::vector<pll_unode_t*>  oldtreeTips;
     
@@ -97,9 +104,11 @@ public:
     std::vector<std::vector<double> > sampledPoportionVector;
     Files files;
     vector<MCMCmove*>  moves;
-    //std::vector<pll_edge_node_t*> edges;
-public:
     
+    std::vector<long double>  posteriorDeltaT;
+    std::vector<long double>  posteriorT;
+    //std::vector<pll_edge_node_t*> edges;
+
     Chain(int chainNumber,
           int numClones,
           int gammaParam,
@@ -108,46 +117,36 @@ public:
           long double  dropoutRate
           );
     
-    void MakeCoalescenceEvent( Population *Population, std::vector<pll_unode_t *> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
+    void MakeCoalescenceEvent( Population *Population, std::vector<pll_unode_t *> &nodes, int numClones, gsl_rng *randomGenerator, int noisy,   int &numActiveGametes, int &nextAvailable,
                               int &labelNodes, long double  &currentTime, int &numNodes);
     
     
-    void SimulatePopulation( Population *popI, std::vector<Population*> &populations,
-                                   ProgramOptions &programOptions,
-                                   long int *seed,
-                                   int &numNodes,
-                                   int numClones,
-                                   long double       cumNumCA,
-                                   long double  meanNumCA,
-                                   long double  cumNumMIG,
-                                   long double  meanNumMIG,
-                                   int  &numMIG,
-                                   int  &numCA,
-                                   long double  &numEventsTot,
-                                   std::vector<pll_unode_t *> &nodes,
-                                   int &nextAvailable,
-                                   int &numActiveGametes,
-                                   int &labelNodes,
-                                   long double  &currentTime,
-                            int &eventNum);
+    void  SimulatePopulation( Population *popI,
+                                                ProgramOptions &programOptions,
+                                                long int *seed,
+                                                gsl_rng *randomGenerator,
+                                                int &numNodes,
+                                                int numClones,
+                                                int &nextAvailable,
+                                                int &numActiveGametes,
+                                                int &labelNodes,
+                                                long double  &currentTime,
+                                                int &eventNum);
     
     int setInitialTreeFromNewick(char * NewickString);
     
     int setInitialTreeUnrootedTree(pll_utree_t *unrootedTree);
     
-    pll_unode_t* BuildTree(std::vector<Population* > &populations,
-                           Population *CurrentPop,
-                           long int *seed,
-                           ProgramOptions &programOptions,
-                           std::vector<pll_unode_t *> &nodes,
-                           std::vector<pll_unode_t *> &treeTips,
-                           pll_unode_t *tumour_mrca,
-                           int &nextAvailable,
-                           int &newInd,
-                           long double  &currentTime,
-                           int &labelNodes);
+    pll_rnode_t* BuildTree(Population *CurrentPop,
+                                  gsl_rng *randomGenerator,
+                                  ProgramOptions &programOptions,
+                                  pll_rnode_t *tumour_mrca,
+                                  int &nextAvailable,
+                                  int &newInd,
+                                  long double   &currentTime,
+                                  int &labelNodes);
     
-    pll_unode_t * MakeCoalescenceTree (long int *seed,
+    pll_rnode_t * MakeCoalescenceTree (long int *seed,
                                        gsl_rng * randomGenerator,
                                        pll_msa_t *msa,
                                        int &numNodes,
@@ -165,7 +164,7 @@ public:
                                        std::vector<int> &sampleSizes
                                        );
     
-    Population* ChooseFatherPopulation( int numClones, Population  *PopChild,  long int *seed, int noisy);
+    Population* ChooseFatherPopulation( int numClones, Population  *PopChild,  gsl_rng *randomGenerator, int noisy);
     
     void AssignSequencesToPopulations( ProgramOptions& programOptions,
                                       int numNodes, int noisy,  int TotalNumSequences, int &numActiveGametes, int &nextAvailable,
@@ -181,10 +180,11 @@ public:
     void GenerateTimesFromPriorsOriginal(int noisy,  gsl_rng * randomGenerator);
     void InitChainPopulations( int noisy,  int TotalNumSequences  ) ;
     void RelabelNodes(pll_unode_t *p, int &intLabel);
+    void RelabelNodes2(pll_rnode_t *p, int &intLabel);
     void InitPopulationSampleSizes(std::vector<Population*> populations, int TotalSampleSize, int numClones, std::vector<long double> &proportionsVector, gsl_rng* randomGenerator);
     long double  SumBranches(pll_unode_t *root, long double  mutationRate);
     char * toNewickString ( pll_unode_t *p, long double  mutationRate,     int doUseObservedCellNames);
-    
+    char * toNewickString2 ( pll_rnode_t *p,  string healthyTipLabel,    int doUseObservedCellNames);
     long double  LogDensityCoalescentTimesForPopulation();
     long double  LogConditionalLikelihoodTree( ProgramOptions &programOptions, MCMCoptions &mcmcOptions  );
     long double   LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, long double  seqError,long double  dropoutError);
@@ -209,7 +209,7 @@ public:
     void runChain(   MCMCoptions &opt,  gsl_rng *randomGenerator,  FilePaths &filePaths, Files &files,  ProgramOptions &programOptions,
                   char* ObservedCellNames[], pll_msa_t * msa, std::vector<int> &sampleSizes, int currentIteration
                   );
-    void newScaledGrowthRateMoveforPopulation( Population *popI, long int *seed,  ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions & mcmcOptions, std::vector<int> &sampleSizes);
+    //void newScaledGrowthRateMoveforPopulation( Population *popI, long int *seed,  ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions & mcmcOptions, std::vector<int> &sampleSizes);
     void initializeCoalescentEventTimesFormSampleSizes(pll_utree_t *utree, std::vector<int > &sampleSizes, string &healthyCellLabel );
     void initializeMapPopulationAssignFromTree();
     Population * getPopulationbyIndex(int indexPopulation);
@@ -225,7 +225,7 @@ public:
     void initProportionsVector();
     void initProportionsVectorFromSampleSizes(vector<int> sampleSizes);
     void generateProportionsVectorFromDirichlet(long double alpha[]);
-    void initPopulationMigration();
+   
     void initTotalEffectivePopulationSize(MCMCoptions &mcmcOptions, gsl_rng* randomGenerator);
     void initPopulationsCoalTimes();
     void initEffectPopulationSizesFromProportionsVector();
@@ -243,7 +243,7 @@ public:
     void filterSortPopulationsCoalescentEvents();
     void samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *seed );
     void rescaleRootedTreeBranchLengths(long double mutationRate);
-    void newTotalEffectivePopulationSizeMove( ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, std::vector<int> &sampleSizes);
+   
     void newProportionsVectorMove(ProgramOptions &programOptions, char *ObservedCellNames[], pll_msa_t * msa, MCMCoptions &mcmcOptions, std::vector<int> &sampleSizes);
     
     long double   proposalSlidingWindow( long double  oldvalue,  long double  windowSize);
@@ -257,8 +257,8 @@ public:
     void PrepareFiles(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, int chainNumber);
     void writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files,  MCMCoptions &mcmcOptions );
     void writeHeaderOutputChain(  const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files );
-    long double  autoCorrelation(int lag, std::vector<double> values);
-    long double  ESS(int lag, std::vector<double> values);
+    long double  autoCorrelation(int lag, std::vector<long double> values);
+    long double  ESS(int lag, std::vector<long double> values);
     void copyProportionsVector(long double  alpha[]);
     void computeAvailableEdges( std::vector<pair<double, pll_tree_edge_t *> > &availableEdges, std::map<pll_rnode_t *, Population *> &currentMrcaOfPopulation, std::string &healthyCellLabel);
     bool checkMigrationsOrder();
@@ -281,9 +281,9 @@ public:
     void initOriginTimeOldestPopulation( string &healthyCellLabel, MCMCoptions &mcmcOptions);
     void  initListMoves();
     void printMovesSummary();
- 
+    void initTreeTips(std::string &healthyTipLabel, MCMCoptions &mcmcOptions,ProgramOptions &programOptions );
   
-    
+    void initTreeBranchLengths(std::string &healthyTipLabel);
     
     void initChainTree( std::string &healthyTipLabel, MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions );
     void initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions) ;
@@ -292,6 +292,41 @@ public:
     void initMRCAOldestPopulation(string& healthyTipLabel);
     vector<long double> initVectorSampleSizes(std::string &healthyTipLabel, MCMCoptions &mcmcOptions, ProgramOptions &programOptions);
     void initPopulationsThetaDelta();
+    void  InitListPossibleMigrations();
+    void InitPopulationsCoalescentEvents( );
+    void InitPopulationSampleSizes(vector<int> sampleSizes);
+    void deleteRNodes();
+    void addEdgeFromNode(pll_rnode_t *node );
+    int setInitialRootedTreeFromNewick(char * NewickString);
+    int setInitialTreeRootedTree(pll_rtree_t *rootedTree);
+    void InitPopulationGametes();
+    void InitPopulationRTips();
+    void resetMRCAMap();
+    void initEdgesRootedTree(int numberTips);
+    void insertMRCAMap(pll_rnode_t   *r, Population *population);
+    void initMRCAMap();
+    void closeFiles(ProgramOptions &programOptions);
+//    void initEdgesRootedTree(int numberTips);
+  //  ~Chain()
+   // {
+        
+//        pll_rtree_destroy(initialRootedTree, ~TreeNode );
+//        for (std::vector<pll_rnode_t *>::iterator i = rnodes.begin(); i != rnodes.end(); ++i)
+//        {
+//            delete *i;
+//        }
+//        //if (healthyTip)
+//       //   delete healthyTip;
+//        rnodes.clear();
+//        rtreeTips.clear();
+//
+//        for (std::vector<Population *>::iterator i = populations.begin(); i != populations.end(); ++i)
+//        {
+//            delete *i;
+//        }
+//        populations.clear();
+        
+ //   }
     
 private:
     static double * expand_uniq_rates(int states, const double * uniq_rates, const int * rate_sym);

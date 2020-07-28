@@ -176,6 +176,7 @@ public:
     long double altModelMutationRate = 0;
     int numFixedMutations = 0;
     int TotalNumSequences = 0;
+    int TotalTumorSequences =0;
     int doSimulateFromPriors = 0;
     int populationSampleSizesKnown = 0;
     int assignationKnown = 0;
@@ -192,6 +193,7 @@ public:
      double thinning;
      bool useGSLRandomGenerator;
      bool splitThetaDeltaTmoves;
+     bool doThinning;
      int numberTumorCells;
      long double Deltafrom;
      long double Deltato;
@@ -242,6 +244,9 @@ public:
      double lengthIntervalMultiplier ;
      double lengthIntervalMultiplierTimeOriginOldestPop;
      double upperBoundTimeOriginInputOldestPop;
+     double percentIterationsToComputeThinnig;
+     int iterationToComputeThinnig;
+     double thresholdAutoCorrelation;
 };
 
 typedef struct {

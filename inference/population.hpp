@@ -27,7 +27,7 @@
 
 #include <stdio.h>
 #include <vector>
-
+#include <gsl/gsl_rng.h>
 extern "C"
 {
 #include "libpll/pll.h"
@@ -115,7 +115,10 @@ public:
     
     
     void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, long *seed, int choosePairIndividuals);
+    void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, gsl_rng *randomGenerator, int choosePairIndividuals);
     void InitCoalescentEvents(int numClones);
+    void resetGametesCounters();
+    
     void resetActiveGametes();
     static int bbinClones (long double dat, long double *v, int n);
     long double DensityTime( long double u);
@@ -131,6 +134,9 @@ public:
     void setLowerBoundTimeOriginInput(long double from);
     void restoreOldCoalescentTimes();
     void restoreOldImmigrationTimes();
+    void InitIdsActiveGametes();
+    void InitIdsGametes(int numClones);
+    void InitRTips();
 private:
     static bool isNotPositive(long double d);
 };

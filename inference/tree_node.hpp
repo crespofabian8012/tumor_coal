@@ -26,10 +26,11 @@
 #define tree_node_hpp
 
 #include <vector>
+#include <string>
 
 #include  "definitions.hpp"
 
-
+using namespace std;
 class TreeNode
 {
 public:
@@ -39,13 +40,16 @@ public:
     long double      length, time,lengthModelUnits, timePUnits;
     long double      oldlength, oldtime, oldlengthModelUnits, oldtimePUnits;
     long double      timeInputTreeUnits;
+    long double      scaledByThetaTimeInputTreeUnits;
+    long double oldScaledByThetaTimeInputTreeUnits;
     int         nodeClass; // 0: leaf, 1: internal, 2: 3: 4: outgroup 5: healthy cells (TODO: check later)
     int         indexOldClone, indexCurrentClone,orderCurrentClone;
     //indexCoalClone;
     long double      effectPopSize;
     long double      oldeffectPopSize;
     char        cellName[200];
-    char        observedCellName[200];
+    char         observedCellName[200];
+    //std::string      inputCellName;
     std::vector<int>        maternalSequence;
     std::vector<int>        paternalSequence;
     std::vector<int>        genotypeSequence;

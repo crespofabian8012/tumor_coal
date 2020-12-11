@@ -29,10 +29,13 @@
 
 using namespace std;
 
-MCMCmove::MCMCmove(Chain *chain,  std::string nameMove)
+MCMCmove::MCMCmove(Chain *chain,  std::string nameMove, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam)
 {
     this->chain = chain;
     this->nameMove = nameMove;
+    this->mcmcParamKernels= mcmcParKernel;
+    this->affectedParameters = affectedParameters;
+    this->vectorParam = &vectorParam;
     this->numberAccept=0;
     this->numberReject=0;
     this->numberAttemps=0;
@@ -55,27 +58,35 @@ double MCMCmove::numberRejected()
     return this->numberReject;
     
 }
+void  MCMCmove::resetNumberAccepted(){
+   this->numberAccept=0;
+}
+void  MCMCmove::resetNumberRejected(){
+    this->numberReject=0;
+}
 Chain * MCMCmove::getChain()
 {
     return chain;
 }
-NewTotalEffectPopSizeMove::NewTotalEffectPopSizeMove(Chain * chain, std::string nameMove ):MCMCmove(chain, nameMove)
+NewTotalEffectPopSizeMove::NewTotalEffectPopSizeMove(Chain * chain, std::string nameMove, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters , MCMCVectorParameterWithKernel &vectorParam):MCMCmove(chain, nameMove, mcmcParKernel, affectedParameters, vectorParam)
 {
     
 }
-NewProportionsVectorMove::NewProportionsVectorMove(Chain * chain, std::string nameMove ):MCMCmove(chain, nameMove)
+NewProportionsVectorMove::NewProportionsVectorMove(Chain * chain, std::string nameMove,vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam ):MCMCmove(chain, nameMove, mcmcParKernel, affectedParameters, vectorParam)
 {
     
 }
-NewEffectPopSizeMoveForPopulation::NewEffectPopSizeMoveForPopulation(Chain *chain, std::string nameMove, Population *pop):MCMCmove(chain, nameMove)
+NewEffectPopSizeMoveForPopulation::NewEffectPopSizeMoveForPopulation(Chain *chain, std::string nameMove, Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam):MCMCmove(chain, nameMove, mcmcParKernel, affectedParameters, vectorParam)
 {
     
 }
-void NewTotalEffectPopSizeMove::safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewTotalEffectPopSizeMove::saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     Population *popI;
     chain->oldTotalEffectPopSize = chain->totalEffectPopSize;
+    
+    
     for(unsigned int i = 0 ; i < chain->numClones; i++)
     {
         popI=chain->populations[i];
@@ -128,7 +139,7 @@ void NewTotalEffectPopSizeMove::makeProposal(ProgramOptions &programOptions, MCM
             fprintf (stderr, "\n The  popSize < sampleSize\n");
         if (!allPopulationPopSizesSet)
             break;
-        chain->initPopulationMigration();//after setting the timeSTD
+        chain->InitListPossibleMigrations();//after setting the timeSTD
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         allPopulationPopSizesSet = chain->checkMigrationsOrder();
@@ -191,7 +202,7 @@ long double NewTotalEffectPopSizeMove::computeLogAcceptanceProb(ProgramOptions &
 
 void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator)
 {
-    safeCurrentValue(programOptions,mcmcOptions );
+    saveCurrentValue(programOptions,mcmcOptions );
     numberAttemps=0;
     makeProposal(programOptions, mcmcOptions, randomGenerator);
     
@@ -227,6 +238,7 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gs
            printf("\n Accepted new move %s \n", nameMove.c_str());
         this->numberAccept++;
         
+        
         Chain *chain=getChain();
         if ( (!mcmcOptions.noData && chain->currentlogConditionalLikelihoodTree !=newLogConditionalLikelihoodTree))
         {
@@ -244,7 +256,7 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gs
     }
 }
 //////////////////////////////////////////////
-void NewProportionsVectorMove::safeCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
+void NewProportionsVectorMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     int i=0;
@@ -308,7 +320,7 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
         }
         if (!allPopulationPopSizesSet)
             break;
-        chain->initPopulationMigration();//after setting the timeSTD
+        chain->InitListPossibleMigrations();//after setting the timeSTD
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         allPopulationPopSizesSet = chain->checkMigrationsOrder();
@@ -375,15 +387,19 @@ long double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &p
     
     return(LogAcceptanceRate);
 }
-NewGrowthRateMoveForPopulation::NewGrowthRateMoveForPopulation(Chain *chain,std::string nameMove,  Population *pop):MCMCmove(chain, nameMove)
+NewGrowthRateMoveForPopulation::NewGrowthRateMoveForPopulation(Chain *chain, std::string nameMove,Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam):MCMCmove(chain, nameMove, mcmcParKernel, affectedParameters, vectorParam)
 {
-    this->pop =pop;
+    this->pop = pop;
 }
-void NewGrowthRateMoveForPopulation::safeCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewGrowthRateMoveForPopulation::saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     pop->olddelta= pop->delta;
+
+
+    
     Population *popI;
+    
     for( int i = 0 ; i < chain->numClones; i++)
     {
         popI= chain->populations[i];
@@ -404,7 +420,7 @@ void NewGrowthRateMoveForPopulation::makeProposal(ProgramOptions &programOptions
     pop->growthRate =pop->delta  / pop->effectPopSize;
     pop->deathRate= pop->birthRate - pop->growthRate;
     
-    chain->initPopulationMigration();//after setting the timeSTD
+    chain->InitListPossibleMigrations();//after setting the timeSTD
     chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
     chain->filterSortPopulationsCoalescentEvents();
 }
@@ -446,7 +462,7 @@ long double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOpti
     
     return LogAcceptanceRate;
 }
-void NewEffectPopSizeMoveForPopulation::safeCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
+void NewEffectPopSizeMoveForPopulation::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {    Chain *chain=getChain();
     pop->oldeffectPopSize= pop->effectPopSize;
     chain->oldTotalEffectPopSize =chain->totalEffectPopSize;
@@ -506,7 +522,7 @@ void NewEffectPopSizeMoveForPopulation::makeProposal(ProgramOptions &programOpti
         }
         if (!populationPopSizesSet)
             break;
-        chain->initPopulationMigration();//after setting the timeSTD
+        chain->InitListPossibleMigrations();//after setting the timeSTD
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         populationPopSizesSet = chain->checkMigrationsOrder();
@@ -562,19 +578,19 @@ void NewGlobalScaledGrowthRateForPopulationMove::move(ProgramOptions &programOpt
 {
     MCMCmove::move(programOptions,mcmcOptions, randomGenerator);
 }
-NewGlobalScaledGrowthRateForPopulationMove::NewGlobalScaledGrowthRateForPopulationMove(Chain *chain,std::string nameMove,  Population *pop):MCMCmove(chain, nameMove)
+NewGlobalScaledGrowthRateForPopulationMove::NewGlobalScaledGrowthRateForPopulationMove(Chain *chain,std::string nameMove,  Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel, vector<IMCMCParameter<long double> *> &affectedParameters,MCMCVectorParameterWithKernel &vectorParam ):MCMCmove(chain, nameMove, mcmcParKernel, affectedParameters, vectorParam)
 {
     this->pop =pop;
 }
-NewTimeOriginOnTreeforPopulationMove::NewTimeOriginOnTreeforPopulationMove(Chain *chain,std::string nameMove,  Population *pop):MCMCmove(chain, nameMove)
+NewTimeOriginOnTreeforPopulationMove::NewTimeOriginOnTreeforPopulationMove(Chain *chain,std::string nameMove,  Population *pop,vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam):MCMCmove(chain, nameMove, mcmcParKernel, affectedParameters, vectorParam)
 {
     this->pop =pop;
 }
-NewTimeOriginOnEdgeforPopulationMove::NewTimeOriginOnEdgeforPopulationMove(Chain *chain,std::string nameMove,  Population *pop):MCMCmove(chain, nameMove)
+NewTimeOriginOnEdgeforPopulationMove::NewTimeOriginOnEdgeforPopulationMove(Chain *chain,std::string nameMove,  Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam):MCMCmove(chain, nameMove, mcmcParKernel, affectedParameters, vectorParam)
 {
     this->pop =pop;
 }
-void NewTimeOriginOnTreeforPopulationMove::safeCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
+void NewTimeOriginOnTreeforPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
     //save information for the population
@@ -618,9 +634,12 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove(ProgramOptions &programO
     pop->rMRCA = pop->oldrMRCA ;
     
     pop->timeOriginInput = pop->oldTimeOriginInput;
+   
 
     pop->scaledtimeOriginInput = pop->oldScaledTimeOriginInput ;
     pop->timeOriginSTD = pop->oldTimeOriginSTD ;
+    
+    pop->TimeOriginSTD->rollbackValue();
     //save information for the other populations
     if(programOptions.numClones >1 )
     {
@@ -629,8 +648,10 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove(ProgramOptions &programO
         popI=chain->populations[i];
         popI->sampleSize = popI->oldSampleSize;
         //  popI->effectPopSize = popI->oldeffectPopSize;
-        if (popI != pop)
+        if (popI != pop){
           popI->timeOriginSTD = popI->oldTimeOriginSTD;
+            popI->TimeOriginSTD->rollbackValue();
+        }
         
         popI->FatherPop = popI->oldFatherPop ; //the father population can change also for other populations
         if (!isOldestPop){
@@ -668,8 +689,13 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     else
     {
         chain->proposedrMRCAPopulation=chain->chooseNewTimeofOriginOnEdge(pop,mcmcOptions, randomGenerator);
-         if (pop->timeOriginInput < pop->lowerBoundTimeOriginInput)
-             isInvalidMove = true;
+        if (pop->timeOriginInput < pop->lowerBoundTimeOriginInput)
+        {
+             fprintf (stderr, "\n invalid move \n");
+            isInvalidMove = true;
+            exit(-1);
+            
+        }
     }
     bool stillTheOldestPop=  chain->isOldestPopulation(pop, chain->proposedrMRCAPopulation) ;
     
@@ -684,7 +710,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
         chain->initPopulationsSampleSizes( chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
         
         chain->initTimeOriginSTDYoungerPopulations(mcmcOptions);
-        chain->initPopulationMigration();//after setting the timeSTD
+        chain->InitListPossibleMigrations();//after setting the timeSTD
         
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->proposedrMRCAPopulation, programOptions.healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
@@ -779,7 +805,14 @@ long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(Prog
              sumLogDenominators=chain->currentlogConditionalLikelihoodTree ;
             if(mcmcOptions.kernelType ==0)//multiplier move
             {
-                sumLogNumerators += log((pop->timeOriginSTD)/ ( pop->oldTimeOriginSTD));
+                if (mcmcOptions.doMCMCMoveTimeOriginInputOldestPop)
+                {
+                    
+                    sumLogNumerators += log((pop->timeOriginInput - pop->lowerBoundTimeOriginInput)/ ( pop->oldTimeOriginInput- pop->lowerBoundTimeOriginInput));
+                    sumLogNumerators +=log(( mcmcOptions.upperBoundTimeOriginInputOldestPop- pop->timeOriginInput )/ ( mcmcOptions.upperBoundTimeOriginInputOldestPop-pop->oldTimeOriginInput));
+                }
+                else
+                    sumLogNumerators += log((pop->timeOriginSTD)/ ( pop->oldTimeOriginSTD));
             }
         }
         else
@@ -788,11 +821,18 @@ long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(Prog
             {
             // sumLogNumerators= pop->LogDensityTime2( pop->timeOriginSTD);
             // sumLogDenominators=pop->LogDensityTime2( pop->oldTimeOriginSTD);
-            sumLogNumerators=pop->LogDensityTimeSTDFrom(pop->timeOriginSTD,0);
+            sumLogNumerators=pop->LogDensityTimeSTDFrom(pop->timeOriginSTD, 0);
             sumLogDenominators=pop->LogDensityTimeSTDFrom( pop->oldTimeOriginSTD,0);
                 
              if(mcmcOptions.kernelType ==0)//multiplier move
              {
+                 if (mcmcOptions.doMCMCMoveTimeOriginInputOldestPop)
+                 {
+                    
+                     sumLogNumerators += log((pop->timeOriginInput - pop->lowerBoundTimeOriginInput)/ ( pop->oldTimeOriginInput- pop->lowerBoundTimeOriginInput));
+                    sumLogNumerators +=log(( mcmcOptions.upperBoundTimeOriginInputOldestPop- pop->timeOriginInput )/ ( mcmcOptions.upperBoundTimeOriginInputOldestPop-pop->oldTimeOriginInput));
+                 }
+                  else
                     sumLogNumerators += log((pop->timeOriginSTD)/ ( pop->oldTimeOriginSTD));
               }
             }
@@ -801,6 +841,7 @@ long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(Prog
                  fprintf (stderr, "\n The move is invalid you should not compute acceptance rate \n");
                   sumLogNumerators= log(0);
                   sumLogDenominators= log(0);
+                  exit(-1);
             }
         }
     }
@@ -819,7 +860,7 @@ long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(Prog
     
     return LogAcceptanceRate;
 }
-void NewTimeOriginOnEdgeforPopulationMove::safeCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
+void NewTimeOriginOnEdgeforPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
     //Chain *chain=getChain();
   
@@ -929,7 +970,7 @@ long double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(Prog
     return LogAcceptanceRate;
 }
 //////////////////////////////////////////
-NewGlobalScaledMutationRateMove::NewGlobalScaledMutationRateMove(Chain *chain,std::string nameMove,  Population *pop):MCMCmove(chain, nameMove)
+NewGlobalScaledMutationRateMove::NewGlobalScaledMutationRateMove(Chain *chain,std::string nameMove,  Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam):MCMCmove(chain, nameMove, mcmcParKernel, affectedParameters, vectorParam)
 {
     
     this->pop =pop;
@@ -938,23 +979,36 @@ void NewGlobalScaledMutationRateMove::move(ProgramOptions &programOptions, MCMCo
 {
     MCMCmove::move(programOptions,mcmcOptions, randomGenerator);
 }
-void NewGlobalScaledMutationRateMove::safeCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
+void NewGlobalScaledMutationRateMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
    
  
     chain->oldtheta = chain->theta;
+    chain->thetaPar->saveCurrentValue();
+    
     if (!mcmcOptions.noData)
-      chain->safeTreeNodeCurrentTimePUnits();
+       chain->saveTreeNodeCurrentTimePUnits();
     
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
         auto popI =  chain->populations[i];
-        // popI->olddeltaT= popI->deltaT;
+        
         popI->oldTheta =popI->theta;
-       // popI->olddelta= popI->delta;
+        popI->Theta->saveCurrentValue();
+        
+        if (!mcmcOptions.splitThetaDeltaTmoves)
+        {
+            
+            popI->olddeltaT= popI->deltaT;
+            popI->olddelta= popI->delta;
+            popI->DeltaT->saveCurrentValue();
+        }
+      
         popI->oldScaledTimeOriginInput= popI->scaledtimeOriginInput ;
         popI->oldTimeOriginSTD = popI->timeOriginSTD;
+        
+        popI->TimeOriginSTD->saveCurrentValue();
        if (!mcmcOptions.noData)
         {
            
@@ -970,7 +1024,7 @@ void NewGlobalScaledMutationRateMove::safeCurrentValue(ProgramOptions &programOp
 void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator)
 {
     Chain *chain=getChain();
-    
+    long double m3;
     //mcmcOptions.paramMultiplierEffectPopSize = parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplier);
    
     //generate a uniform variable between 0 and 1
@@ -981,7 +1035,15 @@ void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOption
        randomNumber= Random::randomUniformBoost();
     
     //mcmcOptions.paramMultiplierTheta =parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplier);
-    long double m2 = exp(2 * log(mcmcOptions.paramMultiplierTheta) *(randomNumber -0.5));
+    long double kernelPar= this->mcmcParamKernels[0]->getKernelParameter();
+   // long double m2 = exp(2 * log(mcmcOptions.paramMultiplierTheta) *(randomNumber -0.5));
+    
+    long double m2;
+    if (kernelPar <=0);
+    kernelPar =0.1;
+    
+    m2 = exp(2 * log(kernelPar) *(randomNumber -0.5));
+
     
     if (mcmcOptions.kernelType==0)
     {chain->theta = m2 * chain->theta;}
@@ -993,49 +1055,54 @@ void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOption
     if (mcmcOptions.verbose>=2)
       fprintf (stderr, "\n proposed new theta %.10Lf, old %.10Lf \n", chain->theta, chain->oldtheta );
     
+    assert(chain->theta >0);
     if (!mcmcOptions.noData)
         chain->updateNodeScaledTimeForRootedTree(chain->theta);
     else{
         if (chain->theta == 0)
           fprintf (stderr, "\n the new theta cannot be 0\n");
       }
-    long double m3;
+    //long double m3;
     //mcmcOptions.paramMultiplierGrowthRate = parameterMultiplierMCMCmove(mcmcOptions.lengthIntervalMultiplier);
+    
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
         auto popI =  chain->populations[i];
      
             popI->theta = chain->theta * popI->x;
        
-//        if (!mcmcOptions.splitThetaDeltaTmoves)
-//        {
-//           if(mcmcOptions.useGSLRandomGenerator)
-//              randomNumber= randomUniformFromGsl2(randomGenerator);
-//           else
-//             randomNumber= randomUniformBoost();
-//
-//            m3 = exp(2 * log(mcmcOptions.paramMultiplierGrowthRate) *(randomNumber -0.5));
-//            //  popI->delta =  chain->proposalSlidingWindow(popI->Delta, mcmcOptions.slidingWindowSizeGrowtRate);
-//            //popI->delta =  chain->proposalSlidingWindow(popI->Delta, 0.1 * popI->oldGrowthRate);
-//            if (mcmcOptions.kernelType==1)
-//            {
-//               popI->deltaT = randomNormalGreaterThan(popI->deltaT, mcmcOptions.sigmaNormalKernelGrowthRate,0);
-//            }
-//            if (mcmcOptions.kernelType==0)
-//            {
-//                popI->deltaT = m3 * popI->deltaT ;
-//             }
-//            if (mcmcOptions.verbose>= 3)
-//             {
-//               fprintf (stderr, "\n proposed deltaT  %.10Lf, old %.10Lf \n",popI->deltaT, popI->olddeltaT );
-//             }
-//             popI->delta = popI->deltaT * popI->x;
-//             if (mcmcOptions.verbose>=3)
-//               fprintf (stderr, "\n proposed delta %.10Lf, old %.10Lf \n", popI->delta, popI->olddelta );
-//        }
+        if (!mcmcOptions.splitThetaDeltaTmoves)
+        {
+            if(mcmcOptions.useGSLRandomGenerator)
+                randomNumber= Random::randomUniformFromGsl2(randomGenerator);
+            else
+                randomNumber= Random::randomUniformBoost();
+            
+            //m3 = exp(2 * log(mcmcOptions.paramMultiplierGrowthRate) *(randomNumber -0.5));
+            kernelPar= this->mcmcParamKernels[1]->getKernelParameter();
+            m3 = exp(2 * log(kernelPar) *(randomNumber -0.5));
+            //  popI->delta =  chain->proposalSlidingWindow(popI->Delta, mcmcOptions.slidingWindowSizeGrowtRate);
+            //popI->delta =  chain->proposalSlidingWindow(popI->Delta, 0.1 * popI->oldGrowthRate);
+            if (mcmcOptions.kernelType==1)
+            {
+                popI->deltaT = Random::randomNormalGreaterThan(popI->deltaT, mcmcOptions.sigmaNormalKernelGrowthRate,0);
+            }
+            if (mcmcOptions.kernelType==0)
+            {
+                popI->deltaT = m3 * popI->deltaT ;
+            }
+            if (mcmcOptions.verbose>= 3)
+            {
+                fprintf (stderr, "\n proposed deltaT  %.10Lf, old %.10Lf \n",popI->deltaT, popI->olddeltaT );
+            }
+            popI->delta = popI->deltaT * popI->x;
+            if (mcmcOptions.verbose>=3)
+                fprintf (stderr, "\n proposed delta %.10Lf, old %.10Lf \n", popI->delta, popI->olddelta );
+        }
+        
       //  if (mcmcOptions.doInferenceWithoutData==0)
       //  {
-            popI->scaledtimeOriginInput = popI->timeOriginInput / popI->theta;
+            popI->scaledtimeOriginInput = popI->timeOriginInput / chain->theta;
             popI->timeOriginSTD = popI->scaledtimeOriginInput / popI->x;
             
             if (mcmcOptions.verbose>=2)
@@ -1052,7 +1119,7 @@ void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOption
     }
     if (!mcmcOptions.noData)
     {
-        chain->initPopulationMigration();//after setting the timeSTD
+        chain->InitListPossibleMigrations();//after setting the timeSTD
         chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
         chain->filterSortPopulationsCoalescentEvents();
         bool allPopulationPopSizesSet = chain->checkMigrationsOrder();
@@ -1063,11 +1130,14 @@ void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOption
 void NewGlobalScaledMutationRateMove::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
+    assert(chain->oldtheta>0);
     chain->theta = chain->oldtheta;
  
     // chain->rollbackTreeNodeCurrentTimePUnits();
-    if (chain->theta != 0 && !mcmcOptions.noData )
+    if ( !mcmcOptions.noData )
         chain->updateNodeScaledTimeForRootedTree(chain->theta);
+    
+
     
     for (unsigned int i = 0; i < chain->numClones; ++i)
     {
@@ -1075,11 +1145,12 @@ void NewGlobalScaledMutationRateMove::rollbackMove(ProgramOptions &programOption
         popI->theta =popI->oldTheta;
         popI->scaledtimeOriginInput = popI->oldScaledTimeOriginInput;
         popI->timeOriginSTD = popI->oldTimeOriginSTD;
-  
-         //if (!mcmcOptions.splitThetaDeltaTmoves)
-         //   popI->deltaT= popI->olddeltaT;
-       // if (!mcmcOptions.splitThetaDeltaTmoves)
-        //    popI->delta= popI->olddelta;
+        
+        if (!mcmcOptions.splitThetaDeltaTmoves)
+        {   popI->deltaT= popI->olddeltaT;
+            popI->delta= popI->olddelta;
+        }
+       
         
         if (!mcmcOptions.noData )
         {
@@ -1096,6 +1167,7 @@ void NewGlobalScaledMutationRateMove::rollbackMove(ProgramOptions &programOption
 long double NewGlobalScaledMutationRateMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
     Chain *chain=getChain();
+    long double temp;
     
    // fprintf (stderr, "\n>> log conditional Likelihood tree for the new pair  theta and  r %d(old %d),  of the chain %d is = %lf  \n",chain->totalEffectPopSize, chain->oldTotalEffectPopSize,chain->chainNumber,newLogConditionalLikelihoodTree );
 
@@ -1135,58 +1207,62 @@ long double NewGlobalScaledMutationRateMove::computeLogAcceptanceProb(ProgramOpt
     {  priorDensityCurrentMutationRate =Distributions::LogExponentialDensity(mcmcOptions.lambdaExponentialPriorMutationRate,chain->oldtheta,0);
     }
     
-    //long double priorDensityNewGrowthRate= 0;
-    //long double priorDensityCurrentGrowthRate= 0;
+    long double priorDensityNewGrowthRate= 0;
+    long double priorDensityCurrentGrowthRate= 0;
     
-    //long double logKernelGrowthRate =0.0;
+    long double logKernelGrowthRate =0.0;
     
-    
-//    for (unsigned int i = 0; i < chain->numClones; ++i)
-//    {
-//        auto popI =  chain->populations[i];
-//        if(mcmcOptions.priorsType==0)
-//        {
-    //            priorDensityNewGrowthRate +=LogUniformDensity(popI->deltaT, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
-//
-//        }
-//        if(mcmcOptions.priorsType==2)
-//        {
-//            priorDensityNewGrowthRate +=
-//            LogPowerLawDistibutionDensity(mcmcOptions.parameterPowerLawDistributionGrowthRate, popI->deltaT,0);
-//
-//        }
-//
-//        if(mcmcOptions.priorsType==1) {
-//            priorDensityNewGrowthRate +=LogExponentialDensity(mcmcOptions.lambdaExponentialPriorGrowthRate,popI->deltaT,0);
-//        }
-//
-//        if (mcmcOptions.kernelType==0)
-//           {
-//               logKernelGrowthRate += log(popI->deltaT / popI->olddeltaT);
-//              // logKernelGrowthRate += log(popI->olddeltaT / popI->deltaT);
-//         }
-//
-//        if (isinf(priorDensityNewGrowthRate) ||  isnan(priorDensityNewGrowthRate))
-//        {
-//           if (mcmcOptions.verbose>=1)
-//             fprintf (stderr, "\n isNan DensityNewGrowthRate: new growth rate :%.40Lf \n", popI->growthRate);
-//
-//        }
-//
-//        if(mcmcOptions.priorsType==0)
-    //            priorDensityCurrentGrowthRate += LogUniformDensity(popI->olddeltaT, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
-//
-//        if(mcmcOptions.priorsType==2)
-//            priorDensityCurrentGrowthRate +=LogPowerLawDistibutionDensity(mcmcOptions.parameterPowerLawDistributionGrowthRate, popI->olddeltaT,0);
-//        if(mcmcOptions.priorsType==1)
-//            priorDensityCurrentGrowthRate +=LogExponentialDensity(mcmcOptions.lambdaExponentialPriorGrowthRate,popI->olddeltaT,0);
-//    }
-//
+    for (unsigned int i = 0; i < chain->numClones; ++i)
+    {
+        auto popI =  chain->populations[i];
+        if (!mcmcOptions.splitThetaDeltaTmoves)
+        {
+            if(mcmcOptions.priorsType==0)
+            {
+                priorDensityNewGrowthRate +=Distributions::LogUniformDensity(popI->deltaT, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
+            }
+            if(mcmcOptions.priorsType==2)
+            {
+                priorDensityNewGrowthRate +=Distributions::LogPowerLawDistibutionDensity(mcmcOptions.parameterPowerLawDistributionGrowthRate, popI->deltaT,0);
+            }
+            
+            if(mcmcOptions.priorsType==1) {
+                priorDensityNewGrowthRate +=Distributions::LogExponentialDensity(mcmcOptions.lambdaExponentialPriorGrowthRate,popI->deltaT,0);
+            }
+            
+            if (mcmcOptions.kernelType==0)
+            {
+                  temp= mcmcParamKernels[0]->getKernel()->logKernel(pop->olddeltaT, pop->deltaT);
+                logKernelGrowthRate += log(popI->deltaT / popI->olddeltaT);
+                // logKernelGrowthRate += log(popI->olddeltaT / popI->deltaT);
+            }
+            
+            if (isinf(priorDensityNewGrowthRate) ||  isnan(priorDensityNewGrowthRate))
+            {
+                if (mcmcOptions.verbose>=1)
+                    fprintf (stderr, "\n isNan DensityNewGrowthRate: new growth rate :%.40Lf \n", popI->growthRate);
+            }
+            if(mcmcOptions.priorsType==0)
+                priorDensityCurrentGrowthRate += Distributions::LogUniformDensity(popI->olddeltaT, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
+            
+            if(mcmcOptions.priorsType==2)
+                priorDensityCurrentGrowthRate +=Distributions::LogPowerLawDistibutionDensity(mcmcOptions.parameterPowerLawDistributionGrowthRate, popI->olddeltaT,0);
+            if(mcmcOptions.priorsType==1)
+                priorDensityCurrentGrowthRate +=Distributions::LogExponentialDensity(mcmcOptions.lambdaExponentialPriorGrowthRate,popI->olddeltaT,0);
+            
+            
+        }
+        
+        
+        
+    }
+
 
     long double logkernelTheta=0;
     
     if (mcmcOptions.kernelType==0)
     {
+            temp= mcmcParamKernels[0]->getKernel()->logKernel(chain->oldtheta, chain->theta);
         logkernelTheta=log(chain->theta/chain->oldtheta);//log(multiplier factor)
     }
     
@@ -1197,10 +1273,13 @@ long double NewGlobalScaledMutationRateMove::computeLogAcceptanceProb(ProgramOpt
    long  double sumLogNumerators=
     priorDensityNewMutationRate+logkernelTheta;
     
-    //sumLogNumerators+=priorDensityNewGrowthRate+ logKernelGrowthRate;
+    if (!mcmcOptions.splitThetaDeltaTmoves)
+       sumLogNumerators+=priorDensityNewGrowthRate+ logKernelGrowthRate;
 
     long double sumLogDenominators= priorDensityCurrentMutationRate;
-   // sumLogDenominators+=priorDensityCurrentGrowthRate;
+
+    if (!mcmcOptions.splitThetaDeltaTmoves)
+        sumLogDenominators+=priorDensityCurrentGrowthRate;
     
    if (!mcmcOptions.noData)
    {  //fprintf (stderr, "\n Log likelihood tree included!\n");
@@ -1216,7 +1295,6 @@ long double NewGlobalScaledMutationRateMove::computeLogAcceptanceProb(ProgramOpt
     {
         if (mcmcOptions.verbose>=1)
            fprintf (stderr, "\n isNan  Log acceptance rate\n");
-        
     }
     return LogAcceptanceRate;
 }
@@ -1228,6 +1306,8 @@ long double NewGlobalScaledGrowthRateForPopulationMove::computeLogAcceptanceProb
     
     long double priorDensityNewGrowthRate= 0;
     long double priorDensityCurrentGrowthRate= 0;
+    
+    long double temp= mcmcParamKernels[0]->getKernel()->logKernel(pop->olddeltaT, pop->deltaT);
     
     long double logKernelGrowthRate =0.0;
   
@@ -1258,11 +1338,15 @@ long double NewGlobalScaledGrowthRateForPopulationMove::computeLogAcceptanceProb
         if(mcmcOptions.priorsType==0)
             priorDensityCurrentGrowthRate += Distributions::LogUniformDensity(pop->olddeltaT, mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto);
         
-        if(mcmcOptions.priorsType==2)
-            priorDensityCurrentGrowthRate +=Distributions::LogPowerLawDistibutionDensity(mcmcOptions.parameterPowerLawDistributionGrowthRate, pop->olddeltaT,0);
-        if(mcmcOptions.priorsType==1)
-            priorDensityCurrentGrowthRate +=Distributions::LogExponentialDensity(mcmcOptions.lambdaExponentialPriorGrowthRate,pop->olddeltaT,0);
-  
+    if(mcmcOptions.priorsType==2){
+         priorDensityCurrentGrowthRate +=Distributions::LogPowerLawDistibutionDensity(mcmcOptions.parameterPowerLawDistributionGrowthRate, pop->olddeltaT,0);
+    }
+    
+    if(mcmcOptions.priorsType==1){
+          //priorDensityCurrentGrowthRate +=Distributions::LogExponentialDensity(mcmcOptions.lambdaExponentialPriorGrowthRate,pop->olddeltaT,0);
+        priorDensityCurrentGrowthRate +=Distributions::LogExponentialDensity(mcmcOptions.lambdaExponentialPriorGrowthRate,pop->olddeltaT,0);
+    }
+    
      long  double sumLogNumerators = priorDensityNewGrowthRate+ logKernelGrowthRate ;
     
     long double sumLogDenominators =  priorDensityCurrentGrowthRate;
@@ -1289,6 +1373,15 @@ void NewGlobalScaledGrowthRateForPopulationMove::rollbackMove(ProgramOptions &pr
    
         pop->deltaT= pop->olddeltaT;
         pop->delta= pop->olddelta;
+    
+    for(unsigned int i = 0 ; i < mcmcParamKernels.size(); i++){
+        mcmcParamKernels[i]->rollbackValue();
+        
+    }
+    for(unsigned int i = 0 ; i < affectedParameters.size(); i++){
+        affectedParameters[i]->rollbackValue();
+        
+    }
         if (!mcmcOptions.noData )
         {
            
@@ -1298,7 +1391,7 @@ void NewGlobalScaledGrowthRateForPopulationMove::rollbackMove(ProgramOptions &pr
 }
 void NewGlobalScaledGrowthRateForPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator)
 {
-    Chain *chain=getChain();
+    //Chain *chain=getChain();
     double randomNumber;
     long double m3;
    
@@ -1307,7 +1400,10 @@ void NewGlobalScaledGrowthRateForPopulationMove::makeProposal(ProgramOptions &pr
             randomNumber= Random::randomUniformFromGsl2(randomGenerator);
         else
             randomNumber= Random::randomUniformBoost();
-        m3 = exp(2 * log(mcmcOptions.paramMultiplierGrowthRate) *(randomNumber -0.5));
+    
+        long double kernelPar= this->mcmcParamKernels[0]->getKernelParameter();
+    
+        m3 = exp(2 * log(kernelPar) *(randomNumber -0.5));
         //  popI->delta =  chain->proposalSlidingWindow(popI->Delta, mcmcOptions.slidingWindowSizeGrowtRate);
         //popI->delta =  chain->proposalSlidingWindow(popI->Delta, 0.1 * popI->oldGrowthRate);
         if (mcmcOptions.kernelType==1)
@@ -1328,14 +1424,25 @@ void NewGlobalScaledGrowthRateForPopulationMove::makeProposal(ProgramOptions &pr
             fprintf (stderr, "\n proposed delta %.10Lf, old %.10Lf \n", pop->delta, pop->olddelta );
       //}
 }
-void NewGlobalScaledGrowthRateForPopulationMove::safeCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
+void NewGlobalScaledGrowthRateForPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions)
 {
   
     //for (unsigned int i = 0; i < chain->numClones; ++i)
    // {
         //auto popI =  chain->populations[i];
-        pop->olddeltaT= pop->deltaT;
+       pop->olddeltaT= pop->deltaT;
        pop->olddelta= pop->delta;
+    
+    for(unsigned int i = 0 ; i < mcmcParamKernels.size(); i++){
+        mcmcParamKernels[i]->saveCurrentValue();
+        
+    }
+    for(unsigned int i = 0 ; i < affectedParameters.size(); i++){
+        affectedParameters[i]->saveCurrentValue();
+        
+    }
+    
+
         if (!mcmcOptions.noData)
         {
             //pop->olddelta= pop->delta;
@@ -1348,4 +1455,73 @@ void NewGlobalScaledGrowthRateForPopulationMove::safeCurrentValue(ProgramOptions
             //pop->immigrantsPopOrderedByModelTime.clear();
         }
     //}
+}
+void NewTimeOriginOnTreeforPopulationMove::increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    //Chain *chain=getChain();check if it is the oldest pop
+    //mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop += mcmcOptions.updateLengthMultiplierMCMCMove;
+    long double newKernelParameter=this->mcmcParamKernels[0]->getKernelParameter() +mcmcOptions.updateLengthMultiplierMCMCMove;
+    this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
+    
+
+}
+void NewTimeOriginOnTreeforPopulationMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    //Chain *chain=getChain();check if it is the oldest pop
+    //mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop -= mcmcOptions.updateLengthMultiplierMCMCMove;
+    long double newParameterValue = this->mcmcParamKernels[0]->getKernelParameter() - mcmcOptions.updateLengthMultiplierMCMCMove;
+    long double newKernelParameter= newParameterValue <=0 ? 0.1 :  newParameterValue;
+    this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
+}
+void NewGlobalScaledMutationRateMove::increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    //mcmcOptions.lengthIntervalMultiplierTheta += mcmcOptions.updateLengthMultiplierMCMCMove;
+    
+    long double newKernelParameter=this->mcmcParamKernels[0]->getKernelParameter() +mcmcOptions.updateLengthMultiplierMCMCMove;
+    this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
+    
+    if (!mcmcOptions.splitThetaDeltaTmoves){
+        
+        newKernelParameter=this->mcmcParamKernels[1]->getKernelParameter() +mcmcOptions.updateLengthMultiplierMCMCMove;
+        this->mcmcParamKernels[1]->modifyKernelParameter( newKernelParameter);
+      //mcmcOptions.lengthIntervalMultiplierDeltaT += mcmcOptions.updateLengthMultiplierMCMCMove;
+    }
+}
+void NewGlobalScaledMutationRateMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    //mcmcOptions.lengthIntervalMultiplierTheta -= mcmcOptions.updateLengthMultiplierMCMCMove;
+    
+    long double newKernelParameter=this->mcmcParamKernels[0]->getKernelParameter() - mcmcOptions.updateLengthMultiplierMCMCMove;
+    this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
+    
+    if (!mcmcOptions.splitThetaDeltaTmoves){
+        
+       newKernelParameter=this->mcmcParamKernels[1]->getKernelParameter() - mcmcOptions.updateLengthMultiplierMCMCMove;
+        this->mcmcParamKernels[1]->modifyKernelParameter( newKernelParameter);
+    
+       //mcmcOptions.lengthIntervalMultiplierDeltaT -= mcmcOptions.updateLengthMultiplierMCMCMove;
+    }
+
+}
+void NewGlobalScaledGrowthRateForPopulationMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    //mcmcOptions.lengthIntervalMultiplierTheta -= mcmcOptions.uplmqerknmh ´powrtjh´poildateLengthMultiplierMCMCMove;
+    long double newKernelParameter=this->mcmcParamKernels[0]->getKernelParameter() -mcmcOptions.updateLengthMultiplierMCMCMove;
+    this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
+    
+}
+void NewGlobalScaledGrowthRateForPopulationMove::increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+   // mcmcOptions.lengthIntervalMultiplierTheta += mcmcOptions.updateLengthMultiplierMCMCMove;
+    
+    long double newKernelParameter=this->mcmcParamKernels[0]->getKernelParameter() +mcmcOptions.updateLengthMultiplierMCMCMove;
+    this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
+}
+void NewProportionsVectorMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    //mcmcOptions.lengthIntervalMultiplierTheta -= mcmcOptions.updateLengthMultiplierMCMCMove;
+}
+void NewProportionsVectorMove::increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+{
+    //mcmcOptions.lengthIntervalMultiplierTheta += mcmcOptions.updateLengthMultiplierMCMCMove;
 }

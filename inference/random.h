@@ -80,7 +80,8 @@ static long double LogExponentialDensity(long double lambda, long double value, 
 static long double  logMultinomialProbability(const  size_t size, const  double  *p, const unsigned int *n );
 static double LogUniformDensity(double value, double from, double to);
 static long double LogPowerLawDistibutionDensity(long double a, long double value, long double from);
-    static long double LogUniformDensity(long double value, long double from, long double to);
+static long double LogUniformDensity(long double value, long double from, long double to);
+    static long double  DirichletDensity(vector<long double> &proportionsVector,  vector<long double> &concentrationVector, int sizeVector);
 };
 #endif /* random_h */
 

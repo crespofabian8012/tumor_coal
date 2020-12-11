@@ -35,6 +35,7 @@
 #include "data_utils.hpp"
 #include "population.hpp"
 #include "mcmc_chain.hpp"
+#include "chain_manager.hpp"
 #include "definitions.hpp"
 #include "utils.hpp"
 #include "constants.hpp"
@@ -62,8 +63,12 @@ int main(int argc, char* argv[] )
 {
     FILE *input_file;
     char* input_path;
-    int k=0;
-    
+    vector<StructuredCoalescentTree *> structuredCoalTrees;
+    vector<pll_rtree_t *> trueTrees;
+    vector<long double> trueThetas;
+    vector<vector<long double>> trueDeltaTs;
+    vector<vector<long double>> trueTs;
+
     char *fileNameFasta ;//= argv[2];
     char *fileNamePhylip ;//= argv[3];
     char *treefileName; //= argv[4];
@@ -75,13 +80,23 @@ int main(int argc, char* argv[] )
     
     mcmcOptions.noData = false;
     mcmcOptions.useGSLRandomGenerator = true;
-    mcmcOptions.splitThetaDeltaTmoves=false;
+    mcmcOptions.splitThetaDeltaTmoves=true;
     
+    
+    //test
+    long double result = Chain::LogDensityCoalTimes({ 1.0, 1.5}, {1.0}, {1.5}, 1.5, 1.0, 2);
+    // result must be -1.032054
+    
+    long double result2= log(Population::DensityTimeSTD(1.5, 1.0, 0.0));
+    //result2 must be -1.282252
+    
+    
+    printProgramHeader();
     setDefaultOptions(programOptions, mcmcOptions);
     if (argc == 1 )
     {
         
-        fprintf (stderr, "\nERROR: No parameters specified (use command  parameter file)");
+        std::cout << "\nERROR: No parameters specified (use command  parameter file)"<< endl;
         Output::PrintUsage();
     }
     if (argc <= 2 )//only a path to a MCMC configuration file
@@ -91,7 +106,7 @@ int main(int argc, char* argv[] )
         
         if (!mcmcOptions.noData)
         {
-            fprintf (stderr, "\nERROR: No parameters specified (use command  parameter file)");
+             std::cout << "\nERROR: No parameters specified (use command  parameter file)"<<endl;
             Output::PrintUsage();
         }
     }
@@ -108,7 +123,7 @@ int main(int argc, char* argv[] )
             if (!mcmcOptions.noData)
             {
                 
-                fprintf (stderr, "\nERROR: No parameters specified (use command line or parameter file)");
+                 std::cout << "\nERROR: No parameters specified (use command line or parameter file)"<<endl;
                 exit(-1);
             }
         }
@@ -125,7 +140,6 @@ int main(int argc, char* argv[] )
     //    //3. do inference
 
     pll_msa_t *msa;
-    
     
     //    if (mcmcOptions.useSequencesLikelihood ==1)
     //   {
@@ -146,151 +160,106 @@ int main(int argc, char* argv[] )
     fileNamePhylip =filePaths.inputGenotypeFilePhylip;
     msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
     if (!msa)
-        fprintf (stderr, "Error reading phylip file \n");
+         std::cout << "Error reading phylip file \n"<< endl;
     // }
     treefileName = filePaths.inputTreeFile;
     if ((treefileName != NULL) && (treefileName[0] == '\0'))
     {
-        fprintf (stderr, "\nERROR: No tree file  specified (use command line or parameter file)");
+        std::cout << "\nERROR: No tree file  specified (use command line or parameter file)" <<endl;
         exit(-1);
     }
     std::string healthyTipLabel = "healthycell";
     programOptions.healthyTipLabel ="healthycell";
-    
-    int currentIteration;
-    int sampleEvery = mcmcOptions.thinning;
+
+    //int sampleEvery = mcmcOptions.thinning;
     vector<Chain*> chains(mcmcOptions.numChains);
-    //parallelizing
-    
-    
     vector<gsl_rng * > randomGenerators(mcmcOptions.numChains);
-    gsl_rng * currentRandomGenerator;
+    
+    int maxNumberThreads = omp_get_max_threads();
     Random::allocateListRandomNumbersGenerators(randomGenerators);
     
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
     
-    float start = clock();
-    unsigned int chainNumber=0;
-  
-    programOptions.doUseFixedTree=YES;
-    int maxNumberThreads = omp_get_max_threads();
-    int iterationToComputeThinnig= floor(mcmcOptions.percentIterationsToComputeThinnig * mcmcOptions.Niterations);
-    mcmcOptions.iterationToComputeThinnig= 10000;
-    fprintf (stderr, "\n max number of threads %d \n", omp_get_max_threads());
-    vector<int> lags={100, 200, 500, 1000, 2000};
-    long double autocorr=0.0;
-    mcmcOptions.thresholdAutoCorrelation=0.01;
-    mcmcOptions.doThinning=false;
-    clock_t begin = omp_get_wtime();
-   //#pragma omp parallel shared(programOptions,mcmcOptions,filePaths, sampleSizes, initialRootedTree, healthyTipLabel, ObservedData,ObservedCellNames, msa) private(chainNumber, currentIteration,currentRandomGenerator, lags, iterationToComputeThinnig)
-   // omp_set_num_threads(maxNumberThreads);
-    {
-   //   #pragma omp for
-        for(chainNumber=0; chainNumber< mcmcOptions.numChains;chainNumber++)
-        {
-            currentRandomGenerator =randomGenerators.at(chainNumber);
-            chains.at(chainNumber) = Chain::initializeChain( programOptions, mcmcOptions, sampleSizes, currentRandomGenerator, ObservedData,ObservedCellNames, msa,  initialRootedTree, healthyTipLabel);
-            chains.at(chainNumber)->chainNumber =chainNumber;
-            chains.at(chainNumber)->PrepareFiles(filePaths, programOptions, chains.at(chainNumber)->files, chainNumber);
-            
-            chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,
-                                                           chains.at(chainNumber)->files );
-            chains.at(chainNumber)->initListMoves();
-            for (currentIteration = 0; currentIteration < mcmcOptions.Niterations; currentIteration++)
-            {
-                if (currentIteration  == 0)//print initial values(iteration 0)
-                {
-                    chains.at(chainNumber)->writeMCMCState(  currentIteration, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
-                
-                }
-                if (currentIteration % mcmcOptions.printChainStateEvery == 0 || currentIteration >= (mcmcOptions.Niterations-1))
-                    fprintf (stderr, "\n Chain #%d, Starting Iteration %d \n", chains.at(chainNumber)->chainNumber ,currentIteration +1);
-                chains.at(chainNumber)->currentNumberIerations =currentIteration;
-                chains.at(chainNumber)->runChain(mcmcOptions,  currentRandomGenerator,  filePaths, chains.at(chainNumber)->files, programOptions,ObservedCellNames, msa, sampleSizes, currentIteration );
-                if (currentIteration==  mcmcOptions.iterationToComputeThinnig)
-                {
-                    k=0;
-                    autocorr=chains.at(chainNumber)->autoCorrelation(lags.at(0), chains.at(chainNumber)->posteriorT);
-                    while (autocorr > mcmcOptions.thresholdAutoCorrelation){
-                         k++;
-                         autocorr=chains.at(chainNumber)->autoCorrelation(lags.at(k), chains.at(chainNumber)->posteriorT);
-                    }
-                    fprintf (stderr, "\n Chain #%d, thinnig %d \n", chains.at(chainNumber)->chainNumber ,lags.at(k));
-                    if (mcmcOptions.doThinning){
-                      chains.at(chainNumber)->thinning =lags.at(k);
-                    }
-                }
-                if (currentIteration % chains.at(chainNumber)->thinning == 0 && currentIteration >= mcmcOptions.numberWarmUpIterations)
-                {
-                    chains.at(chainNumber)->writeMCMCState(  currentIteration+1, filePaths, programOptions,chains.at(chainNumber)->files, mcmcOptions);
-                    //in the future i will write trees to a nexus file
-                    ////PrintTrees(currentIteration, &(chains[chainNumber].root),
-                }
-            }
-            chains.at(chainNumber)->currentNumberIerations =currentIteration;
-            if (currentIteration >= mcmcOptions.Niterations -1)//last iteration
-            {
-                chains.at(chainNumber)->printMovesSummary();
-                string priorsType;
-                if (mcmcOptions.priorsType==0)
-                    priorsType="log uniform";
-                else if(mcmcOptions.priorsType==1)
-                    priorsType="exponential";
-                else
-                    priorsType="power law";
-                string kernelType;
-                if (mcmcOptions.kernelType==0)
-                    kernelType="multiplier";
-                else //(mcmcOptions.priorsType==1)
-                    kernelType="normal";
-                printf ("\n Use of %s priors and %s kernels \n", priorsType.c_str(), kernelType.c_str());
-                chains.at(chainNumber)->closeFiles(programOptions);
-                //chains.at(chainNumber)->closeFiles(filePaths,programOptions, files, chainNumber);
-            }
-            //chains.at(chainNumber)->moves.clear();
-            //delete chains.at(chainNumber);
-        }
-    }
-    
-    Random::freeListRandomNumbersGenerators(randomGenerators);
+    programOptions.doUseFixedTree=NO;
+    mcmcOptions.maxNumberIndependentPosteriorValues=500;
    
-    for (auto ptr : chains)
+    //int iterationToComputeThinnig= floor(mcmcOptions.percentIterationsToComputeThinnig * mcmcOptions.Niterations);
+  
+    
+    vector<Chain*> chainsFortheSameTree(mcmcOptions.numberChainsPerTree);
+    int numberTrees = floor((double)mcmcOptions.numChains / mcmcOptions.numberChainsPerTree);
+    
+    mcmcOptions.fixedValuesForSimulation = true;
+    if (programOptions.doUseFixedTree == NO)
+             simulateTrees( numberTrees,structuredCoalTrees,  trueTrees,         trueThetas,
+                            trueDeltaTs,
+                            trueTs,
+                          sampleSizes, programOptions,mcmcOptions, randomGenerators,ObservedData,ObservedCellNames, msa,  healthyTipLabel  );
+    
+    ChainManager * chainManager= new ChainManager(mcmcOptions.numChains);
+    omp_set_num_threads(maxNumberThreads);
+
+    mcmcOptions.doMCMCMoveTimeOriginInputOldestPop=true;
+    mcmcOptions.iterationToComputeThinnig= floor(0.25 *mcmcOptions.Niterations);
+    mcmcOptions.numberWarmUpIterations = 10000;//floor(0.20 *mcmcOptions.Niterations);
+    
+    
+    mcmcOptions.iterationsToMonitorChain= floor(0.05 *mcmcOptions.iterationToComputeThinnig);
+    mcmcOptions.iterationsToMonitorChain =   floor(mcmcOptions.numberWarmUpIterations / 20);
+    
+    mcmcOptions.printChainStateEvery=mcmcOptions.iterationsToMonitorChain;
+    chainManager->initializeChains(randomGenerators, programOptions, mcmcOptions, filePaths, sampleSizes, ObservedData, ObservedCellNames, msa, initialRootedTree, structuredCoalTrees, healthyTipLabel, trueTrees, trueThetas, trueDeltaTs, trueTs);
+    
+    int burnInIterations= 10000;
+    mcmcOptions.Niterations= 1000000;
+    mcmcOptions.maxNumberIndependentPosteriorValues=400;
+    float start = clock();
+    clock_t begin = omp_get_wtime();
+    bool converged =false;
+    //////////////////////
+    chainManager->performWarmUp(programOptions, mcmcOptions, randomGenerators, filePaths);
+    chainManager->resetChainValues(programOptions, mcmcOptions);
+    
+    for (size_t currentIteration = 0; currentIteration < mcmcOptions.Niterations; ++currentIteration)
     {
-        for (auto ptr1 : ptr->populations)
-        {
-            delete ptr1;
-        }
-        ptr->populations.clear();
-        for (auto ptr2 : ptr->rnodes)
-        {
-            delete (TreeNode*)(ptr2->data);
-            delete ptr2;
-        }
-        ptr->rnodes.clear();
-        for (auto ptr3 : ptr->edges)
-        {
-            delete ptr3;
-        }
-        ptr->edges.clear();
-        ptr->moves.clear();
+         //reset Chains values
+           chainManager->stepAllChainsNoSave( currentIteration,programOptions, mcmcOptions, randomGenerators  );
         
-        //ptr->moves.clear();
-        delete ptr;
+        if (currentIteration  >=  burnInIterations){
+              chainManager->saveChainState( currentIteration, programOptions, mcmcOptions );
+              chainManager->writeChainsOutput(currentIteration, programOptions, mcmcOptions, filePaths);
+        }
+        
+           if ( (currentIteration ) >=  burnInIterations +mcmcOptions.maxNumberIndependentPosteriorValues  )
+               converged = chainManager->checkConvergence(mcmcOptions.numberChainsPerTree, programOptions, mcmcOptions, 0.01);
+        
+        if (converged){
+            break;
+            
+        }
+        
     }
+    Random::freeListRandomNumbersGenerators(randomGenerators);
+    trueTrees.clear();
+    structuredCoalTrees.clear();
+    trueThetas.clear();
+    trueDeltaTs.clear();
+    trueTs.clear();
+    sampleSizes.clear();
+
     chains.clear();
-    //for default(shared) private(chainNumber, currentIteration) firstprivate(files)
-    //close files
+
     if (!mcmcOptions.noData && mcmcOptions.useSequencesLikelihood ==1)
         pll_msa_destroy(msa);
     clock_t end = omp_get_wtime();
     double elapsed_time = double(end - begin);
-    fprintf(stderr, "\n\n*** Program finished ***");
+    std::cout << "\n\n*** Program finished ***" <<endl;
     /* execution time */
     double secs = (double)(clock() - start) / CLOCKS_PER_SEC;
-    fprintf(stderr, "\n\n_________________________________________________________________");
-    fprintf(stderr, "\n sSerial Time processing: %G seconds and parallel Time processing %G \n", secs, elapsed_time  );
-    fprintf(stderr, "\nIf you need help type '-?' in the command line of the program\n");
+    std::cout << "\n\n_________________________________________________________________" <<endl;
+    std::cout << "\n sSerial Time processing: " << secs << " seconds and parallel Time processing " << elapsed_time  <<endl;
+    std::cout << "\nIf you need help type '-?' in the command line of the program\n"<<endl;
     return 0;
-    return 0;
+ 
 }
 

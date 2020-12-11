@@ -22,14 +22,18 @@
  * output functions
  */
 #include "output_functions.hpp"
+//#include <fstream>
+//#include <iomanip>
 #include "utils.hpp"
+
+
 
 
 
 /***************************** PrintUsage *******************************/
 /* Prints a short description of program usage */
 using namespace std;
-void PrintUsage()
+void Output::PrintUsage()
 {
     fprintf (stderr, "\n\nUsage: %s%s []", PROGRAM_NAME, VERSION_NUMBER);
     fprintf (stderr, "\n\nUsage: %s%s [-n# -x# -c# (# # # # # #) -u# -o# -ttrees.tre -ktimes.txt -## -y# -? -h]", PROGRAM_NAME, VERSION_NUMBER);
@@ -53,9 +57,9 @@ void PrintUsage()
 
 /**************** PrintTrees ***************/
 /*  Print unrooted trees to treefile in Newick format */
-void PrintTrees(int replicate, TreeNode *treeRootInit,   FILE  *fpTrees, double mutationRate, int doUseObservedCellNames)
+void Output::PrintTrees(int replicate, TreeNode *treeRootInit,   FILE  *fpTrees, double mutationRate, int doUseObservedCellNames)
 {
-    /* there isn´t recombination */
+    
     /*fprintf(fpTrees,"Tree.%05d = ", replicate+1);*/
     //    fprintf(fpTrees, "(");
     WriteTree (treeRootInit, mutationRate, fpTrees, doUseObservedCellNames);
@@ -65,21 +69,15 @@ void PrintTrees(int replicate, TreeNode *treeRootInit,   FILE  *fpTrees, double 
 
 /**************** PrintTrees2 ***************/
 /*  Print unrooted trees to treefile in Newick format */
-void PrintTrees2(int replicate, TreeNode *treeRootInit,   FILE   *fpTrees2 , double mutationRate,char * ObservedCellNames[],int doUseObservedCellNames)
+void Output::PrintTrees2(int replicate, TreeNode *treeRootInit,   FILE   *fpTrees2 , double mutationRate,char * ObservedCellNames[],int doUseObservedCellNames)
 {
     int indexCurrentCell=0;
     
-    /* there isn´t recombination */
+  
     /*fprintf(fpTrees2,"Tree.%05d = ", replicate+1);*/
     //   fprintf(fpTrees2, "(");
     WriteTree2 (treeRootInit, mutationRate, fpTrees2, ObservedCellNames, &indexCurrentCell, doUseObservedCellNames);
-    //     fprintf(fpTrees2, ");\n");
-    //    long len= strlen(newickString);
-    //    char *res = malloc(len  + strlen(");\n"));
-    //    if (res){
-    //        memcpy(res, newickString, len);
-    //        memcpy(res + len, ");\n", strlen(");\n")+1);
-    //    }
+  
     fprintf(fpTrees2, ");\n");
     
     //fprintf (fpTrees2,"\n");
@@ -88,7 +86,7 @@ void PrintTrees2(int replicate, TreeNode *treeRootInit,   FILE   *fpTrees2 , dou
 
 /******************* WriteTree ****************/
 /* Writes a given (unrooted) tree from PrintTrees */
-void WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObservedCellNames)
+void Output::WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObservedCellNames)
 {
     char buffer[1024];
     
@@ -158,7 +156,7 @@ void WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObs
 }
 /******************* WriteTree2 ****************/
 /* Writes a given (unrooted) tree from PrintTrees */
-void WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cellNames[], int *indexCurrentCell, int doUseObservedCellNames)
+void Output::WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cellNames[], int *indexCurrentCell, int doUseObservedCellNames)
 {
     //asprintf(&currentNewick, *newickString);
     if (p != NULL)
@@ -217,7 +215,7 @@ void WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, char *cel
 /* Prints to timesfile a detailed description of
  the tree: nodes, times, branch lengths */
 
-void PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector<TreeNode *> &nodes,  int thereisOutgroup)
+void Output::PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector<TreeNode *> &nodes,  int thereisOutgroup)
 {
     /* there isn't recombination */
     fprintf (fpTimes, "\n\nDataset %d", replicate + 1);
@@ -232,7 +230,7 @@ void PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector
 /* Prints to timesfile a detailed description of
  the tree: nodes, times, branch lengths */
 
-void PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vector<TreeNode *> &nodes,  int thereisOutgroup)
+void Output::PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vector<TreeNode *> &nodes,  int thereisOutgroup)
 {
     /* there isn't recombination */
     fprintf (fpTimes2, "\n\nDataset %d", replicate + 1);
@@ -247,7 +245,7 @@ void PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vect
 /********************** ListTimes ************************/
 /* Writes a given tree description from ListTimes   */
 
-void ListTimes (int j, double mutationRate, std::vector<TreeNode *> &nodes, FILE *fpTimes, int thereisOutgroup)
+void Output::ListTimes (int j, double mutationRate, std::vector<TreeNode *> &nodes, FILE *fpTimes, int thereisOutgroup)
 {
     /* It does not list superfluous nodes */
     TreeNode  *p;
@@ -291,7 +289,7 @@ void ListTimes (int j, double mutationRate, std::vector<TreeNode *> &nodes, FILE
 /********************** ListTimes2 ************************/
 /* Writes a given tree description from ListTimes   */
 
-void ListTimes2 (int j,  double mutationRate, std::vector<TreeNode *> &nodes,  FILE *fpTimes2, int thereisOutgroup)
+void Output::ListTimes2 (int j,  double mutationRate, std::vector<TreeNode *> &nodes,  FILE *fpTimes2, int thereisOutgroup)
 {
     /* It does not list superfluous nodes */
     TreeNode  *p;
@@ -326,23 +324,30 @@ void ListTimes2 (int j,  double mutationRate, std::vector<TreeNode *> &nodes,  F
 
 /***************** Index ***************/
 /* Returns index for a given node */
-int Index (TreeNode *p)
+int Output::Index (TreeNode *p)
 {
     //return (p == NULL) ? -1 : p->index+1; /* If the node haven't got bond => index = -1, else index = index+1 */
     return (p == NULL) ? -1 : p->index; /* If the node haven't got bond => index = -1, else index = index */
+}
+/***************** Index ***************/
+/* Returns index for a given node */
+int Output::Index (pll_rnode_t *p)
+{
+    //return (p == NULL) ? -1 : p->index+1; /* If the node haven't got bond => index = -1, else index = index+1 */
+    return (p == NULL) ? -1 : p->node_index; /* If the node haven't got bond => index = -1, else index = index */
 }
 
 
 /***************** Lab ***************/
 /* Returns label for a given node */
-int Label (TreeNode *p)
+int Output::Label (TreeNode *p)
 {
     return (p->anc1 == NULL && p->left == NULL && p->right == NULL) ? -1 : p->label + 1; /* If the node haven't got ancester and descendants => label = -1, else label = label+1 */
 }
 
 /********************* getHealthyTip **********************/
 /* getHealthyTip*/
-TreeNode *getHealthyTip(TreeNode *treeRootInit)
+TreeNode * Output::getHealthyTip(TreeNode *treeRootInit)
 {
     if (treeRootInit !=NULL && treeRootInit->right!=NULL)
         return treeRootInit->right;
@@ -352,7 +357,7 @@ TreeNode *getHealthyTip(TreeNode *treeRootInit)
 
 /***************************** PrintTrueFullHaplotypes *******************************/
 /* Prints observed/ML haplotypes for all sites (variable + invariable) to a file */
-void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName)
+void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName)
 {
     int         i, j;
     char *temp;
@@ -492,3 +497,269 @@ void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode
     }
 }
 
+void Output::PrintTrees(int replicate, pll_rnode_t *treeRootInit,   FILE  *fpTrees, double mutationRate, int doUseObservedCellNames)
+{
+    
+    /*fprintf(fpTrees,"Tree.%05d = ", replicate+1);*/
+    //    fprintf(fpTrees, "(");
+    WriteTree (treeRootInit, mutationRate, fpTrees, doUseObservedCellNames);
+    //    fprintf(fpTrees, ");\n");
+    fprintf (fpTrees,");\n");
+}
+
+/**************** PrintTrees2 ***************/
+/*  Print unrooted trees to treefile in Newick format */
+void Output::PrintTrees2(int replicate, pll_rnode_t *treeRootInit,   FILE   *fpTrees2 , double mutationRate,char * ObservedCellNames[],int doUseObservedCellNames)
+{
+    int indexCurrentCell=0;
+    
+    
+    /*fprintf(fpTrees2,"Tree.%05d = ", replicate+1);*/
+    //   fprintf(fpTrees2, "(");
+    WriteTree2 (treeRootInit, mutationRate, fpTrees2, ObservedCellNames, &indexCurrentCell, doUseObservedCellNames);
+    
+    fprintf(fpTrees2, ");\n");
+    
+    //fprintf (fpTrees2,"\n");
+}
+/******************* WriteTree ****************/
+/* Writes a given (unrooted) tree from PrintTrees */
+void Output::WriteTree (pll_rnode_t *p, double mutationRate, FILE    *fpTrees, int doUseObservedCellNames)
+{
+    char buffer[1024];
+    TreeNode *pData;
+    
+    if (p != NULL)
+    {
+        assert(p->data!=NULL);
+            
+        pData= (TreeNode*)(p->data);
+        if(pData->isOutgroup == YES)            /* Outgroup*/
+        {
+            strcpy( pData->cellName,"healthycell");
+            strcpy( pData->observedCellName,"healthycell");
+            fprintf (fpTrees, "healthycell:%10.15f",p->length);
+        }
+        else if (p->left == NULL && p->right == NULL)        /* tip of the tree */
+        {
+            snprintf(buffer, sizeof(buffer), "tip_i%05d_C%d_%d", p->node_index,pData->indexOldClone,pData->indexCurrentClone);
+            strcpy( pData->cellName,buffer);
+            fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.15f", p->node_index,pData->indexOldClone,pData->indexCurrentClone,p->length);
+        }
+        else                                /* all ancester */
+        {
+            fprintf (fpTrees, "(");
+            WriteTree (p->left, mutationRate, fpTrees, doUseObservedCellNames);
+            if (p->right != NULL) // Miguel added this condition to consider an outgroup as this right node that is NULL (see add outgroup)
+            {
+                fprintf (fpTrees, ",");
+                WriteTree (p->right, mutationRate, fpTrees, doUseObservedCellNames);
+            }
+            if (p->parent !=NULL)
+            {
+                snprintf(buffer, sizeof(buffer), "int_i%05d_C%d_%d", p->node_index,pData->indexOldClone,pData->indexCurrentClone);
+                strcpy( pData->cellName,buffer);
+                fprintf (fpTrees, "):%10.15f", p->length);
+            }
+            if (p->parent ==NULL)  {
+                snprintf(buffer, sizeof(buffer), "root_i%05d_C%d_%d",  p->node_index,pData->indexOldClone,pData->indexCurrentClone);
+                strcpy( pData->cellName,buffer);
+            }
+            WriteTree (pData->outgroup, mutationRate, fpTrees, doUseObservedCellNames);
+        }
+    }
+}
+/******************* WriteTree2 ****************/
+/* Writes a given (unrooted) tree from PrintTrees */
+void Output::WriteTree2 ( pll_rnode_t *p, double mutationRate, FILE    *fpTrees2, char *cellNames[], int *indexCurrentCell, int doUseObservedCellNames)
+{
+     TreeNode *pData;
+    if (p != NULL)
+    {
+        assert(p->data!=NULL);
+        
+        pData= (TreeNode*)(p->data);
+        if (pData->isOutgroup == YES)     /* Outgroup */
+        {
+            fprintf (fpTrees2, "healthycell:%10.15f", p->length);
+        }
+        else if (p->left == NULL && p->right == NULL)   /* tip of the tree */
+        {
+    
+            if (doUseObservedCellNames == YES)
+            {
+                if (strcmp(cellNames[*indexCurrentCell],"healthycell")==0)
+                    *indexCurrentCell =*indexCurrentCell+1;
+            }
+            if (doUseObservedCellNames == YES)
+                fprintf (fpTrees2, "%s:%10.15f", pData->observedCellName, p->length);
+            else
+                fprintf (fpTrees2, "%s:%10.15f", pData->cellName, p->length);
+            *indexCurrentCell =*indexCurrentCell+1;
+        }
+        else                /* all ancester */
+        {
+            fprintf (fpTrees2, "(");
+            WriteTree2 (p->left, mutationRate, fpTrees2,  cellNames, indexCurrentCell, doUseObservedCellNames);
+            if (p->right != NULL) // Miguel added this condition to consider an outgroup as this right node that is NULL (see add outgroup)
+            {
+                fprintf (fpTrees2, ",");
+                WriteTree2 (p->right, mutationRate, fpTrees2,  cellNames, indexCurrentCell, doUseObservedCellNames);
+            }
+            if (p->parent != NULL)
+            {
+
+                fprintf (fpTrees2, "):%10.15f",  p->length);
+            }
+            if (p->parent ==NULL)  {
+       
+            }
+            WriteTree2 (pData->outgroup, mutationRate, fpTrees2,  cellNames, indexCurrentCell, doUseObservedCellNames);
+        }
+    }
+}
+/********************* PrintTimes **********************/
+/* Prints to timesfile a detailed description of
+ the tree: nodes, times, branch lengths */
+
+void Output::PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector<pll_rnode_t *> &nodes,  int thereisOutgroup)
+{
+    /* there isn't recombination */
+    fprintf (fpTimes, "\n\nDataset %d", replicate + 1);
+    fprintf (fpTimes, "\n              ------------ Nodes ----------------------");
+    fprintf (fpTimes, "\n    class    |     label        index  (left right anc) |         time     time length    branch length");
+    fprintf (fpTimes, "\n-------------------------------------------------------------------------------------------------------\n");
+    ListTimes (0, mutationRate, nodes, fpTimes, thereisOutgroup);
+}
+
+
+/********************* PrintTimes2 **********************/
+/* Prints to timesfile a detailed description of
+ the tree: nodes, times, branch lengths */
+
+void Output::PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vector<pll_rnode_t *> &nodes,  int thereisOutgroup)
+{
+    /* there isn't recombination */
+    fprintf (fpTimes2, "\n\nDataset %d", replicate + 1);
+    fprintf (fpTimes2, "\n              ------------ Nodes ----------------------");
+    fprintf (fpTimes2, "\n    class    |     label        index  (left right anc) |         time     time length    branch length");
+    fprintf (fpTimes2, "\n-------------------------------------------------------------------------------------------------------\n");
+    ListTimes2 (0, mutationRate, nodes, fpTimes2, thereisOutgroup);
+}
+
+
+
+/********************** ListTimes ************************/
+/* Writes a given tree description from ListTimes   */
+
+void Output::ListTimes (int j, double mutationRate, std::vector<pll_rnode_t *> &nodes, FILE *fpTimes, int thereisOutgroup)
+{
+    /* It does not list superfluous nodes */
+    pll_rnode_t  *p;
+    int     i = 0;
+    TreeNode* pData, *parentData;
+    
+    do
+    {
+        p = nodes[i];
+        if (p==NULL )
+            break;
+        if (p->data ==NULL )
+            break;
+        
+        assert(p->data!=NULL);
+        
+        pData= (TreeNode*)(p->data);
+        
+        if (p->parent !=NULL && p->parent->data!=NULL)
+            parentData=(TreeNode*)(p->parent->data);
+        
+        if (pData->isOutgroup == YES)   {  /* Outgroup */
+            fprintf (fpTimes, "%13s  %15s   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.15f\n",
+                     "outgroup", (p->label)? p->label: "", Output::Index(p), Output::Index(p->left), Output::Index(p->right), Output::Index(p->parent), pData->timePUnits, parentData->timePUnits - pData->timePUnits, p->length);
+        }
+        else if (p->parent != NULL && p->left != NULL && p->right != NULL)        /* No MRCA, no tip (internal ancester) */
+            fprintf (fpTimes, "%5s_C%dR%d(f)  %15s   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.15f\n",
+                     "int", pData->indexOldClone, pData->indexCurrentClone, (p->label)? p->label: "", Output::Index(p), Output::Index(p->left), Output::Index(p->right), Output::Index(p->parent), pData->timePUnits, parentData->timePUnits - pData->timePUnits, p->length);
+        
+        else if (p->parent != NULL && p->left == NULL && p->right == NULL)        /* tip */
+            fprintf (fpTimes, "%8s_C%dR%d  %15s   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.15f\n",
+                     "tip", pData->indexOldClone, pData->indexCurrentClone, (p->label)? p->label: "", p->clv_index, Output::Index(p->left),  Output::Index(p->right), Output::Index(p->parent), pData->timePUnits, parentData->timePUnits - pData->timePUnits, p->length);
+        
+        else if ((p->parent == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
+            fprintf (fpTimes, "%8s_C%dR%d  %15s   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4lf       %10.9lf\n",
+                     "root", pData->indexOldClone, pData->indexCurrentClone, (p->label)? p->label: "",Output::Index(p), Output::Index(p->left), Output::Index(p->right), Output::Index(p->parent), pData->timePUnits, 0.0, 0.0);
+        
+        else
+            fprintf (fpTimes, "");
+        
+        i++;
+        
+        if (i > 2000)
+            exit(-1);
+        
+    } while    ((thereisOutgroup == NO  && p->parent  != NULL)    /* no MRCA */
+                || (thereisOutgroup == NO  && p->left == NULL)   /* tip */
+                || (thereisOutgroup == YES && pData->isOutgroup == NO)
+                );
+}
+
+
+
+/********************** ListTimes2 ************************/
+/* Writes a given tree description from ListTimes   */
+
+void Output::ListTimes2 (int j,  double mutationRate, std::vector<pll_rnode_t *> &nodes,  FILE *fpTimes2, int thereisOutgroup)
+{
+    /* It does not list superfluous nodes */
+    pll_rnode_t  *p;
+    int     i = 0;
+    TreeNode* pData, *parentData;
+    
+    do
+    {
+        p = nodes[i];
+        if (p==NULL )
+            break;
+        if (p->data ==NULL )
+            break;
+        assert(p->data!=NULL);
+        
+        pData= (TreeNode*)(p->data);
+        
+        if (p->parent !=NULL && p->parent->data!=NULL)
+            parentData=(TreeNode*)(p->parent->data);
+        
+        if (pData->isOutgroup == YES)     /* Outgroup */
+            fprintf (fpTimes2, "%13s  %15s   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.15f\n",
+                     "outgroup", (p->label)? p->label: "", Output::Index(p), Output::Index(p->left), Output::Index(p->right), Output::Index(p->parent), pData->time, parentData->time - pData->time, p->length);
+        else if (p->parent != NULL && p->left != NULL && p->right != NULL)        /* No MRCA, no tip (internal ancester) */
+            fprintf (fpTimes2, "%5s_C%dR%d(f)  %15s   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.15f\n",
+                     "int", pData->indexOldClone, pData->indexCurrentClone, (p->label)? p->label: "", Output::Index(p), Output::Index(p->left), Output::Index(p->right), Output::Index(p->parent), pData->time, parentData->time - pData->time, p->length);
+        else if (p->parent != NULL && p->left == NULL && p->right == NULL)        /* tip */
+            fprintf (fpTimes2, "%8s_C%dR%d  %15s   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.15f\n",
+                     "tip", pData->indexOldClone, pData->indexCurrentClone,(p->label)? p->label: "", Output::Index(p), Output::Index(p->left), Output::Index(p->right), Output::Index(p->parent), pData->time, parentData->time  - pData->time, p->length);
+        else if ( (p->parent == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
+            fprintf (fpTimes2, "%8s_C%dR%d  %15s   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9lf       %10.9lf\n",
+                     "root", pData->indexOldClone, pData->indexCurrentClone, (p->label)? p->label: "", Output::Index(p), Output::Index(p->left), Output::Index(p->right), Output::Index(p->parent), pData->time,0.0, 0.0);
+        else
+            fprintf (fpTimes2, "");
+        i++;
+        
+        if (i > 2000)
+            exit(-1);
+        
+    } while    ((thereisOutgroup == NO   && p->parent  != NULL)    /* no MRCA */
+              ||  (thereisOutgroup == NO  && p->left == NULL)   /* tip */
+              ||  (thereisOutgroup == YES && pData->isOutgroup == NO)
+                );
+}
+//void Output::writetextToFile(FilePath &filePath, char * text)
+//{
+//    std::ofstream ofs(filePath.path, ios::out | ios::app);
+//    ofs << std::setprecision(15);
+//
+//    ofs.write( text, 256 );
+//    ofs.close();
+//    
+//}

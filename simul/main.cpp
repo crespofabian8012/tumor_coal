@@ -105,14 +105,14 @@ int main(int argc, char *argv[])
         if (programOptions.doPrintTrees == YES  )
         {
             fprintf(stderr, "\n Trees printed to files \"%s\"", filePaths.treeFile);
-            fclose(files.fpTrees);
-            fclose(files.fpTrees2);
+            fclose(files.fpTrees->f);
+            fclose(files.fpTrees2->f);
         }
         if (programOptions.doPrintTimes == YES)
         {
             fprintf(stderr, "\n Times printed to files  \"%s\"", filePaths.timesFile);
-            fclose(files.fpTimes);
-            fclose(files.fpTimes2);
+            fclose(files.fpTimes->f);
+            fclose(files.fpTimes2->f);
         }
     }
     fprintf(stderr, "\n\n*** Simulations finished ***");

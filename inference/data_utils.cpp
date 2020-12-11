@@ -880,13 +880,13 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
         if (programOptions.doPrintTrees == YES)
         {
             
-            Output::PrintTrees(dataSetNum, root, files.fpTrees, programOptions.mutationRate, programOptions.doUseObservedCellNames);
-            Output::PrintTrees2(dataSetNum, root, files.fpTrees2, programOptions.mutationRate, NULL, NO);
+            Output::PrintTrees(dataSetNum, root, files.fpTrees->f, programOptions.mutationRate, programOptions.doUseObservedCellNames);
+            Output::PrintTrees2(dataSetNum, root, files.fpTrees2->f, programOptions.mutationRate, NULL, NO);
         }
         if (programOptions.doPrintTimes == YES)
         {
-            Output::PrintTimes(dataSetNum, files.fpTimes, programOptions.mutationRate, nodes, programOptions.thereisOutgroup);
-            Output::PrintTimes2(dataSetNum, files.fpTimes2, programOptions.mutationRate, nodes, programOptions.thereisOutgroup);
+            Output::PrintTimes(dataSetNum, files.fpTimes->f, programOptions.mutationRate, nodes, programOptions.thereisOutgroup);
+            Output::PrintTimes2(dataSetNum, files.fpTimes2->f, programOptions.mutationRate, nodes, programOptions.thereisOutgroup);
         }
         if (programOptions.noisy > 1)
         {
@@ -944,56 +944,56 @@ int SimulateData(ProgramOptions &programOptions, vector<int> &CloneNameBegin, ve
             if (programOptions.doPrintTrueHaplotypes == YES)
             {
                 if (programOptions.doPrintSeparateReplicates == NO)
-                    fprintf (files.fpTrueHaplotypes, "[#%d]\n", z+1);
+                    fprintf (files.fpTrueHaplotypes->f, "[#%d]\n", z+1);
                 //
-                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes,  nodes, root , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, programOptions.numSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
+                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes->f,  nodes, root , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, programOptions.numSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
             }
             
             if (programOptions.doPrintTrees ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
                 
-                fclose(files.fpTrees);
-                fclose(files.fpTrees2);
+                fclose(files.fpTrees->f);
+                fclose(files.fpTrees2->f);
             }
             if (programOptions.doPrintTimes ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
                 
-                fclose(files.fpTimes);
-                fclose(files.fpTimes2);
+                fclose(files.fpTimes->f);
+                fclose(files.fpTimes2->f);
             }
             if (programOptions.doPrintTrueHaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
             
-                    fclose(files.fpTrueHaplotypes);
+                    fclose(files.fpTrueHaplotypes->f);
            
             }
             if (programOptions.doPrintMLhaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
          
-                fclose(files.fpMLhaplotypes);
+                fclose(files.fpMLhaplotypes->f);
           
             }
             if (programOptions.doPrintSNVhaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
  
-                fclose(files.fpSNVhaplotypes);
+                fclose(files.fpSNVhaplotypes->f);
          
             }
             if (programOptions.doPrintFullGenotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
       
-                fclose(files.fpFullGenotypes);
+                fclose(files.fpFullGenotypes->f);
          
             }
             if (programOptions.doPrintCATG ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
 
-                fclose(files.fpCATG);
+                fclose(files.fpCATG->f);
             }
             if (programOptions.doSimulateReadCounts ==YES && programOptions.doPrintSeparateReplicates == YES)
             {
                 
-                fclose(files.fpVCF);
+                fclose(files.fpVCF->f);
                
             }
           
@@ -1659,7 +1659,8 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
             sprintf(File,"%s/%s_Chain%d/%s_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir,ChainNumber , filePaths.treeFile, paramSetNumber+1, replicate+1);
         }
         //if ((*fpTrees = fopen(File, "w")) == NULL)
-        if (openFile(&files.fpTrees, File) == -1)
+        strcpy (files.fpTrees->path,File);
+        if (openFile(&files.fpTrees->f, File) == -1)
         {
             fprintf (stderr, "Can't open \"%s\"\n", File);
             exit(-1);
@@ -1678,7 +1679,8 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
         }
         //sprintf(File,"%s/%s/%s_2_%04d.tre", resultsDir, treeDir, treeFile, replicate+1);
         //if ((*fpTrees2 = fopen(File, "w")) == NULL)
-        if (openFile(&files.fpTrees2, File) == -1)
+        strcpy (files.fpTrees2->path,File);
+        if (openFile(&files.fpTrees2->f, File) == -1)
         {
             fprintf(stderr, "Can't open %s.\n", File);
             exit(-1);
@@ -1706,7 +1708,8 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
             
         }
         //if ((*fpTimes = fopen(File, "w")) == NULL)
-        if (openFile(&files.fpTimes, File) == -1)
+        strcpy (files.fpTimes->path,File);
+        if (openFile(&files.fpTimes->f, File) == -1)
         {
             fprintf (stderr, "Can't open \"%s\"\n", File);
             exit(-1);
@@ -1724,7 +1727,8 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
         // sprintf(File,"%s/%s/%s_2_%04d.txt", resultsDir, timesDir, timesFile, replicate+1);
         
         //if ((*fpTimes2 = fopen(File, "w")) == NULL)
-        if (openFile(&files.fpTimes2, File) == -1)
+        strcpy (files.fpTimes2->path,File);
+        if (openFile(&files.fpTimes2->f, File) == -1)
         {
             fprintf(stderr, "Can't open %s.\n", File);
             exit(-1);
@@ -1761,7 +1765,8 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
             //sprintf(File,"%s/%s/%s.%04d", resultsDir, SNVgenotypesDir, SNVgenotypesFile, replicate+1);
             //if ((*fpSNVgenotypes = fopen(File, "w")) == NULL)
-            if (openFile(&files.fpSNVgenotypes, File) == -1)
+            strcpy (files.fpSNVgenotypes->path,File);
+            if (openFile(&files.fpSNVgenotypes->f, File) == -1)
             {
                 fprintf (stderr, "Can't open \"%s\"\n", File);
                 exit(-1);
@@ -1776,7 +1781,8 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
             // sprintf(File,"%s/%s/%s.%04d", resultsDir, SNVhaplotypesDir, SNVhaplotypesFile, replicate+1);
             //if ((*fpSNVhaplotypes = fopen(File, "w")) == NULL)
-            if (openFile(&files.fpSNVhaplotypes, File) == -1)
+            strcpy (files.fpSNVhaplotypes->path,File);
+            if (openFile(&files.fpSNVhaplotypes->f, File) == -1)
             {
                 fprintf (stderr, "Can't open \"%s\"\n", File);
                 exit(-1);
@@ -1793,7 +1799,8 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             
             // sprintf(File,"%s/%s/%s.%04d", resultsDir, trueHaplotypesDir, trueHaplotypesFile, replicate+1);
             //if ((*fpTrueHaplotypes = fopen(File, "w")) == NULL)
-            if (openFile(&files.fpTrueHaplotypes, File) == -1)
+            strcpy (files.fpTrueHaplotypes->path,File);
+            if (openFile(&files.fpTrueHaplotypes->f, File) == -1)
             {
                 fprintf (stderr, "Can't open \"%s\"\n", File);
                 exit(-1);
@@ -1808,7 +1815,8 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.MLhaplotypesDir, filePaths.MLhaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
             // sprintf(File,"%s/%s/%s.%04d", resultsDir, MLhaplotypesDir, MLhaplotypesFile, replicate+1);
             // if ((*fpMLhaplotypes = fopen(File, "w")) == NULL)
-            if (openFile(&files.fpMLhaplotypes, File) == -1)
+            strcpy (files.fpMLhaplotypes->path,File);
+            if (openFile(&files.fpMLhaplotypes->f, File) == -1)
             {
                 fprintf (stderr, "Can't open \"%s\"\n", File);
                 exit(-1);
@@ -1824,7 +1832,8 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullGenotypesDir, filePaths.fullGenotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
             //sprintf(File,"%s/%s/%s.%04d", resultsDir, fullGenotypesDir, fullGenotypesFile, replicate+1);
             //if ((*fpFullGenotypes = fopen(File, "w")) == NULL)
-            if (openFile(&files.fpFullGenotypes, File) == -1)
+            strcpy (files.fpFullGenotypes->path,File);
+            if (openFile(&files.fpFullGenotypes->f, File) == -1)
             {
                 fprintf (stderr, "Can't open \"%s\"\n", File);
                 exit(-1);
@@ -1839,7 +1848,8 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
             //sprintf(File,"%s/%s/%s.%04d", resultsDir, fullHaplotypesDir, fullHaplotypesFile, replicate+1);
             //if ((*fpFullHaplotypes = fopen(File, "w")) == NULL)
-            if (openFile(&files.fpFullHaplotypes, File) == -1)
+            strcpy (files.fpFullHaplotypes->path,File);
+            if (openFile(&files.fpFullHaplotypes->f, File) == -1)
             {
                 fprintf (stderr, "Can't open \"%s\"\n", File);
                 exit(-1);
@@ -1854,7 +1864,8 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.VCFdir, filePaths.VCFfile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
             //sprintf(File,"%s/%s/%s.%04d", resultsDir, VCFdir, VCFfile, replicate+1);
             //if ((*fpVCF = fopen(File, "w")) == NULL)
-            if (openFile(&files.fpVCF, File) == -1)
+            strcpy (files.fpVCF->path,File);
+            if (openFile(&files.fpVCF->f, File) == -1)
             {
                 fprintf (stderr, "Can't open \"%s\"\n", File);
                 exit(-1);
@@ -1869,7 +1880,8 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.CATGdir, filePaths.CATGfile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
             // sprintf(File,"%s/%s/%s.%04d", resultsDir, CATGdir, CATGfile, replicate+1);
             //if ((*fpCATG = fopen(File, "w")) == NULL)
-            if (openFile(&files.fpCATG, File) == -1)
+            strcpy (files.fpCATG->path,File);
+            if (openFile(&files.fpCATG->f, File) == -1)
             {
                 fprintf (stderr, "Can't open \"%s\"\n", File);
                 exit(-1);
@@ -3038,7 +3050,7 @@ void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, Pr
         found = hsearch(query,FIND);
         
         if (!found)
-            fprintf(stderr,"Sequence with header %s does not appear in the tree", msa->label[i]);
+            cout << "Sequence with header %s does not appear in the tree"<< msa->label[i] << endl;
         
         unsigned int tip_clv_index = *((unsigned int *)(found->data));
         
@@ -3482,7 +3494,7 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     //programOptions
     programOptions.numberClonesKnown=YES;
     programOptions.populationSampleSizesKnown = YES;
-    programOptions.doPrintTimes = NO;
+    programOptions.doPrintTimes = YES;
     
     programOptions.doUseObservedCellNames =1;
     programOptions.doUseGenotypes = YES;
@@ -3514,7 +3526,7 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     mcmcOptions.kernelType = 0;//0: multiplier move, 1: normal
     
     
-  mcmcOptions.sigmaNormalKernelTotalEffectivePopulationSize = 300;
+    mcmcOptions.sigmaNormalKernelTotalEffectivePopulationSize = 300;
     mcmcOptions.sigmaNormalKernelMutationRate =  0.0000000001 ;
     mcmcOptions.sigmaNormalKernelGrowthRate=0.00001;
     //mcmcOptions.lambdaExponentialPriorMutationRate=10000000;
@@ -3522,8 +3534,8 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     //mcmcOptions.lambdaExponentialPriorMutationRate=0.0000001;
     //mcmcOptions.lambdaExponentialPriorTotalEffectivePopSize=0.0001;
     
-    //mcmcOptions.lambdaExponentialPriorGrowthRate= 0.01;
     mcmcOptions.lambdaExponentialPriorGrowthRate= 0.01;
+    //mcmcOptions.lambdaExponentialPriorGrowthRate= 1;
     // mcmcOptions.lambdaExponentialPriorGrowthRate= 0.00001;
     mcmcOptions.GrowthRatefrom = -20;
     mcmcOptions.GrowthRateto = 1;
@@ -3532,12 +3544,16 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     mcmcOptions.parameterPowerLawDistributionGrowthRate=100;
     mcmcOptions.parameterPowerLawDistributionTimeOriginInputOldestPop=1000;
     mcmcOptions.sigmaNormalKernelTimeofOrigin=0.001;
-    mcmcOptions.lengthIntervalMultiplier = 0.7;
+    mcmcOptions.lengthIntervalMultiplier = 0.9;
+    //mcmcOptions.lengthIntervalMultiplierTheta = 1.6;
+    //mcmcOptions.lengthIntervalMultiplierDeltaT = 1.9;
+    mcmcOptions.lengthIntervalMultiplierTheta = 1.2;
+    mcmcOptions.lengthIntervalMultiplierDeltaT = 1.2;
     
     programOptions.seqErrorRate=programOptions.sequencingError=0;
     programOptions.dropoutRate=programOptions.ADOrate=0;
     
-    mcmcOptions.paramMultiplierMoveTheta = 3;
+    mcmcOptions.paramMultiplierMoveTheta = 2;
     mcmcOptions.paramMultiplierEffectPopSize = 2;
     //mcmcOptions.Niterations = 10000000;
     //mcmcOptions.numberWarmUpIterations = mcmcOptions.Niterations / 2.0;
@@ -3545,16 +3561,104 @@ void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions 
     mcmcOptions.useSequencesLikelihood =0;
     
     mcmcOptions.verbose = 0;
-    mcmcOptions.printChainStateEvery=10000;
-    mcmcOptions.paramMultiplierGrowthRate = Utils::parameterMultiplierMCMCmove(mcmcOptions.lengthIntervalMultiplier);
-    mcmcOptions.paramMultiplierTheta =Utils::parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplier);
+    
+    mcmcOptions.paramMultiplierGrowthRate = Utils::parameterMultiplierMCMCmove(mcmcOptions.lengthIntervalMultiplierDeltaT);
+    mcmcOptions.paramMultiplierTheta =Utils::parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplierTheta);
     
    // mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop = 0.008;
-    mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop = 0.7;
+    //mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop = 1;
+    mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop = 2.5;
     mcmcOptions.paramMultiplierTimeOriginOldestPop =Utils::parameterMultiplierMCMCmove (mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop);
     
-    mcmcOptions.upperBoundTimeOriginInputOldestPop = 5;
+    mcmcOptions.upperBoundTimeOriginInputOldestPop = 7;
     mcmcOptions.percentIterationsToComputeThinnig=0.1;
-    
+    mcmcOptions.doThinning=true;
    // mcmcOptions.splitThetaDeltaTmoves= true;
+    mcmcOptions.thresholdAccceptanteRate=0.44;
+    mcmcOptions.updateLengthMultiplierMCMCMove=0.2;
+    
+  
+    
+    mcmcOptions.thresholdAutoCorrelation=0.01;
+    mcmcOptions.doThinning=true;
+    mcmcOptions.numberChainsPerTree = 4;
+}
+void printProgramHeader()
+{
+    //auto end = std::chrono::system_clock::now();
+    std::time_t timeNow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    //std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "+                                                                                     +\n";
+    std::cout << "+Bayesian inference of tumour single cell growth rates using the structured coalescent+\n";
+    std::cout << "+                                                                                     +\n";
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "+        Version 1.0.0    [August-1-2020]                                             +\n";
+    std::cout << "+       Program started at  "   <<  std::ctime(&timeNow);
+    
+  
+}
+void simulateTrees(int numberTrees,vector<StructuredCoalescentTree *> &structuredCoalTrees,  vector<pll_rtree_t *> &trees,          vector<long double> &realThetas,
+                   vector<vector<long double>> &realDeltaTs,
+                   vector<vector<long double>> &realTs,
+                   vector<int> & sampleSizes, ProgramOptions &programOptions, MCMCoptions & mcmcOptions, vector<gsl_rng * > randomGenerators, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, string& healthyTipLabel  )
+{
+    
+    int numNodes;
+
+    gsl_rng * randomGenerator;
+    std::vector<pll_rnode_t*> rnodes;
+    std::vector<pll_rnode_t*> rtreeTips;
+    std::vector<pll_tree_edge_t *> edges;
+    std::vector<pair<double, pll_tree_edge_t *> > edgeLengths;
+    if (programOptions.numberClonesKnown)
+    {
+        numNodes = programOptions.numNodes;
+    }
+    
+    for (unsigned int i=0; i < numberTrees ; i++)
+    {
+        randomGenerator =randomGenerators.at(i);
+        auto theta =initMutationRate( mcmcOptions, programOptions, randomGenerator);
+        
+        realThetas.push_back(theta);
+    
+        auto structuredCoalTree = new StructuredCoalescentTree(programOptions.numClones, sampleSizes, theta, mcmcOptions, programOptions,   randomGenerator, ObservedData, ObservedCellNames, msa, healthyTipLabel );
+      
+        
+        realDeltaTs.push_back(structuredCoalTree->getDeltaTs());
+         realTs.push_back(structuredCoalTree->getTs());
+        trees.push_back(structuredCoalTree->getTree());
+        structuredCoalTrees.push_back(structuredCoalTree);
+        
+    }
+    
+    
+}
+long double  initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, gsl_rng * randomGenerator) {
+    long double theta=0.0;
+    if (programOptions.doUsefixedMutationRate)
+        theta = programOptions.mutationRate;
+    else
+    {
+        if(mcmcOptions.priorsType==0)
+        {
+            theta = Random::RandomLogUniform(mcmcOptions.MutRatefrom, mcmcOptions.MutRateto, mcmcOptions.useGSLRandomGenerator, randomGenerator);
+            
+        }
+        else if(mcmcOptions.priorsType==1)
+        {
+            if (mcmcOptions.fixedValuesForSimulation)
+                theta= 1.0 / mcmcOptions.lambdaExponentialPriorMutationRate;
+            else
+             theta = Random::RandomExponentialStartingFrom( mcmcOptions.lambdaExponentialPriorMutationRate, 0, mcmcOptions.useGSLRandomGenerator, randomGenerator);
+        }
+        
+        else{
+            
+            theta = Random::RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionMutationRate, 0, mcmcOptions.useGSLRandomGenerator);
+        }
+        printf ( "True scaled mutation rate outside:  %Lf \n",theta );
+    }
+    return theta;
 }

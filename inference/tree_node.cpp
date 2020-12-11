@@ -84,9 +84,8 @@ void TreeNode::initSequenceVectors(int size){
         genotypeSequence.push_back(0);
         numbersMutationsUnderSubtreePerSite.push_back(0);
         numbersMaternalMutationsPerSite.push_back(0);
-        numbersPaternalMutationsPerSite.push_back(0);
-        
-        
+        numbersPaternalMutationsPerSite.push_back(0);        
     }
     
 }
+

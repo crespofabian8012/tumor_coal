@@ -24,11 +24,15 @@
 #include "utils.hpp"
 #include <unistd.h>
 
+#include <algorithm>
+
+
 #include "kseq.h"
 #include "output_functions.hpp"
 
 KSEQ_INIT(int, read);
 
+using namespace std;
 /************************ ReadParametersFromFastaFile ***********************/
 /*  ReadParametersFromFastaFile */
 void Utils::ReadParametersFromFastaFile(char *fileName, int &numCells, int &TotalNumSequences, int &numSites){
@@ -549,4 +553,109 @@ char* Utils::appendCharToCharArray(char* array, char a)
     ret[len+1] = '\0';
     
     return ret;
+}
+void Utils::init_to_empty_str(char str[MAX_NAME])
+{
+    for (size_t i = 0; i < MAX_NAME; i++) {
+        str[i] = 0;
+    }
+}
+vector<pll_rnode_t*>  Utils::filterHealthyTip(pll_rnode_t** doublePointer, size_t count, string &healthyTipLabel )
+{
+    vector<pll_rnode_t*> result;
+    pll_rnode_t* current;
+    for(size_t j=0; j <count;++j)
+    {
+        
+        current =doublePointer[j];
+        
+        if  (current->label != 0 && current->label  ){
+            
+            if (std::string(current->label).compare(healthyTipLabel)!=0)
+                result.push_back(doublePointer[j]);
+            
+        }
+        else
+           result.push_back(doublePointer[j]);
+     }
+return result;
+}
+//vector<long double >    Utils::potentialScaleReductionLongDouble(int inner_size,int n, int m,  vector<vector<long double>> &means, vector<vector<long double>> &variances )
+long double     Utils::potentialScaleReductionLongDouble(int inner_size,int n, int m,  vector<long double>& means, vector<long double> &variances )
+{
+    vector<long double> elements;
+    vector<long double> varianceElements;
+    vector<long double> results;
+
+    long double B;
+    long double W;
+    long double potentialScaleReduction ;
+    
+    B = n * Utils::variance(means) ;
+    W = (1.0 /m)* Utils::mean(variances) ;
+    potentialScaleReduction= (1.0-1.0/n)* W+ (1.0/n)*B;
+    potentialScaleReduction = sqrt(potentialScaleReduction / W);
+
+    return potentialScaleReduction;
+    
+//
+//    for(int j=0; j < inner_size;j++)
+//    {
+//
+//        std::transform( means.begin(), means.end(), elements.begin(), [&](vector<long double> &vec){
+//            return vec.at(j);
+//        });
+//        std::transform( variances.begin(), variances.end(), varianceElements.begin(), [&](vector<long double> &vec){
+//            return vec.at(j);
+//        });
+//
+//        meanOfMeans = Utils::mean( elements);
+//        B = n * Utils::variance(elements) ;
+//        W = (1.0 /m)*Utils::mean(varianceElements) ;
+//        potentialScaleReduction= (1.0-1.0/n)* W+ (1.0/n)*B;
+//        results.push_back(potentialScaleReduction);
+//    }
+//    return results;
+    }
+vector<long double >    Utils::potentialScaleReductionArray(int numClones,int n, int m,  vector<vector<long double>> &means, vector<vector<long double>> &variances ){
+    vector<long double> elements;
+    vector<long double> varianceElements;
+    vector<long double> results;
+  
+    long double potentialScaleReduction ;
+    vector<long double > temp;
+
+    for(int j=0; j < numClones;j++)
+        {
+            elements.clear();
+            varianceElements.clear();
+
+            for(int i=0; i < means.size();i++){
+                temp = means.at(i);
+                elements.push_back(temp.at(j));
+                temp=variances.at(i);
+                varianceElements.push_back(temp.at(j));
+            }
+            
+            potentialScaleReduction=  Utils::potentialScaleReductionLongDouble(numClones, n, m,  elements, varianceElements);
+            results.push_back(potentialScaleReduction);
+        }
+    
+
+    return results;
+}
+bool Utils::checkAllElementsGreaterThanZero(vector<long double> &values){
+    
+    bool result=true;
+    for(int j=0; j < values.size();j++){
+        
+        if (values[j]<=0){
+            result =false;
+            fprintf (stderr, "\nERROR: Coal time %d: %Lf is not positive \n", j,values[j] );
+            break;
+            
+        }
+        
+    }
+    return result;
 }

@@ -29,7 +29,9 @@
 #include <algorithm>
 #include <vector>
 #include <iterator>
-
+#include "data_types.hpp"
+#include "data_utils.hpp"
+#include "mcmc_parameter.hpp"
 using namespace std;
 
 //#include "data_utils.hpp"
@@ -38,7 +40,7 @@ using namespace std;
 //Parametrized Constructor
 Population::Population(int ind, int ord, long double timeOriginInput,
                        int sampleSize, int popSize, long double birthRate,
-                      long  double deathRate, bool estimateTOR)
+                      long  double deathRate, bool estimateTOR, MCMCoptions &mcmcOptions)
 {
     if (ind >=0)
         index=ind;
@@ -131,6 +133,118 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     oldTimeOriginInput=0.0;
     indexFirstObservedCellName=0;
     scaledtimeOriginInput=0.0;
+    
+   
+    DeltaT = new MCMCParameterWithKernel(0.0,mcmcOptions.paramMultiplierGrowthRate);
+    TimeOriginSTD = new MCMCParameterWithKernel(0.0,mcmcOptions.paramMultiplierTimeOriginOldestPop);
+    Theta=new MCMCParameterWithKernel(0.0,mcmcOptions.paramMultiplierMoveTheta);
+    long double doubleSampleSize= (long double) sampleSize;
+    X = new MCMCParameter<long double>(doubleSampleSize);
+    sampleSizePar = new MCMCParameter<long double>(doubleSampleSize);
+}
+
+Population::Population(int ind, int ord, long double timeOriginInput,
+                       int sampleSize, int popSize, long double birthRate,
+                       long  double deathRate, bool estimateTOR)
+{
+    if (ind >=0)
+        index=ind;
+    else
+        fprintf (stderr, "\n ERROR: Population  index cannot be negative \n");
+    if (ord >= 0)
+        order=ord;
+    else
+        fprintf (stderr, "\n ERROR: Population order cannot be negative \n");
+    
+    if (popSize >= 0)
+    {
+        this->popSize=popSize;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population size cannot be negative \n");
+    
+    if (sampleSize >= 0)
+    {
+        this->sampleSize=sampleSize;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population sample size cannot be negative \n");
+    
+    if (birthRate >0){
+        this->birthRate =birthRate;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population birth rate cannot be negative \n");
+    
+    if (deathRate >0){
+        this->deathRate = deathRate;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population death rate cannot be negative \n");
+    
+    if (birthRate > deathRate)
+    {
+        growthRate = birthRate - deathRate;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population growth rate cannot be negative \n");
+    
+    if (timeOriginInput >= 0)
+    {
+        this->timeOriginInput = timeOriginInput;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population time of origin   cannot be negative \n");
+    if (birthRate >0)
+        effectPopSize = popSize / birthRate;
+    
+    delta= growthRate * effectPopSize;
+    
+    isAlive = YES;
+    
+    if (effectPopSize>0)
+        timeOriginSTD = timeOriginInput /effectPopSize;
+    else
+        timeOriginSTD=0;
+    
+    numActiveGametes = sampleSize;
+    
+    numGametes = sampleSize;
+    
+    nodeIdAncestorMRCA = 0;
+    numCompletedCoalescences = 0;
+    nextAvailableIdInmigrant = 0;
+    numIncomingMigrations = 0;
+    numPossibleMigrations = 0;
+    doEstimateTimeOrigin = estimateTOR;
+    lowerBoundTimeOriginInput=0;
+    
+    MRCA=0;
+    
+    deltaT = 0.0;
+    olddeltaT = 0.0;
+    x = 1.0;
+    oldx = 0.0;
+    theta = 0.0;
+    oldTheta = 0.0;
+    oldOrder=0;
+    oldScaledTimeOriginInput=0.0;
+    olddelta=0.0;
+    oldeffectPopSize =0.0;
+    oldDeathRate=0.0;
+    oldPopSize=0.0;
+    oldGrowthRate =0.0;
+    oldTimeOriginSTD=0.0;
+    oldTimeOriginInput=0.0;
+    indexFirstObservedCellName=0;
+    scaledtimeOriginInput=0.0;
+    
+    DeltaT = new MCMCParameterWithKernel(0.0,1);
+    TimeOriginSTD = new MCMCParameterWithKernel(0.0,1);
+    Theta=new MCMCParameterWithKernel(0.0,1);
+    long double doubleSampleSize= (long double) sampleSize;
+    X = new MCMCParameter<long double>(doubleSampleSize);
+    sampleSizePar = new MCMCParameter<long double>(doubleSampleSize);
 }
 long double Population::ProbabilityComeFromPopulation(Population *PopJ, vector<Population*> &populations, int numClones)
 {
@@ -253,7 +367,7 @@ long double Population::FmodelTstandard (long double t, long double TOrigin, lon
     c = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     
     if ( c == 0.0)
-        fprintf (stderr, "\n  c = 0.0, TOrigin = %Lf, t = %Lf \n", TOrigin, t);
+        fprintf (stderr, "\n  c = 0.0, TOrigin = %.15Lf, t = %.15Lf \n", TOrigin, t);
     if ( delta == 0.0)
         fprintf (stderr, "\n delta  = 0.0 \n");
     
@@ -388,6 +502,7 @@ void Population::InitCoalescentEvents(int numClones)
 {
     int j = 0;
     assert(sampleSize >0);
+    numCompletedCoalescences =0;
     for (j = 0; j < sampleSize + numClones - 2; j++) {
         CoalescentEventTimes.push_back(0);
     }
@@ -575,6 +690,21 @@ long double Population::DensityTimeSTD(long double u, long double from){
     }
     return result;
 }
+long double Population::DensityTimeSTD(long double u, long double deltaPar, long double from){
+    long double  result=1.0;
+    long double term1 = exp(-1.0*deltaPar*u);
+    long double term2 = deltaPar * term1;
+    long double term3 = 1.0-term1;
+    if (u >=from){
+        
+        result = deltaPar * term2 /(term3 * term3);
+        result = result * exp( -1 * term2/term3);
+    }
+    else {
+        result=0;
+    }
+    return result;
+}
 long double Population::LogDensityTimeSTDFrom(long double u, long double from){
     long double  densityFrom, result;
     densityFrom = DensityTimeSTD(u, from );
@@ -591,6 +721,15 @@ long double Population::LogProbNoCoalescentEventBetweenTimes(long double from, l
     if (j==0 || j==1)
         return 0;
     result= log(j *(j-1) /2.0) -1.0 * j* (j-1)*(Population::FmodelTstandard(to,timeOriginSTD, delta)-Population::FmodelTstandard(from, timeOriginSTD, delta))/ 2.0;
+    return result;
+}
+long double Population::LogProbNoCoalescentEventBetweenTimes(long double from, long double to, int numberActiveInd, long double TOrigin, long double deltaPar)
+{
+    int j=numberActiveInd;
+    long double result=0.0;
+    if (j==0 || j==1)
+        return 0;
+    result= log(j *(j-1) /2.0) -1.0 * j* (j-1)*(Population::FmodelTstandard(to,TOrigin, deltaPar)-Population::FmodelTstandard(from, TOrigin, deltaPar))/ 2.0;
     return result;
 }
 void Population::filterAndSortCoalescentEvents(){
@@ -636,4 +775,1427 @@ void Population::restoreOldImmigrationTimes(){
     numIncomingMigrations= oldimmigrantsPopOrderedByModelTime.size();
 }
 
+void Population::savePosteriorValues(){
+    
+    
+    posteriorDeltaT.push_back(deltaT);
+    DeltaT->saveCurrentValue();
+    
+    posteriorTimeOriginSTD.push_back(timeOriginSTD);
+    TimeOriginSTD->saveCurrentValue();
+    
+    
+    Theta->saveCurrentValue();
+    
+    posteriorProportion.push_back(x);
+    X->saveCurrentValue();
+    
+}
+void Population::resetPosteriorValues(){
 
+    posteriorDeltaT.clear();
+    DeltaT->resetParameterValues();
+    
+    posteriorTimeOriginSTD.clear();
+    TimeOriginSTD->resetParameterValues();
+    
+    Theta->resetParameterValues();
+    
+    posteriorProportion.clear();
+    X->resetValues();
+    
+}
+void Population::setTimeOriginInputTree(long double timeOriginInputTree){
+    
+    timeOriginInput = timeOriginInputTree;
+    TimeOriginInput->setParameterValue(timeOriginInputTree);
+    scaledtimeOriginInput = timeOriginInput / theta;
+    
+    timeOriginSTD = scaledtimeOriginInput / x;
+    TimeOriginSTD->setParameterValue(timeOriginSTD);
+    //timeOriginSTD ->
+}
+void Population::setTimeOriginSTD(long double parTimeOriginSTD){
+    
+    timeOriginSTD = parTimeOriginSTD;
+    TimeOriginSTD->setParameterValue(parTimeOriginSTD);
+    
+    scaledtimeOriginInput = timeOriginSTD * x;
+    timeOriginInput = scaledtimeOriginInput * theta;
+    TimeOriginInput->setParameterValue(timeOriginInput);
+}
+void Population::setScaledTimeOriginInputTree(long double parScaledTimeOriginInputTree){
+    scaledtimeOriginInput = parScaledTimeOriginInputTree;
+}
+void Population::setTheta(long double parTheta){
+    theta = parTheta;
+    Theta->setParameterValue(parTheta);
+}
+void Population::setProportion(long double parX){
+    x=parX;
+    X->setValue(parX);
+}
+
+PopulationSet::PopulationSet(int numClones){
+    
+    if (numClones >=0)
+        this->numClones=numClones;
+    else
+        fprintf (stderr, "\n ERROR: The number of clones cannot be negative \n");
+    
+    initPopulation();
+    initProportionsVector();
+  
+    setPopulationsBirthRate( 1);
+    
+}
+std::vector<Population *>& PopulationSet::getPopulations(){
+    
+    return populations;
+    
+}
+void PopulationSet::initPopulation()
+{
+    
+    for (unsigned z = 0; z <= (numClones - 1); z++)
+    {
+        int ind = z;
+        int ord = 0;
+        long double  timeOriginInput = 0.0;
+        int sampleSize = 0;
+        int popSize =0;
+        long double  birthRate = 1.0;
+        long double  deathRate = 0.99;
+        
+        
+        auto pop = new Population(ind, ord, timeOriginInput, sampleSize, popSize, birthRate, deathRate, NO);
+        populations.push_back(pop);
+        
+    }
+    
+}
+vector<long double> PopulationSet::samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions,  gsl_rng * randomGenerator )
+{
+    int i;
+    Population *popI;
+    long double  randomGrowthRate;
+    vector<long double> result(numClones);
+    for( i = 0 ; i < numClones; i++)
+    {
+        popI=populations[i];
+        if (mcmcOptions.priorsType ==0)
+        {
+            randomGrowthRate = Random::RandomLogUniform(mcmcOptions.GrowthRatefrom, mcmcOptions.GrowthRateto, mcmcOptions.useGSLRandomGenerator, randomGenerator);
+        }
+        if (mcmcOptions.priorsType ==2)
+        {
+            randomGrowthRate =Random::RandomPowerLawDistribution(mcmcOptions.parameterPowerLawDistributionGrowthRate, 0, mcmcOptions.useGSLRandomGenerator);
+            
+        }
+        if (mcmcOptions.priorsType ==1)
+        {
+            if (mcmcOptions.fixedValuesForSimulation)
+                randomGrowthRate= 1.0 / mcmcOptions.lambdaExponentialPriorGrowthRate;
+            else
+            randomGrowthRate =Random::RandomExponentialStartingFrom(mcmcOptions.lambdaExponentialPriorGrowthRate,0, mcmcOptions.useGSLRandomGenerator, randomGenerator);
+        }
+        
+        popI->deltaT =  randomGrowthRate;
+        popI->DeltaT->setParameterValue(randomGrowthRate);
+        result.at(i)= randomGrowthRate;
+        
+         printf ( "True scaled growth rate:  %Lf \n",randomGrowthRate );
+        
+        if (mcmcOptions.verbose>=2)
+            fprintf(stderr, "\n initial  r %.10Lf \n",popI->deltaT );
+    }
+    return(result);
+}
+void  PopulationSet::setPopulationsBirthRate( long double  lambda )
+{
+    int i;
+    Population *popI;
+    for( i = 0 ; i < numClones; i++)
+    {
+        popI=populations[ i];
+        if (popI != NULL)
+            popI->birthRate = lambda;
+    }
+}
+void PopulationSet::initPopulationSampleSizes(vector<int> &sampleSizes)
+{
+    for (unsigned int i = 0; i <numClones; ++i)
+    {
+        auto popI =  populations[i];
+        popI->sampleSize = sampleSizes.at(i);
+    }
+}
+Population * PopulationSet::getPopulationbyIndex(int indexPopulation)
+{
+    Population *pop;
+    for (unsigned int i = 0; i < numClones; ++i){
+        pop = populations[i];
+        if (pop->index ==indexPopulation)
+            return pop;
+    }
+    return NULL;
+}
+void PopulationSet::initPopulationGametes()
+{
+    for (unsigned int i = 0; i < numClones; ++i)
+    {
+        auto popI =  populations[i];
+        
+        popI->InitIdsGametes(numClones);
+        popI->InitIdsActiveGametes();
+        
+    }
+}
+void PopulationSet::initPopulationRTips()
+{
+    for (unsigned int i = 0; i < numClones; ++i)
+    {
+        auto popI =  populations[i];
+        
+        popI->InitRTips();
+        
+    }
+}
+void PopulationSet::initProportionsVectorFromSampleSizes(vector<int> &sampleSizes )
+{
+    int sum =0;
+    for (size_t i = 0; i < numClones; i++)
+    {
+        sum+=sampleSizes.at(i);
+    }
+    for (size_t i = 0; i < numClones; i++)
+    {
+        proportionsVector.at(i) =(long double)sampleSizes.at(i) / sum ;
+    }
+}
+void PopulationSet::initPopulationsThetaDelta(long double theta)
+{
+    for (unsigned int i = 0; i < numClones; ++i)
+    {
+        auto popI =  populations[i];
+        popI->x = proportionsVector[i];
+        popI->X->setValue(proportionsVector[i]);
+        popI->theta = popI->x * theta;
+        popI->Theta->setParameterValue(popI->theta);
+
+        popI->delta = popI->deltaT * popI->x;
+    }
+}
+void  PopulationSet::initListPossibleMigrations()
+{
+    sort(populations.begin(), populations.end(), comparePopulationsByTimeOrigin);
+    Population *p;
+    int i;
+    for (i = 0; i < numClones; i++) {
+        p = populations[i];
+        p->InitListPossibleMigrations(i);
+    }
+}
+void PopulationSet::initPopulationsCoalescentEvents( )
+{
+    int i;
+    Population *popI;
+    for( i = 0 ; i < numClones; i++)
+    {
+        popI = populations[i];
+        popI->InitCoalescentEvents(numClones);
+    }
+}
+void PopulationSet::initProportionsVector(){
+    for (size_t i = 0; i < numClones; i++) {
+        proportionsVector.push_back(0);
+        oldproportionsVector.push_back(0);
+    }
+    
+}
+Population* PopulationSet::ChooseFatherPopulation( Population  *PopChild,  gsl_rng *randomGenerator, int noisy)
+{
+    
+    Population  *p;
+    long double  pij, ran;
+    int  j, k;
+    long double  cumProb[numClones  - (int)(PopChild->order)];
+    cumProb[0] = 0.0;
+    for (j = PopChild->order + 1; j < numClones; j++)
+    {
+        cumProb[j - PopChild->order] = 0.0;
+        p = populations[ j];
+        pij= PopChild->ProbabilityComeFromPopulation ( p, populations,  numClones);
+        //pij = ProbabilityCloneiFromClonej2(PopChild, p, populations, numClones);
+        cumProb[j - PopChild->order] = cumProb[j - 1 - PopChild->order] + pij;
+        
+    }
+    // now selecting the ancestral clone
+    ran =  Random::randomUniformFromGsl2(randomGenerator);
+    //fprintf (stderr, "\n ran = %lf ", ran);
+    int w = -1;
+    for (k = 1; k < numClones ; k++)
+    {
+        if (ran <= cumProb[k])
+        {
+            w = k;
+            break;
+        }
+    }
+    Population *result =  populations[ PopChild->order + w];
+    if (noisy > 3)
+        fprintf (stderr, "\nClone %d derived from clone %d\n", PopChild->index, result->index); // clone ThisCloneNumber (i) is originated from clone ThisOriginCloneNumber (j)
+    /* Update list of migation times considering that clone i comes from clone j */
+    if (noisy > 1)
+        fprintf (stderr, "\n*** Updating list of migration times (considering that clone %d comes from clone %d) ..\n", PopChild->index, result->index);
+    return (result); //the father population has  order  (PopChild->order) + w
+}
+void PopulationSet::AssignSequencesToPopulations(std::vector<pll_rnode_t*> rnodes,
+                                         ProgramOptions &programOptions,
+                                          int noisy,  int TotalTumorSequences,
+                                         int &numActiveGametes, int &nextAvailable,
+                                         int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames, vector<int> &sampleSizes)
+
+{
+    Population *pop;
+    pll_rnode_t *p;
+    TreeNode *u;
+    int i, j;
+    long double  currentSampleSize;
+    numActiveGametes = 0;
+    int indexFirstObservedCellName;
+    
+    vector<int> CumSumNodes(numClones+1);
+    CumSumNodes[0] = 0;
+    
+    for (i = 1; i <= numClones; i++)
+    {
+        pop = populations[i-1];
+        pop->resetGametesCounters();
+        currentSampleSize = pop->sampleSize;
+        CumSumNodes[i] = CumSumNodes[i - 1] + currentSampleSize;
+    }
+    if (noisy > 1)
+        fprintf (stderr, "\n Initial relation nodes-clones:");
+    int  cumIndivid = 0;
+    int currentPopIndex;
+    numActiveGametes = 0;
+    
+    for (j = 0; j < TotalTumorSequences; j++)
+    {
+        cumIndivid++;
+        p = rnodes[j];
+        //activeGametes[*numActiveGametes] = j;
+        p->node_index = j;
+        //p->label = j;
+        
+        labelNodes = j;
+        
+        if (p->data == NULL)
+            p->data = new TreeNode(0);
+        u= (TreeNode *)(p->data);
+        u->nodeClass = 1;
+        // fprintf (stderr,"\nIn cumIndivid=%d j=%d", cumIndivid, j);
+        for (i = 1; i <= numClones; i++)
+        {
+            pop = populations[ i - 1];
+            currentPopIndex = pop->index;
+            indexFirstObservedCellName= pop->indexFirstObservedCellName;
+            // Identify to which clone belongs this node (sample)
+            if (cumIndivid <= CumSumNodes[i] && cumIndivid > CumSumNodes[i - 1])
+            {
+                //fprintf (stderr,"\ncumIndivid=%d <= CumSamNodes[i]=%d, in clone %d\n", cumIndivid, CumSamNodes[i], pop->index);
+                //pop->idsActiveGametes.push_back(j);
+                pop->idsActiveGametes[pop->numActiveGametes]=j;
+                //pop->rtips.push_back(p);
+                pop->rtips[pop->numActiveGametes]=p;
+                
+                pop->numActiveGametes=pop->numActiveGametes+1;
+                // for(int k=0; k < pop->idsActiveGametes.size();k++)
+                //    fprintf (stderr, "\n pop of order  %d Active gamete id %d", pop->order, pop->idsActiveGametes[k]);
+                // pop->idsGametes.push_back(j);
+                pop->idsGametes[pop->numGametes]=j;
+                pop->numGametes=pop->numGametes+1;
+                
+                u->indexOldClone = currentPopIndex;
+                u->indexCurrentClone = currentPopIndex;
+                //u->effectPopSize= pop->effectPopSize;
+                u->orderCurrentClone = pop->order;
+                
+                //                if (programOptions.doUseObservedCellNames)
+                //                    strcpy( u->observedCellName, ObservedCellNames[indexFirstObservedCellName + pop->numActiveGametes ]);
+                break;
+            }
+        }
+        //        if(doUseObservedCellNames == YES)
+        //            strcpy( p->observedCellName,ObservedCellNames[j]);
+        
+        if (noisy > 1)
+            fprintf (stderr,"\n > The node %d(%d) belongs to clone %d", u->index, cumIndivid, u->indexOldClone);
+        numActiveGametes = numActiveGametes + 1;
+    }
+    //AssignObservedCellNamestoTips(nodes, populations, sampleSizes,ObservedCellNames,  programOptions);
+    // AssignObservedCellNamestoTips2(nodes, populations, sampleSizes,ObservedCellNames,  programOptions);
+    
+    CumSumNodes.clear();
+    nextAvailable = numActiveGametes;
+    labelNodes = labelNodes + 1;
+}
+vector <long double> PopulationSet::getDeltaTs()
+{
+    vector <long double> result(numClones);
+    Population *p;
+    int i;
+    for (i = 0; i < numClones; i++) {
+        p = populations[i];
+        result.at(i)=p->deltaT;
+    }
+    return result;
+    
+}
+vector <long double> PopulationSet::getDeltas()
+{
+    vector <long double> result(numClones);
+    Population *p;
+    int i;
+    for (i = 0; i < numClones; i++) {
+        p = populations[i];
+        result.at(i)=p->delta;
+    }
+    return result;
+    
+}
+vector <long double> PopulationSet::getTs()
+{
+    vector <long double> result(numClones);
+    Population *p;
+    int i;
+    for (i = 0; i < numClones; i++) {
+        p = populations[i];
+        result.at(i)=p->timeOriginSTD;
+    }
+    return result;
+    
+}
+vector <long double> PopulationSet::getSampleSizes()
+{
+    vector <long double> result(numClones);
+    Population *p;
+    int i;
+    for (i = 0; i < numClones; i++) {
+        p = populations[i];
+        result.at(i)=p->sampleSize;
+    }
+    return result;
+    
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////
+StructuredCoalescentTree::StructuredCoalescentTree(int numClones, vector<int> &sampleSizes, long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions, gsl_rng *  randomGenerator, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, string& healthyTipLabel){
+    
+    if (numClones >0)
+        this->numClones = numClones;
+    else
+        fprintf (stderr, "\n ERROR: The number of populations cannot be negative \n");
+    
+    this->populationSet = new PopulationSet(numClones);
+    assert(sampleSizes.size()==numClones);
+      copy(sampleSizes.begin(), sampleSizes.end(), back_inserter(this->sampleSizes));
+    
+    auto deltaTs  = populationSet->samplePopulationGrowthRateFromPriors(mcmcOptions, randomGenerator );
+    
+    if (theta >0)
+       this->theta = theta;
+    else
+        fprintf (stderr, "\n ERROR: Theta cannot be negative \n");
+    
+    populationSet->initPopulationSampleSizes(sampleSizes);
+    
+    populationSet->initPopulationGametes();
+    populationSet->initPopulationRTips();
+    populationSet->initProportionsVectorFromSampleSizes(sampleSizes);
+    populationSet->initPopulationsThetaDelta( theta);
+    int numberTips =0;
+    for(std::vector<int>::iterator it = sampleSizes.begin(); it != sampleSizes.end(); ++it)
+        numberTips += *it;
+    
+    Population* oldestPop=populationSet->getPopulationbyIndex(numClones -1);
+    
+    oldestPop->timeOriginSTD  =   Random::RandomDensityModelTimeOrigin (oldestPop->delta, mcmcOptions.useGSLRandomGenerator, 0, randomGenerator );
+    oldestPop->TimeOriginSTD->setParameterValue(oldestPop->timeOriginSTD);
+    printf ( "\n 1.True time of origin oldest pop:  %Lf \n",oldestPop->timeOriginSTD );
+    
+    initEdgesRootedTree(numberTips);
+    currentNumberEdgesRootedTree=0;
+    
+    populationSet->initListPossibleMigrations();
+    populationSet->initPopulationsCoalescentEvents();
+    
+    healthyTip=NULL;
+ 
+    root =   MakeCoalescenceTree (randomGenerator,
+                                                          msa,
+                                                          programOptions.numNodes,
+                                                          programOptions,
+                                                          ObservedData,
+                                                          ObservedCellNames,
+                                                          sampleSizes
+                                                          ) ;
+    
+    
+    rtree = pll_rtree_wraptree(root,programOptions.numCells);
+    
+}
+StructuredCoalescentTree::StructuredCoalescentTree(PopulationSet *populationSet, vector<int> &sampleSizes, long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions, gsl_rng *  randomGenerator, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, string& healthyTipLabel )
+{
+    if (populationSet->numClones >0)
+    {
+        this->numClones=populationSet->numClones;
+        this->populationSet = populationSet;
+        
+    }
+    else
+        fprintf (stderr, "\n ERROR: The number of clones cannot be negative \n");
+    
+    assert(sampleSizes.size()==numClones);
+    
+    auto deltaTs  = populationSet->samplePopulationGrowthRateFromPriors(mcmcOptions, randomGenerator );
+ 
+    if (theta >0)
+        this->theta = theta;
+    else
+        fprintf (stderr, "\n ERROR: Theta cannot be negative \n");
+    
+    
+    copy(sampleSizes.begin(), sampleSizes.end(), back_inserter(this->sampleSizes));
+    populationSet->initPopulationSampleSizes(sampleSizes);
+    
+    populationSet->initPopulationGametes();
+    populationSet->initPopulationRTips();
+    populationSet->initProportionsVectorFromSampleSizes(sampleSizes);
+    populationSet->initPopulationsThetaDelta( theta);
+    int numberTips =0;
+    for(std::vector<int>::iterator it = sampleSizes.begin(); it != sampleSizes.end(); ++it)
+        numberTips += *it;
+    Population* oldestPop=populationSet->getPopulationbyIndex(numClones -1);
+    
+    oldestPop->timeOriginSTD  =   Random::RandomDensityModelTimeOrigin (oldestPop->delta, mcmcOptions.useGSLRandomGenerator, 0, randomGenerator );
+  
+    
+    printf ( "\n True time of origin oldest pop:  %Lf \n",oldestPop->timeOriginSTD );
+    initEdgesRootedTree(numberTips);
+    currentNumberEdgesRootedTree=0;
+    
+    populationSet->initListPossibleMigrations();
+    populationSet->initPopulationsCoalescentEvents();
+    healthyTip=NULL;
+
+    root =   MakeCoalescenceTree (randomGenerator,
+                                                          msa,
+                                                          programOptions.numNodes,
+                                                          programOptions,
+                                                          ObservedData,
+                                                          ObservedCellNames,
+                                                          sampleSizes
+                                                          ) ;
+
+    rtree = pll_rtree_wraptree(root,programOptions.numCells);
+}
+pll_rnode_t * StructuredCoalescentTree::MakeCoalescenceTree (
+                                   gsl_rng * randomGenerator,
+                                   pll_msa_t *msa,
+                                   int &numNodes,
+                                   ProgramOptions &programOptions,
+                                   std::vector<std::vector<int> > &ObservedData,
+                                   char* ObservedCellNames[],
+                                   vector<int> &sampleSizes
+                                   ) {
+    
+    int      c,  i,  m, cumIndivid, isCoalescence, whichInd,
+    newInd, eventNum, numActiveGametes,
+    isMigration, whichClone, currentNumberAliveClones;
+    int     labelNodes;
+    long double     currentTime, eventTime;
+    pll_rnode_t  *p;
+    TreeNode *t;
+    
+    int     *numParcialActiveGametes;
+    int         *fromClone;
+    int         ThisCloneNumber, ThisOriginCloneNumber;
+    long double       minValue;
+    long double       ThisRateCA;
+    long double       ThisTimeCA_W;
+    long double       ThisTimeCA_V1;
+    long double       ThisTimeCA_V2;
+    
+    int         doAmigration;
+    int         ThisCloneNumberMigrations, ThisM;
+    int nextAvailable;
+    Population *pop;
+    string nodeLabel;
+    
+    /* defaults */
+    isCoalescence = NO;
+    isMigration = NO;
+    newInd = whichClone = labelNodes = cumIndivid = 0;
+    numParcialActiveGametes = NULL;
+    fromClone = NULL;
+    eventTime = 0.0;
+    c = m = 0;
+    whichInd = 0;
+    minValue = 0.0;
+    ThisCloneNumber = 0;
+    ThisOriginCloneNumber = 0;
+    ThisRateCA = 0.0;
+    ThisTimeCA_W = 0.0;
+    ThisTimeCA_V1 = 0.0;
+    ThisTimeCA_V2 = 0.0;
+    doAmigration = -1;
+    ThisCloneNumberMigrations = -1;
+    ThisM = -1;
+    std::vector<Population *>& populations =  populationSet->getPopulations();
+    
+    
+    //*numNodes = 2 * TotalNumSequences * numClones+ 1; // (2 * TotalNumSequences) + numClones(superfluos) - 1, but let's allocate some more..
+    currentNumberAliveClones = numClones;
+    
+    //InitListPossibleMigrations(populations, numClones);
+    for (i = 0; i < programOptions.numClones; i++){
+        pop =populations[i];
+        pop->sampleSize= sampleSizes[i];
+        pop->resetMigrationsList();
+    }
+    //resetMigrationsList( populations,  numClones);
+    
+    
+    for (i=0; i< msa->count; i++){
+        p=new pll_rnode_t();
+        p->left =NULL;
+        p->right=NULL;
+        p->parent=NULL;
+        p->label =new char[strlen(msa->label[i]) + 1]{};
+        std::copy(msa->label[i], msa->label[i] + strlen(msa->label[i]), p->label);
+        
+        nodeLabel = p->label;
+        
+        t = new TreeNode(msa->length);
+        t->initNumberTipsVector(programOptions.numClones);
+        //strcpy( t->observedCellName,p->label);
+        
+        std::copy(p->label, p->label + strlen(p->label), t->observedCellName);
+        
+        t->genotypeSequence = ObservedData[i];
+        p->data = t;
+        if (std::strcmp(p->label, programOptions.healthyTipLabel.c_str())==0)
+            healthyTip = p;
+        else{
+            rtreeTips.push_back(p);
+            rnodes.push_back(p);
+        }
+        
+    }
+    
+    for (i = 0; i < (numNodes - programOptions.TotalTumorSequences); i++)
+    {
+        p = new pll_rnode_t();
+        p->left =NULL;
+        p->right=NULL;
+        p->parent=NULL;
+        t = new TreeNode(0);
+        t->initNumberTipsVector(programOptions.numClones);
+        p->data = t;
+        rnodes.push_back(p);
+    }
+    
+    
+    
+    populationSet->AssignSequencesToPopulations( rnodes, programOptions,  programOptions.noisy, programOptions.TotalTumorSequences, numActiveGametes,  nextAvailable,
+                                               labelNodes, ObservedCellNames, programOptions.doUseObservedCellNames, sampleSizes);
+    Population *currentPop;
+    Population *fatherPop;
+    i=0;
+    currentTime=0.0;
+    while (i < numClones) {
+        //currentPop = *(populations + i);
+        currentPop = populations[i];
+        assert(currentPop->numCompletedCoalescences==0);
+        SimulatePopulation( *currentPop,  programOptions, randomGenerator,
+                           programOptions.numNodes,
+                           numClones,
+                           nextAvailable ,
+                           numActiveGametes,
+                           labelNodes,
+                           currentTime,
+                           eventNum);
+        if (i< numClones-1)   //if it is not the last one
+        {
+            //choose the father population from which the population i came
+            fatherPop= populationSet->ChooseFatherPopulation(  currentPop, randomGenerator,  programOptions.noisy);
+            currentPop->FatherPop = fatherPop;
+            //update list of migrant times
+            Population::UpdateListMigrants( numClones, currentPop, fatherPop);
+        }
+        i = i + 1;
+    }
+    pll_rnode_t *root=NULL;
+    
+        root =  BuildTree( currentPop,randomGenerator,
+                          programOptions,
+                          root,
+                          nextAvailable,
+                          newInd,
+                          currentTime,
+                          labelNodes
+                          );
+    
+    
+    // RelabelNodes(treeRootInit[0], treeRootInit, &intLabel );
+    return root;
+}
+void StructuredCoalescentTree::initEdgesRootedTree(int numberTips)
+{
+    int i;
+    assert(numberTips >0);
+    edges.clear();
+    edgeLengths.clear();
+    
+    
+    //edgeLengths (2*numberTips-2, std::make_pair(0.0, NULL));
+    for( i = 0 ; i < 2*numberTips-2; i++)
+    {
+        
+        edges.push_back(NULL);
+        edgeLengths.push_back(std::make_pair(0.0, nullptr));
+    }
+    
+}
+void StructuredCoalescentTree::MakeCoalescenceEvent( Population &population,gsl_rng *randomGenerator, int noisy,   int &numActiveGametes, int &nextAvailable,
+                                 int &labelNodes, long double  &currentTime, int &numNodes)
+{
+   
+    // TreeNode  *p, *q, *r;
+    pll_rnode_t  *p, *q,  *r ;
+    TreeNode * tp, *tq, *tr ;
+    int firstInd,  secondInd=0, newInd=0;
+    int choosePairIndividuals = YES;
+    
+    population.ChooseRandomIndividual(&firstInd, numClones,   &secondInd, randomGenerator, choosePairIndividuals);
+    
+    newInd = nextAvailable;
+    if (noisy > 1)
+        fprintf (stderr, "Coalescence involving %d and %d to create node %d (in clone %d)", population.idsActiveGametes[firstInd], population.idsActiveGametes[secondInd], newInd, population.index);
+    /*  set pointers between nodes */
+    assert(firstInd< population.idsActiveGametes.size() );
+    assert(secondInd< population.idsActiveGametes.size() );
+    p = rnodes[population.idsActiveGametes[firstInd]];
+    q = rnodes[population.idsActiveGametes[secondInd]];
+    
+    
+    r = rnodes[newInd];
+    
+    r->node_index = nextAvailable;
+    
+    tr= (TreeNode *)(r->data);
+    tp= (TreeNode *)(p->data);
+    tq= (TreeNode *)(q->data);
+    
+    tr->index =   nextAvailable;
+    tr->label = labelNodes;
+    labelNodes=labelNodes+1;
+    tr->indexOldClone = tr->indexCurrentClone = population.index;//here the clone number is updated
+    
+    // r->indexCurrentClone = p->indexCurrentClone;
+    // r->orderCurrentClone = p->orderCurrentClone;
+    tr->orderCurrentClone =population.order;
+    //tr->effectPopSize=population->effectPopSize;
+    tr->nodeClass  = 4;
+    // link the nodes
+    r->left = p;
+    r->right = q;
+    p->parent = r;
+    q->parent = r;
+    
+    tr->time = currentTime;
+    tr->scaledByThetaTimeInputTreeUnits =currentTime * theta;
+    tr->timePUnits =currentTime * theta * population.x;
+    tr->timeInputTreeUnits = tr->timePUnits;
+    
+    p->length = tr->timePUnits -tp->timePUnits;
+    q->length= tr->timePUnits -tq->timePUnits;
+    
+    //fprintf (stderr, "\n r->index = %d, r->time = %lf, ClonePopSizeMeffectBegin[ThisCloneNumber] = %lf, ThisCloneNumber = %d\n", r->index, r->time, ClonePopSizeMeffectBegin[ThisCloneNumber], ThisCloneNumber);
+    if (noisy > 1)
+        fprintf (stderr, "\t|\tCurrentTime (input units) = %Lf", tr->timePUnits);
+    /* readjust active nodes */
+    
+    // idsActiveGametes[firstInd] = newInd;
+    population.idsActiveGametes[firstInd] = r->node_index;// the r3 node
+    population.idsActiveGametes[secondInd] = population.idsActiveGametes[population.numActiveGametes - 1];
+    // for(int k=0; k < population ->idsActiveGametes.size();k++)
+    //    fprintf (stderr, "\n pop of order  %d Active gamete id %d ", population->order, population->idsActiveGametes[k]);
+    numActiveGametes = numActiveGametes - 1; /* less 1 active node */
+    
+    //update list ids nodes
+    population.idsGametes[population.numGametes] = newInd;
+    population.numGametes = population.numGametes +1;
+    
+    // *nextAvailable=*nextAvailable+1; /* 1 node more is available */
+    nextAvailable=nextAvailable+1; /* 1 node more is available */
+    
+    
+    assert(tr->time>0);
+    printf ( "\n number of completed coal %d with time %Lf \n",population.numCompletedCoalescences,tr->time  );
+  
+    population.CoalescentEventTimes[ population.numCompletedCoalescences]=  tr->time;
+    population.numCompletedCoalescences= population.numCompletedCoalescences+1;
+    
+    population.numActiveGametes = population.numActiveGametes - 1; /* now this clone
+                                                                      has 1 less node */
+    
+    
+    /* memory for number of nodes */
+    if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
+    {
+        /* ReallocNodes(&numNodes, activeGametes); */
+        if (noisy == 4)
+            fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
+        numNodes += INCREMENT_NODES;
+        
+    }
+    
+}
+void StructuredCoalescentTree::SimulatePopulation(Population &popI,
+                                                  ProgramOptions &programOptions,
+                                                  gsl_rng *randomGenerator,
+                                                  int &numNodes,
+                                                  int numClones,
+                                                  int &nextAvailable,
+                                                  int &numActiveGametes,
+                                                  int &labelNodes,
+                                                  long double  &currentTime,
+                                                  int &eventNum)
+{
+    int   i,  k, isCoalescence,
+    firstInd,  newInd,
+    isMigration, whichClone;
+    long double      eventTime;
+    pll_rnode_t  *p, *r, *r1 ;
+    TreeNode  *u,*v, *u1;
+    
+    eventNum = 0;
+    
+    long double  ThisRateCA = 0.0;
+    long double  ThisTimeCA_W = 0.0;
+    long double  ThisTimeCA_V1 = 0.0;
+    long double  ThisTimeCA_V2 = 0.0;
+    int numParcialActiveGametes;
+    
+    
+    numParcialActiveGametes = popI.numActiveGametes;
+    
+    int numMigrations = popI.numIncomingMigrations; //taking into account also the    time of origin as a migration
+    
+    long double  timeNextMigration;
+    int indexNextMigration = 0;
+    Population *incomingPop;
+    
+    if (programOptions.noisy > 1)
+        fprintf (stderr, "\n\n>> Simulating evolutionary history of clone %d (number active gametes %d, original time to origin %Lf)\n", popI.index, popI.numActiveGametes, popI.timeOriginInput);
+    
+    if (programOptions.noisy > 1)
+        fprintf (stderr, "\n\n> Simulating evolutionary history of clone  or order  %d ..\n", popI.order);
+    
+    currentTime=0;
+    popI.numCompletedCoalescences =0;
+    while (indexNextMigration < numMigrations) {
+        timeNextMigration = popI.immigrantsPopOrderedByModelTime[indexNextMigration].first;
+        //fprintf (stderr, "\n\n> numParcialActiveGametes= %d \n", numParcialActiveGametes);
+        if ( popI.numActiveGametes >= 2) {
+            ThisRateCA = (long double)  popI.numActiveGametes * ((long double) popI.numActiveGametes - 1) / 2.0;
+            ThisTimeCA_W = Random::RandomExponentialStartingFrom (ThisRateCA,0,  true, randomGenerator) ;
+            ThisTimeCA_V1 = Population::FmodelTstandard (currentTime, popI.timeOriginSTD, popI.delta);
+            ThisTimeCA_V1 = ThisTimeCA_V1 + ThisTimeCA_W;
+            // from standard time to model time, GstandardTmodel(V, T, delta)
+            ThisTimeCA_V2 = Population::GstandardTmodel(ThisTimeCA_V1, popI.timeOriginSTD, popI.delta);
+        }
+        else
+        {
+            ThisTimeCA_V2 = timeNextMigration + 1.0; // it reached a "provisional" MRCA
+        }
+        if ( ThisTimeCA_V2 < timeNextMigration)
+        {
+            //choose randomly two lineages to coalesce
+            isCoalescence = YES;
+            isMigration = NO;
+            eventNum= eventNum +1;
+            whichClone = popI.index;
+            currentTime = ThisTimeCA_V2; // update current time in model time
+            eventTime = currentTime;
+            
+            if (programOptions.noisy > 1)
+            {
+                fprintf (stderr, "\n\n*** Event %3d *** currentTime (model time) = %Lf, currentTime (standard time) = %Lf\n", eventNum, ThisTimeCA_V2, ThisTimeCA_V1 );
+                fprintf (stderr, "\n\n*** Event %3d *** currentTime (input units) = %Lf\n", eventNum, ThisTimeCA_V2);
+            }
+            if (programOptions.noisy == 4)
+                fprintf (stderr, "* Coalescence *\n");
+            
+            assert(currentTime>0);
+            MakeCoalescenceEvent( popI,  randomGenerator, programOptions.noisy, numActiveGametes, nextAvailable, labelNodes, currentTime,  programOptions.numNodes);
+            
+        }
+        else
+        {
+            if (indexNextMigration < numMigrations - 1) //indexNextMigration corresponds to one of the true migrations
+            {
+                isCoalescence = NO;
+                isMigration = YES;
+                eventNum= eventNum +1;
+                currentTime = timeNextMigration;
+                eventTime = currentTime;
+                //update migration times in model time
+                if (programOptions.noisy > 1)
+                {
+                    fprintf (stderr, "\n\n*** Event %3d *** *currentTime (model units) = %Lf\n", eventNum, ThisTimeCA_V2);
+                }
+                if (programOptions.noisy == 4)
+                {fprintf (stderr, "* Migration *\n");}
+                
+                incomingPop = popI.immigrantsPopOrderedByModelTime[indexNextMigration].second;
+                
+                //r->indexOldClone = incommingPop->index;
+                p = rnodes[incomingPop->nodeIdAncestorMRCA]; // root of younger clone
+                
+                indexNextMigration = indexNextMigration + 1;
+                
+                v= (TreeNode *)(p->data);
+                
+                printf( "\n The incoming population %d to  population %d with node %d and nodelet %d time %Lf", incomingPop->order, popI.order, v->index, p->node_index, v->timePUnits );
+                
+                v->indexCurrentClone = popI.index;
+                v->indexOldClone = incomingPop->index;
+                v->orderCurrentClone = popI.order;
+                
+                
+                k = v->indexCurrentClone;
+                incomingPop->numActiveGametes = incomingPop->numActiveGametes - 1; /* now the other clone has 1 less node */
+                // remove node from old clone in list of active gametes and add the new node of the current clone
+                //popI->idsActiveGametes[popI->numActiveGametes]=r->index;//adding the superfluos node
+                popI.idsActiveGametes[popI.numActiveGametes]=p->node_index;//adding the superfluos node
+                
+                popI.numActiveGametes = popI.numActiveGametes + 1; /* now this clone has 1 more node */
+                //                if (noisy > 1)
+                
+                //for(int i=0; i < popI->idsActiveGametes.size();i++)
+                //    fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[i]);
+                
+                if (programOptions.noisy > 1)
+                    fprintf (stderr, "\t|\tCurrentTime (input units) = %Lf", v->timePUnits);
+                // fprintf (stderr, "\t|\tCurrentTime (input units) = %lf", r->timePUnits);
+                /* memory for number of nodes */
+                if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
+                {
+                    /* ReallocNodes(&numNodes, activeGametes); */
+                    if (programOptions.noisy == 4)
+                        fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
+                    numNodes += INCREMENT_NODES;
+                }
+            }
+            else {
+                //origin reached
+                currentTime = timeNextMigration;
+                indexNextMigration = indexNextMigration + 1;
+                isCoalescence = NO;
+                isMigration = NO;
+                eventTime = currentTime;
+                if (programOptions.noisy > 1)
+                    fprintf (stderr, "\n\n*** Clone origin ***\n");
+                if (programOptions.noisy == 4)
+                    fprintf (stderr, "Clone origin %d at time (model units) = %Lf\n", popI.index, currentTime);
+                if (popI.order < numClones - 1) // do not do it for the last clone
+                {
+                    newInd = nextAvailable;
+                    
+                    r1 = rnodes[newInd];   /* new nodelet ancester */
+                    
+                    r1->node_index = newInd;
+                    
+                    if (r1->data ==NULL)
+                        r1->data =  new TreeNode(0);
+                    
+                    u1= (TreeNode *)(r1->data);
+                    
+                    
+                    u1->index = nextAvailable;
+                    u1->label = labelNodes;
+                    labelNodes=labelNodes+1;
+                    u1->indexOldClone =u1->indexCurrentClone = popI.index;
+                    
+                    u1->orderCurrentClone = popI.order;
+                    //u1->effectPopSize= popI->effectPopSize;
+                    popI.nodeIdAncestorMRCA=newInd;
+                    
+                    u1->nodeClass  =4;
+                    
+                    //firstInd = *nextAvailable - 1;
+                    firstInd = nextAvailable - 1;
+                    //p = nodes + activeGametes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
+                    p = rnodes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
+                    // link the nodes
+                    //r->left = p;
+                    r1->left = p;
+                    r1->right = NULL;
+                    p->parent= r1;
+                    
+                    
+                    //r->right = NULL;
+                    //p->anc1 = r;
+                    
+                    u1->time = currentTime;
+                    u1->scaledByThetaTimeInputTreeUnits = currentTime * theta;
+                    u1->timePUnits =  currentTime * theta * popI.x;
+                    u1->timeInputTreeUnits = u1->timePUnits;
+                    p->length = currentTime * theta * popI.x;
+                    popI.rMRCA = p;
+                    //insertMRCAMap(r,popI);
+                    //rMRCAPopulation[p].push_back(popI);
+                    
+                    /* readjust active nodes */
+                    nextAvailable=nextAvailable+1; /* 1 node more is available */
+                    popI.idsActiveGametes[0] = newInd;//always will be in the 0  position because there is only one left
+                    
+                    // for(int k=0; k < popI->idsActiveGametes.size();k++)
+                    //    fprintf (stderr, "\n pop of order  %d Active gamete id %d", popI->order, popI->idsActiveGametes[k]);
+                    
+                    if (programOptions.noisy > 1)
+                        fprintf (stderr, "Creating origin node, it creates node %d derived from node %d", newInd, firstInd);
+                    if (programOptions.noisy > 1)
+                        fprintf (stderr, "\t|\tCurrentTime (input units) = %Lf", u1->timePUnits);
+                    /* memory for number of nodes */
+                    if (nextAvailable >= numNodes)  /* if there aren't enough nodes it go into and it addition more */
+                    {
+                        /* ReallocNodes(&numNodes); */
+                        if (programOptions.noisy == 4)
+                            fprintf (stderr, "\n\n...Doing reallocation of nodes (Coalescence)\n");
+                        numNodes += INCREMENT_NODES;
+                    }
+                }
+                else  {//origin of oldest pop reached
+                    popI.nodeIdAncestorMRCA=nextAvailable-1;//for the last population, nodeIdAncesterMRCA is the MRCA instead of ancester of MRCA
+                    r = rnodes[nextAvailable-1];//popI->idsActiveGametes[0]
+                    u= (TreeNode *)(r->data);
+                    u->indexOldClone = u->indexCurrentClone = popI.index;
+                    u->orderCurrentClone = popI.order;
+                    popI.rMRCA= r;
+                    //insertMRCAMap(r,popI);
+                    //rMRCAPopulation[r].push_back(popI);
+                }
+            }
+        }
+        if (programOptions.noisy > 3)
+        {
+            fprintf (stderr, "\nActive nodes (%d):",  popI.numActiveGametes);
+            for (i = 0; i < popI.numActiveGametes; i++)
+                fprintf (stderr, " %d", popI.idsActiveGametes[i]);
+            fprintf (stderr, "\t|\tNext node available = %d", nextAvailable);
+        }
+    }
+    if (programOptions.noisy > 1)
+        fprintf (stderr, "\n\nEvolutionary history of clone %d is completed \n", popI.index);
+    
+}
+PopulationSet& StructuredCoalescentTree::getPopulationSet()
+{
+    return *populationSet;
+}
+pll_rtree_t* StructuredCoalescentTree::getTree()
+{
+    
+    return rtree;
+}
+pll_rnode_t* StructuredCoalescentTree::BuildTree(Population *CurrentPop,
+                              gsl_rng *randomGenerator,
+                              ProgramOptions &programOptions,
+                              pll_rnode_t *tumour_mrca,
+                              int &nextAvailable,
+                              int &newInd,
+                              long double   &currentTime,
+                              int &labelNodes)
+{
+    int i, j;
+    int indexCurrentTip;
+    int  foundSuperflousNode;
+    pll_rnode_t *p, *q, *r;
+    TreeNode *u, *anc, *healthyR, *u1, *u2;
+    pll_rnode_t *treeRootInit;
+    /********** BUILDING TREES ***********/
+    if (programOptions.noisy > 1)
+    {
+        fprintf (stderr, "\n>> Building trees ..");
+    }
+    
+    j=0;
+    indexCurrentTip=0;
+    /* get rid of superflous nodes */
+    foundSuperflousNode = YES;
+    while (foundSuperflousNode == YES)
+    {
+        foundSuperflousNode = NO;
+        for (i = 0; i < nextAvailable; i++) // available all the nodes
+        {
+            p = rnodes[i];
+            
+            //fprintf (stderr, "\n\np->index = %d", p->index);
+            
+            if (p->left == NULL && p->right == NULL && p->parent == NULL)
+            {
+                // nothing to do with this node because it is not connected to anything
+            }
+            else if (p->left == NULL && p->right == NULL && p->parent != NULL)
+            {
+                // (*treeTips)[indexCurrentTip]=p;
+                if(indexCurrentTip <  programOptions.TotalNumSequences)
+                {
+                    //treeTips[indexCurrentTip]=p;
+                    if(std::find(rtreeTips.begin(), rtreeTips.end(), p) == rtreeTips.end())
+                    {
+                        rtreeTips.push_back(p);
+                        
+                    }
+                    indexCurrentTip++;
+                }
+                
+                // do not do anything with this node because it is a tip
+            }
+            else if (p->left != NULL && p->right == NULL && p->parent != NULL)
+            {
+                // this is a superflous node and can be removed(this superfluos nodes are the MRCA nodes of the demes
+                foundSuperflousNode = YES;
+                q = p->left;
+                r = p->parent;
+                
+                if (p->parent->left == p)
+                {
+                    
+                    r->left = q;
+                    q->parent = r;
+                    p->left = NULL;
+                    p->parent = NULL;
+                    
+                }
+                else
+                {
+                    r->right = q;
+                    q->parent = r;
+                    p->left = NULL;
+                    p->parent = NULL;
+                    
+                }
+                
+                //fprintf (stderr, "\n - this is a superflous node and can be removed (1)");
+            }
+            else if (p->left == NULL && p->right != NULL && p->parent != NULL)
+            {
+                // this is a superflous node and can be removed
+                foundSuperflousNode = YES;
+                q = p->right;
+                r = p->parent;
+                if (p->parent->left == p)
+                {
+                    r->left = q;
+                    q->parent = r;
+                    p->right = NULL;
+                    p->parent = NULL;
+                    
+                }
+                else
+                {
+                    r->right = q;
+                    q->parent = r;
+                    p->right = NULL;
+                    p->parent = NULL;
+                    
+                }
+                
+                //fprintf (stderr, "\n - this is a superflous node and can be removed (2)");
+            }
+            else if (p->left != NULL && p->right != NULL && p->parent != NULL)
+            {
+                
+                // this is an internal node formed by a coalescence event, do not touch
+                
+            }
+            else if (p->left != NULL && p->right != NULL && p->parent == NULL)
+            {
+                
+                // this is the  MRCA
+                
+            }
+            
+            else if (p->left != NULL && p->right == NULL && p->parent == NULL)
+            {
+                // Seems to be the last coalescent event among sequences with non-ancestral material
+                // it is not superfluous, we just remove it
+                p->left->parent = NULL;
+                
+            }
+            else if (p->left == NULL && p->right != NULL && p->parent == NULL)
+            {
+                // not clear what this node could be doing, but we will remove it anyway
+                fprintf (stderr, "strange\n");
+                p->left=NULL;
+                p->right->parent =NULL;
+                
+            }
+            else
+            {
+                fprintf (stderr, "You should not be here, I think\n");
+                //fprintf (stderr, "%d %d-- %d %d %d\n", Index(p), j, Index(p->left), Index(p->right), Index(p->anc1));
+            }
+            if (p->parent != NULL)
+            {//update length field
+                
+                // p->length = p->parent->time- p->time;
+                //p->length = (p->anc1->timePUnits- p->timePUnits);
+                u = (TreeNode *)(p->data);
+                anc = (TreeNode *)(p->parent->data);
+                u->length =(anc->timePUnits- u->timePUnits);
+                assert(p->length-(anc->timePUnits- u->timePUnits)<=0.0000000001);
+                p->length = (anc->timePUnits- u->timePUnits);
+                //*mutationRate;
+                u->lengthModelUnits = (anc->time- u->time);
+                addEdgeFromNode(p );
+                //*mutationRate;
+                
+            }
+        }
+        //fprintf (stderr, "\n");
+    }//while
+    
+    /* about the MRCA */
+    newInd=nextAvailable-1;
+    p = rnodes[newInd]; /* because the last one event is the last coalescence */
+    //fprintf (stderr, "\n\n\n>> newInd = %d\n", newInd);
+    
+    if (programOptions.thereisOutgroup == NO)
+    {
+        p = rnodes[newInd];
+        u = (TreeNode *)(p->data);
+        u->nodeClass = 5;
+        tumour_mrca = p;
+        //CurrentPop->rMRCA=p;
+        //treeRootInit[0] = p;
+        p->parent=NULL;
+        u->anc1 = NULL;
+        treeRootInit =tumour_mrca;
+    }
+    if (programOptions.thereisOutgroup == YES && programOptions.outgroupSelection > 0)  /*** Root and outgroup ***/
+    {
+        p = rnodes[newInd]; // MRCA
+        u = (TreeNode *)(p->data);
+        u->nodeClass = 4;
+        
+        if (programOptions.noisy > 1)
+            fprintf (stderr, "\n\n>> Attaching outgroup .. ");
+        
+        
+        if (programOptions.outgroupSelection == 1)  /*** Root 2 times and outgroup ***/
+            currentTime = CurrentPop->timeOriginSTD; // origin of the clone; // currentTime + (outgroupBranchLength_Root1Root2 / mutationRate); // set time of the new root (from which the MRCA and outgroup nodes are derived)
+        else if (programOptions.outgroupSelection == 2) { /*** Root 2 times and outgroup ***/
+            currentTime = CurrentPop->timeOriginSTD + (programOptions.outgroupBranchLength_Root1Root2 / (theta * CurrentPop->x)); // origin of the clone + time given by the user
+            
+        }
+        else
+        {
+            fprintf (stderr, "\n\nError simulationg the outgroup. Check input settings\n");
+            
+        }
+        
+        pll_rnode_t*       healthyRoot = rnodes[nextAvailable];
+        
+        if (healthyRoot->data ==NULL)
+            healthyRoot->data= new TreeNode(0);
+        u = (TreeNode *)(p->data);
+        healthyR = (TreeNode *)(healthyRoot->data);
+        healthyR->index = nextAvailable;
+        healthyR->label = labelNodes;
+        healthyR->indexOldClone = healthyR->indexCurrentClone = CurrentPop->index;
+        healthyR->orderCurrentClone = CurrentPop->order;
+        //healthyR->effectPopSize= u->effectPopSize;
+        labelNodes= labelNodes+1;
+        healthyRoot->left = p;//coalTreeMRCA;
+        //        coalTreeMRCA->anc = healthyRoot;
+        //p->anc1 = healthyRoot;
+        p->parent = healthyRoot;
+        
+        
+        healthyR->nodeClass = 5;
+        //        coalTreeMRCA->length = transformingBranchLength/mutationRate;
+        p->length = 0;
+        u->length = 0;
+        //        coalTreeMRCA->branchLength = transformingBranchLength;
+        u->lengthModelUnits = 0;
+        
+        //        healthyRoot->time = currentTime +  transformingBranchLength/mutationRate;
+        healthyR->time = currentTime  ;
+        healthyR->scaledByThetaTimeInputTreeUnits = currentTime * theta;
+        healthyR->timePUnits = currentTime * theta *CurrentPop->x;
+        healthyR->timeInputTreeUnits = healthyR->timePUnits;
+        //p->length = (p->anc1->timePUnits- p->timePUnits);
+        anc = (TreeNode *)(p->parent->data);
+        p->length = (anc->timePUnits- u->timePUnits);
+        u->length = (anc->timePUnits- u->timePUnits);
+        //*mutationRate;
+        u->lengthModelUnits = (anc->time- u->time);
+        addEdgeFromNode(p );
+        //*mutationRate;
+        
+        healthyRoot->length = 0;
+        healthyR->length = 0;
+        //        healthyRoot->length = 0;
+        
+        //        if (noisy > 2)
+        //            fprintf (stderr, "DONE");
+        //
+        nextAvailable++;
+        //
+        //        /* connect the healthy ancestral cell with the tip healthy cell*/
+        //        if (noisy > 2)
+        //            fprintf (stderr, "\n>> Adding healthy tip ... ");
+        
+        pll_rnode_t* healthyTip1= rnodes[nextAvailable];
+        if (healthyTip1->data==NULL)
+            healthyTip1->data =  new TreeNode(0);
+        //
+        //        if (healthyTip ==NULL)
+        //        {
+        //            healthyTip1=rnodes[nextAvailable];
+        //            if (healthyTip1->data==NULL)
+        //               healthyTip1->data =  new TreeNode(0);
+        //        }
+        //       else
+        //           healthyTip1= healthyTip;
+        
+        u1= (TreeNode *)(healthyTip1->data);
+        if (healthyTip!=NULL)
+        {
+            healthyTip1->label = healthyTip->label;
+            if (healthyTip->data!=NULL)
+            {
+                u2= (TreeNode *)(healthyTip->data);
+                u1->genotypeSequence = u2->genotypeSequence;
+            }
+        }
+        else
+        {
+            healthyTip1->label = new char[((string)(programOptions.healthyTipLabel)).length() + 1];
+            healthyTip1->label= strcpy(healthyTip1->label, programOptions.healthyTipLabel.c_str());
+        }
+        
+        healthyRoot->right = healthyTip1;
+        healthyTip1->parent=healthyRoot;
+        
+        
+        //u1->effectPopSize=healthyR->effectPopSize;
+        
+        u1->time  =0;
+        u1->timePUnits =0;
+        double  healthyTipBranchLengthRatio = Random::randomUniformFromGsl2(randomGenerator);
+        
+        u1->time = healthyTipBranchLengthRatio * healthyR->time;
+        u1->timePUnits = healthyTipBranchLengthRatio * healthyR->timePUnits;
+        u1->timeInputTreeUnits = u1->timePUnits;
+        
+        healthyTip1->length= healthyR->timePUnits- u1->timePUnits;
+        
+        u1->length = 0;
+        u1->lengthModelUnits = 0;
+        
+        u1->isOutgroup= YES;
+        
+        treeRootInit=healthyRoot;
+        
+    }
+    
+    int intLabel = 0;
+    if (programOptions.noisy > 1)
+        fprintf (stderr, "\n\n>> Relabeling nodes on tree... \n\n");
+    if (programOptions.thereisOutgroup == YES)
+        intLabel = programOptions.TotalTumorSequences + 1;
+    else
+        intLabel = programOptions.TotalTumorSequences;
+    
+    RelabelNodes2( treeRootInit, intLabel );
+    
+    return treeRootInit;
+}
+void StructuredCoalescentTree::addEdgeFromNode(pll_rnode_t *node ){
+    pll_tree_edge_t *edge;
+    TreeNode *u, *v;
+    edge = new pll_tree_edge_t();
+    u= (TreeNode *)(node->data);
+    if (node->parent!=NULL)
+    {
+        v= (TreeNode *)(node->parent->data);
+        edge->edge.rtree.parent = u->timeInputTreeUnits >= v->timeInputTreeUnits ? node :  node->parent;
+        edge->edge.rtree.child= u->timeInputTreeUnits < v->timeInputTreeUnits ? node :  node->parent;
+        assert(abs(edge->edge.rtree.child->length -(v->timeInputTreeUnits- u->timeInputTreeUnits))<=0.000000001 );
+        edge->length= edge->edge.rtree.child->length;
+        //edgeLengths.push_back(make_pair(edge->length, edge));
+        //edges.push_back(edge);
+        edgeLengths[currentNumberEdgesRootedTree]=make_pair(edge->length, edge);
+        edges[currentNumberEdgesRootedTree]=edge;
+        currentNumberEdgesRootedTree++;
+    }
+    
+}
+
+void StructuredCoalescentTree::RelabelNodes2(pll_rnode_t *p, int &intLabel)
+{
+    if (p != NULL)
+    {
+        TreeNode *u;
+        RelabelNodes2 (p->left, intLabel);
+        RelabelNodes2 (p->right, intLabel);
+        /*RelabelNodes (p->outgroup);*/
+        if (p->left == NULL && p->right == NULL) /* is tip */
+        {
+            // p->label = intLabel++;
+            //  p->label = (*intLabel);
+            // *intLabel=*intLabel+1;
+            u=(TreeNode*) p->data;
+            u->label = u->index ;
+        }
+        else                  /* all ancester */
+        {
+            //p->label = intLabel++;
+            u=(TreeNode*) p->data;
+            u->label = intLabel;
+            intLabel=intLabel+1;
+        }
+    }
+}
+vector <long double> StructuredCoalescentTree::getDeltaTs()
+{
+    return populationSet->getDeltaTs();
+    
+}
+vector <long double> StructuredCoalescentTree::getDeltas(){
+    
+    return populationSet->getDeltas();
+    
+    
+}
+vector <long double> StructuredCoalescentTree::getTs(){
+    
+    return populationSet->getTs();
+}
+vector <long double> StructuredCoalescentTree::getSampleSizes(){
+    
+    return populationSet->getSampleSizes();
+    
+    
+}
+pll_rnode_t* StructuredCoalescentTree::getRoot(){
+    
+    return root;
+}

@@ -226,13 +226,13 @@ public:
      long double paramMultiplierTheta;
      long double paramMultiplierTimeOriginOldestPop;
      bool noData;//1: without data(just priors), 0: with data
-      int useSequencesLikelihood;//1: true, 0 false
+     int useSequencesLikelihood;//1: true, 0 false
      int verbose;// 0 nothing, 1, 2 more verbose
      int fixTimeOriginInputTreeUnits;
      long double lambdaExponentialPriorTime;
      long double lambdaExponentialPriorMutationRate;
-      long double lambdaExponentialPriorTotalEffectivePopSize;
-      long double lambdaExponentialPriorGrowthRate;
+     long double lambdaExponentialPriorTotalEffectivePopSize;
+     long double lambdaExponentialPriorGrowthRate;
      long double sigmaNormalKernelTimeofOrigin;
      long double parameterPowerLawDistributionTotalEffectPopSize;
      long double parameterPowerLawDistributionMutationRate;
@@ -242,11 +242,20 @@ public:
      long double sigmaNormalKernelMutationRate;
      long double sigmaNormalKernelGrowthRate;
      double lengthIntervalMultiplier ;
+     double lengthIntervalMultiplierDeltaT;
+     double lengthIntervalMultiplierTheta;
      double lengthIntervalMultiplierTimeOriginOldestPop;
      double upperBoundTimeOriginInputOldestPop;
      double percentIterationsToComputeThinnig;
      int iterationToComputeThinnig;
      double thresholdAutoCorrelation;
+     int maxNumberIndependentPosteriorValues;
+     double thresholdAccceptanteRate;
+     int iterationsToMonitorChain;
+     int numberChainsPerTree;
+     bool doMCMCMoveTimeOriginInputOldestPop;
+     long double updateLengthMultiplierMCMCMove;
+     bool fixedValuesForSimulation;
 };
 
 typedef struct {
@@ -282,20 +291,28 @@ typedef struct {
     char  inputGenotypeFilePhylip[500];
 }FilePaths;
 
+
+typedef struct  {
+    FILE *f;
+    char  path[MAX_NAME];
+}FilePath;
+
 typedef struct {
-    FILE *fpTrees;
-    FILE *fpTrees2;
-    FILE  *fpSNVgenotypes;
-    FILE  *fpTimes;
-    FILE  *fpTimes2;
-    FILE  *fpSNVhaplotypes;
-    FILE  *fpTrueHaplotypes;
-    FILE  *fpFullGenotypes;
-    FILE *fpFullHaplotypes;
-    FILE *fpVCF;
-    FILE *fpCATG;
-    FILE *fpMLhaplotypes;
-    FILE *fplog;
+    FilePath *fpTrees;
+    FilePath *fpTrees2;
+    FilePath *fpSNVgenotypes;
+    FilePath *fpTimes;
+    FilePath *fpTimes2;
+    FilePath *fpSNVhaplotypes;
+    FilePath *fpTrueHaplotypes;
+    FilePath *fpFullGenotypes;
+    FilePath *fpFullHaplotypes;
+    FilePath *fpVCF;
+    FilePath *fpCATG;
+    FilePath *fpMLhaplotypes;
+    FilePath *fplog;
 }Files;
+
+
 
 #endif /* data_types_h */

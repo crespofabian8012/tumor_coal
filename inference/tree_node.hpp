@@ -30,6 +30,7 @@
 
 #include  "definitions.hpp"
 
+
 using namespace std;
 class TreeNode
 {
@@ -75,6 +76,7 @@ public:
 };
 
 typedef TreeNode* pTreeNode;
+
 
 
 #endif /* tree_node_hpp */

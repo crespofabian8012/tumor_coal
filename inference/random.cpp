@@ -226,7 +226,7 @@ long double  Random::RandomExponential (long double  lambda, long int *seed, boo
         else
            U = randomUniformBoost();
        }
-    while (U == 0);
+    while (U == 0 || U == 1);
     
     exponentialNumber = -log (U) / lambda;
     
@@ -247,10 +247,10 @@ long double  Random::RandomExponentialStartingFrom (long double  lambda, long do
         else
             U = randomUniformBoost();
     }
-    while (U == 0);
+    while (U == 1 || U == 0);
     
  //  exponentialNumber = -log ( (1 - U)/ exp(lambda* from)) / lambda;
-    exponentialNumber = from - log (U) / lambda;
+    exponentialNumber = from - log (1-U) / lambda;
 
     return exponentialNumber;
 }
@@ -589,4 +589,19 @@ long double Distributions::LogPowerLawDistibutionDensity(long double a, long dou
     long double logfullTerm= firstTerm -secondTerm;
     long double result=logfullTerm;
     return result;
+}
+
+long double  Distributions::DirichletDensity(vector<long double> &proportionsVector,  vector<long double> &concentrationVector, int sizeVector)
+{
+    int i;
+    long double  sum=0;
+    long double  logResult=0;
+    for( i = 0 ; i < sizeVector; i++)
+    {
+        sum = sum +concentrationVector[i];
+        logResult= logResult+(concentrationVector[i]-1)*log(proportionsVector[i]);
+        logResult= logResult-lgamma(concentrationVector[i]);
+    }
+    logResult = logResult+lgamma(sum);
+    return logResult;
 }

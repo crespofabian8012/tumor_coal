@@ -27,6 +27,7 @@
 #define data_utils_hpp
 
 #include <iostream>
+
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -196,4 +197,11 @@ int countTrueVariants (std::vector<TreeNode *> &nodes,  int numSites, int numCel
 
 long double computeParamPowerDistribQuantileUntil(long double areaUntilb, long double b, long double from);
 void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions );
+void printProgramHeader();
+
+long double  initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, gsl_rng * randomGenerator);
+void simulateTrees(int numberTrees,vector<StructuredCoalescentTree *> &structuredCoalTrees,  vector<pll_rtree_t *> &trees,          vector<long double> &realThetas,
+                   vector<vector<long double>> &realDeltaTs,
+                   vector<vector<long double>> &realTs,
+                   vector<int> & sampleSizes, ProgramOptions &programOptions, MCMCoptions & mcmcOptions, vector<gsl_rng * > randomGenerators, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, string& healthyTipLabel  );
 #endif /* data_utils_hpp */

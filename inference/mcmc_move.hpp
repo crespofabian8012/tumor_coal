@@ -25,144 +25,135 @@
 #ifndef mcmc_move_hpp
 #define mcmc_move_hpp
 
-#include "mcmc_chain.hpp"
+
+//#include "mcmc_chain.hpp"
 #include "mcmc_parameter.hpp"
-
-
-//class Chain;
-//class MCMCoptions;
-//class ProgramOptions;
-//class Population;
 
 
 class MCMCParameterWithKernel;
 class MCMCVectorParameter;
-
+class Chain;
 class MCMCmove{
-    Chain *chain;
+    int chainId;
+    //Chain *chain;
     std::string nameMove;
 protected:
     int numberAccept;
     int numberReject;
     int numberAttemps;
-    vector<MCMCParameterWithKernel *> mcmcParamKernels;
-    vector<IMCMCParameter<long double> *> affectedParameters;
+    std::vector<MCMCParameterWithKernel *> mcmcParamKernels;
+    std::vector<IMCMCParameter<long double> *> affectedParameters;
     
     //MCMCVectorParameter * vectorParam;
     MCMCVectorParameterWithKernel *vectorParam;
     
-    MCMCParameter<vector<long double>> *affectedVectorParameters;
+    MCMCParameter<std::vector<long double>> *affectedVectorParameters;
     //MCMCParameter<vector<long double>> sampleSizesVector;
     
     long double newLogConditionalLikelihoodTree;
     long double newLogConditionalLikelihoodSequences;
+    long double chainLogConditionalLikelihoodTree;
+    long double chainLogConditionalLikelihoodSequences;
 public:
     bool isInvalidMove;
     std::string name();
-    MCMCmove(Chain *chain, std::string nameMove, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam );
-    virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator)=0;
-    virtual void rollbackMove( ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
-    virtual void saveCurrentValue( ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
-    virtual long  double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
+    MCMCmove(int chainId, std::string nameMove, std::vector<MCMCParameterWithKernel *> &mcmcParKernel,  std::vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam,  long double currentlogConditionalLikelihoodTree,
+                      long double currentlogConditionalLikelihoodSequences);
+    virtual void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator, Chain* chain)=0;
+    virtual void rollbackMove( ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)=0;
+    virtual void saveCurrentValue( ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)=0;
+    virtual long  double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)=0;
     virtual void increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
     virtual void decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)=0;
+    long double getKernelValue(){return mcmcParamKernels[0]->getKernelParameter();}
+    void setKernelValue(long double newKernelParameterValue){ mcmcParamKernels[0]->modifyKernelParameter(newKernelParameterValue);}
+    void  setCurrentLogLikelihoods(long double currentlogConditionalLikelihoodTree,
+                                             long double currentlogConditionalLikelihoodSequences);
+    long double  getCurrentLogLikelihoodSequences() const;
+    long double  getCurrentLogLikelihoodTree() const;
     double numberAccepted();
     void  resetNumberAccepted();
     void  resetNumberRejected();
     double numberRejected();
-    Chain * getChain();
+   // Chain * getChain();
+    int  getChainId();
 public:
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain);
     
     // virtual ~MCMCmove()=0;
 };
 
-class NewTotalEffectPopSizeMove:public MCMCmove{
-public:
-    NewTotalEffectPopSizeMove(Chain *chain, std::string nameMove, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
-    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
-};
-
 class NewProportionsVectorMove:public MCMCmove{
 public:
-    NewProportionsVectorMove(Chain *chain, std::string nameMove, vector<MCMCParameterWithKernel *> &mcmcParKernel, vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
-    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
+    NewProportionsVectorMove(int chainId, std::string nameMove, std::vector<MCMCParameterWithKernel *> &mcmcParKernel, std::vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam, long double currentlogConditionalLikelihoodTree,
+    long double currentlogConditionalLikelihoodSequences);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator,Chain* chain);
+    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost,Chain* chain);
     void increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 class NewGrowthRateMoveForPopulation:public MCMCmove{
     Population *pop;
 public:
-    NewGrowthRateMoveForPopulation(Chain *chain, std::string nameMove,Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
-    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
-};
-
-class NewEffectPopSizeMoveForPopulation:public MCMCmove{//this is not used since we can change the total effective population size and the proportions vector to achieve the same
-    Population *pop;
-public:
-    NewEffectPopSizeMoveForPopulation(Chain *chain, std::string nameMove, Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel, vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
-    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
+    NewGrowthRateMoveForPopulation(int chainId, std::string nameMove,Population *pop, std::vector<MCMCParameterWithKernel *> &mcmcParKernel,  std::vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam, long double currentlogConditionalLikelihoodTree,
+    long double currentlogConditionalLikelihoodSequences);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator,Chain* chain);
+    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *rngGsl, boost::mt19937* rngBoost, Chain* chain);
 };
 
 class NewTimeOriginOnTreeforPopulationMove:public MCMCmove{
     Population *pop;
 public:
-    NewTimeOriginOnTreeforPopulationMove(Chain *chain, std::string nameMove, Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
-    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
+    NewTimeOriginOnTreeforPopulationMove(int chainId, std::string nameMove, Population *pop, std::vector<MCMCParameterWithKernel *> &mcmcParKernel,  std::vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam, long double currentlogConditionalLikelihoodTree,
+    long double currentlogConditionalLikelihoodSequences);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const  gsl_rng *randomGenerator,Chain* chain);
+    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain);
     void increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 class NewTimeOriginOnEdgeforPopulationMove:public MCMCmove{
     Population *pop;
 public:
-    NewTimeOriginOnEdgeforPopulationMove(Chain *chain, std::string nameMove, Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel, vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,gsl_rng *randomGenerator);
-    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
+    NewTimeOriginOnEdgeforPopulationMove(int chainId, std::string nameMove, Population *pop, std::vector<MCMCParameterWithKernel *> &mcmcParKernel, std::vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam, long double currentlogConditionalLikelihoodTree,
+    long double currentlogConditionalLikelihoodSequences);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator,Chain* chain);
+    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,const  gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain);
 };
 class NewGlobalScaledMutationRateMove:public MCMCmove{
     Population *pop;
 public:
-    NewGlobalScaledMutationRateMove(Chain *chain, std::string nameMove, Population *pop, vector<MCMCParameterWithKernel *> &mcmcParKernel,  vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
-    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
+    NewGlobalScaledMutationRateMove(int chainId, std::string nameMove, Population *pop, std::vector<MCMCParameterWithKernel *> &mcmcParKernel,  std::vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam, long double currentlogConditionalLikelihoodTree,
+    long double currentlogConditionalLikelihoodSequences);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator,Chain* chain);
+    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain);
     void increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };
 class NewGlobalScaledGrowthRateForPopulationMove:public MCMCmove{
     Population *pop;
 public:
-    NewGlobalScaledGrowthRateForPopulationMove(Chain *chain, std::string nameMove, Population *pop,vector<MCMCParameterWithKernel *> &mcmcParKernel, vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam);
-    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
-    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
-    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, gsl_rng *randomGenerator);
+    NewGlobalScaledGrowthRateForPopulationMove(int chainId, std::string nameMove, Population *pop,std::vector<MCMCParameterWithKernel *> &mcmcParKernel, std::vector<IMCMCParameter<long double> *> &affectedParameters, MCMCVectorParameterWithKernel &vectorParam, long double currentlogConditionalLikelihoodTree,
+    long double currentlogConditionalLikelihoodSequences);
+    void makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator,Chain* chain);
+    void rollbackMove(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    long double computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,Chain* chain);
+    void  move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain);
     void increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
     void decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
 };

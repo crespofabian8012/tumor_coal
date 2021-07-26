@@ -1,5 +1,5 @@
-#ifndef definitions_h
-#define definitions_h
+#ifndef definitions_hpp
+#define definitions_hpp
 
 /* Macros */
 #define PROGRAM_NAME    "TumorCoal"
@@ -13,7 +13,7 @@
 #define	PATERNAL                1
 #define BINARY                  0
 #define	DNA                     1
-#define    MAX_NAME             120
+#define    MAX_NAME             200
 #define    MAX_LINE                3500
 #define    MAX_GENOME              1000000
 
@@ -33,34 +33,38 @@ namespace Definitions{
     static const int S = 8;
     static const int Y = 10;
     static const int K = 11;
+
+    static const int AA = 0;
+    static const int CC = 1;
+    static const int GG = 2;
+    static const int TT = 3;
+    static const int AC = 4;
+    static const int CA = 4;
+    static const int AG = 5;
+    static const int GA = 5;
+    static const int AT = 6;
+    static const int TA = 6;
+    static const int A_ = 7;
+    static const int _A = 7;
+    static const int CG = 8;
+    static const int GC = 8;
+    static const int CT = 9;
+    static const int TC = 9;
+    static const int C_ = 10;
+    static const int _C = 10;
+    static const int GT = 11;
+    static const int TG = 11;
+    static const int G_ = 12;
+    static const int _G = 12;
+    static const int T_ = 13;
+    static const int _T = 13;
+    static const int __ = 14;
+
+
 };
 
-//#define genotypes
-#define AA                      0
-#define CC                      1
-#define GG                      2
-#define TT                      3
-#define AC                      4
-#define CA                      4
-#define AG                      5
-#define GA                      5
-#define AT                      6
-#define TA                      6
-#define A_                      7
-#define _A                      7
-#define CG                      8
-#define GC                      8
-#define CT                      9
-#define TC                      9
-#define C_                      10
-#define _C                      10
-#define GT                      11
-#define TG                      11
-#define G_                      12
-#define _G                      12
-#define T_                      13
-#define _T                      13
-#define __                      14
+
+
 //A/C => M
 //A/G => R
 //A/T => W
@@ -166,5 +170,7 @@ namespace Definitions{
 
 #define HOMO(state)   (state<4)
 #define HETERO(state) (state>3)
+//#define STATES 4
+
 
 #endif /* definitions_h */

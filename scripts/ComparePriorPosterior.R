@@ -168,7 +168,9 @@ compareExponentialPriorsPosterior=function(chainPath_List,number.iterations,perc
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
           legend.title = element_blank(),
           legend.position = c(.30,.70),
-          legend.text.align = 0)+ theme_bw()+
+          legend.text.align = 0
+          )+ theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                              panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
            annotation_custom(grob1)
         #+
          # scale_colour_manual(values = c("red"), labels = c("Theor. Prior"))
@@ -186,7 +188,9 @@ compareExponentialPriorsPosterior=function(chainPath_List,number.iterations,perc
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
           legend.title = element_blank(),
           legend.position = c(.30,.90),
-          legend.text.align = 0)+ theme_bw()+
+          legend.text.align = 0
+          )+ theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                               panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
     scale_colour_manual( values=c('green','blue' ), labels=c(expression('Prior'),expression('Posterior')))+
     annotation_custom(grob2)
     
@@ -198,7 +202,8 @@ compareExponentialPriorsPosterior=function(chainPath_List,number.iterations,perc
           plot.title = element_text(size=15, face="bold", vjust=2),
           axis.title.x=element_text(size=10,face="bold",vjust=-0.5,hjust=0.5),
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
-          legend.text.align = 0)+ theme_bw()+
+          legend.text.align = 0)+ theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                                                   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
           scale_fill_manual( values=c('green','blue'), labels=c(expression('Prior'),expression('Posterior')))
   
   ggpubr::ggarrange(g1, g2, g3, 
@@ -330,7 +335,8 @@ plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_t
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
           legend.title = element_blank(),
           legend.position = "bottom",
-          legend.text.align = 0)+ theme_bw()+
+          legend.text.align = 0)+ theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                                                    panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
           annotation_custom(grob1)
  
   
@@ -346,7 +352,8 @@ plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_t
           legend.title = element_blank(),
           legend.position ="bottom",
           legend.text.align = 0)+
-         annotation_custom(grob2)+ theme_bw()+
+         annotation_custom(grob2)+ theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                                                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
     scale_colour_manual( values=color.values, labels=distrib.labels)
   
   g3<-ggplot(data.melted,aes(x=variable, y=value, fill=variable)) + geom_boxplot()+
@@ -357,7 +364,8 @@ plotPosterior=function(chainPath_List,number.iterations,percent_burn_in,values_t
           plot.title = element_text(size=15, face="bold", vjust=2),
           axis.title.x=element_text(size=10,face="bold",vjust=-0.5,hjust=0.5),
           axis.title.y=element_text(size=10,face="bold",vjust=1.5,hjust=0.5),
-          legend.text.align = 0)+ theme_bw()+
+          legend.text.align = 0)+ theme_bw()+theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                                                    panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))+
     scale_fill_manual( values=color.values, labels=distrib.labels)
   
   ggpubr::ggarrange(g1, g2, g3, 
@@ -376,6 +384,18 @@ build_mcmc_list<-function(filtered_list_chains_data, number.iterations)
     return(res)
    }
    )
+  mcmc_list=as.mcmc.list(mcmc_list)
+  return(mcmc_list)
+}
+build_mcmc_list2<-function(filtered_list_chains_data, number.iterations)
+{
+  require(coda)
+  mcmc_list<-lapply(filtered_list_chains_data, FUN=function(x)
+  {
+    res<-mcmc(data= x, start = x$state[1], end = x$state[nrow(x)], thin =  x$state[2]- x$state[1])
+    return(res)
+  }
+  )
   mcmc_list=as.mcmc.list(mcmc_list)
   return(mcmc_list)
 }

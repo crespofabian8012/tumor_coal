@@ -56,7 +56,6 @@ TreeNode::TreeNode(int numSites)
     indexOldClone = 0;
     indexCurrentClone = 0;
     orderCurrentClone = 0;
-    effectPopSize=0;
     isLeaf = NO;
     init_to_empty_str(cellName);
     init_to_empty_str(observedCellName);
@@ -86,6 +85,5 @@ void TreeNode::initSequenceVectors(int size){
         numbersMaternalMutationsPerSite.push_back(0);
         numbersPaternalMutationsPerSite.push_back(0);        
     }
-    
 }
 

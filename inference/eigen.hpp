@@ -17,22 +17,24 @@
  ##   limitations under the License.
  ##
  ################################################################################*/
-
-//  eigein.h
-//  CellCoal
 //
 //  Created by David Posada on 21/11/2017.
 //  Everything below is shamelessly taken from Yang's Paml package */
 
-//
 
 #ifndef eigein_h
 #define eigein_h
 
+extern "C"
+{
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+}
 
+
+
+namespace  linalgebra{
 int EigenREV (double mr, double Qij[], double Root[], double Cijk[]);
 //double Qij[16], mr;
 
@@ -53,6 +55,7 @@ public:
     double re;
     double im;
     complex(double re, double im);
+    complex(int re);
     complex conjj (complex a);
     complex cplus (complex a, complex b);
     complex cminus (complex a, complex b);
@@ -64,7 +67,39 @@ public:
     int cmatby (complex a[], complex b[], complex c[], int n,int m,int k);
     int cmatout (FILE * fout, complex x[], int n, int m);
     int cmatinv( complex x[], int n, int m, double space[]);
+    complex operator+(complex z){
+        return complex(re+z.re,im+z.im);
+      }
+
+      complex operator-(complex z){
+        return complex(re-z.re,im-z.im);
+      }
+
+      complex operator*(complex z){
+        return complex(re*z.re-im*z.im,re*z.im+im*z.re);
+    }
+    
+
+    complex &operator+=(const complex & z){
+        this->re += z.re;
+        this->im += z.im;
+        return *this;
+    }
+
+    complex &operator*=(const complex & z){
+        this->re = (this->re)*z.re-(this->im)*z.im;
+        this->im = (this->re)*z.im+(this->im)*z.re;
+        return *this;
+    }
+
+    complex &operator/=(double a){
+      this->re = (this->re)/ a;
+      this->im = (this->im)/ a;
+      return *this;
+    }
+
 };
 #define csize(a) (fabs(a.re)+fabs(a.im))
-
+#define csize2(a) (a.re*a.re+a.im^a.im)
+}//namespace  linalgebra
 #endif /* eigein_h */

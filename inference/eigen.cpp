@@ -18,14 +18,14 @@
  ##
  ################################################################################*/
 
-//  eigein.c
+//  eigen.c
 //  CellCoal
 //
 //  Created by David Posada on 21/11/2017.
 //  Everything below is shamelessly taken from Yang's Paml package */
 //
 #include "eigen.hpp"
-
+namespace linalgebra{
 int EigenREV (double mr, double Qij[], double Root[], double Cijk[])
 {
     /* freq[] is constant
@@ -181,6 +181,10 @@ complex::complex(double re,double im)
     this->im = im;
 }
 
+complex::complex(int re){
+    this->re = (double) (1.0 *re);
+    this->im = (double)0.0;
+}
 complex complex::conjj (complex a)
 {
     a.im = -a.im;
@@ -189,7 +193,7 @@ complex complex::conjj (complex a)
 
 #define csize(a) (fabs(a.re)+fabs(a.im))
 
-complex complex::cplus (complex a, complex b)
+complex linalgebra::complex::cplus (complex a, complex b)
 {
     double re = a.re+b.re;
     double im = a.im+b.im;
@@ -197,7 +201,7 @@ complex complex::cplus (complex a, complex b)
     return (c);
 }
 
-complex complex::cminus (complex a, complex b)
+complex linalgebra::complex::cminus (complex a, complex b)
 {
     double re = a.re-b.re;
     double im = a.im-b.im;
@@ -205,7 +209,7 @@ complex complex::cminus (complex a, complex b)
     return (c);
 }
 
-complex complex::cby (complex a, complex b)
+complex linalgebra::complex::cby (complex a, complex b)
 {
     double re = a.re*b.re-a.im*b.im ;
     double im = a.re*b.im+a.im*b.re ;
@@ -213,7 +217,7 @@ complex complex::cby (complex a, complex b)
     return (c);
 }
 
-complex complex::cdiv (complex a,complex b)
+complex linalgebra::complex::cdiv (complex a,complex b)
 {
     double ratio, den;
     complex c(0, 0);
@@ -233,7 +237,7 @@ complex complex::cdiv (complex a,complex b)
     return(c);
 }
 
-complex complex::cexpp (complex a)
+complex linalgebra::complex::cexpp (complex a)
 {
     complex c(0, 0);
     c.re = exp(a.re);
@@ -242,7 +246,7 @@ complex complex::cexpp (complex a)
     return (c);
 }
 
-complex complex::cfactor (complex x, double a)
+complex linalgebra::complex::cfactor (complex x, double a)
 {
     complex c(0,0);
     c.re = a*x.re;
@@ -250,14 +254,14 @@ complex complex::cfactor (complex x, double a)
     return (c);
 }
 
-int complex::cxtoy (complex x[], complex y[], int n)
+int linalgebra::complex::cxtoy (complex x[], complex y[], int n)
 {
     int i;
     FOR (i,n) y[i]=x[i];
     return (0);
 }
 
-int complex::cmatby (complex a[], complex b[], complex c[], int n,int m,int k)
+int linalgebra::complex::cmatby (complex a[], complex b[], complex c[], int n,int m,int k)
 /* a[n*m], b[m*k], c[n*k]  ......  c = a*b
  */
 {
@@ -272,7 +276,7 @@ int complex::cmatby (complex a[], complex b[], complex c[], int n,int m,int k)
     return (0);
 }
 
-int complex::cmatout (FILE * fout, complex x[], int n, int m)
+int linalgebra::complex::cmatout (FILE * fout, complex x[], int n, int m)
 {
     int i,j;
     for (i=0,FPN(fout); i<n; i++,FPN(fout))
@@ -280,7 +284,7 @@ int complex::cmatout (FILE * fout, complex x[], int n, int m)
     return (0);
 }
 
-int complex::cmatinv( complex x[], int n, int m, double space[])
+int linalgebra::complex::cmatinv( complex x[], int n, int m, double space[])
 {
     /* x[n*m]  ... m>=n
      */
@@ -895,5 +899,5 @@ int realeig(int job,double mat[],int n,int low, int hi, double valr[],
     }
     return(0);
 }
-
+}
 

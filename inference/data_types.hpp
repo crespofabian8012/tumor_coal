@@ -22,17 +22,18 @@
  * data types
  */
 
-#ifndef data_types_h
-#define data_types_h
+#ifndef data_types_hpp
+#define data_types_hpp
 
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iostream>
 #include "definitions.hpp"
 
+//#include <vector>
+//#include <string>
+//#include <sstream>
+#include <iostream>
 
-using namespace std;
+//#include "definitions.hpp"
+
 
 // SiteStr: information about a site
 typedef struct
@@ -148,7 +149,16 @@ public:
     double healthyTipBranchLength = 0;
     double meanAmplificationError = 0;
     double mutationRate = 0;
+    double CNLOHrate =0;
+    double meanADOcell  = 0;
+    double varADOcell= 0;
+    double meanADOsite= 0;
+    double varADOsite=0;
+    double deletionRate =0;
     int noisy = 1;
+    double fixedADOrate =0 ;
+    int doADOcell = 0;
+    int doADOsite = 0;
     double nonISMRelMutRate = 0;
     int numCells = 0;
     int numDataSets = 0;
@@ -182,7 +192,14 @@ public:
     int assignationKnown = 0;
     int numberClonesKnown = 0;
     int MutationAssignNum = 0;
-    string healthyTipLabel;
+    std::string healthyTipLabel;
+    long double K;
+    long double K_inference;
+    int totalParameterValuesFromPriors;
+    int minSampleSize;
+    int maxSampleSize;
+    double meanGenotypingError= 0;
+    double varGenotypingError=0;
     //gsl_rng * r;
 };
 
@@ -233,6 +250,8 @@ public:
      long double lambdaExponentialPriorMutationRate;
      long double lambdaExponentialPriorTotalEffectivePopSize;
      long double lambdaExponentialPriorGrowthRate;
+     long double lambdaExponentialPriorSeqError;
+     long double lambdaExponentialPriorDropoutError;
      long double sigmaNormalKernelTimeofOrigin;
      long double parameterPowerLawDistributionTotalEffectPopSize;
      long double parameterPowerLawDistributionMutationRate;
@@ -256,6 +275,10 @@ public:
      bool doMCMCMoveTimeOriginInputOldestPop;
      long double updateLengthMultiplierMCMCMove;
      bool fixedValuesForSimulation;
+     long double lambdaExponentialMutationRateSimulation;
+     long double lambdaExponentialGrowthRateSimulation;
+     int burnInIterations;
+     int numberIterationsAfterConvergence;
 };
 
 typedef struct {
@@ -289,6 +312,7 @@ typedef struct {
     char  inputTreeFile[500];
     char  inputGenotypeFileFasta[500];
     char  inputGenotypeFilePhylip[500];
+    char  likelihoodOuput[500];
 }FilePaths;
 
 
@@ -311,6 +335,8 @@ typedef struct {
     FilePath *fpCATG;
     FilePath *fpMLhaplotypes;
     FilePath *fplog;
+    FilePath *fpTreeOutput;
+    FilePath *fpLikelihood;
 }Files;
 
 

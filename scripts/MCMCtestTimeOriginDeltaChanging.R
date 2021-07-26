@@ -20,10 +20,7 @@ step.time.input <- function(current_time_input,current_delta,from, current_theta
       current_time_std = proposal_time_std
       number_accepted <- number_accepted +1
       }
-   
-    
   }
- 
   return(list(current_time_input,current_time_std, number_accepted))
 }
 step <- function(current_value, f, q, HR_Multiplier, number_accepted) {
@@ -105,7 +102,8 @@ run <- function(time_input,delta,theta, from,   f, q, f_delta, f_theta, q_multip
   drop(res_delta)
   drop(res_theta)
   drop(res_time_input)
-  return(list(res_delta,res_theta,res_time_input,res_time_std ))
+  drop(res_time_std)
+  return(list(res_delta,res_theta,res_time_input,res_time_std,number_accepted_pair,number_accepted_time ))
 }
 f <- function(x, delta, from)
 {
@@ -160,10 +158,10 @@ q_multiplier <- function(current.value)
   proposed.value
 }
 
-draw_random<-function(delta)
+draw_random<-function(delta, fromTimeSTD)
 {
   u= runif(1) 
-  result=from+ (1.0 /delta) *log(1-(delta)/log(u))
+  result=fromTimeSTD+ (1.0 /delta) *log(1-(delta)/log(u))
   return(result)
   
 }
@@ -212,18 +210,36 @@ get.thinning=function(chain_data,number.iterations, lags, threshold_corr){
 thin.chain.data=function(chain_data,number.iterations, percent_burn_in, thinning){
   if (length(chain_data)>0 && thinning >1 && percent_burn_in >=0 && percent_burn_in< 1 )
   {
-    mcmc_data<-mcmc(data= chain_data, start = 1, end = number.iterations, thin = 1)
-    number_interations_burn_in= floor(percent_burn_in * length(chain_data))
-    chain_data_after_burn_in=chain_data[(number_interations_burn_in+1):length(chain_data)]
+    chain_data_after_burn_in=removeBurnIn(chain_data,number.iterations, percent_burn_in)
     indexes<-seq(0,length(chain_data_after_burn_in),thinning)
     thinned_data=chain_data_after_burn_in[indexes]
     return(thinned_data)
   }
   
 }
+removeBurnIn<-function(chain_data,number.iterations, percent_burn_in){
+  mcmc_data<-mcmc(data= chain_data, start = 1, end = number.iterations, thin = 1)
+  number_interations_burn_in= floor(percent_burn_in * length(chain_data))
+  chain_data_after_burn_in=chain_data[(number_interations_burn_in+1):length(chain_data)]
+  return(chain_data_after_burn_in)
+}
+runChain=function(from, lambdaExponentialPriorDelta,lambdaExponentialPriorTheta, number.iterations,  
+                  f, q_transformed_multiplier, f_delta, f_theta, q_multiplier, 
+                  HR_multiplier_bounded,HR_multiplier_unbounded){
+  
+  number_accepted_pair=0
+  number_accepted_delta=0
+  delta=rexp(1,rate=lambdaExponentialPriorDelta)
+  theta =rexp(1,rate=lambdaExponentialPriorTheta)
+  fromTimeSTD= from *delta
+  time_input = draw_random(delta, fromTimeSTD)
+  list_res <- run(time_input, delta,theta, from,  f, q_transformed_multiplier, f_delta, f_theta, q_multiplier, number.iterations, 
+                  HR_multiplier_bounded,HR_multiplier_unbounded,  number_accepted_pair,number_accepted_time )
+  return(list_res)
+}
 ##############################
 
-from= 0.000408897000000000025634
+from= 0.000408897000000000025634 
 to= 5
 #from=0.035
 lambdaExponentialPriorDelta= 0.01
@@ -234,66 +250,136 @@ theta =rexp(1,rate=lambdaExponentialPriorTheta)
 #delta=200
 curve(f(x, 1.0/lambdaExponentialPriorDelta, from) , col="red", n=200, xlim=c(from,0.4), main ="Conditional density  Delta=100, lower bound 0.0004",xlab= "time of origin", ylab="density")
 
-number.iterations=2000000
-time_input = draw_random(delta)
-
+number.iterations=500000
 list.values <-  vector("list", number.iterations)
 list.values[[1]]<-time
 length.interval.multiplier=0.008
 length.interval.multiplier=0.7
 b=  (length.interval.multiplier)/2.0 + sqrt(1 + (length.interval.multiplier * length.interval.multiplier)* 0.25);
-number_accepted_pair=0
-number_accepted_delta=0
 
-list_res <- run(time_input, delta,theta, from,  f, q_transformed_multiplier, f_delta, f_theta, q_multiplier, number.iterations, 
-                HR_multiplier_bounded,HR_multiplier_unbounded,  number_accepted_pair,number_accepted_time )
-#time_input,delta,theta, from,   f, q, f_delta, q_delta,f_theta, q_theta,  nsteps, HR_multiplier_bounded,HR_multiplier_unbounded, number_accepted_pair,number_accepted_time
-res_delta = list_res[[1]]
-res_theta  =  list_res[[2]]
-res_time_input  =  list_res[[3]]
-res_time_std  =  list_res[[4]]
+
+
+list_res1 <- runChain( from, lambdaExponentialPriorDelta,lambdaExponentialPriorTheta, number.iterations,
+                       f, q_transformed_multiplier, f_delta, f_theta, q_multiplier,  
+                HR_multiplier_bounded,HR_multiplier_unbounded)
+
+list_res2 <- runChain( from, lambdaExponentialPriorDelta,lambdaExponentialPriorTheta, number.iterations,
+                       f, q_transformed_multiplier, f_delta, f_theta, q_multiplier,  
+                       HR_multiplier_bounded,HR_multiplier_unbounded )
+
+list_res3 <- runChain( from, lambdaExponentialPriorDelta,lambdaExponentialPriorTheta, number.iterations,
+                       f, q_transformed_multiplier, f_delta, f_theta, q_multiplier,  
+                       HR_multiplier_bounded,HR_multiplier_unbounded )
+
+list_res4 <- runChain( from, lambdaExponentialPriorDelta,lambdaExponentialPriorTheta, number.iterations,
+                       f, q_transformed_multiplier, f_delta, f_theta, q_multiplier,  
+                       HR_multiplier_bounded,HR_multiplier_unbounded )
+
+res_delta_chain1 = list_res1[[1]]
+res_theta_chain1 = list_res1[[2]]
+res_time_input_chain1 = list_res1[[3]]
+res_time_std_chain1 = list_res1[[4]]
+number_accepted_pair1  =  list_res1[[5]]
+number_accepted_time1  =  list_res1[[6]]
+
+res_delta_chain2 = list_res2[[1]]
+res_theta_chain2 = list_res2[[2]]
+res_time_input_chain2 = list_res2[[3]]
+res_time_std_chain2 = list_res2[[4]]
+number_accepted_pair2  =  list_res2[[5]]
+number_accepted_time2  =  list_res2[[6]]
+
+res_delta_chain3 = list_res3[[1]]
+res_theta_chain3 = list_res3[[2]]
+res_time_input_chain3 = list_res3[[3]]
+res_time_std_chain3 = list_res3[[4]]
+number_accepted_pair3  =  list_res3[[5]]
+number_accepted_time3  =  list_res3[[6]]
+
+res_delta_chain4 = list_res4[[1]]
+res_theta_chain4 = list_res4[[2]]
+res_time_input_chain4 = list_res4[[3]]
+res_time_std_chain4 = list_res4[[4]]
+number_accepted_pair4  =  list_res4[[5]]
+number_accepted_time4  =  list_res4[[6]]
 
 layout(matrix(c(1, 2), 1, 2), widths=c(4, 1))
 par(mar=c(4.1, .5, .5, .5), oma=c(0, 4.1, 0, 0))
-plot(res_delta, type="s", xpd=NA, ylab="Parameter", xlab="Sample", las=1)
+plot(res_delta_chain1, type="s", xpd=NA, ylab="Parameter", xlab="Sample", las=1)
 usr <- par("usr")
 xx <- seq(usr[3], usr[4], length=301)
 plot(f_delta(xx), xx, type="l", yaxs="i", axes=FALSE, xlab="")
 
-hist(res_delta, 50, freq=FALSE, main="", las=1,
+hist(res_delta_chain1, 50, freq=FALSE, main="", las=1,
      xlab="x", xlim=c(0, 1000), ylab="Probability density")
 z <- integrate(f_delta, 0, Inf)$value
 curve(f_delta(x) / z, add=TRUE, col="red", n=200)
 
-hist(res_theta, 50, freq=FALSE, main="", las=1,
+hist(res_theta_chain1, 50, freq=FALSE, main="", las=1,
      xlab="x", xlim=c(0, 0.1), ylab="Probability density")
 z <- integrate(f_theta, 0, Inf)$value
 curve(f_theta(x) / z, add=TRUE, col="red", n=200)
 
-hist(res_time_input, 50, freq=FALSE, main="", las=1,
+hist(res_time_input_chain1, 50, freq=FALSE, main="", las=1,
      xlab="x", xlim=c(from, 0.1), ylab="Probability density")
 
-hist(res_time_std, 50, freq=FALSE, main="", las=1,
+hist(res_time_std_chain1, 50, freq=FALSE, main="", las=1,
      xlab="x", ylab="Probability density")
 
 library(coda)
-mcmcTime<-coda::mcmc(data= res_time_std, start = 1, end = number.iterations, thin = 1)
+mcmcTime<-coda::mcmc(data= res_time_std_chain2, start = 1, end = number.iterations, thin = 1)
 mcmc_list=as.mcmc.list(mcmcTime)
 #gelman.diag(mcmc_list, confidence = 0.95,  autoburnin=TRUE,
    #         multivariate=TRUE)
 lags = c(100, 200, 500, 1000)
 threshold_corr=0.1
-thinning.delta<-get.thinning(res_delta,number.iterations, lags, threshold_corr)
-thinning<-get.thinning(res_time_std,number.iterations, lags, threshold_corr)
+thinning.delta_chain1<-get.thinning(res_delta_chain1,number.iterations, lags, threshold_corr)
+thinning.time.std_chain1<-get.thinning(res_time_std_chain1,number.iterations, lags, threshold_corr)
+thinning.time.std_chain2<-get.thinning(res_time_std_chain2,number.iterations, lags, threshold_corr)
+thinning.time.std_chain3<-get.thinning(res_time_std_chain3,number.iterations, lags, threshold_corr)
+thinning.time.std_chain4<-get.thinning(res_time_std_chain4,number.iterations, lags, threshold_corr)
+
+thinning.time.input_chain1<-get.thinning(res_time_input_chain1,number.iterations, lags, threshold_corr)
+thinning.time.input_chain2<-get.thinning(res_time_input_chain2,number.iterations, lags, threshold_corr)
+thinning.time.input_chain3<-get.thinning(res_time_input_chain3,number.iterations, lags, threshold_corr)
+thinning.time.input_chain4<-get.thinning(res_time_input_chain4,number.iterations, lags, threshold_corr)
+
+
+
 percent_burn_in=0.1
 
-thinned_res_delta=thin.chain.data(res_delta,number.iterations, percent_burn_in, thinning)
-thinned_res_time=thin.chain.data(res_time_std,number.iterations, percent_burn_in, thinning)
+remove_burnIn_res_delta_chain1=removeBurnIn(res_delta_chain1,number.iterations, percent_burn_in)
+remove_burnIn_res_time_chain1=removeBurnIn(res_time_std_chain1,number.iterations, percent_burn_in)
+remove_burnIn_res_time_chain2=removeBurnIn(res_time_std_chain2,number.iterations, percent_burn_in)
+remove_burnIn_res_time_chain3=removeBurnIn(res_time_std_chain3,number.iterations, percent_burn_in)
+remove_burnIn_res_time_chain4=removeBurnIn(res_time_std_chain4,number.iterations, percent_burn_in)
 
-hist(thinned_res_time, 100000, freq=FALSE, main="", las=1,
+remove_burnIn_res_time_input_chain1=removeBurnIn(res_time_input_chain1,number.iterations, percent_burn_in)
+remove_burnIn_res_time_input_chain2=removeBurnIn(res_time_input_chain2,number.iterations, percent_burn_in)
+remove_burnIn_res_time_input_chain3=removeBurnIn(res_time_input_chain3,number.iterations, percent_burn_in)
+remove_burnIn_res_time_input_chain4=removeBurnIn(res_time_input_chain4,number.iterations, percent_burn_in)
+
+remove_burnIn_res_time_std=c(remove_burnIn_res_time_chain1, remove_burnIn_res_time_chain2, remove_burnIn_res_time_chain3, remove_burnIn_res_time_chain4)
+
+remove_burnIn_res_time_input=c(remove_burnIn_res_time_input_chain1, remove_burnIn_res_time_input_chain2, remove_burnIn_res_time_input_chain3, remove_burnIn_res_time_input_chain4)
+
+
+max_thinning_time_std = max(thinning.time.std_chain1, thinning.time.std_chain2, thinning.time.std_chain3, thinning.time.std_chain4)
+max_thinning_time_input=max(thinning.time.input_chain1, thinning.time.input_chain2, thinning.time.input_chain3, thinning.time.input_chain4)
+
+thinned_res_time_std1= thin.chain.data(res_time_std_chain1, number.iterations, percent_burn_in, max_thinning_time_std)
+thinned_res_time_std2= thin.chain.data(res_time_std_chain2, number.iterations, percent_burn_in, max_thinning_time_std)
+thinned_res_time_std3= thin.chain.data(res_time_std_chain3, number.iterations, percent_burn_in, max_thinning_time_std)
+thinned_res_time_std4= thin.chain.data(res_time_std_chain4, number.iterations, percent_burn_in, max_thinning_time_std)
+
+thinned_res_time_std=c(thinned_res_time_std1, thinned_res_time_std2, thinned_res_time_std3, thinned_res_time_std4)
+hist(thinned_res_time_std, 100000, freq=FALSE, main="", las=1,
      xlab="x", xlim=c(0, 100), ylab="Probability density")
 
-print(mean(thinned_res_time))
+print(mean(thinned_res_time_std))
+print(median(thinned_res_time_std))
+
+
 
 library(ggplot2)
 require(data.table)
@@ -308,18 +394,9 @@ require(coda)
 ######################################
 source("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/ComparePriorPosterior.R")
 number.iterations =500000
-path="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/benchmarking/NoDataFixedT=0.5/0AfixedTimeOriginExpPriors_2priors/500000_not_thinned/ThetaDeltaTTimeOrigin"
-chain1path<-paste(path, "log00_new.log", sep="/")
-chain2path<-paste(path, "log01_new.log", sep="/")
-chai3path<-paste(path, "log02_new.log", sep="/")
-chain4path<-paste(path, "log03_new.log", sep="/")
-#list_paths=c(chain1path,chain2path, chain3path, chain2path )
-list_paths=c(chain1path, chain2path, chai3path, chain4path )
-#exponential  --2 priors
-
 lambda1=100
-number.iterations =500000
 path="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/benchmarking/NoDataFixedT=0.5/0AfixedTimeOriginExpPriors_2priors/500000_not_thinned/ThetaDeltaTTimeOrigin"
+path="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/benchmarking/NoDataFixedT=0.5/0AfixedTimeOriginExpPriors_2priors/500000_not_thinned/ThetaDeltaTTimeOriginSTDandInput"
 chain1path<-paste(path, "log00_new.log", sep="/")
 chain2path<-paste(path, "log01_new.log", sep="/")
 chai3path<-paste(path, "log02_new.log", sep="/")
@@ -331,4 +408,6 @@ compareExponentialPriorsPosterior(list_paths,number.iterations, 0.1, "theta", la
 lambda2=0.01
 compareExponentialPriorsPosterior(list_paths,number.iterations, 0.1, "deltaT", lambda2, 0, path)
 
-plotPosterior(list_paths,number.iterations, 0.1,thinned_res_time,  "time_origin_std", path)
+plotPosterior(list_paths,number.iterations, 0.1,remove_burnIn_res_time_std, max_thinning_time_std,  "time_origin_std", path)
+
+plotPosterior(list_paths,number.iterations, 0.1,remove_burnIn_res_time_input,max_thinning_time_input,  "time_origin_input", path)

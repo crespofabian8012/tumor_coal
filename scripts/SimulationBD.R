@@ -290,7 +290,7 @@ get.most.probable.number.of.ancestors.population.present.time2=function(sample.s
 {
 
     u=runif(1,0,1)
-    print(u)
+    #print(u)
     mprime=solve.cumulative.density.number.ancestors.population.present.time(u, sample.size)
     return(mprime)
   
@@ -372,7 +372,7 @@ simulate.coalescent.times.A1=function(lambda, mu, rho,sample.size, list.number.a
   return(unlist(list.coal.times))
 }
 #############################################################################################
-sim=10
+sim=1000
 sample.size=20
 lambda=1
 mu=0.99
@@ -385,11 +385,11 @@ invisible(lapply(1:sim, FUN=function(i, sample.size, lambda, mu, rho, coal.event
   {
  
    list.number.ancestors.population= simulate.list.number.ancestors.population(sample.size)
-   print(unlist(list.number.ancestors.population))
+   #print(unlist(list.number.ancestors.population))
   list.number.ancestors.population.sim[i,] <<-list.number.ancestors.population
   list.coal.times= simulate.coalescent.times.A1(lambda, mu, rho,sample.size, list.number.ancestors.population)
   coal.events.times =cumsum(list.coal.times)
-  print(unlist(coal.events.times))
+  #print(unlist(coal.events.times))
   #coal.events.times=c(0,coal.events.times)
   coal.events.times.sim[i,] <<- coal.events.times
   print(paste0("finished sim",i, sep=" "))
@@ -407,7 +407,11 @@ saveRDS(mean.number.population.ancestors, "~/project3/test/mean.events.times.rds
 population=colSums(list.number.ancestors.population.sim)/sim
 
 padded.coal.events.times.sim=cbind(rep(0,sim) , coal.events.times.sim)
+
 padded.list.number.ancestors.population.sim=cbind( list.number.ancestors.population.sim, rep(0,sim))
+population.present.time =padded.list.number.ancestors.population.sim[,1]
+vector.population.present.time =rep(c(population.present.time,mean(population.present.time)), rep(sample.size+1, sim+1))
+  
 rev.padded.coal.events.times.sim<-t(apply(padded.coal.events.times.sim,1,function(x) rev(x)))
 all.times.population=as.vector(t(padded.coal.events.times.sim))
 sample.sizes=rep(0:sample.size,sim+1)
@@ -417,8 +421,11 @@ num.sim=rep(1:(sim), rep(sample.size+1, sim))
 population.dataframe=data.frame(sample.sizes, event.time=c(all.times.population,0,mean.events.times) , 
                                 population.size=c(population.sizes, 0,mean.number.population.ancestors), num.sim=c(num.sim, rep(sim+1,sample.size+1)))
 population.dataframe$simulation= paste0("simulation", population.dataframe$num.sim)
-
-
+population.dataframe[population.dataframe$simulation == paste0("simulation", sim+1),]$simulation= "average"
+population.dataframe$population.present.time=vector.population.present.time
+population.dataframe$relative.population.size = population.dataframe$population.size / population.dataframe$population.present.time
+  
+  
 pdf("~/project3/test/plotScenarioAStochastic5.pdf")
 plot(mean.events.times,1:sample.size,ylab="Origin (i=1), Number of ancestors (i>1)",xlab="Time until i-1 ancestors",pch=19,col="orange")
 
@@ -434,26 +441,28 @@ pdf("~/project3/test/plotScenarioAStochastic3.pdf")
 plot(population,mean.events.times,xlab="Origin (i=1), Number of ancestors population(i>1)",ylab="Time until i-1 ancestors",pch=19,col="orange")
 
 dev.off()
-#Scenario A with deterministic  population size(expected population size)
-# for (k in 1:length(Torigin)) {
-#   for (i in 1:sim) times[i,] <- modelCoal(n,Torigin[k],Delta)
-#   xx <- colSums(times)/sim
-# 
-# }
+
 
 #Scenario B with deterministic  population size(expected population size)
 
 library(ggplot2)
-
+library(dplyr, warn.conflicts = FALSE)
+library(gghighlight)
 # This example uses the ChickWeight dataset, which comes with ggplot2
 # First plot
 dev.off()
 
+
+
+max.Avg.Y=max(population.dataframe[population.dataframe$simulation=="average",]$population.size)
+min.Avg.Y=min(population.dataframe[population.dataframe$simulation=="average",]$population.size)
+max.Avg.X=max(population.dataframe[population.dataframe$simulation=="average",]$event.time)
 plot.new()
 p1 <- ggplot(population.dataframe, aes(x=event.time, y=population.size))+
   geom_line(aes(colour=simulation))+
-  ylim(19,2000)+
-  xlim(0,310)+
+  gghighlight(simulation == "average")+
+  ylim(min.Avg.Y,max.Avg.Y)+
+  xlim(0,max.Avg.X)+
   xlab("Time(forward)") +
   ylab("Number of population ancestors") +
   theme(legend.position = "none") +
@@ -463,22 +472,69 @@ p1 <- ggplot(population.dataframe, aes(x=event.time, y=population.size))+
   #      colour = "yellow")+
 p1 + theme(legend.position = "none") 
 
+
+
 # Second plot
-p2 <- ggplot(ChickWeight, aes(x=Time, y=weight, colour=Diet)) +
-  geom_point(alpha=.3) +
-  geom_smooth(alpha=.2, size=1) +
-  ggtitle("Fitted growth curve per diet")
+plot.new()
+p2 <- ggplot(population.dataframe, aes(x=sample.sizes, y=population.size))+
+  geom_line(aes(colour=simulation))+
+  gghighlight(simulation == "average")+
+  ylim(min.Avg.Y,max.Avg.Y)+
+  xlim(0,21)+
+  xlab("Number ancestors sample") +
+  ylab("Number of population ancestors") +
+  theme(legend.position = "none") +
+  ggtitle("Stochastic population growth")
+#geom_point(aes(x=c(0,mean.events.times),y=c(0,mean.number.population.ancestors)), 
+#     pch = 16,
+#      colour = "yellow")+
+p2 + theme(legend.position = "none") 
 
 # Third plot
-p3 <- ggplot(subset(ChickWeight, Time==21), aes(x=weight, colour=Diet)) +
-  geom_density() +
-  ggtitle("Final weight, by diet")
+plot.new()
+p3 <- ggplot(population.dataframe, aes(x=event.time, y=sample.sizes ))+
+  geom_line(aes(colour=simulation))+
+  gghighlight(simulation == "average")+
+  ylim(0,21)+
+  xlim(0,350)+
+  xlab("Time(forward)") +
+  ylab("Number ancestors sample") +
+  theme(legend.position = "none") +
+  ggtitle("Stochastic population growth")
+#geom_point(aes(x=c(0,mean.events.times),y=c(0,mean.number.population.ancestors)), 
+#     pch = 16,
+#      colour = "yellow")+
+p3 + theme(legend.position = "none") 
+
 
 # Fourth plot
-p4 <- ggplot(subset(ChickWeight, Time==21), aes(x=weight, fill=Diet)) +
-  geom_histogram(colour="black", binwidth=50) +
-  facet_grid(Diet ~ .) +
-  ggtitle("Final weight, by diet") +
-  theme(legend.position="none")        # No legend (redundant in this graph)    
+plot.new()
+p4 <- ggplot(population.dataframe, aes(x=event.time, y=relative.population.size ))+
+  geom_line(aes(colour=simulation))+
+  gghighlight(simulation == "average")+
+  ylim(0,1)+
+  xlim(0,350)+
+  xlab("Time(forward)") +
+  ylab("Relative population size") +
+  theme(legend.position = "none") +
+  ggtitle("Stochastic population growth")
+#geom_point(aes(x=c(0,mean.events.times),y=c(0,mean.number.population.ancestors)), 
+#     pch = 16,
+#      colour = "yellow")+
+p4 + theme(legend.position = "none")   
 
 multiplot(p1, p2, p3, p4, cols=2)
+
+####################################################################################
+Torigin= c(23,14,56,67)
+N=1000
+M =N / lambda
+Delta= (lambda -mu)*M
+times= array(0,dim=c(sim,sample.size))
+#Scenario A with deterministic  population size(expected population size)
+for (k in 1:length(Torigin)) 
+  {
+  for (i in 1:sim) times[i,] <- modelCoal(n,Torigin[k],Delta)
+  xx <- colSums(times)/sim
+
+}

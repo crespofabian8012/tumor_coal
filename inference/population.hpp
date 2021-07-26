@@ -22,15 +22,18 @@
  * tumor population class
  */
 
-#ifndef Population_hpp
-#define Population_hpp
+#ifndef population_hpp
+#define population_hpp
 
-#include <stdio.h>
+
+#include "tree_node.hpp"
 #include <vector>
-#include <gsl/gsl_rng.h>
+
+#include <boost/random.hpp>
 
 extern "C"
 {
+#include <gsl/gsl_rng.h>
 #include "libpll/pll.h"
 #include "libpll/pll_tree.h"
 #include "libpll/pll_optimize.h"
@@ -38,15 +41,14 @@ extern "C"
 #include "libpll/pllmod_common.h"
 }
 
-#include "tree_node.hpp"
-//#include "mcmc_parameter.hpp"
+
+//#include "tree_node.hpp"
+
 class MCMCoptions;
 class ProgramOptions;
 class MCMCParameterWithKernel;
 template<typename T>
 class MCMCParameter;
-
-
 
 class Population
 {
@@ -69,14 +71,12 @@ public:
     long double oldx;
     long double theta;
     long double oldTheta;
-    long double effectPopSize;
-    long double oldeffectPopSize;
+
     long double birthRate, deathRate, growthRate;
     long double oldDeathRate, oldGrowthRate;
     int sampleSize; // number of cells in the population
     int oldSampleSize; // number of cells in the population
-    unsigned long popSize; // total number of cells (unknown at inference)
-    unsigned long oldPopSize;
+
     int numActiveGametes; // number of (currently) living cells
     int numGametes; // ???
     int numCompletedCoalescences;
@@ -121,17 +121,19 @@ public:
     
 public:
     Population(int ind, int ord, long double timeOriginInput,
-               int sampleSize, int popSize, long double birthRate,
+               int sampleSize,int totalSampleSize, int popSize,int totalPopSize, long double birthRate,
                long double deathRate, bool estimateTOR);
     Population(int ind, int ord, long double timeOriginInput,
                int sampleSize, int popSize, long double birthRate,
                long double deathRate, bool estimateTOR, MCMCoptions &mcmcOptions);
+    Population(int ind, int ord, int sampleSize, long double delta, long double theta,
+               ProgramOptions &programOptions);
     
-    long double ProbabilityComeFromPopulation(Population *PopJ, std::vector<Population*> &populations, int numClones);
-    static long double FmodelTstandard (long double t, long  double TOrigin, long double delta);
-    static long double GstandardTmodel (long double V, long double TOrigin, long double delta);
-    static long double LogProbNoCoalescentEventBetweenTimes(long double from, long double to, int numberActiveInd, long double TOrigin, long double delta);
-    static long double CalculateH (long double t, long double TOrigin, long double delta);
+    long double ProbabilityComeFromPopulation(Population *PopJ, std::vector<Population*> &populations, int numClones, long double K);
+    static long double FmodelTstandard (long double t, long  double TOrigin, long double delta, long double K);
+    static long double GstandardTmodel (long double V, long double TOrigin, long double delta, long double K);
+    static long double LogProbNoCoalescentEventBetweenTimes(long double from, long double to, int numberActiveInd, long double TOrigin, long double delta,  long double K);
+    static long double CalculateH (long double t, long double TOrigin, long double delta, long double K);
     static bool comparePopulationsPairByTimeOrigin(const std::pair<long double, Population *> s1, const std::pair<long double, Population *> s2);
     static long double DensityTimeSTD(long double u, long double deltaPar, long double from);
     static int compare (const void * a, const void * b);
@@ -141,19 +143,19 @@ public:
     
     
     void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, long *seed, int choosePairIndividuals);
-    void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, gsl_rng *randomGenerator, int choosePairIndividuals);
+    void ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, const gsl_rng *randomGenerator, int choosePairIndividuals);
     void InitCoalescentEvents(int numClones);
     void resetGametesCounters();
     
     void resetActiveGametes();
     static int bbinClones (long double dat, long double *v, int n);
     long double DensityTime( long double u);
-    long double LogProbNoCoalescentEventBetweenTimes(long double from, long double to, int numberActiveInd);
+    long double LogProbNoCoalescentEventBetweenTimes(long double from, long double to, int numberActiveInd,  long double K);
     void filterAndSortCoalescentEvents();
     void multiplyCoalescentsEventByFactor(long double factor);
     void multiplyMigrationsTimesByFactor(long double factor);
     long double LogDensityTime(long double u);
-    static long double LogCalculateH (long double t, long double TOrigin, long double delta);
+    static long double LogCalculateH (long double t, long double TOrigin, long double delta, long double K);
     long double LogDensityTime2(long double u);
     long double DensityTimeSTD(long double u, long double from);
     long double LogDensityTimeSTDFrom(long double u, long double from);
@@ -171,6 +173,7 @@ public:
     void setScaledTimeOriginInputTree(long double scaledTimeOriginInputTree);
     void setTheta(long double theta);
     void setProportion(long double x);
+    void setPopulationToriginConditionalDelta( const gsl_rng *rngGsl );
     
 private:
     static bool isNotPositive(long double d);
@@ -186,28 +189,30 @@ public:
     
     void initPopulation();
     
-    vector<long double> samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions,  gsl_rng * randomGenerator );
+    std::vector<long double> samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, const gsl_rng * randomGenerator );
     void  setPopulationsBirthRate( long double  lambda);
-    void initPopulationSampleSizes(vector<int> &sampleSizes);
+    void  setPopulationsToriginConditionalDelta( const gsl_rng *rngGsl );
+    void initPopulationSampleSizes(std::vector<int> &sampleSizes);
     Population * getPopulationbyIndex(int indexPopulation);
     void initPopulationGametes();
     void initPopulationRTips();
-    void initProportionsVectorFromSampleSizes(vector<int> &sampleSizes);
+    void initProportionsVectorFromSampleSizes(std::vector<int> &sampleSizes);
     void initPopulationsThetaDelta(long double theta);
     void  initListPossibleMigrations();
     void initPopulationsCoalescentEvents();
     void initProportionsVector();
-    vector <long double> getDeltaTs();
-    vector <long double> getDeltas();
-    vector <long double> getTs();
-    vector <long double> getSampleSizes();
-    Population* ChooseFatherPopulation( Population  *PopChild,  gsl_rng *randomGenerator, int noisy);
+    std::vector <long double> getDeltaTs();
+    std::vector <long double> getDeltas();
+    std::vector <long double> getTs();
+    std::vector <long double> getSampleSizes();
+    Population* ChooseFatherPopulation( Population  *PopChild,  const gsl_rng *randomGenerator, int noisy, long double K);
     void AssignSequencesToPopulations(std::vector<pll_rnode_t*> rnodes,
                                                      ProgramOptions &programOptions,
                                                      int noisy,  int TotalTumorSequences,
                                                      int &numActiveGametes, int &nextAvailable,
-                                                     int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames, vector<int> &sampleSizes);
+                                                     int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames, std::vector<int> &sampleSizes);
     std::vector<Population *>& getPopulations();
+    
 };
 class StructuredCoalescentTree{
 public:
@@ -216,49 +221,60 @@ public:
     long double oldTheta;
     int currentNumberEdgesRootedTree;
     PopulationSet * populationSet;
-    vector<int> sampleSizes;
+    std::vector<int> sampleSizes;
     pll_rnode_t *root;
     pll_rtree_t *rtree;
     pll_rnode_t *healthyTip;
-    vector<pll_rnode_t *> rnodes;
-    vector<pll_rnode_t *> rtreeTips;
+    std::vector<pll_rnode_t *> rnodes;
+    std::vector<pll_rnode_t *> rtreeTips;
     std::vector<pll_tree_edge_t *> edges;
-    std::vector<pair<double, pll_tree_edge_t *> > edgeLengths;
+    std::vector<std::pair<double, pll_tree_edge_t *> > edgeLengths;
+    long double logLikelihoodTree;
+    long double logLikelihoodSequences;
+    long double seqErrorRate;
+    long double dropoutRate;
 public:
-    StructuredCoalescentTree(int numClones, vector<int> &sampleSizes, long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions, gsl_rng *  randomGenerator, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, string& healthyTipLabel);
-    StructuredCoalescentTree(PopulationSet *populationSet, vector<int> &sampleSizes, long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions, gsl_rng *  randomGenerator, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, string& healthyTipLabel );
+    StructuredCoalescentTree(int numClones, std::vector<int> &sampleSizes, long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions,const gsl_rng *rngGsl,
+    boost::mt19937 *rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel,  long double seqErrorRate,
+       long double dropoutRate);
+    StructuredCoalescentTree(PopulationSet *populationSet, std::vector<int> &sampleSizes, long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions, const gsl_rng *rngGsl,
+       boost::mt19937 *rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel,  long double seqErrorRate,
+       long double dropoutRate );
     PopulationSet& getPopulationSet();
     pll_rtree_t* getTree();
     pll_rnode_t* getRoot();
     void addEdgeFromNode(pll_rnode_t *node );
     void RelabelNodes2(pll_rnode_t *p, int &intLabel);
     void initEdgesRootedTree(int numberTips);
-    vector <long double> getDeltaTs();
-    vector <long double> getDeltas();
-    vector <long double> getTs();
-    vector <long double> getSampleSizes();
-    void SimulatePopulation( Population &popI,
-                            ProgramOptions &programOptions,
-                            gsl_rng *randomGenerator,
-                            int &numNodes,
-                            int numClones,
-                            int &nextAvailable,
-                            int &numActiveGametes,
-                            int &labelNodes,
-                            long double  &currentTime,
-                            int &eventNum);
-    pll_rnode_t * MakeCoalescenceTree (gsl_rng * randomGenerator,
+    std::vector <long double> getDeltaTs();
+    std::vector <long double> getDeltas();
+    std::vector <long double> getTs();
+    std::vector <long double> getSampleSizes();
+    void SimulatePopulation(Population &popI,
+                                     ProgramOptions &programOptions,
+                                     const gsl_rng *rngGsl,
+                                     boost::mt19937 *rngBoost,
+                                     int &numNodes,
+                                     int numClones,
+                                     int &nextAvailable,
+                                     int &numActiveGametes,
+                                     int &labelNodes,
+                                     long double  &currentTime,
+                                     int &eventNum,
+                                     long double K);
+    pll_rnode_t * MakeCoalescenceTree (const gsl_rng *rngGsl,
+                                       boost::mt19937 *rngBoost,
                                        pll_msa_t *msa,
                                        int &numNodes,
                                        ProgramOptions &programOptions,
                                         std::vector<std::vector<int> > &ObservedData,
                                         char* ObservedCellNames[],
-                                        vector<int> &sampleSizes) ;
+                                        std::vector<int> &sampleSizes) ;
 
-    void MakeCoalescenceEvent( Population &population,gsl_rng *randomGenerator, int noisy,   int &numActiveGametes, int &nextAvailable,
+    void MakeCoalescenceEvent( Population &population, const gsl_rng *randomGenerator, int noisy,   int &numActiveGametes, int &nextAvailable,
                               int &labelNodes, long double  &currentTime, int &numNodes);
     pll_rnode_t* BuildTree(Population *CurrentPop,
-                           gsl_rng *randomGenerator,
+                           const gsl_rng *randomGenerator,
                            ProgramOptions &programOptions,
                            pll_rnode_t *tumour_mrca,
                            int &nextAvailable,
@@ -266,6 +282,16 @@ public:
                            long double   &currentTime,
                            int &labelNodes);
     
-     
+    long double SumLogProbFatherPopulations(long double K);
+    static long double SumLogProbFatherPopulations(std::vector<Population *> populations, int numClones, long double K);
+    long double SumLogDensitiesTimeOriginSTDPopulations();
+    static long double SumLogDensitiesTimeOriginSTDPopulations(std::vector<Population *> populations, int numClones, long double K);
+    void initLogLikelihoodSequences(const ProgramOptions &programOptions, const pll_msa_t *msa);
+    long double  LogDensityCoalescentTimesForPopulation(long double K);
+    static long double  LogDensityCoalescentTimesForPopulation(std::vector<Population *> populations, int numClones, long double K);
+ 
+    long double getLogLikelihoodTree() const{return logLikelihoodTree;}
+    long double getLogLikelihoodSequences() const{return logLikelihoodSequences;}
+    
 };
 #endif /* Population_hpp */

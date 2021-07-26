@@ -22,12 +22,8 @@
  * output functions
  */
 #include "output_functions.hpp"
-//#include <fstream>
-//#include <iomanip>
+
 #include "utils.hpp"
-
-
-
 
 
 /***************************** PrintUsage *******************************/
@@ -94,27 +90,16 @@ void Output::WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int 
     {
         if(p->isOutgroup == YES)            /* Outgroup*/
         {
-            /*            fprintf (fpTrees, ",outgroup:%8.6f)",p->length*mutationRate);*/
-            //fprintf (fpTrees, ",outgroup:%8.6f",p->length*mutationRate);
             strcpy( p->cellName,"healthycell");
             strcpy( p->observedCellName,"healthycell");
-            //p->cellName[MAX_NAME]=0;
-            //                fprintf (fpTrees, ",outgroup:%10.9lf",p->length);
-            //fprintf (fpTrees, ",outgroup:%10.9lf",(p->anc1->time- p->time)*mutationRate);
             fprintf (fpTrees, "healthycell:%10.9Lf",(p->anc1->time- p->time)*mutationRate);
         }
         else if (p->left == NULL && p->right == NULL)        /* tip of the tree */
         {
-            //fprintf (stderr, "\n\n>> p->index = %d, p->class = %d \n\n", p->index, p->class);
-            //fprintf (fpTrees, "samp%05d_C%dR%d:%8.6f", p->index,p->indexOldClone,p->indexOldRegion,(p->anc1->time-p->time)*mutationRate);
-            //   snprintf(buffer, sizeof(buffer), "tip_i%05d_C%d_%d", p->index,p->indexOldClone,p->indexCurrentClone);
             snprintf(buffer, sizeof(buffer), "tip_i%05d_C%d_%d", p->index,p->indexOldClone,p->indexCurrentClone);
             strcpy( p->cellName,buffer);
-            //strncpy( p->cellName,buffer, sizeof(p->cellName)-1);
-            // p->cellName[MAX_NAME]=0;
-            //            fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.9lf", p->index,p->indexOldClone,p->indexCurrentClone,(p->anc1->time-p->time)*mutationRate);
-            //fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.9lf", p->index,p->indexOldClone,p->indexCurrentClone,(p->anc1->time- p->time)*mutationRate);
             fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.9Lf", p->index,p->indexOldClone,p->indexCurrentClone,(p->anc1->time- p->time)*mutationRate);
+            
         }
         else                                /* all ancester */
         {
@@ -127,28 +112,13 @@ void Output::WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int 
             }
             if (p->anc1 !=NULL)
             {
-                //fprintf (fpTrees, "):%8.6f",(p->anc1->time-p->time)*mutationRate);
-                //snprintf(buffer, sizeof(buffer), "int_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
                 snprintf(buffer, sizeof(buffer), "int_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
                 strcpy( p->cellName,buffer);
-                //strncpy( p->cellName,buffer, sizeof(p->cellName)-1);
-                //p->cellName[MAX_NAME]=0;
-                //                 fprintf (fpTrees, "):%10.9lf", (p->anc1->time-p->time)*mutationRate);
                 fprintf (fpTrees, "):%10.9Lf", (p->anc1->time- p->time)*mutationRate);
-                
-                //                fprintf (fpTrees, ")int_i%05d_C%d_%d:%10.9lf",p->index, p->indexOldClone, p->indexCurrentClone, (p->anc1->time-p->time)*mutationRate);
             }
             if (p->anc1 ==NULL)  {
-                
-                //snprintf(buffer, sizeof(buffer), "root_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
                 snprintf(buffer, sizeof(buffer), "root_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
                 strcpy( p->cellName,buffer);
-                //strncpy( p->cellName,buffer, sizeof(p->cellName)-1);
-                //p->cellName[MAX_NAME]=0;
-                //                    fprintf (fpTrees, ")"  );
-                //                  fprintf (fpTrees, "):0.00"  );
-                //               fprintf (fpTrees, ")root_i%05d_C%d_%d:0.00", p->index,p->indexOldClone,p->indexCurrentClone );
-                
             }
             WriteTree (p->outgroup, mutationRate, fpTrees, doUseObservedCellNames);
         }
@@ -163,18 +133,10 @@ void Output::WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, c
     {
         if (p->isOutgroup == YES)     /* Outgroup */
         {
-            /*      fprintf (fpTrees2, ",outgroup:%8.6f)",p->length*mutationRate);*/
-            //fprintf (fpTrees2, ",outgroup:%8.6f",p->length*mutationRate);
-            //fprintf (fpTrees2, ",outgroup:%10.9lf", p->length * mutationRate);
-            //fprintf (fpTrees2, "healthycell:%10.9lf", p->length * mutationRate);
-            //fprintf (fpTrees2, "healthycell:%10.9lf", p->length * mutationRate);
             fprintf (fpTrees2, "healthycell:%10.9Lf", (p->anc1->timePUnits - p->timePUnits) * mutationRate);
         }
         else if (p->left == NULL && p->right == NULL)   /* tip of the tree */
         {
-            //fprintf (fpTrees2, "samp%05d_C%dR%d:%8.6f", p->index,p->indexOldClone,p->indexOldRegion,(p->anc1->time-p->time)*mutationRate);
-            // fprintf (fpTrees2, "tip_i%05d_C%d_%d:%10.9lf", p->index, p->indexOldClone,p->indexCurrentClone, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
-            //fprintf (fpTrees2, "tip_i%05d_C%d_%d:%10.9lf", p->index, p->indexOldClone,p->indexCurrentClone, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
             if (doUseObservedCellNames == YES)
             {
                 if (strcmp(cellNames[*indexCurrentCell],"healthycell")==0)
@@ -184,7 +146,6 @@ void Output::WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, c
                 fprintf (fpTrees2, "%s:%10.9Lf", p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
             else
                 fprintf (fpTrees2, "%s:%10.9Lf", p->cellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
-            // fprintf (fpTrees2, "%s:%10.9lf", cellNames[*indexCurrentCell], (p->anc1->timePUnits - p->timePUnits)*mutationRate);
             *indexCurrentCell =*indexCurrentCell+1;
         }
         else                /* all ancester */
@@ -198,13 +159,9 @@ void Output::WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, c
             }
             if (p->anc1 != NULL)
             {
-                //                //fprintf (fpTrees2, "):%8.6f",(p->anc1->time-p->time)*mutationRate);
-                //                fprintf (fpTrees2, ")int_i%05d_C%d:%10.9lf", p->index, p->indexCoalClone, (p->anc1->timePUnits - p->timePUnits)*1);
                 fprintf (fpTrees2, "):%10.9Lf",  (p->anc1->timePUnits - p->timePUnits)*mutationRate);
             }
             if (p->anc1 ==NULL)  {
-                //                  fprintf (fpTrees2, ")root_i%05d_C%d_%d:0.00", p->index,p->indexOldClone,p->indexCurrentClone );
-                //                 fprintf (fpTrees2, "):0.00" );
             }
             WriteTree2 (p->outgroup, mutationRate, fpTrees2,  cellNames, indexCurrentCell, doUseObservedCellNames);
         }
@@ -363,7 +320,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, 
     char *temp;
     TreeNode *p;
     
-    TreeNode * healthyTip= getHealthyTip(treeRoot);
+    TreeNode * healthyTip= Output::getHealthyTip(treeRoot);
     if (alphabet == DNA)
     {
         
@@ -497,13 +454,288 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, 
     }
 }
 
+/***************************** PrintSNVGenotypes *******************************/
+/* Prints variable genotypes  to a file */
+void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
+                                int numSNVs, std::vector<int> &SNVsites)
+{
+    int         i, j;
+    char *temp;
+    TreeNode *p;
+    
+    TreeNode * healthyTip= Output::getHealthyTip(treeRoot);
+    if (alphabet == DNA)
+    {
+        if (doPrintIUPAChaplotypes == YES)
+                        {
+                            fprintf (fp,"%d %d\n",numCells +1, numSites);
+                            for (i=0; i<numCells; i++){
+                                p = nodes[i];
+                                /* print IUPAC haplotype */
+                                if (p !=NULL){
+                                    
+                                    if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
+                                        if (doUseObservedCellName == YES)
+                                            temp=p->observedCellName;
+                                        else
+                                            temp=p->cellName;
+                                        fprintf (fp,"%-12s ", temp);
+                                        for (j=0; j<numSites; j++)
+                                            fprintf (fp, "%c", Utils::WhichIUPAC(p->maternalSequence[SNVsites[j]],p->paternalSequence[SNVsites[j]]));
+                                        fprintf (fp,"\n");
+                                        
+                                    }
+                                }
+                            }
+                            
+                            fprintf (fp,"%-12s ", healthyTip->observedCellName);
+                            for (j=0; j<numSNVs; j++)
+                                fprintf (fp, "%c", Utils::WhichIUPAC(healthyTip->maternalSequence[SNVsites[j]],healthyTip->paternalSequence[SNVsites[j]]));
+                            fprintf (fp,"\n");
+                        }
+        else{
+      // print maternal and paternal DNA haplotypes
+            fprintf (fp,"%d %d\n",2*(numCells+1), numSNVs);
+            for (i=0; i<numCells; i++){
+                p = nodes[i];
+                if (p !=NULL){
+                    
+                    if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
+                        if (doUseObservedCellName == YES)
+                            temp=p->observedCellName;
+                        else
+                            temp=p->cellName;
+                        fprintf (fp,"m%-12s ", temp);
+                        for (j=0; j<numSNVs; j++)
+                            fprintf (fp, "%c", Utils::WhichNuc(p->maternalSequence[SNVsites[j]]));
+                        fprintf (fp,"\n");
+                        fprintf (fp,"p%-12s ", temp);
+                        for (j=0; j<numSNVs; j++)
+                            fprintf (fp, "%c", Utils::WhichNuc(p->paternalSequence[SNVsites[j]]));
+                        fprintf (fp,"\n");
+                    }
+                }
+            }
+            if (doUseObservedCellName == YES)
+                fprintf (fp,"m%-12s ", healthyTip->observedCellName);
+            else
+                fprintf (fp,"m%-12s ", healthyTip->cellName);
+            
+            for (j=0; j<numSNVs; j++)
+                fprintf (fp, "%c", Utils::WhichNuc(healthyTip->maternalSequence[SNVsites[j]]));
+            fprintf (fp,"\n");
+            if (doUseObservedCellName == YES)
+                fprintf (fp,"p%-12s ", healthyTip->observedCellName);
+            else
+                fprintf (fp,"p%-12s ", healthyTip->cellName);
+            
+            for (j=0; j<numSNVs; j++)
+                fprintf (fp, "%c", Utils::WhichNuc(healthyTip->paternalSequence[SNVsites[j]]));
+            fprintf (fp,"\n");
+            
+        }
+    }
+    else  //print binary haplotypes
+    {
+        if (doPrintIUPAChaplotypes == YES) // print binary consensus haplotypes
+        {
+            for (i = 0; i < numCells; i++)
+            {
+                p = nodes[i];
+                
+                if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
+                    if (doUseObservedCellName == YES)
+                        temp=p->observedCellName;
+                    else
+                        temp=p->cellName;
+                    
+                    fprintf (fp,"%-12s", temp);
+                    for (j=0; j<numSNVs; j++)
+                        fprintf (fp, "%c", Utils::WhichConsensusBinary(p->maternalSequence[SNVsites[j]],p->paternalSequence[SNVsites[j]]));
+                    fprintf (fp,"\n");
+                }
+            }
+            
+        }
+        else // print maternal and paternal binary haplotypes
+        {
+            int i=0;
+            int numAddedTips=0;
+            fprintf (fp,"%d %d\n",(numCells+1), numSites);
+            for (i=0; i<numCells; i++){
+                p = nodes[i];
+                if (p !=NULL){
+                    
+                    if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
+                        if (doUseObservedCellName == YES)
+                            temp=p->observedCellName;
+                        else
+                            temp=p->cellName;
+                        numAddedTips++;
+                        fprintf (fp,"%-12s ", temp);
+                        for (j=0; j<numSNVs; j++)
+                            fprintf (fp, "%c", Utils::WhichMut(p->maternalSequence[SNVsites[j]]+p->paternalSequence[SNVsites[j]]));
+                        fprintf (fp,"\n");
+                    }
+                }
+            }
+            
+            //this next part is for printing the root/healthy cell
+            if (doUseObservedCellName == YES)
+                fprintf (fp,"%-12s ", healthyTip->observedCellName);
+            else
+                fprintf (fp,"%-12s ", healthyTip->cellName);
+            
+            for (j=0; j<numSNVs; j++)
+                fprintf (fp, "%c", Utils::WhichMut(healthyTip->maternalSequence[SNVsites[j]]+healthyTip->paternalSequence[SNVsites[j]]));
+            fprintf (fp,"\n");
+        
+        }
+    }
+}
+void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
+                        int numSNVs, std::vector<int> &SNVsites){
+    
+      int         i, j;
+      char *temp;
+      TreeNode *p;
+      
+      TreeNode * healthyTip= Output::getHealthyTip(treeRoot);
+      if (alphabet == DNA)
+      {
+          
+          if (doPrintIUPAChaplotypes == YES)
+                 {
+                     fprintf (fp,"%d %d\n",numCells +1, numSites);
+                     for (i=0; i<numCells; i++){
+                         p = nodes[i];
+                         /* print IUPAC haplotype */
+                         if (p !=NULL){
+                             
+                             if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
+                                 if (doUseObservedCellName == YES)
+                                     temp=p->observedCellName;
+                                 else
+                                     temp=p->cellName;
+                                 fprintf (fp,"%-12s ", temp);
+                                 for (j=0; j<numSites; j++)
+                                     fprintf (fp, "%c", Utils::WhichIUPAC(p->maternalSequence[j],p->paternalSequence[j]));
+                                 fprintf (fp,"\n");
+                                 
+                             }
+                         }
+                     }
+                     
+                     fprintf (fp,"%-12s ", healthyTip->observedCellName);
+                     for (j=0; j<numSites; j++)
+                         fprintf (fp, "%c", Utils::WhichIUPAC(healthyTip->maternalSequence[j],healthyTip->paternalSequence[j]));
+                     fprintf (fp,"\n");
+                 }
+          else{
+        // print maternal and paternal DNA haplotypes
+              fprintf (fp,"%d %d\n",2*(numCells+1), numSites);
+              for (i=0; i<numCells; i++){
+                  p = nodes[i];
+                  if (p !=NULL){
+                      
+                      if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
+                          if (doUseObservedCellName == YES)
+                              temp=p->observedCellName;
+                          else
+                              temp=p->cellName;
+                          fprintf (fp,"m%-12s ", temp);
+                          for (j=0; j<numSites; j++)
+                              fprintf (fp, "%c", Utils::WhichNuc(p->maternalSequence[j]));
+                          fprintf (fp,"\n");
+                          fprintf (fp,"p%-12s ", temp);
+                          for (j=0; j<numSites; j++)
+                              fprintf (fp, "%c", Utils::WhichNuc(p->paternalSequence[j]));
+                          fprintf (fp,"\n");
+                      }
+                  }
+              }
+              if (doUseObservedCellName == YES)
+                  fprintf (fp,"m%-12s ", healthyTip->observedCellName);
+              else
+                  fprintf (fp,"m%-12s ", healthyTip->cellName);
+              
+              for (j=0; j<numSites; j++)
+                  fprintf (fp, "%c", Utils::WhichNuc(healthyTip->maternalSequence[j]));
+              fprintf (fp,"\n");
+              if (doUseObservedCellName == YES)
+                  fprintf (fp,"p%-12s ", healthyTip->observedCellName);
+              else
+                  fprintf (fp,"p%-12s ", healthyTip->cellName);
+              
+              for (j=0; j<numSites; j++)
+                  fprintf (fp, "%c", Utils::WhichNuc(healthyTip->paternalSequence[j]));
+              fprintf (fp,"\n");
+              
+          }
+      }
+      else  //print binary haplotypes
+      {
+          if (doPrintIUPAChaplotypes == YES) // print binary consensus haplotypes
+          {
+              for (i = 0; i < numCells; i++)
+              {
+                  p = nodes[i];
+                  
+                  if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
+                      if (doUseObservedCellName == YES)
+                          temp=p->observedCellName;
+                      else
+                          temp=p->cellName;
+                      
+                      fprintf (fp,"%-12s", temp);
+                      for (j=0; j<numSites; j++)
+                          fprintf (fp, "%c", Utils::WhichConsensusBinary(p->maternalSequence[j],p->paternalSequence[j]));
+                      fprintf (fp,"\n");
+                  }
+              }
+              
+          }
+          else // print maternal and paternal binary haplotypes
+          {
+              int i=0;
+              int numAddedTips=0;
+              fprintf (fp,"%d %d\n",(numCells+1), numSites);
+              for (i=0; i<numCells; i++){
+                  p = nodes[i];
+                  if (p !=NULL){
+                      
+                      if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
+                          if (doUseObservedCellName == YES)
+                              temp=p->observedCellName;
+                          else
+                              temp=p->cellName;
+                          numAddedTips++;
+                          fprintf (fp,"%-12s ", temp);
+                          for (j=0; j<numSites; j++)
+                              fprintf (fp, "%c", Utils::WhichMut(p->maternalSequence[j]+p->paternalSequence[j]));
+                          fprintf (fp,"\n");
+                      }
+                  }
+              }
+              
+              //this next part is for printing the root/healthy cell
+              if (doUseObservedCellName == YES)
+                  fprintf (fp,"%-12s ", healthyTip->observedCellName);
+              else
+                  fprintf (fp,"%-12s ", healthyTip->cellName);
+              
+              for (j=0; j<numSites; j++)
+                  fprintf (fp, "%c", Utils::WhichMut(healthyTip->maternalSequence[j]+healthyTip->paternalSequence[j]));
+              fprintf (fp,"\n");
+              
+              
+              
+          }
+      }
+}
 void Output::PrintTrees(int replicate, pll_rnode_t *treeRootInit,   FILE  *fpTrees, double mutationRate, int doUseObservedCellNames)
 {
-    
-    /*fprintf(fpTrees,"Tree.%05d = ", replicate+1);*/
-    //    fprintf(fpTrees, "(");
     WriteTree (treeRootInit, mutationRate, fpTrees, doUseObservedCellNames);
-    //    fprintf(fpTrees, ");\n");
     fprintf (fpTrees,");\n");
 }
 
@@ -512,15 +744,8 @@ void Output::PrintTrees(int replicate, pll_rnode_t *treeRootInit,   FILE  *fpTre
 void Output::PrintTrees2(int replicate, pll_rnode_t *treeRootInit,   FILE   *fpTrees2 , double mutationRate,char * ObservedCellNames[],int doUseObservedCellNames)
 {
     int indexCurrentCell=0;
-    
-    
-    /*fprintf(fpTrees2,"Tree.%05d = ", replicate+1);*/
-    //   fprintf(fpTrees2, "(");
     WriteTree2 (treeRootInit, mutationRate, fpTrees2, ObservedCellNames, &indexCurrentCell, doUseObservedCellNames);
-    
     fprintf(fpTrees2, ");\n");
-    
-    //fprintf (fpTrees2,"\n");
 }
 /******************* WriteTree ****************/
 /* Writes a given (unrooted) tree from PrintTrees */

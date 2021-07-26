@@ -25,13 +25,12 @@
 #ifndef tree_node_hpp
 #define tree_node_hpp
 
+#include "definitions.hpp"
 #include <vector>
 #include <string>
+//#include "definitions.hpp"
 
-#include  "definitions.hpp"
 
-
-using namespace std;
 class TreeNode
 {
 public:
@@ -45,10 +44,9 @@ public:
     long double oldScaledByThetaTimeInputTreeUnits;
     int         nodeClass; // 0: leaf, 1: internal, 2: 3: 4: outgroup 5: healthy cells (TODO: check later)
     int         indexOldClone, indexCurrentClone,orderCurrentClone;
-    //indexCoalClone;
-    long double      effectPopSize;
-    long double      oldeffectPopSize;
-    char        cellName[200];
+    int         indexSequenceMSA;
+    
+    char         cellName[200];
     char         observedCellName[200];
     //std::string      inputCellName;
     std::vector<int>        maternalSequence;
@@ -71,12 +69,9 @@ public:
         delete right;
         delete anc1;
         delete outgroup;
-        
     }
 };
 
 typedef TreeNode* pTreeNode;
-
-
 
 #endif /* tree_node_hpp */

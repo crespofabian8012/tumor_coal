@@ -26,23 +26,24 @@
 #ifndef data_utils_hpp
 #define data_utils_hpp
 
-#include <iostream>
 
+#include "data_types.hpp"
+//#include "definitions.hpp"
+#include "eigen.hpp"
+#include "population.hpp"
+#include "tree_node.hpp"
+#include "mutationModel.h"
+
+#include <gsl/gsl_rng.h>
+#include <boost/random.hpp>
+
+#include <iostream>
 #include <stdio.h>
 #include <string>
 #include <vector>
 #include <stdarg.h>
 #include <search.h>
-#include <time.h>
-#include <gsl/gsl_rng.h>
 
-#include "data_types.hpp"
-#include "definitions.hpp"
-//#include "pllmod_common.h"
-#include "eigen.hpp"
-#include "population.hpp"
-#include "tree_node.hpp"
-#include "mutationModel.h"
 extern "C"
 {
 #include "libpll/pll.h"
@@ -51,16 +52,6 @@ extern "C"
 #include "libpll/pllmod_algorithm.h"
 #include "libpll/pllmod_common.h"
 }
-
-//class TreeNode;
-//class Population;
-//class ProgramOptions;
-//class MCMCoptions;
-//struct FilePaths;
-//struct Files;
-
-using namespace std;
-//pll_msa_t * pll_phylip_load(const char * fname, pll_bool_t interleaved);
 
 void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptions &programOptions );
 
@@ -74,17 +65,17 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                             std::vector<double> &CloneTimeOriginInput,
                             double Mij[4][4],
                             double freq[4]);
-void ReadUntil(FILE *fv, char stopChar, string what);
+void ReadUntil(FILE *fv, char stopChar, std::string what);
 void PrintUsage();
 void ValidateParameters(ProgramOptions &programOptions,
                         std::vector<int> CloneNameBegin , std::vector<int> CloneSampleSizeBegin, std::vector<int> ClonePopSizeBegin) ;
 
 // initializing the clones
-void InitListClones(std::vector<Population *> &populations, int numClones, int noisy, const std::vector<int> &CloneNameBegin, const std::vector<int> &CloneSampleSizeBegin, const std::vector<double> &CloneBirthRateBegin,  const std::vector<double> &CloneDeathRateBegin, const std::vector<int> &ClonePopSizeBegin, const std::vector<double> &CloneTimeOriginInput, int TotalNumSequences  );
+void InitListClones(std::vector<Population *> &populations, int numClones, int noisy, const std::vector<int> &CloneNameBegin, const std::vector<int> &CloneSampleSizeBegin, const std::vector<double> &CloneBirthRateBegin,  const std::vector<double> &CloneDeathRateBegin, const std::vector<int> &ClonePopSizeBegin, const std::vector<double> &CloneTimeOriginInput, int &TotalNumSequences,int  doEstimateTimesOriginClones , ProgramOptions &programOptions,  std::vector<gsl_rng *> rngGslvector);
 void InitNumberNodes(double &TotalBirthRate, double &TotalDeathRate, int &TotalN,  std::vector<Population *> &populations, ProgramOptions &programOptions);
 
 bool comparePopulationsByTimeOrigin(const void *s1, const void *s2);
-void ListClonesAccordingTimeToOrigin(std::vector<Population *> &populations, int numClones);
+void ListClonesAccordingTieToOrigin(std::vector<Population *> &populations, int numClones);
 
 void InitFilesPathsOptions( FilePaths &filePaths, ProgramOptions &programOptions);
 
@@ -94,7 +85,10 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                  FilePaths &filePaths,
                  Files &files,
                   double freq[4],
-                  double Mij[4][4]
+                  double Mij[4][4],
+                 double Eij[4][4],
+                 std::vector<gsl_rng *> &rngGslvector,
+                 std::vector<boost::random::mt19937 *> &rngBoostvector
                  );
 
 // helper function for simulating the data -- called by SimulateData
@@ -109,9 +103,9 @@ void AssignCurrentSequencesToPopulation(std::vector<Population *> &populations, 
                                         int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames);
 
 int bbinClones (long double dat, long double *v, int n);
-void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  int *secondInd, long *seed, int choosePairIndividuals);
+void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  int *secondInd, long *seed, int choosePairIndividuals, const gsl_rng * rngGsl);
 void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *popI, std::vector<TreeNode *> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
-                          int &labelNodes, double &currentTime, int &numNodes);
+                          int &labelNodes, double &currentTime, int &numNodes,const gsl_rng * rngGsl);
 TreeNode *BuildTree(std::vector<Population* > &populations,
                     Population *CurrentPop,
                     long int *seed,
@@ -122,18 +116,27 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
                     int &nextAvailable,
                     int &newInd,
                     double &currentTime,
-                    int &labelNodes);
+                    int &labelNodes,
+                    const gsl_rng *rngGsl);
 
-void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
+void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, std::vector<Population*> &populations);
 
 void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationAssignNum,
-                                   const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
+                                   const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, std::vector<Population*> populations, double numMU);
+
+void PrepareLikelihoodOutputFile(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
 
 void InitPopulationsCoalescentEvents( int numClones,  std::vector<Population *> &populations) ;
 
-void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGenome, int numSites, std::vector<SiteStr> &allSites, int doGeneticSignatures, double cumfreq[4], long double *triNucFreq, char **cellNames);
+void writeHeaderLikelihoodFile(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, int numClones );
 
-double SumBranches (TreeNode *p, double mutationRate);
+void writeLineLikelihoodFile( int  simulationNumber, const FilePaths &filePaths, const ProgramOptions    &programOptions,Files &files ,  std::vector<Population *> &populations,
+     long double logLikCoalTree, long double logLikTrueSequences, long double logLikErrorSequences, double treeLength);
+
+void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGenome, int numSites, std::vector<SiteStr> &allSites, int doGeneticSignatures, double cumfreq[4], long double *triNucFreq, char **cellNames,
+                       const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
+
+double SumBranches (TreeNode *p, double mutationRate, std::string &healthyTipLabel);
 
 TreeNode *MakeCoalescenceTree2 (long int *seed, std::vector<Population *> &populations,
                                 int &numNodes,
@@ -148,7 +151,10 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, std::vector<Population *> &popul
                                 double &numEventsTot,
                                 std::vector<TreeNode *> &nodes,
                                 std::vector<TreeNode *> &treeTips,
-                                TreeNode    *treeRootInit
+                                TreeNode    *treeRootInit,
+                                long double K,
+                                const gsl_rng *rngGsl,
+                                boost::random::mt19937 * rngBoost
                                 ) ;
 void SimulatePopulation( Population *popI, std::vector<Population*> &populations,
                         ProgramOptions &programOptions,
@@ -167,28 +173,22 @@ void SimulatePopulation( Population *popI, std::vector<Population*> &populations
                         int &numActiveGametes,
                         int &labelNodes,
                         double &currentTime,
-                        int &eventNum);
+                        int &eventNum,
+                         long double K,
+                        const gsl_rng * rngGsl,
+                        boost::mt19937* rngBoost);
 char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObservedCellNames);
 void RelabelNodes(TreeNode *p, int &intLabel);
+void ListClonesAccordingTimeToOrigin(std::vector<Population *> &populations, int numClones);
 
-double ProbabilityCloneiFromClonej2 (Population *PopI, Population* PopJ, std::vector<Population*> &populations, int numClones);
+double ProbabilityCloneiFromClonej2 (Population *PopI, Population* PopJ, std::vector<Population*> &populations, int numClones, long double K);
 
 //void connectNodes(TreeNode *left, TreeNode *right, TreeNode *ancester  );
 //void setLength(TreeNode *node );
 
 TreeNode *getHealthyTip(TreeNode *treeRootInit);
 int openFile(FILE **file, char path[MAX_NAME] );
-double  LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, double seqError,double dropoutError);
 
-void set_partition_tips_costum( pll_partition_t * partition, pll_msa_t * msa, ProgramOptions &programOptions, double seqError, double dropoutError);
-void  destroyTree(pll_utree_t * tree, void (*cb_destroy)(void *));
-void dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *));
-int set_tipclv_custom_error_model(pll_partition_t * partition,
-                                  unsigned int tip_index,
-                                  const pll_state_t * map,
-                                  const char * sequence,
-                                  double _seq_error_rate,
-                                  double _dropout_rate);
 
 void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCoptions &mcmcOptions);
 void computeUnfoldedISMSFS(int numSites,std::vector<SiteStr> &allSites,int numSNVs, std::vector<int> &SNVsites, std::vector<int> &SFS, std::vector<int> &numberDifferences);
@@ -199,9 +199,17 @@ long double computeParamPowerDistribQuantileUntil(long double areaUntilb, long d
 void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions );
 void printProgramHeader();
 
-long double  initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, gsl_rng * randomGenerator);
-void simulateTrees(int numberTrees,vector<StructuredCoalescentTree *> &structuredCoalTrees,  vector<pll_rtree_t *> &trees,          vector<long double> &realThetas,
-                   vector<vector<long double>> &realDeltaTs,
-                   vector<vector<long double>> &realTs,
-                   vector<int> & sampleSizes, ProgramOptions &programOptions, MCMCoptions & mcmcOptions, vector<gsl_rng * > randomGenerators, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, string& healthyTipLabel  );
+long double  initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, const gsl_rng * randomGenerator);
+long double  sampleMutationRateSimulation( MCMCoptions &mcmcOptions, ProgramOptions &programOptions,const gsl_rng *randomGsl, boost::mt19937* rngBoost) ;
+void simulateTrees(int numberTrees,std::vector<StructuredCoalescentTree *> &structuredCoalTrees,  std::vector<pll_rtree_t *> &trees,          std::vector<long double> &realThetas,
+                   std::vector<std::vector<long double>> &realDeltaTs,
+                   std::vector<std::vector<long double>> &realTs,
+                   std::vector<int> & sampleSizes, ProgramOptions &programOptions, MCMCoptions & mcmcOptions, std::vector<gsl_rng * > rngGsl,std::vector<boost::mt19937* > rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel,
+                   long double seqErrorRate,
+                   long double dropoutRate );
+void InitFiles(Files &files);
+void SetPopulationTimeOriginSTD(std::vector<Population *> &populations, int numClones, const gsl_rng* rngGsl, bool doEstimateTorigins);
+void InitNumberNodes( std::vector<Population *> &populations, ProgramOptions &programOptions);
+void computeStatisticsNumberMutations(std::vector<SiteStr> allSites, long double &meanMaternalMutationPerSite, long double &meanPaternalMutationPerSite);
+void SetPopulationParametersFromPriors(std::vector<Population *> &populations, int numClones,const gsl_rng* rngGsl, ProgramOptions &programOptions);
 #endif /* data_utils_hpp */

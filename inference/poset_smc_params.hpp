@@ -10,6 +10,8 @@
 
 #include  "data_types.hpp"
 #include  "mcmc_parameter.hpp"
+#include  "pll_buffer_manager.hpp"
+#include  "genotype_error_model.hpp"
 
 #include  <vector>
 
@@ -25,23 +27,31 @@ class PosetSMCParams{
 public:
     int numberClones;
     int sampleSize;
+    unsigned int num_sites;
     pll_msa_t *msa;
+    const pll_partition_t *partition;
+    PLLBufferManager *const pll_buffer_manager;
     std::vector<int> positions;
     ProgramOptions *programOptions;
-  
+    GenotypeErrorModel *gtErrorModel;
     
     std::shared_ptr<MCMCParameterWithKernel> theta;
+    
     std::shared_ptr<MCMCParameterWithKernel> seqError;
     std::shared_ptr<MCMCParameterWithKernel> dropoutError;
     std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationDeltaTs;
     std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationToriginSTDs;
     std::shared_ptr<MCMCVectorParameterWithKernel>proportions;
-    
+
     PosetSMCParams(int numberClones,
                    int sampleSize,
+                   unsigned int num_sites,
                    pll_msa_t *msa,
+                   const pll_partition_t *partition,
+                   PLLBufferManager *const pll_buffer_manager,
                    std::vector<int> &positions,
-                   ProgramOptions &programOptions);
+                   ProgramOptions &programOptions,
+                   GenotypeErrorModel *gtErrorModel);
     
     void set(std::shared_ptr<MCMCParameterWithKernel> thetaPar,
              std::shared_ptr<MCMCParameterWithKernel> seqErrorPar,

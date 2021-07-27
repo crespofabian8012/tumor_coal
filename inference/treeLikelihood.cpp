@@ -134,8 +134,9 @@ TreeLikelihood::TreeLikelihood(int numberTips,
         
     }
     //pll_repeats_t * repeats = reference_partition->getPartition()->repeats;
-    int use_repeats = pll_repeats_enabled(reference_partition->getPartition());
-   // std::cout<< "use repeats " <<use_repeats << std::endl;
+   // int use_repeats = pll_repeats_enabled(reference_partition->getPartition());
+   
+    // std::cout<< "use repeats " <<use_repeats << std::endl;
 //    if (use_repeats)
 //        pll_repeats_t * repeats = reference_partition->getPartition()->repeats;
 //    

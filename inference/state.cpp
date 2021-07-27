@@ -9,29 +9,20 @@
 #include "state.hpp"
 #include "pll_utils.hpp"
 #include <memory>
+#include "poset_smc_params.hpp"
 
-State::State(long double currentModelTime){
-    this->currentModelTime = currentModelTime;
-}
 
-State::State(unsigned int num_sites, const pll_partition_t *partition):
-partition(partition),num_sites(num_sites)
+
+
+
+State::State(PosetSMCParams &smcParams):
+pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition), num_sites(smcParams.num_sites)
 {
-    currentModelTime = 0.0;
-}
-
-State::State(unsigned int num_sites, const pll_partition_t *partition,  int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions):
-partition(partition),num_sites(num_sites)
-{
-    currentModelTime = 0.0;
+    height = 0.0;
     
-    initForest(  sampleSize, msa, positions,  programOptions);
+    initForest(  smcParams.sampleSize, smcParams.msa, smcParams.positions,  smcParams.getProgramOptions());
 }
 
-
-void State::setForest(std::vector<pll_rtree_t *> forestPar){
-    forest= forestPar;
-}
 void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions){
     
     assert(sampleSize==positions.size());
@@ -39,8 +30,8 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
     const  pll_partition_t *reference_partition = partition;
 
     //pll_rtree_t * tree;
-    std::shared_ptr<pll_rnode_t>  p;
-    TreeNode *t;
+    std::shared_ptr<PartialTreeNode>  p;
+    //TreeNode *t;
     for(size_t i=0; i< positions.size();++i){
         
         unsigned int sites_alloc =
@@ -53,64 +44,41 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
                                        : sites_alloc;
 
         
-        p=std::make_shared<pll_rnode_t>();
-        p->left =NULL;
-        p->right=NULL;
-        p->parent=NULL;
-        p->label =new char[strlen(msa->label[i]) + 1]{};
-        std::copy(msa->label[i], msa->label[i] + strlen(msa->label[i]), p->label);
-        p->length = 0.0;
-        //p->scaler_index = i;
-        //p->clv_index = i;
-        
-        t = new TreeNode(msa->length);
-        std::copy(p->label, p->label + strlen(p->label), t->observedCellName);
-        t->isLeaf=true;
-        t->indexSequenceMSA= i;
-        t->time = 0.0;//model time
-        t->timePUnits = 0.0;// model time * theta * x
-        //t->genotypeSequence = ObservedData[i];
-        p->data = t;
-        
-        
-//        delete (reference_partition->clv);
-//        delete (reference_partition->scale_buffer);
-//        reference_partition->clv = reference_partition->clv[i];
-//        reference_partition->scale_buffer = nullptr;
-//        reference_partition->ln_likelihood = compute_ln_likelihood(node->clv, nullptr, reference_partition);
-//
-//        tree = new pll_rtree_t();
-//        tree->root = p;
-//        roots.push_back(p);
-//        forest.push_back(p);
+        p=std::make_shared<PartialTreeNode>(pll_buffer_manager, nullptr, nullptr, msa->label[i], height, clv_size,
+        scaler_size);
+
+        delete (p->clv);
+        delete (p->scale_buffer);
+        p->clv = reference_partition->clv[i];
+        p->scale_buffer = nullptr;
+        p->ln_likelihood = compute_ln_likelihood(p->clv, nullptr, reference_partition);
+
+        roots.push_back(p);
     }
-    currentModelTime = 0.0;
+    height = 0.0;
 }
-std::vector<pll_rtree_t *> State::getForest() const{
-    return forest;
-}
-pll_rtree_t * State::getTreeAt(int i) const{
-    return forest[i];
-}
-std::shared_ptr<State> State::makeDeepCopy(){
-    
-    std::shared_ptr<State> newState = std::make_shared<State>(currentModelTime);
-    std::vector<pll_rtree_t *> forestCopy;
-    pll_rtree_t *tree;
-    pll_rtree_t *treeCopy;
-    
-    for(size_t i=0; i< forest.size();++i){
-        tree = forest[i];
-        char * newick=pll_rtree_export_newick(tree->root, NULL);
-        //pll_utree_graph_clone
-        treeCopy =pll_rtree_parse_newick_string(newick);
-        treeCopy = pll_utils::cloneRTree(tree);
-      
-        forestCopy.push_back(treeCopy);
-    }
-    newState->setForest(forestCopy);
-    return newState;
-}
+
+
+//std::shared_ptr<State> State::makeDeepCopy(){
+//    
+//    std::shared_ptr<State> newState = std::make_shared<State>(height);
+//    std::vector<pll_rnode_t *> forestCopy;
+//    pll_rnode_t *tree;
+//    pll_rnode_t *treeCopy;
+//    
+////    for(size_t i=0; i< roots.size();++i){
+////
+////        char * newick=pll_rtree_export_newick(tree, NULL);
+////        //pll_utree_graph_clone
+////
+////       // treeCopy =pll_rtree_parse_newick_string(newick);
+////        //treeCopy = pll_utils::cloneRTree(tree);
+////
+////        forestCopy.push_back(treeCopy);
+////    }
+////    newState->setForest(forestCopy);
+//    return newState;
+//}
 
 State &State::operator=(const State &original){
     
@@ -118,31 +86,72 @@ State &State::operator=(const State &original){
        return *this;
 
      partition = original.partition;
-     currentModelTime = original.currentModelTime;
+      height = original.height;
      roots = original.roots;
 
      return *this;
     
 }
 
-std::vector<std::shared_ptr<pll_rtree_t*>> State::propose(int i, int j, double height){
+std::vector<std::shared_ptr<PartialTreeNode>> State::propose(int i, int j, double height){
     
-    std::vector<std::shared_ptr<pll_rtree_t*>> result;
+    std::vector<std::shared_ptr<PartialTreeNode>> result;
     
     return result;
 }
 
 
 
-double State::likelihood_factor(std::shared_ptr<pll_rtree_t*> root){
+double State::likelihood_factor(std::shared_ptr<PartialTreeNode> root){
     
     double result=0.0;
+    assert(root->edge_l && root->edge_r && "Root cannot be a leaf");
+
+     std::shared_ptr<PartialTreeNode> left = root->edge_l->child;
+     std::shared_ptr<PartialTreeNode> right = root->edge_r->child;
+
+     double ln_m = root->ln_likelihood;
+     double ln_l = left->ln_likelihood;
+     double ln_r = right->ln_likelihood;
+
+     assert(ln_m <= 0 && ln_l <= 0 && ln_r <= 0 &&
+            "Likelihood can't be more than 100%");
+
+     return ln_m - (ln_l + ln_r);
     
     return result;
     
 }
 
-void State::remove_roots(int i, int j){}
+void State::remove_roots(int i, int j){
+    assert(i != j && "Expected different indices");
+    assert(i >= 0 && i < roots.size() && j >= 0 && j < roots.size() &&
+           "Index out of bounds");
+
+    if (i < j) {
+      roots.erase(roots.begin() + j, roots.begin() + j + 1);
+      roots.erase(roots.begin() + i, roots.begin() + i + 1);
+    } else {
+      roots.erase(roots.begin() + i, roots.begin() + i + 1);
+      roots.erase(roots.begin() + j, roots.begin() + j + 1);
+    }
+    
+    
+    
+}
+
+double State::compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
+                             const pll_partition_t *p) {
+  const unsigned int parameter_indices[4] = {0, 0, 0, 0};
+
+  return pll_core_root_loglikelihood(
+      p->states, p->sites, p->rate_cats,
+
+      clv, scale_buffer,
+
+      p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
+      p->invariant, parameter_indices, NULL, p->attributes);
+}
 
 State::~State(){
     

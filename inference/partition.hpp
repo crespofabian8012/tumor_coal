@@ -28,10 +28,6 @@ extern "C"
 class Partition{
 private:
     pll_partition_t * partition;
-
- 
-
- 
     Partition(){};
 //    Partition(int numberTips,
 //               int clvBuffers,
@@ -183,8 +179,6 @@ pll_partition_t * getPartition();
 }
     
 };
-
-
 
 #endif /* partition_hpp */
 

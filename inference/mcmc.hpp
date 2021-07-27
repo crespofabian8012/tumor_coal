@@ -29,7 +29,7 @@ class MCMC {
 public:
     MCMC(int numChains);
     
-    void initialize(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths,
+    void initialize(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions,               MCMCoptions &mcmcOptions, FilePaths &filePaths,
                     std::vector<int> &sampleSizes,
                     std::vector<std::vector<int> > &ObservedData,
                     char* ObservedCellNames[],

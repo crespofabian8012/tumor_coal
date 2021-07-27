@@ -58,3 +58,25 @@ void MCMC::runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &p
     }
     
 }
+//for (size_t currentIteration = 0; currentIteration < mcmcOptions.Niterations; ++currentIteration)
+//         {
+//             chainManager->stepAllChainsNoSave( currentIteration,programOptions, mcmcOptions, randomGenerators  );
+//             
+//            if (currentIteration >=  mcmcOptions.burnInIterations ){
+//                   chainManager->saveChainState( currentIteration, programOptions, mcmcOptions );
+//     //              //chainManager->saveChainState( currentIteration, programOptions, mcmcOptions );
+//     //              chainManager->writeChainsOutput(currentIteration, programOptions, mcmcOptions, filePaths);
+//             }
+//              chainManager->writeChainsOutput(currentIteration, programOptions, mcmcOptions, filePaths);
+//             if ( (currentIteration >= (mcmcOptions.burnInIterations +mcmcOptions.maxNumberIndependentPosteriorValues)) &&  currentIteration % 1000 ==0 ){
+//                   chainManager->checkConvergence(mcmcOptions.numberChainsPerTree, programOptions, mcmcOptions, 0.01) ;
+//             }
+//             if (chainManager->numberFinishedChains >= 0.98*mcmcOptions.numChains)
+//                 break;
+//     //        if (converged){
+//     //            std::cout << "\nMCMC chains converged .... \n"<<std::endl;
+//     //            //break;
+//     //           // mcmcOptions.Niterations = mcmcOptions.Niterations + 10000;
+//     //        }
+//         }
+//

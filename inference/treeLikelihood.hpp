@@ -46,7 +46,6 @@ public:
        bool  asc,
        bool tipPatternCompression, pll_rtree_t * rooted_tree, pll_msa_t * msa, GenotypeErrorModel *gtErrorModel);
    
-    
     double computeRootLogLikelihood();
     int setPartitionTips(bool doUseGenotypes);
     int initOperations();
@@ -58,11 +57,9 @@ public:
     
     ~TreeLikelihood()
        {
-           
            //pll_msa_destroy(msa);
            delete reference_partition;
           // pll_rtree_destroy (rooted_tree, NULL);
-           
            
            free( branch_lengths);
            free( matrix_indices);

@@ -7,16 +7,22 @@
 
 #include "poset_smc_params.hpp"
 
+
 PosetSMCParams::PosetSMCParams(int numberClones,
-                  int sampleSize,
-                  pll_msa_t *msa,
-                  std::vector<int> &positions,
-                 ProgramOptions &programOptions):
-numberClones(numberClones),sampleSize(sampleSize)
+                 int sampleSize,
+                 unsigned int num_sites,
+                 pll_msa_t *msa,
+                 const pll_partition_t *partition,
+                 PLLBufferManager *const pll_buffer_manager,
+                 std::vector<int> &positions,
+                 ProgramOptions &programOptions,GenotypeErrorModel *gtErrorModel):
+numberClones(numberClones),sampleSize(sampleSize), msa(msa), partition(partition),
+pll_buffer_manager(pll_buffer_manager), gtErrorModel(gtErrorModel)
 {
-    this->msa= msa;
+
     this->positions= positions;
     this->programOptions = &programOptions;
+    
     
     assert(positions.size()==sampleSize);
         if (positions.size()==0)
@@ -36,8 +42,6 @@ void PosetSMCParams::set(std::shared_ptr<MCMCParameterWithKernel> thetaPar,
                 std::shared_ptr<MCMCVectorParameterWithKernel>proportionsPar
                 )
 {
-    
-
     this->proportions = proportionsPar;
     this->theta = thetaPar;
     populationDeltaTs=   populationDeltaTsPar;

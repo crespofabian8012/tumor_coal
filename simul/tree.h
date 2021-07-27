@@ -85,7 +85,9 @@ static void MakeCoalescenceTree2 (long int *seed, Population **populations,
                                   TreeNode** treeTips,
                                   TreeNode    **treeRootInit,
                                   char* ObservedCellNames[],
-                                  int *sampleSizes
+                                  int *sampleSizes,
+                                  gsl_rng *rngGsl,
+                                  boost::random::mt19937 * rngBoost
                                   ) ;
 static void MakeCoalescenceEvent(Population **populations, Population *popI, TreeNode **nodes, int numClones, long int* seed, int noisy, int *numActiveGametes,
                                  int* nextAvailable,

@@ -1068,6 +1068,16 @@ void  Population::setPopulationToriginConditionalDelta( const gsl_rng *rngGsl ){
     std::cout << "Population with sample size "<< sampleSize << " torigin std: "<<timeOriginSTD<< " and scaled physical torigin: "  << timeOriginInput << " ,  order "<< order << " and delta "<< delta << std::endl;
 
 }
+long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K){
+    
+   long double  RateCA = (long double)  numActiveLineages * ((long double) numActiveLineages - 1) / 2.0;
+   long double  ThisTimeCA_W = Random::RandomExponentialStartingFrom (RateCA,0,  true, rngGsl,NULL ) ;
+  
+    // from standard time to model time, GstandardTmodel(V, T, delta)
+   long double ThisTimeCA_V2 = Population::GstandardTmodel(ThisTimeCA_W, timeOriginSTD, delta, K);
+    return ThisTimeCA_V2;
+    
+}
 PopulationSet::PopulationSet(int numClones){
     
     if (numClones >=0)
@@ -1133,7 +1143,7 @@ std::vector<long double> PopulationSet::samplePopulationGrowthRateFromPriors(MCM
             else
             randomGrowthRate =Random::RandomExponentialStartingFrom(mcmcOptions.lambdaExponentialGrowthRateSimulation,0, mcmcOptions.useGSLRandomGenerator, randomGenerator, NULL);
         }
-        randomGrowthRate=100;
+       // randomGrowthRate=100;
         popI->deltaT =  randomGrowthRate;
         popI->DeltaT->setParameterValue(randomGrowthRate);
         result.at(i)= randomGrowthRate;

@@ -174,6 +174,7 @@ public:
     void setTheta(long double theta);
     void setProportion(long double x);
     void setPopulationToriginConditionalDelta( const gsl_rng *rngGsl );
+    long double proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K);
     
 private:
     static bool isNotPositive(long double d);

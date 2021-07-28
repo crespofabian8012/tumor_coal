@@ -34,6 +34,7 @@ public:
     std::vector<int> positions;
     ProgramOptions *programOptions;
     GenotypeErrorModel *gtErrorModel;
+    std::vector<int> sampleSizes;
     
     std::shared_ptr<MCMCParameterWithKernel> theta;
     
@@ -45,6 +46,7 @@ public:
 
     PosetSMCParams(int numberClones,
                    int sampleSize,
+                   std::vector<int> &sampleSizes,
                    unsigned int num_sites,
                    pll_msa_t *msa,
                    const pll_partition_t *partition,

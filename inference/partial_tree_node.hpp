@@ -15,9 +15,6 @@
 #include <vector>
 //#include <cstring>
 
-
-
-
 class PartialTreeNode;
 
 class PartialTreeEdge {

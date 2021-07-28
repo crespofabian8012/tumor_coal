@@ -22,7 +22,7 @@ class PosetSMCParams;
 class State{
    
     long double height;
-    PopulationSet * populations;
+    PopulationSet *populationSet;
 
     PLLBufferManager *const pll_buffer_manager;
 
@@ -52,6 +52,8 @@ public:
     
     double compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
                                  const pll_partition_t *p);
+    
+    PopulationSet* getPopulationSet()const {return populationSet;};
     ~State();
 };
 #endif /* state_hpp */

@@ -7,7 +7,7 @@
 
 #include "poset_smc.hpp"
 #include "state.hpp"
-
+#include "random.h"
 #include "poset_smc_params.hpp"
 
 
@@ -23,8 +23,30 @@ std::shared_ptr<State> PosetSMC::propose_initial(gsl_rng *random, double &log_w,
 }
 std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, const State &curr, double &log_w, PosetSMCParams &params){
     std::shared_ptr<State> result;
-    //
-    //choose 2 random trees to merge
+    
+    if (curr.root_count()>1){
+        // select 2 nodes to coalesce
+        Population *pop;
+        long double minProposedTime = 100000000 ;
+        int idx_pop;
+        for(size_t i=0; i <  curr.getPopulationSet()->getPopulations().size(); i++){
+            
+            pop= curr.getPopulationSet()->getPopulationbyIndex(i);
+            long double time= pop->proposeTimeNextCoalEvent(random, pop->numActiveGametes, params.getProgramOptions().K);
+            
+            if (time<minProposedTime){
+                minProposedTime=time;
+                idx_pop=i;
+                
+            }
+        }
+        //choose 2 active lineages to coalesce inside population i
+        
+        
+        
+    }
+    
+  
     
     return result;
 }

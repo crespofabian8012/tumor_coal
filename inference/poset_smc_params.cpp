@@ -10,6 +10,7 @@
 
 PosetSMCParams::PosetSMCParams(int numberClones,
                  int sampleSize,
+                std::vector<int> &sampleSizes,
                  unsigned int num_sites,
                  pll_msa_t *msa,
                  const pll_partition_t *partition,
@@ -17,7 +18,7 @@ PosetSMCParams::PosetSMCParams(int numberClones,
                  std::vector<int> &positions,
                  ProgramOptions &programOptions,GenotypeErrorModel *gtErrorModel):
 numberClones(numberClones),sampleSize(sampleSize), msa(msa), partition(partition),
-pll_buffer_manager(pll_buffer_manager), gtErrorModel(gtErrorModel)
+pll_buffer_manager(pll_buffer_manager), gtErrorModel(gtErrorModel), sampleSizes(sampleSizes)
 {
 
     this->positions= positions;

@@ -32,7 +32,6 @@ if (OPENMP_FOUND)
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 #find_package(Boost 1.67 COMPONENTS regex system filesystem unit_test_framework program_options REQUIRED)
@@ -42,12 +41,10 @@ if(Boost_FOUND)
     include_directories( PRIVATE ${Boost_INCLUDE_DIRS})
 endif()
 
-target_link_libraries(run  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a  ${Boost_LIBRARIES}  GSL::gsl  OpenMP::OpenMP_CXX Eigen3::Eigen)
-
-
+target_link_libraries(run  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a  ${Boost_LIBRARIES}  GSL::gsl  OpenMP::OpenMP_CXX libSPF.a Eigen3::Eigen)
 
 target_link_libraries(libTumorCoal
-    ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a   GSL::gsl OpenMP::OpenMP_CXX Eigen3::Eigen)
+    ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a   GSL::gsl OpenMP::OpenMP_CXX libSPF.a Eigen3::Eigen)
 
 INSTALL(TARGETS run DESTINATION ${CMAKE_SOURCE_DIR}/)
 INSTALL(TARGETS libTumorCoal DESTINATION bin)

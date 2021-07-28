@@ -50,9 +50,9 @@
 //#include "smc.hpp"
 //#include "smc_model.hpp"
 //#include "smc_options.hpp"
-//#include "poset_smc.hpp"
-//#include "state.hpp"
-//#include "spf.hpp"
+#include "poset_smc.hpp"
+#include "state.hpp"
+#include "spf.hpp"
 
 
 

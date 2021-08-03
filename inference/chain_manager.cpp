@@ -49,7 +49,8 @@ void ChainManager::initializeChains(std::vector< gsl_rng * > &randomGenerators, 
                                     std::vector<int> &sampleSizes,  std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, std::vector<StructuredCoalescentTree *> structuredCoalTrees,  std::string& healthyTipLabel,
                                     const std::vector<pll_rtree_t *> &trueTrees,        const  std::vector<long double> &trueThetas,
                                     const std::vector<std::vector<long double>> &trueDeltaTs,
-                                    const  std::vector<std::vector<long double>> &trueTs
+                                    const  std::vector<std::vector<long double>> &trueTs,
+                                    std::vector<Partition *> &partitions
                                     )
 {
     StructuredCoalescentTree * currenStructuredCoalTreeToInfer;
@@ -57,7 +58,7 @@ void ChainManager::initializeChains(std::vector< gsl_rng * > &randomGenerators, 
     {
         int idx = chainNumber / mcmcOptions.numberChainsPerTree;
         currenStructuredCoalTreeToInfer =structuredCoalTrees.at(idx);
-        chains.at(chainNumber) = Chain::initializeChain( chainNumber, programOptions, mcmcOptions, sampleSizes, randomGenerators.at(chainNumber), ObservedData,ObservedCellNames,                                              msa,  initialRootedTree,currenStructuredCoalTreeToInfer, healthyTipLabel, filePaths);
+        chains.at(chainNumber) = Chain::initializeChain( chainNumber, programOptions, mcmcOptions, sampleSizes, randomGenerators.at(chainNumber), ObservedData,ObservedCellNames,                                              msa,  initialRootedTree,currenStructuredCoalTreeToInfer, healthyTipLabel, filePaths, partitions[chainNumber]);
         setWarmup(chainNumber, mcmcOptions.burnInIterations);
         if (chainNumber==0)
         {

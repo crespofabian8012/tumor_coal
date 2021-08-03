@@ -232,7 +232,7 @@ public:
  
     
     static Chain *initializeChain(int chainNumber,  ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, std::vector<int> &sampleSizes,const gsl_rng* randomGenerator, std::vector<std::vector<int>> &ObservedData,
-                                  char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, StructuredCoalescentTree *structCoalTree, std::string& healthyTipLabel, FilePaths &filePaths);
+                                  char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, StructuredCoalescentTree *structCoalTree, std::string& healthyTipLabel, FilePaths &filePaths, Partition *partition);
     
     
    
@@ -319,7 +319,7 @@ public:
     void initTreeBranchLengths(std::string &healthyTipLabel);
     
     void initChainTree( std::string &healthyTipLabel, MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions );
-    void initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions) ;
+    void initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions, Partition *partition) ;
     long double SumLogDensitiesTimeOriginSTDPopulations() ;
     long double SumLogProbFatherPopulations(long double K) ;
     void initMRCAOldestPopulation(std::string& healthyTipLabel);

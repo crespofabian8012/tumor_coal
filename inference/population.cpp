@@ -1241,6 +1241,21 @@ void PopulationSet::initPopulationsThetaDelta(long double theta)
         popI->delta = popI->deltaT * popI->x;
     }
 }
+
+void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl){
+    long double delta;
+    long double theta;
+    for (unsigned int i = 0; i < numClones; ++i){
+         auto popI =  populations[i];
+        delta = Random::RandomExponential(1, NULL, true, rngGsl, NULL);
+        theta =  Random::RandomExponential(1, NULL, true, rngGsl, NULL);
+        popI->theta = theta;
+        popI->delta = delta;
+        
+    }
+
+    
+}
 void  PopulationSet::initListPossibleMigrations()
 {
     sort(populations.begin(), populations.end(), comparePopulationsByTimeOrigin);

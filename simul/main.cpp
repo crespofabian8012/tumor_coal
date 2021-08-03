@@ -168,12 +168,12 @@ int main(int argc, char *argv[])
             fclose(files.fpTimes2->f);
         }
     }
-    std::cout << "\n\nOutput files are in folder \Results\ "\""<< std::endl;;
-    std::cout << "\n Trees saved to folder Results\treeDir\"" << "\""<< std::endl;
-    std::cout << "\n Times saved to folder  Results\timesDir\"" << filePaths.timesDir<< "\""<< std::endl;
-    std::cout << "\n True haplotypes(IUPAC codes) saved to folder  Results\true_haplotypes_dir\"" << std::endl;
-    std::cout << "\n True genotypes saved to folder  Results\true_genotypes_dir\"" << std::endl;
-    std::cout << "\n Full haplotypes(IUPAC codes) with errors saved to folder  Results\full_haplotypes_dir\"" <<std::endl;
+    std::cout << "\n\nOutput files are in folder Results" << std::endl;
+    std::cout << "\n Trees saved to folder Results\\treeDir\\" << "\""<< std::endl;
+    std::cout << "\n Times saved to folder  Results\\timesDir\\"<< std::endl;
+    std::cout << "\n True haplotypes(IUPAC codes) saved to folder  Results""\true_haplotypes_dir\\" << std::endl;
+    std::cout << "\n True genotypes saved to folder  Results\\true_genotypes_dir\\" << std::endl;
+    std::cout << "\n Full haplotypes(IUPAC codes) with errors saved to folder  Results\\full_haplotypes_dir\\" <<std::endl;
     
     std::cout <<  "\n\n*** Simulations finished ***"<< std::endl;
     /* execution time */

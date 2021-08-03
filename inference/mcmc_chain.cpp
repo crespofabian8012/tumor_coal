@@ -2705,7 +2705,7 @@ void Chain::initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programO
     
 }
 
-void Chain::initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions) {
+void Chain::initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions, Partition *partition) {
     
     //if (!mcmcOptions.noData)
     // {
@@ -2726,23 +2726,25 @@ void Chain::initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, Program
     
     //currentlogConditionalLikelihoodSequences = pll_utils::LogConditionalLikelihoodSequences( msa,  rootedNewick2, programOptions, seqErrorRate, dropoutRate);
     gtErrorModel= new GenotypeErrorModel("GT20", seqErrorRate, dropoutRate, 16);
-     treeLik= new TreeLikelihood(
-                                                initialRootedTree->tip_count,
-                                                initialRootedTree->inner_count,
-                                                16,
-                                                (unsigned int)(msa->length),//int numberSites,
-                                                1,
-                                                initialRootedTree->edge_count,//int probMatrices,
-                                                1,//,int numberRateCats,
-                                                initialRootedTree->inner_count,
-                                                0,
-                                                false,
-                                                false,
-                                                false,
-                                                false,
-                                                false,
-                                                false,initialRootedTree ,  msa,  gtErrorModel);
     
+      treeLik=  new TreeLikelihood(partition, initialRootedTree,  msa, gtErrorModel);
+//     treeLik= new TreeLikelihood(
+//                                                initialRootedTree->tip_count,
+//                                                initialRootedTree->inner_count,
+//                                                16,
+//                                                (unsigned int)(msa->length),//int numberSites,
+//                                                1,
+//                                                initialRootedTree->edge_count,//int probMatrices,
+//                                                1,//,int numberRateCats,
+//                                                initialRootedTree->inner_count,
+//                                                0,
+//                                                false,
+//                                                false,
+//                                                false,
+//                                                false,
+//                                                false,
+//                                                false,initialRootedTree ,  msa,  gtErrorModel);
+//
     
     currentlogConditionalLikelihoodSequences = treeLik->computeRootLogLikelihood();
   // currentlogConditionalLikelihoodSequences =   pll_utils::LogConditionalLikelihoodSequencesRootedTree( msa,  initialRootedTree, programOptions, seqErrorRate, dropoutRate );
@@ -2879,7 +2881,7 @@ void Chain::initMRCAOldestPopulation(string& healthyTipLabel)
     }
 }
 
-Chain *Chain::initializeChain( int chainNumber,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, const gsl_rng * randomGenerator, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * inputRootedTree, StructuredCoalescentTree *structCoalTree,  string& healthyTipLabel, FilePaths &filePaths)
+Chain *Chain::initializeChain( int chainNumber,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, const gsl_rng * randomGenerator, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * inputRootedTree, StructuredCoalescentTree *structCoalTree,  string& healthyTipLabel, FilePaths &filePaths, Partition *partition)
 {
     
     
@@ -3003,7 +3005,18 @@ Chain *Chain::initializeChain( int chainNumber,   ProgramOptions &programOptions
     
     // totalTreeLength = SumBranches2(rootRootedTree, mutationRate);
     
-    chain->initLogLikelihoods(mcmcOptions, msa, programOptions);
+    partition = new Partition(chain->initialRootedTree->tip_count,// numberTips
+     chain->initialRootedTree->inner_count,//unsigned  int  clvBuffers
+     16,// model->states,//numberStates
+      msa->length,//unsigned  int  sites
+     1,//unsigned  int numberRateMatrices
+     chain->initialRootedTree->edge_count, // unsigned int probMatrices
+     RATE_CATS,//RATE_CATS, // unsigned  int  numberRateCats
+      chain->initialRootedTree->inner_count, // unsigned  int numberScaleBuffers
+     0, //int statesPadded
+    false, false, false, false, false, false);
+    
+    chain->initLogLikelihoods(mcmcOptions, msa, programOptions, partition);
     
     return chain;
 }

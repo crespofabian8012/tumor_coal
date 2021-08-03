@@ -68,6 +68,7 @@ pll_rnode_t * cloneRNode(const pll_rnode_t * node);
 pll_rtree_t * cloneRTree(const pll_rtree_t * tree);
 char * xstrdup(const char * s);
 const pll_partition_t *createReferencePartition(pll_msa_t * msa) ;
+const pll_partition_t *createGTReferencePartition(pll_msa_t * msa);
 double computeLogLikelihood(double *clv, unsigned int *scale_buffer,
                                         const pll_partition_t *p);
 int cb_rfull_traversal(pll_rnode_t * node);

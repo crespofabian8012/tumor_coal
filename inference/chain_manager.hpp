@@ -45,7 +45,7 @@ public:
                           std::vector<int> &sampleSizes,  std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, std::vector<StructuredCoalescentTree *> structuredCoalTrees,  std::string& healthyTipLabel,
                           const std::vector<pll_rtree_t *> &trueTrees,        const  std::vector<long double> &trueThetas,
                           const std::vector<std::vector<long double>> &trueDeltaTs,
-                          const  std::vector<std::vector<long double>> &trueTs
+                          const  std::vector<std::vector<long double>> &trueTs, std::vector<Partition *> &partitions
                           );
     void stepAllChains(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators );
     void monitorChains(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators, FilePaths &filePaths );

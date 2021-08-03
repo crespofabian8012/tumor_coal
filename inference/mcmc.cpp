@@ -13,7 +13,9 @@ MCMC::MCMC(int  numChains){
         chainManager= new ChainManager(numChains);
     
 }
-void MCMC::initialize(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths,
+void MCMC::initialize(std::vector< gsl_rng * > &randomGenerators,                   ProgramOptions &programOptions,
+                      MCMCoptions   &mcmcOptions,
+                      FilePaths &filePaths,
                       std::vector<int> &sampleSizes,
                       std::vector<std::vector<int> > &ObservedData,
                       char* ObservedCellNames[],
@@ -24,11 +26,11 @@ void MCMC::initialize(std::vector< gsl_rng * > &randomGenerators, ProgramOptions
                       const std::vector<pll_rtree_t *> &trueTrees,
                       const  std::vector<long double> &trueThetas,
                       const std::vector<std::vector<long double>> &trueDeltaTs,
-                      const  std::vector<std::vector<long double>> &trueTs){
+                      const  std::vector<std::vector<long double>> &trueTs, std::vector<Partition *> &partitions){
     
     chainManager->initializeChains(randomGenerators, programOptions, mcmcOptions, filePaths,
                                    sampleSizes, ObservedData, ObservedCellNames, msa, initialRootedTree,
-                                   structuredCoalTrees, healthyTipLabel, trueTrees, trueThetas, trueDeltaTs, trueTs);
+                                   structuredCoalTrees, healthyTipLabel, trueTrees, trueThetas, trueDeltaTs, trueTs, partitions );
     
 }
 void MCMC::runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths){

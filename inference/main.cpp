@@ -47,12 +47,10 @@
 #include <gsl/gsl_randist.h>
 #include <boost/program_options.hpp>
 
-//#include "smc.hpp"
-//#include "smc_model.hpp"
-//#include "smc_options.hpp"
+
+#include "smc.hpp"
 #include "poset_smc.hpp"
-#include "state.hpp"
-#include "spf.hpp"
+
 
 
 
@@ -92,7 +90,7 @@ int main(int argc, char* argv[] )
     ProgramOptions programOptions;
     FilePaths filePaths;
     MCMCoptions mcmcOptions;
-    bool doMCMC = true;
+    bool doMCMC = false;
     
     if (config_file.empty())
     {
@@ -220,6 +218,9 @@ int main(int argc, char* argv[] )
     programOptions.doUsefixedMutationRate = false;
     programOptions.K=0.8;
     
+   
+      std::vector<Partition *> partitionList(mcmcOptions.numChains);
+  
     if (doMCMC){
         mcmcOptions.printChainStateEvery=mcmcOptions.iterationsToMonitorChain;
         
@@ -235,7 +236,7 @@ int main(int argc, char* argv[] )
                          healthyTipLabel,
                          trueTrees,    trueThetas,
                          trueDeltaTs,
-                         trueTs);
+                         trueTs, partitionList);
         
         float start = clock();
         clock_t begin = omp_get_wtime();
@@ -258,26 +259,41 @@ int main(int argc, char* argv[] )
     }
     else/* SMC */
     {
-        std::vector<int> positions;
+        std::vector<int> positions(programOptions.TotalTumorSequences);
+        std::iota( std::begin( positions ), std::end( positions ), 1 );
+        //std::random_shuffle( positions.begin(), positions.end());
+        
         GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
         PLLBufferManager *pll_buffer_manager = new PLLBufferManager;
-        const pll_partition_t* partition= pll_utils::createReferencePartition(msa);
-        PosetSMCParams *psParams= new PosetSMCParams(programOptions.numClones, programOptions.TotalNumSequences, programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel);
+        const pll_partition_t* partition= pll_utils::createGTReferencePartition(msa);
         
-      
-        PosetSMC *posetSMC = new PosetSMC();
+        PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel);
+        
+        size_t num_iter = programOptions.TotalTumorSequences-1;
+        PosetSMC posetSMC(programOptions.numClones,  num_iter);
         SMCOptions smcOptions;
         
         smcOptions.ess_threshold = 1;
         smcOptions.num_particles = 10000;
         smcOptions.resample_last_round = true;
-    
-        SMC<State, SMCOptions>  smc(posetSMC, smcOptions);
-        smc.runSMC();
-        
-        ParticlePopulation<int> *pop = smc.get_curr_population();
-        vector<shared_ptr<int>> *particles = pop->get_particles();
+  
+        smcOptions.ess_threshold = 1.0;
+        smcOptions.main_seed = 532366;
+        smcOptions.resampling_seed = 8234532;
+        smcOptions.track_population = true;
+        smcOptions.init();
+      
+       
+        SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
+       
+        smc.run_smc(psParams);
+        ParticlePopulation<State> *pop = smc.get_curr_population();
+        vector<shared_ptr<State>> *particles = pop->get_particles();
+        double   log_marginal = smc.get_log_marginal_likelihood();
+        ParticlePopulation<State> *pop0 = smc.get_population(0);
         vector<double> *normalized_weights = pop->get_normalized_weights();
+        double log_marginal_lik = smc.get_log_marginal_likelihood();
+        cout << "Estimate log P(y)= " << log_marginal_lik  << endl;
 
     }
     

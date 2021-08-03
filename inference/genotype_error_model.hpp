@@ -27,6 +27,7 @@ public:
     GenotypeErrorModel(std::string name, long double seqErrorRate,long double ADOErrorRate, int states );
    long double getSeqErrorRate() const;
    long double getADOErrorRate() const;
+   GenotypeErrorModel &operator=(const GenotypeErrorModel &original);
    void computeStateErrorProbPT19(pll_state_t state,
                               std::vector<double>::iterator &clvp) const;
 

@@ -53,6 +53,7 @@ public:
   std::string label;
   double height;
   double ln_likelihood;
+  int index_population;
 
   double *clv;
   unsigned int *scale_buffer;

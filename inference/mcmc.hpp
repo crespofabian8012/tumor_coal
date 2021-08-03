@@ -39,7 +39,7 @@ public:
                     std::string& healthyTipLabel,
                     const std::vector<pll_rtree_t *> &trueTrees,        const  std::vector<long double> &trueThetas,
                     const std::vector<std::vector<long double>> &trueDeltaTs,
-                    const  std::vector<std::vector<long double>> &trueTs);
+                    const  std::vector<std::vector<long double>> &trueTs, std::vector<Partition *> &partitions);
     
     void runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths);
     

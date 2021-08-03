@@ -934,7 +934,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     //int ***data;
     ValidateParameters(programOptions,CloneNameBegin , CloneSampleSizeBegin, ClonePopSizeBegin);
    
-    //TreeLikelihood *treeLik;
+   
     std::vector<pll_msa_t *> msaList(programOptions.numDataSets* programOptions.MutationAssignNum);
     std::vector<pll_rtree_t *> treesList(programOptions.numDataSets);
     std::vector<Partition *> partitionList(programOptions.numDataSets* programOptions.MutationAssignNum);
@@ -956,16 +956,16 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         if(programOptions.doSimulateFromPriors==YES){
             
             SetPopulationParametersFromPriors( populations, programOptions.numClones,rngGslvector.at(dataSetNum), programOptions);
-            SetPopulationTimeOriginSTD(populations, programOptions.numClones, rngGslvector.at(dataSetNum), programOptions.doEstimateTimesOriginClones);
-            InitNumberNodes( populations, programOptions);
-            programOptions.meanADOsite = 0.1;
-            programOptions.varADOsite=0.01;
-            programOptions.meanADOcell = 0.1;
-            programOptions.varADOcell=0.01;
-            programOptions.meanGenotypingError= 0.01;
-            programOptions.varGenotypingError=0.001;
+            
         }
-        
+        SetPopulationTimeOriginSTD(populations, programOptions.numClones, rngGslvector.at(dataSetNum), programOptions.doEstimateTimesOriginClones);
+        InitNumberNodes( populations, programOptions);
+        programOptions.meanADOsite = 0.1;
+        programOptions.varADOsite=0.01;
+        programOptions.meanADOcell = 0.1;
+        programOptions.varADOcell=0.01;
+        programOptions.meanGenotypingError= 0.01;
+        programOptions.varGenotypingError=0.001;
         
         InitListPossibleMigrations(populations, programOptions.numClones);
         InitPopulationsCoalescentEvents( programOptions.numClones,  populations);

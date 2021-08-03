@@ -760,9 +760,67 @@ const pll_partition_t *pll_utils::createReferencePartition(pll_msa_t * msa) {
 
   pll_update_eigen(partition, 0);
 
+  return partition;
+}
+const pll_partition_t *pll_utils::createGTReferencePartition(pll_msa_t * msa) {
+    
+
+  const unsigned int rate_category_count = 4;
+    unsigned int number_states=16;
+ // double rate_categories[4] = {0, 0, 0, 0};
+  //pll_compute_gamma_cats(1, 4, rate_categories, PLL_GAMMA_RATES_MEAN);
+
+  const unsigned int subst_model_count = 1;
+  //const double subst_params[6] = {1, 1, 1, 1, 1, 1};
+
+  const unsigned int nucleotide_states = 16;
+//  double  one_16 = 1.0/16;
+//  const double nucleotide_frequencies[16] = {one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16
+//  };
+
+  pll_partition *partition = pll_partition_create(
+      msa->count,
+      0, // Don't allocate any inner CLV's.
+      nucleotide_states, msa->length, subst_model_count,
+      0, // Don't allocate any pmatrices.
+      rate_category_count,
+      0, // Don't allocate any scale buffers.
+      PLL_ATTRIB_ARCH_SSE);
+
+  assert(partition);
+    
+  double subst_params[ number_states*(number_states-1) /2] ;
+   std::fill_n (subst_params,number_states*(number_states-1) /2, 1);
+   
+   double  rate_categories[number_states];
+   std::fill_n (rate_categories, number_states*(number_states-1) /2, 1);
+   
+   double  category_weights[number_states];
+   std::fill_n (category_weights, number_states*(number_states-1) /2, 1);
+   
+   double nucleotide_frequencies[number_states];
+   std::fill_n (nucleotide_frequencies, number_states, 1.0/(number_states));
+   
+   pll_compute_gamma_cats(1, RATE_CATS, rate_categories, PLL_GAMMA_RATES_MEAN);
+  
+  pll_set_frequencies(partition, 0, nucleotide_frequencies);
+  pll_set_category_rates(partition, rate_categories);
+  pll_set_subst_params(partition, 0, subst_params);
+
+  for (unsigned int i = 0; i < msa->count; i++) {
+      
+   if (pll_set_tip_states(partition, i, pll_map_gt10, msa->sequence[i]) != PLL_SUCCESS)
+      {
+        fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
+        exit(pll_errno);
+      }
+  }
+  
+  pll_update_eigen(partition, 0);
 
   return partition;
 }
+
 double pll_utils::computeLogLikelihood(double *clv, unsigned int *scale_buffer,
                              const pll_partition_t *p) {
   const unsigned int parameter_indices[4] = {0, 0, 0, 0};

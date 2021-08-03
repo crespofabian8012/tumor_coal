@@ -24,10 +24,7 @@ pll_buffer_manager(pll_buffer_manager), gtErrorModel(gtErrorModel), sampleSizes(
     this->positions= positions;
     this->programOptions = &programOptions;
     
-    
-    assert(positions.size()==sampleSize);
-        if (positions.size()==0)
-              std::cout << "\n The particle cannot be initialized without tips. \n"<<std::endl;
+
         
 }
 ProgramOptions& PosetSMCParams::getProgramOptions(){

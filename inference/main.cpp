@@ -196,33 +196,31 @@ int main(int argc, char* argv[] )
     mcmcOptions.maxNumberIndependentPosteriorValues=500;
     mcmcOptions.numberIterationsAfterConvergence = 10000;
     
-    
-    std::vector<Chain*> chainsFortheSameTree(mcmcOptions.numberChainsPerTree);
-    int numberTrees = floor((double)mcmcOptions.numChains / mcmcOptions.numberChainsPerTree);
-    
-    mcmcOptions.fixedValuesForSimulation = true;
-    programOptions.doUsefixedMutationRate=true;
-    programOptions.K=0.0;
-    
-    if (programOptions.doUseFixedTree == NO){
-        std::cout << "\nSimulating " << numberTrees << " trees .... \n"<<std::endl;
-        simulateTrees( numberTrees,structuredCoalTrees,  trueTrees,         trueThetas,
-                      trueDeltaTs,
-                      trueTs,
-                      sampleSizes, programOptions,mcmcOptions, randomGenerators,randomGeneratorsBoost, ObservedData,ObservedCellNames, msa,  healthyTipLabel,   programOptions.seqErrorRate,
-                      programOptions.dropoutRate  );
-        std::cout << "\nSimulation trees ended. \n"<< std::endl;
-        
-    }
-    
+
     programOptions.doUsefixedMutationRate = false;
     programOptions.K=0.8;
     
    
-      std::vector<Partition *> partitionList(mcmcOptions.numChains);
   
     if (doMCMC){
+        std::vector<Chain*> chainsFortheSameTree(mcmcOptions.numberChainsPerTree);
+        int numberTrees = floor((double)mcmcOptions.numChains / mcmcOptions.numberChainsPerTree);
+        
+        mcmcOptions.fixedValuesForSimulation = true;
+        programOptions.doUsefixedMutationRate=true;
+        /*simulate trees to initialize the chains*/
+        if (programOptions.doUseFixedTree == NO){
+            std::cout << "\nSimulating " << numberTrees << " trees .... \n"<<std::endl;
+            simulateTrees( numberTrees,structuredCoalTrees,  trueTrees,         trueThetas,
+                          trueDeltaTs,
+                          trueTs,
+                          sampleSizes, programOptions,mcmcOptions, randomGenerators,randomGeneratorsBoost, ObservedData,ObservedCellNames, msa,  healthyTipLabel,   programOptions.seqErrorRate,
+                          programOptions.dropoutRate  );
+            std::cout << "\nSimulation trees ended. \n"<< std::endl;
+            
+        }
         mcmcOptions.printChainStateEvery=mcmcOptions.iterationsToMonitorChain;
+         std::vector<Partition *> partitionList(mcmcOptions.numChains);
         
         MCMC * mcmc =new MCMC(mcmcOptions.numChains);
         
@@ -259,17 +257,37 @@ int main(int argc, char* argv[] )
     }
     else/* SMC */
     {
+        
+        programOptions.meanADOsite = 0.1;
+        programOptions.varADOsite=0.01;
+        programOptions.meanADOcell = 0.1;
+        programOptions.varADOcell=0.01;
+        programOptions.meanGenotypingError= 0.01;
+        programOptions.varGenotypingError=0.001;
+        programOptions.fixedADOrate=0.01;
+        
+        
         std::vector<int> positions(programOptions.TotalTumorSequences);
         std::iota( std::begin( positions ), std::end( positions ), 1 );
         //std::random_shuffle( positions.begin(), positions.end());
         
+        
         GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
         PLLBufferManager *pll_buffer_manager = new PLLBufferManager;
-        const pll_partition_t* partition= pll_utils::createGTReferencePartition(msa);
+//        const pll_partition_t* pll_partition= pll_utils::createGTReferencePartition(msa);
+        
+        Partition * partition = new Partition(msa,
+           16,// model->states,//numberStates
+           1,//RATE_CATS, // unsigned  int  numberRateCats
+           0, //int statesPadded
+           false, false, false, false, false, false);
+        
+        
+    
         
         PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel);
         
-        size_t num_iter = programOptions.TotalTumorSequences-1;
+        size_t num_iter = programOptions.TotalTumorSequences-1 +programOptions.numClones-1;
         PosetSMC posetSMC(programOptions.numClones,  num_iter);
         SMCOptions smcOptions;
         
@@ -299,7 +317,7 @@ int main(int argc, char* argv[] )
     
     /* clean memory*/
     
-    Random::freeListRandomNumbersGenerators(randomGenerators);
+   Random::freeListRandomNumbersGenerators(randomGenerators);
     trueTrees.clear();
     structuredCoalTrees.clear();
     trueThetas.clear();

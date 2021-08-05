@@ -1078,6 +1078,24 @@ long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveL
     return ThisTimeCA_V2;
     
 }
+long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,long double currentTime, int numActiveLineages,  double K){
+    
+    long double result=0.0;
+    long double temp, termOnlyAfterFirstCoalEvent;
+    if (numActiveLineages > 1)
+    {
+        temp=log(numActiveLineages * (numActiveLineages-1.0)/2.0);
+        result= result + temp;
+        temp = -1.0 * Population::LogCalculateH(timeNextEvent,timeOriginSTD, delta, K);
+        result= result + temp;
+//        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
+        termOnlyAfterFirstCoalEvent =Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K);//if no coalescent
+        temp =  (numActiveLineages / 2.0)* (numActiveLineages - 1.0)*(Population::FmodelTstandard(timeNextEvent, timeOriginSTD, delta, K)-termOnlyAfterFirstCoalEvent);
+        result= result - temp;
+    
+    }
+    return result;
+}
 PopulationSet::PopulationSet(int numClones){
     
     if (numClones >=0)
@@ -1247,7 +1265,7 @@ void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl){
     long double theta;
     for (unsigned int i = 0; i < numClones; ++i){
          auto popI =  populations[i];
-        delta = Random::RandomExponential(1, NULL, true, rngGsl, NULL);
+        delta = Random::RandomExponential(0.1, NULL, true, rngGsl, NULL);
         theta =  Random::RandomExponential(1, NULL, true, rngGsl, NULL);
         popI->theta = theta;
         popI->delta = delta;
@@ -1282,6 +1300,12 @@ void PopulationSet::initProportionsVector(){
         oldproportionsVector.push_back(0);
     }
     
+}
+void PopulationSet::sortPopulationsByTorigin(){
+ 
+        sort(populations.begin(), populations.end(), comparePopulationsByTimeOrigin);
+        //    qsort(populations, numClones, sizeof(Population), comparePopulationsByTimeOrigin);
+
 }
 Population* PopulationSet::ChooseFatherPopulation( Population  *PopChild, const gsl_rng *randomGenerator, int noisy, long double K)
 {
@@ -2398,6 +2422,7 @@ pll_rtree_t* StructuredCoalescentTree::getTree()
     
     return rtree;
 }
+
 pll_rnode_t* StructuredCoalescentTree::BuildTree(Population *CurrentPop,
                               const gsl_rng *randomGenerator,
                               ProgramOptions &programOptions,

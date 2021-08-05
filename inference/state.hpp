@@ -13,6 +13,7 @@
 #include "pll_buffer_manager.hpp"
 #include "population.hpp"
 #include "genotype_error_model.hpp"
+#include "partition.hpp"
 
 #include  <vector>
 extern "C"
@@ -25,10 +26,10 @@ class State{
     long double height;
     //std::shared_ptr<PopulationSet> populationSet;
     PopulationSet * populationSet;
-
+    unsigned int nextAvailable;
     PLLBufferManager *const pll_buffer_manager;
 
-    const pll_partition_t *partition;
+    const Partition *partition;
     unsigned int num_sites;
     std::vector<std::shared_ptr<PartialTreeNode>> roots;
     //std::shared_ptr<GenotypeErrorModel> gtError;
@@ -36,6 +37,8 @@ class State{
 public:
 
     State( PosetSMCParams &params, gsl_rng *random);
+    
+    State(const State &original);
     std::vector<pll_rnode_t *> getForest() const;
 
     void initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions);
@@ -44,18 +47,18 @@ public:
     
     State &operator=(const State &original);
     
-    std::vector<std::shared_ptr<PartialTreeNode>> propose(int i, int j, double height);
+    std::shared_ptr<PartialTreeNode> connect(int i, int j, double height_delta);
     
     std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
     
-    double likelihood_factor(std::shared_ptr<PartialTreeNode> root);
+    double likelihood_factor(std::shared_ptr<PartialTreeNode> root)const;
     
     void remove_roots(int i, int j);
     
     int root_count() const{return roots.size();};
     
     double compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
-                                 const pll_partition_t *p);
+                                 const Partition *p);
     
     PopulationSet* getPopulationSet()const  {return populationSet;};
     
@@ -63,6 +66,17 @@ public:
     
     int getNumberPopulations() const {return populationSet->numClones;};
     
+    long double getHeight()const{return height;}
+    
+    void setHeight(long double  newHeight)
+    {
+        assert(newHeight>=height);
+        height= newHeight;
+        
+    }
+    unsigned int getNextAvailable()const{return nextAvailable;}
+    
+    void increaseNextAvailable(){nextAvailable++;}
     ~State();
 };
 #endif /* state_hpp */

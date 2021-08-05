@@ -175,6 +175,7 @@ public:
     void setProportion(long double x);
     void setPopulationToriginConditionalDelta( const gsl_rng *rngGsl );
     long double proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K);
+    long double logLikelihoodNextCoalescent(long double timeNextEvent,long double currentTime, int numActiveLineages,  double K);
     
 private:
     static bool isNotPositive(long double d);
@@ -214,6 +215,8 @@ public:
                                                      int &numActiveGametes, int &nextAvailable,
                                                      int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames, std::vector<int> &sampleSizes);
     std::vector<Population *>& getPopulations();
+    void sortPopulationsByTorigin();
+    
     
 };
 class StructuredCoalescentTree{

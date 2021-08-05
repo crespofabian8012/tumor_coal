@@ -765,7 +765,7 @@ const pll_partition_t *pll_utils::createReferencePartition(pll_msa_t * msa) {
 const pll_partition_t *pll_utils::createGTReferencePartition(pll_msa_t * msa) {
     
 
-  const unsigned int rate_category_count = 4;
+  const unsigned int rate_category_count = 1;
     unsigned int number_states=16;
  // double rate_categories[4] = {0, 0, 0, 0};
   //pll_compute_gamma_cats(1, 4, rate_categories, PLL_GAMMA_RATES_MEAN);
@@ -774,9 +774,7 @@ const pll_partition_t *pll_utils::createGTReferencePartition(pll_msa_t * msa) {
   //const double subst_params[6] = {1, 1, 1, 1, 1, 1};
 
   const unsigned int nucleotide_states = 16;
-//  double  one_16 = 1.0/16;
-//  const double nucleotide_frequencies[16] = {one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16, one_16
-//  };
+
 
   pll_partition *partition = pll_partition_create(
       msa->count,

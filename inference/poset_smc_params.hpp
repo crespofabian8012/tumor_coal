@@ -12,7 +12,7 @@
 #include  "mcmc_parameter.hpp"
 #include  "pll_buffer_manager.hpp"
 #include  "genotype_error_model.hpp"
-
+#include  "partition.hpp"
 #include  <vector>
 
 
@@ -29,7 +29,7 @@ public:
     int sampleSize;
     unsigned int num_sites;
     pll_msa_t *msa;
-    const pll_partition_t *partition;
+    const Partition *partition;
     PLLBufferManager *const pll_buffer_manager;
     std::vector<int> positions;
     ProgramOptions *programOptions;
@@ -49,7 +49,7 @@ public:
                    std::vector<int> &sampleSizes,
                    unsigned int num_sites,
                    pll_msa_t *msa,
-                   const pll_partition_t *partition,
+                   const Partition *partition,
                    PLLBufferManager *const pll_buffer_manager,
                    std::vector<int> &positions,
                    ProgramOptions &programOptions,

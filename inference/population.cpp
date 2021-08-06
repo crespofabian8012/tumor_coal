@@ -808,13 +808,9 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
 {
     long double random;
     int k, w;
-    //long double*cumPopulPart = (long double*) malloc((numActiveGametes + 1)* (long) sizeof(double));
+  
     std::vector<long double> cumPopulPart(numActiveGametes + 1);
-//    if (!cumPopulPart)
-//    {
-//        fprintf (stderr, "Could not allocate cumPopulPart (%lu bytes)\n", (numActiveGametes + 1) * (long) sizeof(double));
-//        exit (-1);
-//    }
+
     cumPopulPart[0] = 0;
     for (k = 1; k <= numActiveGametes; k++)
         cumPopulPart[k] = 0;
@@ -841,9 +837,17 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
             
         } while (*firstInd == *secondInd  );
     }
-   // free (cumPopulPart);
-   // cumPopulPart=NULL;
+  
 }
+//void Population::getIdsActiveGametes(int *firstId,  int *secondId, int i, int j )
+//{
+//
+//    assert(i>=0 && i<numActiveGametes && i < idsActiveGametes.size());
+//    assert(j>=0 && j<numActiveGametes && j < idsActiveGametes.size());
+//
+//    *firstId = idsActiveGametes[i];
+//    *secondId = idsActiveGametes[j];
+//}
 /***************** bbinClones *****************/
 /* binary search in the probabilities with clones */
 int Population::bbinClones (long double dat, long double *v, int n)
@@ -1265,7 +1269,7 @@ void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl){
     long double theta;
     for (unsigned int i = 0; i < numClones; ++i){
          auto popI =  populations[i];
-        delta = Random::RandomExponential(0.1, NULL, true, rngGsl, NULL);
+        delta = Random::RandomExponential(0.8, NULL, true, rngGsl, NULL);
         theta =  Random::RandomExponential(1, NULL, true, rngGsl, NULL);
         popI->theta = theta;
         popI->delta = delta;
@@ -2707,7 +2711,6 @@ pll_rnode_t* StructuredCoalescentTree::BuildTree(Population *CurrentPop,
         
         healthyRoot->right = healthyTip1;
         healthyTip1->parent=healthyRoot;
-        
         
         //u1->effectPopSize=healthyR->effectPopSize;
         

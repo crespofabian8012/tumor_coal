@@ -833,3 +833,47 @@ int pll_utils::cb_rfull_traversal(pll_rnode_t * node)
 {
   return 1;
 }
+double pll_utils::meanHeterozygosity(long seq_count, long site_count, pll_msa_t* msa)
+{
+  /* This calculates the mean heterozygosity for sequences in the alignment,
+  assuming that all sequences are from the same species and each sequence is
+  diploid unphased.
+  The code needs to be changed if there are 2 or more species.
+  */
+  long j,h;
+  double H = 0;
+
+  assert(seq_count > 0 && site_count > 0);
+  for (j = 0; j < seq_count; j++)
+  {
+    for (h = 0; h < site_count; h++)
+      if (msa->sequence[j][h] != 1 &&
+          msa->sequence[j][h] != 2 &&
+          msa->sequence[j][h] != 4 &&
+          msa->sequence[j][h] != 8)
+        H++;
+  }
+  H /= seq_count * site_count;
+  return(H);
+}
+/*** Ziheng 2020-10-17
+* Calculation of average sequence distances (p-distance) over loci and sequnce pairs
+* for simulated data.  Sequences have to be fulled resolved/phased.
+***/
+double pll_utils::meanDistance(long seq_count, long site_count, pll_msa_t* msa)
+{
+  long j1,j2,h;
+  double md = 0;
+
+  assert(seq_count > 0 && site_count > 0);
+  for (j1 = 0; j1 < seq_count; j1++)
+  {
+    for (j2 = 0; j2 < j1; j2++)
+    {
+      for (h = 0; h < site_count; h++)
+        if (msa->sequence[j1][h] != msa->sequence[j2][h]) md++;
+    }
+  }
+  md /= seq_count * (seq_count - 1.0) / 2.0 * site_count;
+  return(md);
+}

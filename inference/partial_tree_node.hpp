@@ -22,7 +22,7 @@ class PartialTreeEdge {
 public:
  
   PartialTreeEdge(PLLBufferManager *manager, std::shared_ptr<PartialTreeNode> child,
-                double length, unsigned int pmatrix_size);
+                double length, unsigned int pmatrix_size, size_t alignment);
 
   ~PartialTreeEdge();
 
@@ -42,7 +42,8 @@ public:
                 std::shared_ptr<PartialTreeEdge> edge_l,
                 std::shared_ptr<PartialTreeEdge> edge_r, std::string label,
                 double height, unsigned int clv_size,
-                unsigned int scale_buffer_size);
+                unsigned int scale_buffer_size, size_t alignment,
+                unsigned  int index);
 
 
   ~PartialTreeNode();
@@ -53,8 +54,9 @@ public:
   std::string label;
   double height;
   double ln_likelihood;
-  int index_population;
-
+  unsigned int index_population;
+  unsigned int index;
+    
   double *clv;
   unsigned int *scale_buffer;
 };

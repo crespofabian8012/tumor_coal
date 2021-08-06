@@ -30,6 +30,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
     //make a  copy of curr
     State * newState= new State(curr);
     std::shared_ptr<State> result(newState);
+    log_w=0;
     
     if (result->root_count()>1){
         // select 2 nodes to coalesce
@@ -77,37 +78,44 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                
             chosenPop->ChooseRandomIndividual(&firstInd, numClones,   &secondInd, random, choosePairIndividuals);
             
+            std::cout<< "first idx "<< firstInd << " second " << secondInd<< std::endl;
+            std::cout<< "timeNextEvent "<<  minTimeNextEvent<<  std::endl;
+            
             //TODO: the indexes firstInd and secondInd are respect to the chosePop
             //for more than one clon we have to fix this
-            std::shared_ptr<PartialTreeNode> node = result->connect(firstInd, secondInd, minTimeNextEvent-result->getHeight());
+            
+            unsigned int index_population = idx_pop;
+            std::shared_ptr<PartialTreeNode> node = result->connect(firstInd, secondInd, minTimeNextEvent-result->getHeight(), index_population);
+            
+            
+            
+            long double logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeight(), chosenPop->numActiveGametes, params.getProgramOptions().K);
+            
+            node->ln_likelihood = node->ln_likelihood +logLikNextCoal;
+            
+    
+            long double logLikNoCoal;
+            //do we  need to add loglik of no coal events in  other populations?
+          
+            for(size_t i=0; i <  result->getNumberPopulations(); i++){
+                    pop= result->getPopulationByIndex( i);
+                // do we need to include this in the node->ln_likelihood?
+                    log_w +=pop->LogDensityTimeSTDFrom(pop->timeOriginSTD, 0);
+                    
+                    if (pop!=chosenPop){
+                        logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeight(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
+                       
+                        node->ln_likelihood = node->ln_likelihood +logLikNoCoal;
+                        
+                    }
+                }
+            
             
             double weight = result->likelihood_factor(node);
             
             assert(!isnan(weight) && !isinf(weight));
                    
             log_w = weight;
-            
-            long double logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeight(), chosenPop->numActiveGametes, params.getProgramOptions().K);
-            
-            log_w += logLikNextCoal;
-            
-              chosenPop->idsGametes[chosenPop->numActiveGametes] = result->getNextAvailable();
-
-            result->increaseNextAvailable(); 
-            
-            chosenPop->numActiveGametes=chosenPop->numActiveGametes -1;
-            long double logLikNoCoal;
-            //do we  need to add loglik of no coal events in  other populations?
-          
-            for(size_t i=0; i <  result->getNumberPopulations(); i++){
-                    pop= result->getPopulationByIndex( i);
-                    log_w +=pop->LogDensityTimeSTDFrom(pop->timeOriginSTD, 0);
-                    if (pop!=chosenPop){
-                        logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeight(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
-                        log_w +=logLikNoCoal;
-                        
-                    }
-                }
             
         }
         else{//next event an origin

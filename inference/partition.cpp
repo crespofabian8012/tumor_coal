@@ -76,7 +76,7 @@ tipPatternCompression(tipPatternCompression)
         
     }
     
-    sumtable = (double *)pll_aligned_alloc(numberSites * numberRateCats * statesPadded * sizeof(double), partition->alignment);
+    sumtable = (double *)pll_aligned_alloc(partition->sites * partition->rate_cats * partition->states_padded * sizeof(double), partition->alignment);
     
     if (!sumtable)
     {
@@ -145,17 +145,18 @@ tipPatternCompression(tipPatternCompression)
     //const double subst_params[6] = {1, 1, 1, 1, 1, 1};
     //const unsigned int rate_category_count = 4;
     // double rate_categories[4] = {0, 0, 0, 0};
-    
+    double rate_categories[1] = {0};
     
     
     // double  rate_categories[number_states];
     // std::fill_n (rate_categories, number_states*(number_states-1) /2, 1);
     
     
-    double rate_categories[1] = {1};
+    //double rate_categories[1] = {1};
     pll_compute_gamma_cats(1, 1, rate_categories, PLL_GAMMA_RATES_MEAN);
-    // int numberRateMatrices = 2*msa->count -3;
+    //pll_compute_gamma_cats(1, 4, rate_categories, PLL_GAMMA_RATES_MEAN);
     
+    //numberRateCats=4;
     numberRateCats=1;
     partition = pll_partition_create(
                                      msa->count,
@@ -164,7 +165,7 @@ tipPatternCompression(tipPatternCompression)
                                      0, // Don't allocate any pmatrices.
                                      numberRateCats,
                                      0, // Don't allocate any scale buffers.
-                                     attributes);
+                                     PLL_ATTRIB_ARCH_SSE);
     
     if(!partition)
     {
@@ -208,7 +209,7 @@ tipPatternCompression(tipPatternCompression)
     pll_update_eigen(partition, 0);
     
     
-    sumtable = (double *)pll_aligned_alloc(numberSites * numberRateCats * statesPadded * sizeof(double), partition->alignment);
+    sumtable = (double *)pll_aligned_alloc(partition->sites * partition->rate_cats * partition->states_padded * sizeof(double), partition->alignment);
     
     if (!sumtable)
     {
@@ -404,7 +405,7 @@ int  Partition::computeLikelihoodDerivatives(int parentScalerIndex, int childSca
     
 }
 
-pll_partition_t * Partition::getPartition(){
+pll_partition_t * Partition::getPartition()const {
     
     return partition;
     

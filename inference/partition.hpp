@@ -179,7 +179,7 @@ public:
     
     int  computeLikelihoodDerivatives(int parentScalerIndex, int childScalerIndex, double branchLength, const unsigned int * paramsIndices, double * df, double * ddf);
     
-    pll_partition_t * getPartition();
+    pll_partition_t * getPartition()const ;
     
     int ascBiasCorrection() const{return partition->asc_bias_alloc; };
     
@@ -202,6 +202,8 @@ public:
     double* rateWeights() const{return partition->rate_weights; };
     
     unsigned int* patternWeights() const{return partition->pattern_weights; };
+    
+    size_t alignment() const{return partition->alignment; };
     
     int* invariant() const{return partition->invariant; };
     

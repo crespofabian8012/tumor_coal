@@ -72,5 +72,7 @@ const pll_partition_t *createGTReferencePartition(pll_msa_t * msa);
 double computeLogLikelihood(double *clv, unsigned int *scale_buffer,
                                         const pll_partition_t *p);
 int cb_rfull_traversal(pll_rnode_t * node);
+double meanHeterozygosity(long seq_count, long site_count, pll_msa_t* msa);
+double meanDistance(long seq_count, long site_count, pll_msa_t* msa);
 }
 #endif /* pll_utils_hpp */

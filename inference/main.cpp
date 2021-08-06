@@ -283,8 +283,6 @@ int main(int argc, char* argv[] )
            false, false, false, false, false, false);
         
         
-    
-        
         PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel);
         
         size_t num_iter = programOptions.TotalTumorSequences-1 +programOptions.numClones-1;
@@ -300,7 +298,7 @@ int main(int argc, char* argv[] )
         smcOptions.resampling_seed = 8234532;
         smcOptions.track_population = true;
         smcOptions.init();
-      
+        smcOptions.debug = true;
        
         SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
        

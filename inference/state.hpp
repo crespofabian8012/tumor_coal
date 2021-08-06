@@ -47,7 +47,7 @@ public:
     
     State &operator=(const State &original);
     
-    std::shared_ptr<PartialTreeNode> connect(int i, int j, double height_delta);
+    std::shared_ptr<PartialTreeNode> connect(int i, int j, double height_delta, unsigned int index_population);
     
     std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
     
@@ -59,6 +59,11 @@ public:
     
     double compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
                                  const Partition *p);
+    
+    double compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
+                                        const pll_partition_t *p);
+    
+    void updateIndexesActiveGametes();
     
     PopulationSet* getPopulationSet()const  {return populationSet;};
     
@@ -77,6 +82,8 @@ public:
     unsigned int getNextAvailable()const{return nextAvailable;}
     
     void increaseNextAvailable(){nextAvailable++;}
+    
+    
     ~State();
 };
 #endif /* state_hpp */

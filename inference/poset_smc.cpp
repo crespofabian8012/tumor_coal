@@ -17,7 +17,7 @@ PosetSMC::PosetSMC(size_t numClones, size_t num_iter)
   {
       this->numClones=numClones;
       this->num_iter = num_iter;
-      std::cout<<"creating posetSMC"<< std::endl;
+      
 }
 std::shared_ptr<State> PosetSMC::propose_initial(gsl_rng *random, double &log_w, PosetSMCParams &params){
     
@@ -35,23 +35,31 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
     if (result->root_count()>1){
         // select 2 nodes to coalesce
         Population *pop,*chosenPop, *oldestPop;
-        long double minTimeNextEvent = 100000000 ;
+        long double minTimeNextEvent = DOUBLE_INF ;
         int idx_pop=1;
         long double waitingTime, timeNextEvent;
         bool isCoalescentEvent=false;
+        double currentTime=0.0;
+        double currentTimeKingman=0.0;
         for(size_t i=0; i <  result->getNumberPopulations(); i++){
             
             pop= result->getPopulationByIndex( i);
             oldestPop = result->getPopulationByIndex( result->getNumberPopulations()-1);
         
             if (pop->numActiveGametes >1){
+                
+                currentTime = result->getHeightModelTime() ;
+                currentTimeKingman = Population::FmodelTstandard (currentTime , pop->timeOriginSTD, pop->delta,   params.getProgramOptions().K);//this is current time in Kingman coal time
+                
                 waitingTime= pop->proposeTimeNextCoalEvent(random, pop->numActiveGametes, params.getProgramOptions().K);
                 
-                timeNextEvent = result->getHeight()+ waitingTime;
+                currentTimeKingman = currentTimeKingman+waitingTime;
+                
+                timeNextEvent =   Population::GstandardTmodel(currentTimeKingman, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);;
                 isCoalescentEvent=true;
-                //do I need to convert this proposed time?
+                
             }
-            else{//already reached the MRCA
+            else{//last event
                 
                 if (result->getNumberPopulations()==1 || pop == oldestPop){
                     timeNextEvent = pop->timeOriginSTD;
@@ -69,6 +77,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
         }
         
         chosenPop= result->getPopulationByIndex( idx_pop);
+        // std::cout<< "chosen pop "<< idx_pop <<  " T " << chosenPop->timeOriginSTD << std::endl;
         if (chosenPop->numActiveGametes >1){
             //next event a coalescence
             //choose 2 active lineages to coalesce inside population idx_pop
@@ -78,18 +87,26 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                
             chosenPop->ChooseRandomIndividual(&firstInd, numClones,   &secondInd, random, choosePairIndividuals);
             
-            std::cout<< "first idx "<< firstInd << " second " << secondInd<< std::endl;
-            std::cout<< "timeNextEvent "<<  minTimeNextEvent<<  std::endl;
+            //std::cout<< "first idx "<< firstInd <<  " second " << secondInd<< std::endl;
+           // std::cout<< "first label "<< result->getRootAt(firstInd)->label <<  " second " << result->getRootAt(secondInd)->label<< std::endl;
+           // std::cout<< "timeNextEvent "<<  minTimeNextEvent<<  " T "<< chosenPop->timeOriginSTD  << std::endl;
             
             //TODO: the indexes firstInd and secondInd are respect to the chosePop
             //for more than one clon we have to fix this
             
             unsigned int index_population = idx_pop;
-            std::shared_ptr<PartialTreeNode> node = result->connect(firstInd, secondInd, minTimeNextEvent-result->getHeight(), index_population);
+            result->setHeightScaledByTheta(minTimeNextEvent* result->getTheta());
+            
+           // std::cout << "new  height scaled by theta"<<  " is "<< result->getHeightScaledByTheta()<< std::endl;
+            
+            std::shared_ptr<PartialTreeNode> node = result->connect(firstInd, secondInd, minTimeNextEvent* result->getTheta()-result->getHeightScaledByTheta(), index_population);
             
             
+            long double logLikNextCoal = 0.0;
             
-            long double logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeight(), chosenPop->numActiveGametes, params.getProgramOptions().K);
+       
+            
+            logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeightModelTime(), chosenPop->numActiveGametes, params.getProgramOptions().K);
             
             node->ln_likelihood = node->ln_likelihood +logLikNextCoal;
             
@@ -103,24 +120,27 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                     log_w +=pop->LogDensityTimeSTDFrom(pop->timeOriginSTD, 0);
                     
                     if (pop!=chosenPop){
-                        logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeight(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
+                        logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeightModelTime(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
                        
                         node->ln_likelihood = node->ln_likelihood +logLikNoCoal;
                         
                     }
                 }
             
-            
+         //    std::cout << "log lik of parent node after the coal part "<<  " is "<< node->ln_likelihood<< std::endl;
             double weight = result->likelihood_factor(node);
             
-            assert(!isnan(weight) && !isinf(weight));
+             
+           assert(!isnan(weight) && !isinf(weight));
                    
             log_w = weight;
             
-        }
-        else{//next event an origin
+            //std::cout << "log weight "<<  " is "<<  log_w<< std::endl;
             
-            result->setHeight(minTimeNextEvent);
+        }
+        else{//next event is an origin
+            
+            result->setHeightScaledByTheta(minTimeNextEvent* result->getTheta());
             //the new log_weight is the log of probability of no events
             // in any of the other populations
 //             long double logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(curr.getHeight(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
@@ -129,7 +149,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
        
     }
     
-
+ 
     return result;
 }
 //void PosetSMC::generate_data(gsl_rng *random, size_t T, SMCOptions &params, std::vector<double> &latent, std::vector<double> &obs){

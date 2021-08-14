@@ -41,10 +41,10 @@ if(Boost_FOUND)
     include_directories( PRIVATE ${Boost_INCLUDE_DIRS})
 endif()
 
-target_link_libraries(run  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a  ${Boost_LIBRARIES}  GSL::gsl  OpenMP::OpenMP_CXX libSPF.a Eigen3::Eigen)
+target_link_libraries(run  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a  ${Boost_LIBRARIES}  GSL::gsl  OpenMP::OpenMP_CXX ${CMAKE_SOURCE_DIR}/install/lib/libSPF.a Eigen3::Eigen)
 
 target_link_libraries(libTumorCoal
-    ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a   GSL::gsl OpenMP::OpenMP_CXX libSPF.a Eigen3::Eigen)
+    ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a   GSL::gsl OpenMP::OpenMP_CXX ${CMAKE_SOURCE_DIR}/install/lib/libSPF.a Eigen3::Eigen)
 
 INSTALL(TARGETS run DESTINATION ${CMAKE_SOURCE_DIR}/)
 INSTALL(TARGETS libTumorCoal DESTINATION bin)

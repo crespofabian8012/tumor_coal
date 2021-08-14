@@ -207,7 +207,7 @@ public:
     std::vector <long double> getDeltas();
     std::vector <long double> getTs();
     std::vector <long double> getSampleSizes();
-    void initDeltaThetaFromPriors( const gsl_rng *rngGsl);
+    void initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double &theta);
     Population* ChooseFatherPopulation( Population  *PopChild,  const gsl_rng *randomGenerator, int noisy, long double K);
     void AssignSequencesToPopulations(std::vector<pll_rnode_t*> rnodes,
                                                      ProgramOptions &programOptions,

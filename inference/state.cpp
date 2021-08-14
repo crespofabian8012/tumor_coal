@@ -8,6 +8,7 @@
 
 #include "state.hpp"
 #include "pll_utils.hpp"
+#include "core_likelihood.hpp"
 #include "treeLikelihood.hpp"
 #include <memory>
 #include "poset_smc_params.hpp"
@@ -16,8 +17,9 @@
 State::State(PosetSMCParams &smcParams, gsl_rng *random):
 pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition), num_sites(smcParams.num_sites)
 {
-    height = 0.0;
-
+    heightModelTime = 0.0;
+    heightScaledByTheta =0.0;
+    
     //TODO put random values on Genotype errors model
     gtError =  new GenotypeErrorModel("GT20", smcParams.getProgramOptions().meanGenotypingError,  1.0 - sqrt (1.0 - smcParams.getProgramOptions().fixedADOrate), 16);;
     populationSet = new PopulationSet(smcParams.getProgramOptions().numClones);
@@ -28,7 +30,7 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     populationSet->initPopulationRTips();
     populationSet->initProportionsVectorFromSampleSizes(smcParams.sampleSizes);
     
-    populationSet->initDeltaThetaFromPriors(random);
+    populationSet->initDeltaThetaFromPriors(random, theta);
     populationSet->setPopulationsToriginConditionalDelta(random);
     populationSet->sortPopulationsByTorigin();
     
@@ -37,18 +39,20 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     
     initForest(smcParams.sampleSize, smcParams.msa, smcParams.positions,  smcParams.getProgramOptions());
     nextAvailable = smcParams.sampleSize+1;
-
+    
 }
 State::State(const State &original):pll_buffer_manager(original.pll_buffer_manager){
-
-    height=original.height;
+    
+    heightModelTime=original.heightModelTime;
+    heightScaledByTheta=original.heightScaledByTheta;
     num_sites=original.num_sites;
     populationSet=original.populationSet;
     gtError=original.gtError;
     roots=original.roots;
     partition= original.partition;
     nextAvailable = original.nextAvailable;
-   
+    theta = original.theta;
+    
 }
 void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions){
     
@@ -74,38 +78,48 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         
         cumIndivid++;
         
-      
+        
         unsigned int sites_alloc =
         reference_partition->ascBiasCorrection() ? reference_partition->numberSites + reference_partition->numberStates : reference_partition->numberSites;
         
+        unsigned int clv_num_elements= sites_alloc * reference_partition->numberStates * reference_partition->numberRateCats;
         unsigned int clv_size =
-        sites_alloc * reference_partition->getStatesPadded() * reference_partition->numberRateCats * sizeof(double);
+        clv_num_elements * sizeof(double);
         unsigned int scaler_size = (reference_partition->attributes & PLL_ATTRIB_RATE_SCALERS)
         ? sites_alloc * reference_partition->numberRateCats
         : sites_alloc;
         
-        
-        p=std::make_shared<PartialTreeNode>(pll_buffer_manager, nullptr, nullptr, msa->label[i], height, clv_size,
+        unsigned int scale_buffer_size = scaler_size * sizeof(unsigned int);
+        //        if (i==0)
+        //            std::cout << "tip clv elements "<<  sites_alloc * reference_partition->numberStates * reference_partition->numberRateCats << " clv size " << clv_size<< " scale size " <<  scaler_size << " scale_buffer_size  " <<  scale_buffer_size<< std::endl;
+        //
+        p=std::make_shared<PartialTreeNode>(pll_buffer_manager, nullptr, nullptr, msa->label[i], heightScaledByTheta, clv_num_elements,
                                             scaler_size, reference_partition->alignment(), i);
         
-        delete (p->clv);
-        delete (p->scale_buffer);
         
-        std::vector<double> tmp_clv;
-     
-        reference_partition->computeCLV(i, msa, gtError, tmp_clv);
-   
-       // reference_partition->initTipCLV(i, tmp_clv.data());
+        // delete (p->clv);
+        //delete (p->scale_buffer);
         
-        //p->clv = reference_partition->getCLV(i);
-        p->clv =tmp_clv.data();
-        p->scale_buffer = nullptr;
-      //  double temp= compute_ln_likelihood(p->clv, nullptr, reference_partition);
+        auto clv_elem = reference_partition->numberSites * reference_partition->numberStates;
         
-        p->ln_likelihood = compute_ln_likelihood(p->clv, nullptr, reference_partition->getPartition());
+        //reference_partition->buildCLV(i, msa, gtError, p->getCLV(), false);
+        p->buildCLV(i,reference_partition->numberStates,  msa, gtError,  false);
         
-        if (i==0)
-           std::cout << "initial log lik node "<< i << " is "<< p->ln_likelihood<< std::endl;
+        // reference_partition->initTipCLV(i, tmp_clv.data());
+        // p->showClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
+        
+        // p->scale_buffer = nullptr;
+        
+        //  double temp= compute_ln_likelihood(p->clv, nullptr, reference_partition);
+        
+        //p->ln_likelihood = compute_ln_likelihood(p->getCLV(), p->getScaleBuffer(), reference_partition->getPartition());
+        
+       // p->showpClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
+        p->ln_likelihood = compute_ln_likelihood(p->pclv, p->pscale_buffer, reference_partition->getPartition());
+        
+        //p->showClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
+        
+        //std::cout << "initial log lik node "<< i << " is "<< p->ln_likelihood<< std::endl;
         
         for (size_t j = 1; j <= programOptions.numClones; j++)
         {
@@ -122,10 +136,9 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
             }
         }
         
-        
         roots.push_back(p);
     }
-    height = 0.0;
+    
 }
 
 
@@ -136,59 +149,67 @@ State &State::operator=(const State &original){
         return *this;
     
     partition = original.partition;
-    height = original.height;
+    heightScaledByTheta = original.heightScaledByTheta;
+    heightModelTime = original.heightModelTime;
+    theta = original.theta;
     num_sites=original.num_sites;
     roots = original.roots;
     gtError=original.gtError;
     populationSet = original.populationSet;
     nextAvailable = original.nextAvailable;
     return *this;
- 
+    
 }
 
 
 std::shared_ptr<PartialTreeNode> State::connect(int i, int j, double height_delta, unsigned int index_population){
     
     std::vector<std::shared_ptr<PartialTreeNode>> result;
+    unsigned int float_precision = 3;
     
     assert(roots.size() > 1 && "Expected more than one root");
     assert(i != j && "Cannot connect, this would make a loop");
-    assert(height_delta >= 0 && "Height change can't be negative");
+    // assert(height_delta >= 0.0 && "Height change can't be negative");
     assert(i >= 0 && i < roots.size() && j >= 0 && j < roots.size() &&
            "Index out of bounds");
     
     const Partition *p =partition;
     
-    height += height_delta;
+    //heightScaledByTheta = heightScaledByTheta+ height_delta;
     
     std::shared_ptr<PartialTreeNode> child_left = roots[i];
     std::shared_ptr<PartialTreeNode> child_right = roots[j];
     
-    double left_length =height - child_left->height;
-    double right_length = height - child_right->height;
+    double left_length =heightScaledByTheta - child_left->height;
+    double right_length = heightScaledByTheta - child_right->height;
     
-    unsigned int pmatrix_size =
-    p->numberStates * p->getStatesPadded() * p->numberRateCats * sizeof(double);
+    unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
+    unsigned int pmatrix_size = pmatrix_elements * sizeof(double);
     
     std::shared_ptr<PartialTreeEdge> edge_left = std::make_shared<PartialTreeEdge>(
-                                                                                   pll_buffer_manager, child_left, left_length, pmatrix_size, partition->alignment());
+                                                                                   pll_buffer_manager, child_left, left_length, pmatrix_elements, partition->alignment());
     
     std::shared_ptr<PartialTreeEdge> edge_right = std::make_shared<PartialTreeEdge>(
-                                                                                    pll_buffer_manager, child_right, right_length, pmatrix_size, partition->alignment());
+                                                                                    pll_buffer_manager, child_right, right_length, pmatrix_elements, partition->alignment());
     
     unsigned int sites_alloc =
     p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites;
     
-    unsigned int clv_size =
-    sites_alloc * p->getStatesPadded() * p->numberRateCats * sizeof(double);
+    unsigned int clv_elements = sites_alloc  * p->numberStates *  p->numberRateCats;
+    
+    unsigned int clv_size = clv_elements * sizeof(double);
+    //sites_alloc * p->getStatesPadded() * p->numberRateCats * sizeof(double);
+    
     unsigned int scaler_size = (p->attributes & PLL_ATTRIB_RATE_SCALERS)
     ? sites_alloc * p->numberRateCats
     : sites_alloc;
     unsigned int scale_buffer_size = scaler_size * sizeof(double);
     
+    
+    
     std::shared_ptr<PartialTreeNode> parent = std::make_shared<PartialTreeNode>(
-                                                                                pll_buffer_manager, edge_left, edge_right, "", height, clv_size,
-                                                                                scale_buffer_size, partition->alignment(), nextAvailable);
+                                                                                pll_buffer_manager, edge_left, edge_right, "", heightScaledByTheta, clv_elements,
+                                                                                scaler_size, partition->alignment(), nextAvailable);
     
     parent->index_population=index_population;
     nextAvailable++;
@@ -199,95 +220,161 @@ std::shared_ptr<PartialTreeNode> State::connect(int i, int j, double height_delt
     //const unsigned int param_indices[4] = {0, 0, 0, 0};
     const unsigned int param_indices[1] = {0};
     
-//    double * pmatrix = (double *)xcalloc(16,sizeof(double));
-//    pll_core_update_pmatrix(&pmatrix,
-//                               4,
-//                               1,
-//                               srates + ((site_rates) ? i : 0),
-//                               &(node->length),
-//                               matrix_indices,
-//                               params_indices,
-//                               &eigenvals,
-//                               &eigenvecs,
-//                               &inv_eigenvecs,
-//                               1,
-//                               opt_arch);
-//    double * left_matrices[1] = { parent->edge_l->pmatrix };
-//     std::cout << "left edge "<< " is "<< &parent->edge_l->length<< std::endl;
-    int left_edge_pmatrix_result = pll_core_update_pmatrix(
-                                                        &parent->edge_l->pmatrix,//double **pmatrix,
-                                                           p->numberStates,// unsigned int states
-                                                           p->numberRateCats,//unsigned int rate_cats
-                                                           p->rates(),//const double *rates
-                                                          &parent->edge_l->length,//const double *branch_lengths
-                                                           matrix_indices,//const unsigned int *matrix_indices
-                                                           param_indices,//const unsigned int *param_indices
-                                                           p->propInvar(),//const double *prop_invar
-                                                           p->eigenVals(),//double *const *eigenvals
-                                                           p->eigenVecs(),//double *const *eigenvecs
-                                                           p->invEigenVecs(),//double *const *inv_eigenvecs
-                                                           1,//unsigned int count
-                                                           p->attributes);
+    //    double * pmatrix = (double *)xcalloc(16,sizeof(double));
+    //    pll_core_update_pmatrix(&pmatrix,
+    //                               4,
+    //                               1,
+    //                               srates + ((site_rates) ? i : 0),
+    //                               &(node->length),
+    //                               matrix_indices,
+    //                               params_indices,
+    //                               &eigenvals,
+    //                               &eigenvecs,
+    //                               &inv_eigenvecs,
+    //                               1,
+    //                               opt_arch);
+    //    double * left_matrices[1] = { parent->edge_l->pmatrix };
+    
+    //    int left_edge_pmatrix_result= pll_core_update_pmatrix2( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices, p->eigenVals(), p->eigenVecs(),  p->invEigenVecs(), 1,  p->attributes);
+    
+    int left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+                                                                     1,
+                                                                     p->attributes);
+    //    int left_edge_pmatrix_result = pll_core_update_pmatrix(
+    //                                                           &parent->edge_l->pmatrix,//double **pmatrix,
+    //                                                           p->numberStates,// unsigned int states
+    //                                                           p->numberRateCats,//unsigned int rate_cats
+    //                                                           p->rates(),//const double *rates
+    //                                                           &parent->edge_l->length,//const double *branch_lengths
+    //                                                           matrix_indices,//const unsigned int *matrix_indices
+    //                                                           param_indices,//const unsigned int *param_indices
+    //                                                           p->propInvar(),//const double *prop_invar
+    //                                                           p->eigenVals(),//double *const *eigenvals
+    //                                                           p->eigenVecs(),//double *const *eigenvecs
+    //                                                           p->invEigenVecs(),//double *const *inv_eigenvecs
+    //                                                           1,//unsigned int count
+    //                                                           p->attributes);
     assert(left_edge_pmatrix_result == PLL_SUCCESS);
     
-//    for( size_t i=0; i < pmatrix_size; i++){
-//
-//        std::cout << &parent->edge_l->pmatrix[i] <<  std::endl;
-//    }
-//
-//
-//      std::cout << "right edge "<< " is "<< &parent->edge_r->length<< std::endl;
+    //       int right_edge_pmatrix_result= pll_core_update_pmatrix2( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices, p->eigenVals(), p->eigenVecs(),  p->invEigenVecs(), 1,  p->attributes);
+    //
+    int right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
+                                                                      1,
+                                                                      p->attributes);
     
-    int right_edge_pmatrix_result = pll_core_update_pmatrix(
-                                                    &parent->edge_r->pmatrix, p->numberStates, p->numberRateCats, p->rates(),
-                                                            &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
-                                                            p->eigenVals(), p->invEigenVecs(), p->invEigenVecs(), 1, p->attributes);
+    //    int right_edge_pmatrix_result = pll_core_update_pmatrix(
+    //                                                            &parent->edge_r->pmatrix, p->numberStates, p->numberRateCats, p->rates(),
+    //                                                            &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
+    //                                                            p->eigenVals(), p->invEigenVecs(), p->invEigenVecs(), 1, p->attributes);
     assert(right_edge_pmatrix_result == PLL_SUCCESS);
     
-//    for( size_t i=0; i < pmatrix_size; i++){
-//
-//        std::cout << &parent->edge_l->pmatrix[i] <<  std::endl;
-//    }
-//
     
-    pll_core_update_partial_ii(p->numberStates, (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites),
-                               p->numberRateCats, parent->clv, parent->scale_buffer, child_left->clv,
-                               child_right->clv, edge_left->pmatrix, edge_right->pmatrix,
-                               child_left->scale_buffer, child_right->scale_buffer, p->attributes);
+    unsigned int sites= (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites);
     
-   
     
-    std::cout << "log lik of parent node before "<<  " is "<< parent->ln_likelihood<< std::endl;
+    //std::vector<double>  left_norm_clv;
+    // std::vector<double>  right_norm_clv;
+    // std::vector<double>  parent_norm_clv;
+    
+    // child_left->getNormalizeCLV(p->numberSites, p->numberStates, left_norm_clv);
+    // child_right->getNormalizeCLV(p->numberSites, p->numberStates, right_norm_clv);
+    
+    //    pll_core_update_partial_ii2(p->numberStates, sites,
+    //                                p->numberRateCats, parent->getCLV().data(),
+    //                                parent->getScaleBuffer().data(),
+    //                                child_left->getCLV().data(),
+    //                                child_right->getCLV().data(),
+    //                                edge_left->pmatrix,
+    //                                edge_right->pmatrix,
+    //                                child_left->getScaleBuffer().data(),
+    //                                child_right->getScaleBuffer().data(),
+    //                                p->attributes);
+    pll_core_update_partial_ii2(p->numberStates, sites,
+                                p->numberRateCats, parent->pclv,
+                                parent->pscale_buffer,
+                                child_left->pclv,
+                                child_right->pclv,
+                                edge_left->pmatrix,
+                                edge_right->pmatrix,
+                                child_left->pscale_buffer,
+                                child_right->pscale_buffer,
+                                p->attributes);
+    
+    //parent->getNormalizeCLV(p->numberSites, p->numberStates, parent_norm_clv);
+    
+    // parent->showpClV(p->numberStates, p->numberRateCats, p->getStatesPadded(),
+//               p->numberSites, float_precision);
+    
+    // parent->showClV(p->numberStates, p->numberRateCats, p->getStatesPadded(),
+    //           p->numberSites, float_precision);
+    
     parent->ln_likelihood =
-    compute_ln_likelihood(parent->clv, nullptr, p->getPartition());
+    compute_ln_likelihood(parent->pclv,
+                          parent->pscale_buffer,
+                          p->getPartition());
+    //    parent->ln_likelihood =
+    //    compute_ln_likelihood(parent->getCLV(),
+    //                          parent->getScaleBuffer(),
+    //                          p->getPartition());
     
-  
-    std::cout << "log lik of parent node "<<  " is "<< parent->ln_likelihood<< std::endl;
+   // std::cout << "log lik of parent node before the coal part "<<  " is "<< parent->ln_likelihood<< std::endl;
     
     if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
-          
-          for( size_t i=0; i < scale_buffer_size; i++){
-            
-                    std::cout << " scale buffer "<<  i << " "<< parent->scale_buffer[i] <<  std::endl;
-                }
-             
-            for( size_t i=0; i < clv_size; i++){
-            
-                    std::cout << " clv pos "<< i << " "<<  parent->clv[i] <<  std::endl;
-                }
         
-          
-      }
-   // parent->ln_likelihood =
-  //    compute_ln_likelihood(parent->clv, parent->scale_buffer, p);
-      
-    
-      std::cout << "log lik of parent node "<<  " is "<< parent->ln_likelihood<< std::endl;
+        parent->ln_likelihood =
+        compute_ln_likelihood(parent->getCLV(),
+                              parent->getScaleBuffer(),
+                              p->getPartition());
+        
+        
+        parent->ln_likelihood =
+        compute_ln_likelihood(parent->getCLVPointer(),
+                              parent->getScaleBufferPointer(),
+                              p->getPartition());
+        
+        std::cout << "log lik of parent node "<<  " is "<< parent->ln_likelihood<< std::endl;
+        
+        std::cout << " clv elements: "<<  clv_elements << ", clv_size: "<<  clv_size << ", scaler_size: "<< scaler_size << ", states padded: "<< p->getStatesPadded()<<" , scale_buffer_size " <<  scale_buffer_size << ", pmatrix elements" <<pmatrix_elements<< ", pmatrix_size " <<  pmatrix_size << std::endl;
+        
+        std::cout << " left edge "<<  left_length << " right edge "<<  right_length  << std::endl;
+        std::cout << "left pmatrix "<< std::endl;
+        parent->edge_l->showPMatrix(p->numberStates, p->numberRateCats, p->getStatesPadded(),    float_precision);
+        
+        std::cout << "right pmatrix "<< std::endl;
+        parent->edge_r->showPMatrix(p->numberStates, p->numberRateCats, p->getStatesPadded(),    float_precision);
+        
+        std::cout << "eigen de comp "<< std::endl;
+        p->showEigenDecomp(float_precision);
+        
+        std::cout << "left clv: \n "<< std::endl;
+        child_left->showClV(p->numberStates, p->numberRateCats, p->getStatesPadded(),
+                            p->numberSites, float_precision);
+        
+        std::cout << "right clv: \n "<< std::endl;
+        child_right->showClV(p->numberStates, p->numberRateCats, p->getStatesPadded(),
+                             p->numberSites, float_precision);
+        
+        std::cout << "parent clv: \n "<< std::endl;
+        
+        parent->showClV(p->numberStates, p->numberRateCats, p->getStatesPadded(),
+                        p->numberSites, float_precision);
+        
+        std::cout << "parent scaler buffer. \n "<< std::endl;
+        
+        for( size_t i=0; i < scaler_size; i++){
             
-  
+            std::cout << " scale buffer "<<  i << " "<< parent->scale_buffer[i] <<  std::endl;
+        }
+        
+        
+    }
+    
+    
+    // std::cout << "log lik of parent node "<<  " is "<< parent->ln_likelihood<< std::endl;
+    
     assert(!isnan(parent->ln_likelihood) && !isinf(parent->ln_likelihood));
-          
-    assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
+    
+    // assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
     
     // Remove children
     remove_roots(i, j);
@@ -296,6 +383,9 @@ std::shared_ptr<PartialTreeNode> State::connect(int i, int j, double height_delt
     //update the active gametes of populations
     updateIndexesActiveGametes();
     
+    // pll_aligned_free(left_norm_clv);
+    //pll_aligned_free(right_norm_clv);
+    //pll_aligned_free(parent_norm_clv);
     return parent;
 }
 
@@ -344,7 +434,7 @@ void State::updateIndexesActiveGametes(){
         pop->idsGametes.clear();
     }
     for(size_t i=0;i< roots.size(); i++ ){
-      pop = populationSet->getPopulationbyIndex(roots[i]->index_population);
+        pop = populationSet->getPopulationbyIndex(roots[i]->index_population);
         pop->idsActiveGametes[pop->numActiveGametes]=i;
         pop->numActiveGametes= pop->numActiveGametes+1;
         pop->idsGametes[pop->numGametes]=i;
@@ -352,35 +442,78 @@ void State::updateIndexesActiveGametes(){
     }
 }
 
-double State::compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
+double State::compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
                                     const Partition *p) {
-   // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
+    // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
     const unsigned int parameter_indices[1] = {0};
-   // const unsigned int parameter_indices[16] = {0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double * persite_lnl=0;
-    double result=  pll_core_root_loglikelihood(
-                                       p->numberStates, p->numberSites, p->numberRateCats,
-                                       
-                                       clv, scale_buffer,
-                                       
-                                       p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
-                                       p->invariant(), parameter_indices, persite_lnl, p->attributes);
+    // const unsigned int parameter_indices[16] = {0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    
+    
+    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
+                                                 clv.data(), scale_buffer.data(),
+                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
+    //    double result=  pll_core_root_loglikelihood(
+    //                                                p->numberStates, p->numberSites, p->numberRateCats,
+    //
+    //                                                clv.data(), scale_buffer.data(),
+    //
+    //                                                p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
+    //                                                p->invariant(), parameter_indices, nullptr, p->attributes);
+    return result;
+}
+double State::compute_ln_likelihood(double *pclv, unsigned int *pscale_buffer,
+                                    const Partition *p) {
+    // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
+    const unsigned int parameter_indices[1] = {0};
+    // const unsigned int parameter_indices[16] = {0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    
+    
+    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
+                                                 pclv, pscale_buffer,
+                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
+    //    double result=  pll_core_root_loglikelihood(
+    //                                                p->numberStates, p->numberSites, p->numberRateCats,
+    //
+    //                                                clv.data(), scale_buffer.data(),
+    //
+    //                                                p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
+    //                                                p->invariant(), parameter_indices, nullptr, p->attributes);
     return result;
 }
 
-double State::compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
+double State::compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
                                     const pll_partition_t *p) {
-   // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
+    // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
     const unsigned int parameter_indices[1] = {0};
-   // const unsigned int parameter_indices[16] = {0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double * persite_lnl=0;
-    double result= pll_core_root_loglikelihood(
-                                       p->states, p->sites, p->rate_cats,
-                                       
-                                       clv, scale_buffer,
-                                       
-                                       p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
-                                       p->invariant, parameter_indices, persite_lnl, p->attributes);
+    
+    
+    double result = pll_core_root_loglikelihood2(  p->states, p->sites, p->rate_cats,
+                                                 clv.data(), scale_buffer.data(),
+                                                 p->frequencies, p->rate_weights, p->pattern_weights, parameter_indices,  nullptr, p->attributes);
+    
+    //    double result= pll_core_root_loglikelihood(
+    //                                               p->states, p->sites, p->rate_cats,
+    //                                               clv, scale_buffer,
+    //                                               p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
+    //                                               p->invariant, parameter_indices, nullptr, p->attributes);
+    return result;
+}
+
+double State::compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
+                                    const pll_partition_t *p) {
+    // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
+    const unsigned int parameter_indices[1] = {0};
+    
+    
+    double result = pll_core_root_loglikelihood2(  p->states, p->sites, p->rate_cats,
+                                                 pclv, pscale_buffer,
+                                                 p->frequencies, p->rate_weights, p->pattern_weights, parameter_indices,  nullptr, p->attributes);
+    
+    //    double result= pll_core_root_loglikelihood(
+    //                                               p->states, p->sites, p->rate_cats,
+    //                                               clv, scale_buffer,
+    //                                               p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
+    //                                               p->invariant, parameter_indices, nullptr, p->attributes);
     return result;
 }
 State::~State(){

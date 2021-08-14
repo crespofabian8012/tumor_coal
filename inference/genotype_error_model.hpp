@@ -11,10 +11,10 @@
 
 
 extern "C"
-{
+    {
 #include "libpll/pll.h"
 #include "libpll/pll_tree.h"
-}
+    }
 
 #include <string>
 class GenotypeErrorModel{
@@ -25,19 +25,26 @@ class GenotypeErrorModel{
     long double ADOErrorRate;
 public:
     GenotypeErrorModel(std::string name, long double seqErrorRate,long double ADOErrorRate, int states );
-   long double getSeqErrorRate() const;
-   long double getADOErrorRate() const;
-   GenotypeErrorModel &operator=(const GenotypeErrorModel &original);
-   void computeStateErrorProbPT19(pll_state_t state,
-                              std::vector<double>::iterator &clvp) const;
-
-
-   void computeStateErrorProbPT17(pll_state_t state,
-                                                      std::vector<double>::iterator &clvp) const;
-    void computeStateErrorProbPT20(pll_state_t state,
-                                                       std::vector<double>::iterator &clvp) const;
+    long double getSeqErrorRate() const;
+    long double getADOErrorRate() const;
+    GenotypeErrorModel &operator=(const GenotypeErrorModel &original);
+    void computeStateErrorProbPT19(pll_state_t state,
+                                   std::vector<double>::iterator &clv) const;
     
-  
+    void computeStateErrorProbPT17(pll_state_t state,
+                                   std::vector<double>::iterator &clv) const;
+    void computeStateErrorProbPT20(pll_state_t state,
+                                   std::vector<double>::iterator &clv) const;
+    
+    
+    void computeStateErrorProbPT19(pll_state_t state,
+                                    double *clvp) const;
+     
+     void computeStateErrorProbPT17(pll_state_t state,
+                                   double *clvp) const;
+     void computeStateErrorProbPT20(pll_state_t state,
+                                    double *clvp) const;
+     
 };
 
 #endif /* genotype_error_model_hpp */

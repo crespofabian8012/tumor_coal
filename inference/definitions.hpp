@@ -155,6 +155,8 @@ namespace Definitions{
 
 #define GT_MODEL "GTGTR4"
 #define JC_MODEL "GTJC"
+#define GT_JC_MODEL "GTJC"
+
 #define RATE_CATS 1
 #define BRLEN_MIN 1e-6
 #define BRLEN_MAX 1e+2
@@ -171,6 +173,116 @@ namespace Definitions{
 #define HOMO(state)   (state<4)
 #define HETERO(state) (state>3)
 //#define STATES 4
+
+/*                                       AA CC GG TT AC AG AT CG CT GT          */
+static const double gt_rates_equal_sm[] = {  0, 0, 0, 1, 1, 1, 0, 0, 0,    /* AA */
+                                                0, 0, 1, 0, 0, 1, 1, 0,    /* CC */
+                                                   0, 0, 1, 0, 1, 0, 1,    /* GG */
+                                                      0, 0, 1, 0, 1, 1,    /* TT */
+                                                         1, 1, 1, 1, 0,    /* AC */
+                                                            1, 1, 0, 1,    /* AG */
+                                                               0, 1, 1,    /* AT */
+                                                                  1, 1,    /* CG */
+                                                                     1 };  /* CT */
+
+/*                                      AA CC GG TT AC AG AT CG CT GT          */
+static const double gt_rates_equal[] =  {   1, 1, 1, 1, 1, 1, 1, 1, 1,    /* AA */
+                                               1, 1, 1, 1, 1, 1, 1, 1,    /* CC */
+                                                  1, 1, 1, 1, 1, 1, 1,    /* GG */
+                                                     1, 1, 1, 1, 1, 1,    /* TT */
+                                                        1, 1, 1, 1, 1,    /* AC */
+                                                           1, 1, 1, 1,    /* AG */
+                                                              1, 1, 1,    /* AT */
+                                                                 1, 1,    /* CG */
+                                                                    1 };  /* CT */
+
+/*                                    AA CC GG TT AC AG AT CG CT GT CA GA TA GC TC TG          */
+static const double gt16_rates_equal[120] =
+                                    {     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   /* AA */
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   /* CC */
+                                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   /* GG */
+                                                   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   /* TT */
+                                                      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   /* AC */
+                                                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   /* AG */
+                                                            1, 1, 1, 1, 1, 1, 1, 1, 1,   /* AT */
+                                                               1, 1, 1, 1, 1, 1, 1, 1,   /* CG */
+                                                                  1, 1, 1, 1, 1, 1, 1,   /* CT */
+                                                                     1, 1, 1, 1, 1, 1,   /* GT */
+                                                                        1, 1, 1, 1, 1,   /* CA */
+                                                                           1, 1, 1, 1,   /* GA */
+                                                                              1, 1, 1,   /* TA */
+                                                                                 1, 1,   /* GC */
+                                                                                    1};  /* TC */
+
+
+/*                                      AA   CC   GG   TT   AC   AG   AT   CG   CT   GT */
+static const double gt_freqs_equal[] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 };
+
+#define ONE_16 1./16
+static const double gt16_freqs_equal[16] = {ONE_16, ONE_16, ONE_16, ONE_16, ONE_16, ONE_16,
+                                            ONE_16, ONE_16, ONE_16, ONE_16, ONE_16, ONE_16,
+                                            ONE_16, ONE_16, ONE_16, ONE_16};
+
+/*                                 A  C  G  T              */
+//static int gt_sym_freq_equal[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//static int gt_sym_freq_free[]  = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+/*                                  AA CC GG TT AC AG AT CG CT GT          */
+static int gt_sym_rate_free_sm[] = {    0, 0, 0, 1, 2, 3, 0, 0, 0,    /* AA */
+                                           0, 0, 4, 0, 0, 5, 6, 0,    /* CC */
+                                              0, 0, 7, 0, 8, 0, 9,    /* GG */
+                                                 0, 0,10, 0,11,12,    /* TT */
+                                                   13,14,15,16, 0,    /* AC */
+                                                      17,18, 0,19,    /* AG */
+                                                          0,20,21,    /* AT */
+                                                            22,23,    /* CG */
+                                                               24 };  /* CT */
+
+/* A-C: 1, A-G: 2, A-T: 3, C-G: 4, C-T: 5, G-T: 6, others: 0 */
+/*                               AA CC GG TT AC AG AT CG CT GT          */
+static int gt_sym_rate_dna4[] =  {   0, 0, 0, 1, 2, 3, 0, 0, 0,    /* AA */
+                                        0, 0, 1, 0, 0, 4, 5, 0,    /* CC */
+                                           0, 0, 2, 0, 4, 0, 6,    /* GG */
+                                              0, 0, 3, 0, 5, 6,    /* TT */
+                                                 4, 5, 2, 3, 0,    /* AC */
+                                                    6, 1, 0, 3,    /* AG */
+                                                       0, 1, 2,    /* AT */
+                                                          6, 5,    /* CG */
+                                                             4 };  /* CT */
+
+/* A-C = A-T = C-G = G-T: 1, A-G = C-T: 2, others: 0 */
+/*                               AA CC GG TT AC AG AT CG CT GT          */
+static int gt_sym_rate_hky4[] =  {   0, 0, 0, 1, 2, 1, 0, 0, 0,    /* AA */
+                                        0, 0, 1, 0, 0, 1, 2, 0,    /* CC */
+                                           0, 0, 2, 0, 1, 0, 1,    /* GG */
+                                              0, 0, 1, 0, 2, 1,    /* TT */
+                                                 1, 2, 2, 1, 0,    /* AC */
+                                                    1, 1, 0, 1,    /* AG */
+                                                       0, 1, 2,    /* AT */
+                                                          1, 2,    /* CG */
+                                                             1 };  /* CT */
+
+
+/* A-C: 1, A-G: 2, A-T: 3, C-G: 4, C-T: 5, G-T: 6, others: 0 */
+/*                                    AA CC GG TT AC AG AT CG CT GT CA GA TA GC TC TG          */
+static int gt16_sym_rate_dna4[] =  {      0, 0, 0, 1, 2, 3, 0, 0, 0, 1, 2, 3, 0, 0, 0,   /* AA */
+                                             0, 0, 1, 0, 0, 4, 5, 0, 1, 0, 0, 4, 5, 0,   /* CC */
+                                                0, 0, 2, 0, 4, 0, 6, 0, 2, 0, 4, 0, 6,   /* GG */
+                                                   0, 0, 3, 0, 5, 6, 0, 0, 3, 0, 5, 6,   /* TT */
+                                                      4, 5, 2, 3, 0, 0, 0, 0, 2, 3, 0,   /* AC */
+                                                         6, 1, 0, 3, 0, 0, 0, 0, 0, 3,   /* AG */
+                                                            0, 1, 2, 0, 0, 0, 0, 0, 0,   /* AT */
+                                                               6, 5, 2, 0, 0, 0, 0, 5,   /* CG */
+                                                                  4, 3, 0, 0, 0, 0, 0,   /* CT */
+                                                                     0, 3, 0, 5, 0, 0,   /* GT */
+                                                                        4, 5, 0, 0, 0,   /* CA */
+                                                                           6, 1, 0, 0,   /* GA */
+                                                                              0, 1, 2,   /* TA */
+                                                                                 6, 0,   /* GC */
+                                                                                    4    /* TC */
+};
+
+
 
 
 #endif /* definitions_h */

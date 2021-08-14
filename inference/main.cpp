@@ -49,6 +49,7 @@
 
 
 #include "smc.hpp"
+#include "state.hpp"
 #include "poset_smc.hpp"
 
 
@@ -158,6 +159,44 @@ int main(int argc, char* argv[] )
     if (!msa)
         std::cout << "Error reading phylip file \n"<< std::endl;
     // }
+    unsigned long stats_mask = PLLMOD_MSA_STATS_DUP_TAXA;
+    pllmod_msa_stats_t * stats = pllmod_msa_compute_stats(msa,
+         10,
+        pll_map_gt10, // map is not used here
+        NULL,
+        stats_mask);
+    assert(stats);
+    if (stats->dup_taxa_pairs_count > 0){
+        
+        std::cout << "Error, Duplicate sequence names found: \n"<< stats->dup_taxa_pairs_count <<  std::endl;
+    }
+   stats_mask = PLLMOD_MSA_STATS_DUP_SEQS;
+    vector<pair<unsigned long,unsigned long> > dup_seqs;
+    std::set<size_t> gap_seqs;
+    pllmod_msa_destroy_stats(stats);
+    pllmod_msa_stats_t * dup_stats = pllmod_msa_compute_stats(msa,
+                                                            10,
+                                                          pll_map_gt10,
+                                                              NULL,
+                                                          stats_mask);
+   
+   
+      assert(dup_stats);
+
+      for (unsigned long c = 0; c < dup_stats->dup_seqs_pairs_count; ++c)
+      {
+          std::cout << dup_stats->dup_seqs_pairs[c]<< std::endl;
+          //dup_seqs.emplace_back(dup_stats->dup_seqs_pairs[c*2]);
+          dup_seqs.emplace_back(dup_stats->dup_seqs_pairs[c*2],
+                  dup_stats->dup_seqs_pairs[c*2+1]);
+        
+          std::cout << "Error, Duplicate sequences found: \n" <<  std::endl;
+          
+      }
+    pllmod_msa_destroy_stats(dup_stats);
+                              
+                              
+                              
     treefileName = filePaths.inputTreeFile;
     if ((treefileName != NULL) && (treefileName[0] == '\0'))
     {
@@ -280,7 +319,8 @@ int main(int argc, char* argv[] )
            16,// model->states,//numberStates
            1,//RATE_CATS, // unsigned  int  numberRateCats
            0, //int statesPadded
-           false, false, false, false, false, false);
+           true,//PLL_ATTRIB_ARCH_SSE
+           false, false, false, false, false);
         
         
         PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel);
@@ -290,25 +330,76 @@ int main(int argc, char* argv[] )
         SMCOptions smcOptions;
         
         smcOptions.ess_threshold = 1;
-        smcOptions.num_particles = 10000;
+        smcOptions.num_particles = 10500;
         smcOptions.resample_last_round = true;
-  
+        //smcOptions.resampling_scheme= 0;
+        //smcOptions.use_SPF=true;
+        
         smcOptions.ess_threshold = 1.0;
-        smcOptions.main_seed = 532366;
-        smcOptions.resampling_seed = 8234532;
+       // smcOptions.main_seed = 66757593;
+        //smcOptions.resampling_seed = 64848399;
         smcOptions.track_population = true;
         smcOptions.init();
         smcOptions.debug = true;
        
         SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
        
+        std::cout<< "Running Sequential Monte Carlo(SMC)....\n" << std::endl;
         smc.run_smc(psParams);
-        ParticlePopulation<State> *pop = smc.get_curr_population();
-        vector<shared_ptr<State>> *particles = pop->get_particles();
+      
+         ParticlePopulation<State> *currenPop = smc.get_curr_population();
+        vector<shared_ptr<State>> *particles = currenPop->get_particles();
         double   log_marginal = smc.get_log_marginal_likelihood();
         ParticlePopulation<State> *pop0 = smc.get_population(0);
-        vector<double> *normalized_weights = pop->get_normalized_weights();
+       
+ 
+        int num_particles = pop0[0].get_num_particles();
+       
+        std::vector<long double> deltas0;
+        std::vector<long double> Ts0;
+        std::vector<long double> Thetas;
+        std::vector<long double> SeqError;
+        std::vector<long double> ADOError;
+        
+        std::vector<long double> currentDeltas;
+        std::vector<long double> currentTs;
+        std::vector<long double> currentThetas;
+        std::vector<long double> currentSeqError;
+        std::vector<long double> currentADOError;
+        for (size_t i=0; i<num_particles; i++){
+            State &s = pop0[0].get_particle(i);
+            shared_ptr<State> currents = particles->at(i);
+           // Population *pop= s.getPopulationByIndex(0);
+            deltas0.push_back(s.getPopulationByIndex(0)->delta);
+            Ts0.push_back(s.getPopulationByIndex(0)->timeOriginSTD);
+            Thetas.push_back(s.getTheta());
+            ADOError.push_back(s.getErrorModel().getADOErrorRate());
+            SeqError.push_back(s.getErrorModel().getSeqErrorRate());
+            
+            currentDeltas.push_back(currents->getPopulationByIndex(0)->delta);
+            currentTs.push_back(currents->getPopulationByIndex(0)->timeOriginSTD);
+            currentThetas.push_back(currents->getTheta());
+            currentSeqError.push_back(currents->getErrorModel().getADOErrorRate());
+            currentADOError.push_back(currents->getErrorModel().getSeqErrorRate());
+            
+        }
+        std::cout<< "Prior distribution" << std::endl;
+        std::cout<< "Delta, mean: " << Utils::mean(deltas0) <<" var: " <<Utils::variance(deltas0) << std::endl;
+        std::cout<< "T, mean: " << Utils::mean(Ts0) <<" var: " <<Utils::variance(Ts0) <<std::endl;
+        std::cout<< "Theta, mean: " << Utils::mean(Thetas) <<" var: " <<Utils::variance(Thetas) <<std::endl;
+          std::cout<< "SeqError, mean: " << Utils::mean(SeqError) <<" var: " <<Utils::variance(SeqError) <<std::endl;
+         std::cout<< "ADOError, mean: " << Utils::mean(ADOError) <<" var: " <<Utils::variance(ADOError) <<std::endl;
+        
+        std::cout<< "Posterior distribution" << std::endl;
+        std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;
+        std::cout<< "T, mean: " << Utils::mean(currentTs) <<" var: " <<Utils::variance(currentTs) <<std::endl;
+        std::cout<< "Theta, mean: " << Utils::mean(currentThetas) <<" var: " <<Utils::variance(currentThetas) <<std::endl;
+                 std::cout<< "SeqError, mean: " << Utils::mean(currentSeqError) <<" var: " <<Utils::variance(currentSeqError) <<std::endl;
+                std::cout<< "ADOError, mean: " << Utils::mean(currentADOError) <<" var: " <<Utils::variance(currentADOError) <<std::endl;
+        
+        vector<double> *normalized_weights = currenPop->get_normalized_weights();
         double log_marginal_lik = smc.get_log_marginal_likelihood();
+        cout << "Estimate log marginal " << log_marginal  << endl;
         cout << "Estimate log P(y)= " << log_marginal_lik  << endl;
 
     }

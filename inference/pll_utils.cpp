@@ -7,8 +7,10 @@
 
 #include "pll_utils.hpp"
 
+
 #include "constants.hpp"
 #include "output_functions.hpp"
+
 //#include "genotype_error_model.cpp"
 #include <stdlib.h>
 
@@ -821,8 +823,9 @@ const pll_partition_t *pll_utils::createGTReferencePartition(pll_msa_t * msa) {
 
 double pll_utils::computeLogLikelihood(double *clv, unsigned int *scale_buffer,
                              const pll_partition_t *p) {
-  const unsigned int parameter_indices[4] = {0, 0, 0, 0};
+  const unsigned int parameter_indices[4] = {0};
 
+   
   return pll_core_root_loglikelihood(
       p->states, p->sites, p->rate_cats,
       clv, scale_buffer,

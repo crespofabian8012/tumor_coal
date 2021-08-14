@@ -322,13 +322,14 @@ int TreeLikelihood::initOperations(){
     
     return PLL_SUCCESS;
 }
-void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double>& clv) const
+void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) const
 {
     
     auto clv_size = msa->length * number_states;
-    clv.resize(clv_size);
+    if( clv.size()!=clv_size)
+       clv.resize(clv_size);
+    
     auto clvp = clv.begin();
-    //auto seq = msa->at(tip_id);
     auto seq = msa->sequence[tip_id];
     //auto charmap = _model.charmap();
     auto charmap = pll_map_gt10;
@@ -354,12 +355,14 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double>& clv) c
     
     assert(clvp == clv.end());
 }
-void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double>& clv, pll_msa_t *msaP, GenotypeErrorModel &gtError,unsigned int number_statesP)
+void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, pll_msa_t *msaP, GenotypeErrorModel &gtError,unsigned int number_statesP)
 {
     
 
     auto clv_size = msaP->length * number_statesP;
-    clv.resize(clv_size);
+    if( clv.size()!=clv_size)
+     clv.resize(clv_size);
+    
     auto clvp = clv.begin();
     //auto seq = msa->at(tip_id);
     auto seq = msaP->sequence[tip_id];
@@ -385,7 +388,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double>& clv, p
         clvp += number_statesP;
     }
     
-    assert(clvp == clv.end());
+   assert(clvp == clv.end());
 }
 void TreeLikelihood::recomputeTipClvs()
 {

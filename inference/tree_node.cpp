@@ -34,7 +34,11 @@ void init_to_empty_str(char str[MAX_NAME])
     }
 }
 
-TreeNode::TreeNode(int numSites)
+TreeNode::TreeNode(int numSites):
+maternalSequence(numSites, 0),paternalSequence(numSites, 0),
+genotypeSequence(numSites, 0),numbersMutationsUnderSubtreePerSite(numSites, 0),
+numbersMaternalMutationsPerSite(numSites, 0),numbersPaternalMutationsPerSite(numSites, 0)
+
 {
     left = NULL;
     right = NULL;
@@ -60,7 +64,7 @@ TreeNode::TreeNode(int numSites)
     init_to_empty_str(cellName);
     init_to_empty_str(observedCellName);
     numberOfTipsSubTree=0;
-    initSequenceVectors(numSites);
+    //initSequenceVectors(numSites);
     
 }
 void TreeNode::initNumberTipsVector(int numberClones)

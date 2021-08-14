@@ -1277,7 +1277,7 @@ void NewGlobalScaledMutationRateMove::decreaseParameter(ProgramOptions &programO
 }
 void NewGlobalScaledGrowthRateForPopulationMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
 {
-    //mcmcOptions.lengthIntervalMultiplierTheta -= mcmcOptions.uplmqerknmh ´powrtjh´poildateLengthMultiplierMCMCMove;
+
     long double newKernelParameter;
     if (this->mcmcParamKernels[0]->getKernelParameter() >=mcmcOptions.updateLengthMultiplierMCMCMove){
            

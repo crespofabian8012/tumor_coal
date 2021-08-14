@@ -23,7 +23,8 @@ extern "C"
 class PosetSMCParams;
 class State{
    
-    long double height;
+    long double heightScaledByTheta;
+    long double heightModelTime;
     //std::shared_ptr<PopulationSet> populationSet;
     PopulationSet * populationSet;
     unsigned int nextAvailable;
@@ -34,6 +35,7 @@ class State{
     std::vector<std::shared_ptr<PartialTreeNode>> roots;
     //std::shared_ptr<GenotypeErrorModel> gtError;
     GenotypeErrorModel *gtError;
+    long double theta;
 public:
 
     State( PosetSMCParams &params, gsl_rng *random);
@@ -57,31 +59,41 @@ public:
     
     int root_count() const{return roots.size();};
     
-    double compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
+    double compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
                                  const Partition *p);
-    
-    double compute_ln_likelihood(double *clv, unsigned int *scale_buffer,
+                              
+    double compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
+                            const Partition *p);
+    double compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
                                         const pll_partition_t *p);
+
+    double compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
+                                 const pll_partition_t *p);
     
     void updateIndexesActiveGametes();
     
-    PopulationSet* getPopulationSet()const  {return populationSet;};
+    PopulationSet& getPopulationSet()const  {return *populationSet;};
     
     Population* getPopulationByIndex(size_t i) const {return populationSet->getPopulationbyIndex(i);};
     
     int getNumberPopulations() const {return populationSet->numClones;};
     
-    long double getHeight()const{return height;}
+    long double getHeightScaledByTheta()const{return heightScaledByTheta;}
+    long double getHeightModelTime()const{return heightModelTime;}
+    long double getTheta()const{return theta;}
     
-    void setHeight(long double  newHeight)
+    void setHeightScaledByTheta(long double  newHeight)
     {
-        assert(newHeight>=height);
-        height= newHeight;
+        assert(newHeight>=heightScaledByTheta);
+        heightScaledByTheta= newHeight;
+        heightModelTime = heightScaledByTheta/theta;
         
     }
     unsigned int getNextAvailable()const{return nextAvailable;}
     
     void increaseNextAvailable(){nextAvailable++;}
+    
+    GenotypeErrorModel &getErrorModel() const{return *gtError;}
     
     
     ~State();

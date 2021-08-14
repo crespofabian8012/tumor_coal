@@ -1069,7 +1069,7 @@ void  Population::setPopulationToriginConditionalDelta( const gsl_rng *rngGsl ){
     //timeOriginSTD = Random::RandomDensityModelTimeOriginLambda(birthRate,true,delta, sampleSize*10,  rngGsl, NULL);
     timeOriginInput = timeOriginSTD *x;
     
-    std::cout << "Population with sample size "<< sampleSize << " torigin std: "<<timeOriginSTD<< " and scaled physical torigin: "  << timeOriginInput << " ,  order "<< order << " and delta "<< delta << std::endl;
+   //std::cout << "Population with sample size "<< sampleSize << " torigin std: "<<timeOriginSTD<< " and scaled physical torigin: "  << timeOriginInput << " ,  order "<< order << " and delta "<< delta << std::endl;
 
 }
 long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K){
@@ -1077,9 +1077,9 @@ long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveL
    long double  RateCA = (long double)  numActiveLineages * ((long double) numActiveLineages - 1) / 2.0;
    long double  ThisTimeCA_W = Random::RandomExponentialStartingFrom (RateCA,0,  true, rngGsl,NULL ) ;
   
-    // from standard time to model time, GstandardTmodel(V, T, delta)
-   long double ThisTimeCA_V2 = Population::GstandardTmodel(ThisTimeCA_W, timeOriginSTD, delta, K);
-    return ThisTimeCA_V2;
+
+  
+    return ThisTimeCA_W;
     
 }
 long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,long double currentTime, int numActiveLineages,  double K){
@@ -1264,14 +1264,15 @@ void PopulationSet::initPopulationsThetaDelta(long double theta)
     }
 }
 
-void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl){
+void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double &theta){
     long double delta;
-    long double theta;
+
+    theta =  Random::RandomExponential(1, NULL, true, rngGsl, NULL);
     for (unsigned int i = 0; i < numClones; ++i){
          auto popI =  populations[i];
-        delta = Random::RandomExponential(0.8, NULL, true, rngGsl, NULL);
-        theta =  Random::RandomExponential(1, NULL, true, rngGsl, NULL);
-        popI->theta = theta;
+        delta = Random::RandomExponential(0.01, NULL, true, rngGsl, NULL);
+        
+        popI->theta = theta * popI->x;
         popI->delta = delta;
         
     }

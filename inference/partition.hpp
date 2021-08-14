@@ -52,15 +52,15 @@ public:
     
     
     unsigned int attributes;
-    int numberTips;
-    int clvBuffers;
-    int numberStates;
-    int numberSites;
-    int numberRateMatrices;
-    int probMatrices;
-    int numberRateCats;
-    int numberScaleBuffers;
-    int statesPadded;
+    unsigned int numberTips;
+    unsigned int clvBuffers;
+    unsigned int numberStates;
+    unsigned int numberSites;
+    unsigned int numberRateMatrices;
+    unsigned int probMatrices;
+    unsigned int numberRateCats;
+    unsigned int numberScaleBuffers;
+    unsigned int statesPadded;
     bool sse;
     bool avx;
     bool  avx2;
@@ -69,15 +69,15 @@ public:
     bool tipPatternCompression;
     double * sumtable;
     
-    Partition(int numberTips,
-              int clvBuffers,
-              int numberStates,
-              int numberSites,
-              int numberRateMatrices,
-              int probMatrices,
-              int numberRateCats,
-              int numberScaleBuffers,
-              int statesPadded,
+    Partition(unsigned int numberTips,
+              unsigned int clvBuffers,
+              unsigned int numberStates,
+              unsigned int numberSites,
+              unsigned int numberRateMatrices,
+              unsigned int probMatrices,
+              unsigned int numberRateCats,
+              unsigned int numberScaleBuffers,
+              unsigned int statesPadded,
               bool sse,
               bool avx,
               bool  avx2,
@@ -183,7 +183,7 @@ public:
     
     int ascBiasCorrection() const{return partition->asc_bias_alloc; };
     
-    int getStatesPadded() const{return partition->states_padded; };
+    unsigned int getStatesPadded() const{return partition->states_padded; };
     
     double* getCLV(int tipIndex) const;
     
@@ -207,9 +207,11 @@ public:
     
     int* invariant() const{return partition->invariant; };
     
-    void computeCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel, std::vector<double>& clv)const ;
+    void buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel, std::vector<double> &clv, bool normalize)const ;
     
     int initTipCLV(unsigned int tipClvIndex, double * clv)const;
+    void showEigenDecomp(unsigned int float_precision) const;
+    
     ~Partition()
     {
         // if(sumtable)

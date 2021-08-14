@@ -6,17 +6,18 @@
 //
 
 #include "partition.hpp"
+#include "core_likelihood.hpp"
 #include <memory.h>
 
-Partition::Partition(int numberTips,
-                     int clvBuffers,
-                     int numberStates,
-                     int numberSites,
-                     int numberRateMatrices,
-                     int probMatrices,
-                     int numberRateCats,
-                     int numberScaleBuffers,
-                     int statesPadded,
+Partition::Partition(unsigned int numberTips,
+                     unsigned int clvBuffers,
+                     unsigned int numberStates,
+                     unsigned int numberSites,
+                     unsigned int numberRateMatrices,
+                     unsigned int probMatrices,
+                     unsigned int numberRateCats,
+                     unsigned int numberScaleBuffers,
+                     unsigned int statesPadded,
                      bool sse=false,
                      bool avx=false,
                      bool  avx2=false,
@@ -147,7 +148,9 @@ tipPatternCompression(tipPatternCompression)
     // double rate_categories[4] = {0, 0, 0, 0};
     double rate_categories[1] = {0};
     
-    
+    //pllmod_subst_model_t * model = pllmod_util_model_info_genotype("GT16JC");
+    //assert(model->states ==numberStates);
+
     // double  rate_categories[number_states];
     // std::fill_n (rate_categories, number_states*(number_states-1) /2, 1);
     
@@ -183,11 +186,11 @@ tipPatternCompression(tipPatternCompression)
     double  category_weights[numberStates];
     std::fill_n (category_weights, numberStates*(numberStates-1) /2, 1);
     
-    double nucleotide_frequencies[numberStates];
-    std::fill_n (nucleotide_frequencies, numberStates, 1.0/(numberStates));
+    double genotype_frequencies[numberStates];
+    std::fill_n (genotype_frequencies, numberStates, 1.0/(numberStates));
     
     
-    pll_set_frequencies(partition, 0, nucleotide_frequencies);
+    pll_set_frequencies(partition, 0, genotype_frequencies);
     pll_set_category_rates(partition, rate_categories);
     pll_set_subst_params(partition, 0, subst_params);
     
@@ -263,12 +266,14 @@ int Partition::initTipCLV(unsigned int tipClvIndex, double * clv)const{
     return PLL_SUCCESS;
     
 }
-void Partition::computeCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel, std::vector<double>& clv)const {
+void Partition::buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel, std::vector<double> &clv, bool normalize)const{
     
     auto clv_size = msa->length * numberStates;
-    clv.resize(clv_size);
+    //auto clv_size = msa->length * numberStates*numberRateCats;
+    //here we assume numberRateCats=1
     auto clvp = clv.begin();
-    //auto seq = msa->at(tip_id);
+
+    
     auto seq = msa->sequence[tip_id];
     //auto charmap = _model.charmap();
     auto charmap = pll_map_gt10;
@@ -281,22 +286,25 @@ void Partition::computeCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErr
         
         gtErrorModel->computeStateErrorProbPT17(state, clvp);
         
-        //if (j == 0 && 0)
-        //{
-        //      printf("state: %llu ", state);
-        //      for (size_t k = 0; k < number_states; ++k)
-        //        printf("%lf ", clvp[k]);
-        //      printf("\n");
-        // }
+        if (j == 0 && 0)
+        {
+              printf("state: %llu ", state);
+              printf("char: %c ", seq[j]);
+              for (size_t k = 0; k < numberStates; ++k)
+                printf("%lf ", clvp[k]);
+              printf("\n");
+            for (size_t k = 0; k < numberStates; ++k)
+              printf("%lf ", clv[k]);
+            printf("\n");
+         }
         
         clvp += numberStates;
+       //  clvp += numberStates*numberRateCats;
     }
     
     assert(clvp == clv.end());
-    
-    
-    
 }
+
 void Partition::setPatternWeights( const unsigned int * patternWeights){
     
     pll_set_pattern_weights(partition, patternWeights);
@@ -413,6 +421,57 @@ pll_partition_t * Partition::getPartition()const {
 double* Partition::getCLV(int tipIndex)const {
     
     return(partition->clv[tipIndex]);
+    
+}
+void Partition::showEigenDecomp(unsigned int float_precision) const{
+    
+    unsigned int i,j,k;
+    double * ev;
+
+
+    /* eigenvals */
+    printf("Eigenvalues\n");
+    printf("[");
+    for (i = 0; i < partition->rate_matrices; ++i)
+    {
+      printf("(");
+      for (j = 0; j < partition->states-1; ++j)
+      {
+        printf("%.*f,", float_precision, partition->eigenvals[i][j]);
+      }
+      printf("%.*f,", float_precision, partition->eigenvals[i][j]);
+      printf(")");
+      if (i < partition->rate_matrices - 1) printf(",");
+    }
+    printf("]\n");
+
+    /* eigen vectors */
+    printf("Eigenvectors\n");
+    for (k = 0; k < partition->rate_matrices; ++k)
+    {
+      ev = partition->eigenvecs[k] + k*partition->states*partition->states;
+      for (i = 0; i < partition->states; ++i)
+      {
+        for (j = 0; j < partition->states; ++j)
+          printf("%+2.*f   ", float_precision, ev[i*partition->states+j]);
+        printf("\n");
+      }
+      printf("\n");
+    }
+
+    printf("Inverse eigenvectors\n");
+    for (k = 0; k < partition->rate_matrices; ++k)
+    {
+      ev = partition->inv_eigenvecs[k] + k*partition->states*partition->states;
+      for (i = 0; i < partition->states; ++i)
+      {
+        for (j = 0; j < partition->states; ++j)
+          printf("%+2.*f   ", float_precision, ev[i*partition->states+j]);
+        printf("\n");
+      }
+      printf("\n");
+    }
+    
     
 }
 // Partition::Partition& operator=(const Partition &original){

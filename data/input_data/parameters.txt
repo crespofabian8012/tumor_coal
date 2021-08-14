@@ -3,8 +3,8 @@
 
 
 [*** GLOBAL SETTINGS ***]
-[parameter values from priors (mandatory): 1:Yes, 0: NO]  q1
-[number of replicates per parameter values(mandatory)]	n100
+[parameter values from priors (mandatory): 1:Yes, 0: NO]  q0
+[number of replicates per parameter values(mandatory)]	n300
 [number of sites] s1000
 
 [*** POPULATION GENETICS SETTINGS ***]
@@ -13,11 +13,11 @@
 [number of clones; clone number, sample size, population size ratio (not effective), birth rate, death rate, time to origin (days, months, years; All clones with 0 = sampled from conditional distribution) (mandatory)]
 [c1
 	1 20 1000 1 0.9 0.0]
-c1
-	1 20  1000  1  0.99   0.0
-[c2
-	1 7  1000  1  0.99   0.0
-	2 13 1000  1  0.85   0.0]
+[c1
+	1 20  1000  1  0.99   0.0]
+c2
+	1 8  1000  1  0.99   0.0
+	2 12 1000  1  0.85   0.0
 [c2
 	1 2 1000 0.1 0.0999  0.0
 	2 3 1000 0.1 0.0996 0.0]

@@ -628,6 +628,7 @@ void pll_core_update_partial_ii2(unsigned int states,
                         std::cout<< "left_clv:" << left_clv[k] << std::endl;
                         std::cout<< "right_clv:" << right_clv[k] << std::endl;
                         std::cout<< lmat[k] * left_clv[k]<< std::endl;
+                        std::cout<< rmat[k] * right_clv[k]<< std::endl;
                     }
                 }
                 

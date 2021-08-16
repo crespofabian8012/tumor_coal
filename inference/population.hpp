@@ -129,6 +129,8 @@ public:
     Population(int ind, int ord, int sampleSize, long double delta, long double theta,
                ProgramOptions &programOptions);
     
+    Population(const Population &original);
+    
     long double ProbabilityComeFromPopulation(Population *PopJ, std::vector<Population*> &populations, int numClones, long double K);
     static long double FmodelTstandard (long double t, long  double TOrigin, long double delta, long double K);
     static long double GstandardTmodel (long double V, long double TOrigin, long double delta, long double K);
@@ -188,6 +190,9 @@ public:
     std::vector<long double  > oldproportionsVector;
 public:
     PopulationSet(int numClones);
+    
+    PopulationSet(const PopulationSet &original);
+    //PopulationSet &operator=(const PopulationSet &original);
     
     void initPopulation();
     

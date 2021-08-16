@@ -38,7 +38,7 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     populationSet->initPopulationsCoalescentEvents();
     
     initForest(smcParams.sampleSize, smcParams.msa, smcParams.positions,  smcParams.getProgramOptions());
-    nextAvailable = smcParams.sampleSize+1;
+    nextAvailable = smcParams.sampleSize-1;
     
 }
 State::State(const State &original):pll_buffer_manager(original.pll_buffer_manager){
@@ -46,8 +46,9 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     heightModelTime=original.heightModelTime;
     heightScaledByTheta=original.heightScaledByTheta;
     num_sites=original.num_sites;
-    populationSet=original.populationSet;
-    gtError=original.gtError;
+    
+    populationSet=new PopulationSet(*(original.populationSet));
+    gtError = new GenotypeErrorModel(*(original.gtError));
     roots=original.roots;
     partition= original.partition;
     nextAvailable = original.nextAvailable;
@@ -83,24 +84,23 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         reference_partition->ascBiasCorrection() ? reference_partition->numberSites + reference_partition->numberStates : reference_partition->numberSites;
         
         unsigned int clv_num_elements= sites_alloc * reference_partition->numberStates * reference_partition->numberRateCats;
-        unsigned int clv_size =
-        clv_num_elements * sizeof(double);
+       // unsigned int clv_size =
+       // clv_num_elements * sizeof(double);
         unsigned int scaler_size = (reference_partition->attributes & PLL_ATTRIB_RATE_SCALERS)
         ? sites_alloc * reference_partition->numberRateCats
         : sites_alloc;
         
-        unsigned int scale_buffer_size = scaler_size * sizeof(unsigned int);
+       // unsigned int scale_buffer_size = scaler_size * sizeof(unsigned int);
         //        if (i==0)
         //            std::cout << "tip clv elements "<<  sites_alloc * reference_partition->numberStates * reference_partition->numberRateCats << " clv size " << clv_size<< " scale size " <<  scaler_size << " scale_buffer_size  " <<  scale_buffer_size<< std::endl;
         //
         p=std::make_shared<PartialTreeNode>(pll_buffer_manager, nullptr, nullptr, msa->label[i], heightScaledByTheta, clv_num_elements,
                                             scaler_size, reference_partition->alignment(), i);
         
-        
         // delete (p->clv);
         //delete (p->scale_buffer);
         
-        auto clv_elem = reference_partition->numberSites * reference_partition->numberStates;
+       // auto clv_elem = reference_partition->numberSites * reference_partition->numberStates;
         
         //reference_partition->buildCLV(i, msa, gtError, p->getCLV(), false);
         p->buildCLV(i,reference_partition->numberStates,  msa, gtError,  false);
@@ -127,7 +127,7 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
             currentPopIndex = pop->index;
             // Identify to which clone belongs this node
             if (cumIndivid <= CumSumNodes[j] && cumIndivid > CumSumNodes[j - 1]){
-                pop->idsActiveGametes[pop->numActiveGametes]=i;
+                pop->idsActiveGametes[pop->numActiveGametes]=p->index;
                 pop->numActiveGametes=pop->numActiveGametes+1;
                 pop->idsGametes[pop->numGametes]=i;
                 pop->numGametes=pop->numGametes+1;
@@ -138,6 +138,9 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         
         roots.push_back(p);
     }
+    if (programOptions.numClones==1)
+              assert(populationSet->getPopulationbyIndex(0)->numActiveGametes == positions.size());
+              
     
 }
 
@@ -162,29 +165,35 @@ State &State::operator=(const State &original){
 }
 
 
-std::shared_ptr<PartialTreeNode> State::connect(int i, int j, double height_delta, unsigned int index_population){
+std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, double height_delta, size_t index_pop_i,size_t index_pop_j, size_t index_pop_new_node ){
     
     std::vector<std::shared_ptr<PartialTreeNode>> result;
     unsigned int float_precision = 3;
     
     assert(roots.size() > 1 && "Expected more than one root");
-    assert(i != j && "Cannot connect, this would make a loop");
-    // assert(height_delta >= 0.0 && "Height change can't be negative");
-    assert(i >= 0 && i < roots.size() && j >= 0 && j < roots.size() &&
-           "Index out of bounds");
+  
     
     const Partition *p =partition;
     
     //heightScaledByTheta = heightScaledByTheta+ height_delta;
+    int idxFirstID = getNodeIdxById(firstId);
+    int idxSecondId = getNodeIdxById(secondId);
     
-    std::shared_ptr<PartialTreeNode> child_left = roots[i];
-    std::shared_ptr<PartialTreeNode> child_right = roots[j];
+   assert(idxFirstID>=0 &&  idxSecondId >=0 && "Indexes must be positive");
+   // assert(height_delta >= 0.0 && "Height change can't be negative");
+    assert(idxFirstID != idxSecondId && "Cannot connect, this would make a loop");
+      // assert(height_delta >= 0.0 && "Height change can't be negative");
+    assert(idxFirstID >= 0 && idxFirstID < roots.size() && idxSecondId >= 0 && idxSecondId < roots.size() &&
+             "Index out of bounds");
+    
+    std::shared_ptr<PartialTreeNode> child_left = roots[idxFirstID];
+    std::shared_ptr<PartialTreeNode> child_right = roots[idxSecondId];
     
     double left_length =heightScaledByTheta - child_left->height;
     double right_length = heightScaledByTheta - child_right->height;
     
     unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
-    unsigned int pmatrix_size = pmatrix_elements * sizeof(double);
+    //unsigned int pmatrix_size = pmatrix_elements * sizeof(double);
     
     std::shared_ptr<PartialTreeEdge> edge_left = std::make_shared<PartialTreeEdge>(
                                                                                    pll_buffer_manager, child_left, left_length, pmatrix_elements, partition->alignment());
@@ -197,13 +206,13 @@ std::shared_ptr<PartialTreeNode> State::connect(int i, int j, double height_delt
     
     unsigned int clv_elements = sites_alloc  * p->numberStates *  p->numberRateCats;
     
-    unsigned int clv_size = clv_elements * sizeof(double);
+   // unsigned int clv_size = clv_elements * sizeof(double);
     //sites_alloc * p->getStatesPadded() * p->numberRateCats * sizeof(double);
     
     unsigned int scaler_size = (p->attributes & PLL_ATTRIB_RATE_SCALERS)
     ? sites_alloc * p->numberRateCats
     : sites_alloc;
-    unsigned int scale_buffer_size = scaler_size * sizeof(double);
+   // unsigned int scale_buffer_size = scaler_size * sizeof(double);
     
     
     
@@ -211,7 +220,7 @@ std::shared_ptr<PartialTreeNode> State::connect(int i, int j, double height_delt
                                                                                 pll_buffer_manager, edge_left, edge_right, "", heightScaledByTheta, clv_elements,
                                                                                 scaler_size, partition->alignment(), nextAvailable);
     
-    parent->index_population=index_population;
+    parent->index_population=index_pop_new_node;
     nextAvailable++;
     
     const unsigned int matrix_indices[1] = {0};
@@ -321,51 +330,7 @@ std::shared_ptr<PartialTreeNode> State::connect(int i, int j, double height_delt
     
     if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
         
-        parent->ln_likelihood =
-        compute_ln_likelihood(parent->getCLV(),
-                              parent->getScaleBuffer(),
-                              p->getPartition());
-        
-        
-        parent->ln_likelihood =
-        compute_ln_likelihood(parent->getCLVPointer(),
-                              parent->getScaleBufferPointer(),
-                              p->getPartition());
-        
-        std::cout << "log lik of parent node "<<  " is "<< parent->ln_likelihood<< std::endl;
-        
-        std::cout << " clv elements: "<<  clv_elements << ", clv_size: "<<  clv_size << ", scaler_size: "<< scaler_size << ", states padded: "<< p->getStatesPadded()<<" , scale_buffer_size " <<  scale_buffer_size << ", pmatrix elements" <<pmatrix_elements<< ", pmatrix_size " <<  pmatrix_size << std::endl;
-        
-        std::cout << " left edge "<<  left_length << " right edge "<<  right_length  << std::endl;
-        std::cout << "left pmatrix "<< std::endl;
-        parent->edge_l->showPMatrix(p->numberStates, p->numberRateCats, p->getStatesPadded(),    float_precision);
-        
-        std::cout << "right pmatrix "<< std::endl;
-        parent->edge_r->showPMatrix(p->numberStates, p->numberRateCats, p->getStatesPadded(),    float_precision);
-        
-        std::cout << "eigen de comp "<< std::endl;
-        p->showEigenDecomp(float_precision);
-        
-        std::cout << "left clv: \n "<< std::endl;
-        child_left->showClV(p->numberStates, p->numberRateCats, p->getStatesPadded(),
-                            p->numberSites, float_precision);
-        
-        std::cout << "right clv: \n "<< std::endl;
-        child_right->showClV(p->numberStates, p->numberRateCats, p->getStatesPadded(),
-                             p->numberSites, float_precision);
-        
-        std::cout << "parent clv: \n "<< std::endl;
-        
-        parent->showClV(p->numberStates, p->numberRateCats, p->getStatesPadded(),
-                        p->numberSites, float_precision);
-        
-        std::cout << "parent scaler buffer. \n "<< std::endl;
-        
-        for( size_t i=0; i < scaler_size; i++){
-            
-            std::cout << " scale buffer "<<  i << " "<< parent->scale_buffer[i] <<  std::endl;
-        }
-        
+      std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
         
     }
     
@@ -377,11 +342,12 @@ std::shared_ptr<PartialTreeNode> State::connect(int i, int j, double height_delt
     // assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
     
     // Remove children
-    remove_roots(i, j);
+
+    remove_roots(idxFirstID, idxSecondId);
     // Add new internal node
     roots.push_back(parent);
     //update the active gametes of populations
-    updateIndexesActiveGametes();
+   
     
     // pll_aligned_free(left_norm_clv);
     //pll_aligned_free(right_norm_clv);
@@ -414,6 +380,7 @@ void State::remove_roots(int i, int j){
     assert(i != j && "Expected different indices");
     assert(i >= 0 && i < roots.size() && j >= 0 && j < roots.size() &&
            "Index out of bounds");
+    int previous_size= roots.size();
     
     if (i < j) {
         roots.erase(roots.begin() + j, roots.begin() + j + 1);
@@ -422,24 +389,41 @@ void State::remove_roots(int i, int j){
         roots.erase(roots.begin() + i, roots.begin() + i + 1);
         roots.erase(roots.begin() + j, roots.begin() + j + 1);
     }
+    assert(roots.size()==(previous_size-2));
 }
 
-void State::updateIndexesActiveGametes(){
-    Population *pop;
-    for(size_t i=0;i< populationSet->numClones; i++ ){
-        pop=populationSet->getPopulationbyIndex(i);
-        pop->numActiveGametes = 0;
-        pop->numGametes = 0;
-        pop->idsActiveGametes.clear();
-        pop->idsGametes.clear();
+void State::updateIndexesActiveGametes(int idxFirstId, int idxSecondId, size_t idxPopFirst,size_t idxPopSecond, size_t newNodeId, size_t idxPopNewNode){
+    
+    assert(idxPopFirst <=populationSet->numClones);
+    assert(idxPopSecond <=populationSet->numClones);
+    Population *popFirst, *popSecond;
+    
+    if (idxPopFirst == idxPopSecond)//coalescent event
+    {
+        popFirst = populationSet->getPopulationbyIndex(idxPopFirst);
+        popFirst->idsActiveGametes[idxFirstId] = newNodeId;
+        popFirst->idsActiveGametes[idxSecondId] = popFirst->idsActiveGametes[ popFirst->numActiveGametes-1];
+       
     }
-    for(size_t i=0;i< roots.size(); i++ ){
-        pop = populationSet->getPopulationbyIndex(roots[i]->index_population);
-        pop->idsActiveGametes[pop->numActiveGametes]=i;
-        pop->numActiveGametes= pop->numActiveGametes+1;
-        pop->idsGametes[pop->numGametes]=i;
-        pop->numGametes=pop->numGametes+1;
+    else//migration
+    {
+       popFirst = populationSet->getPopulationbyIndex(idxPopFirst);
+       popSecond = populationSet->getPopulationbyIndex(idxSecondId);
+        
+        if (popFirst->numActiveGametes == 1){
+            
+            
+        }
+        else{ //(popSecond->numActiveGametes == 1)
+            
+            
+            
+        }
+        popFirst->numActiveGametes= popFirst->numActiveGametes-1;
+        popSecond->numActiveGametes= popSecond->numActiveGametes-1;
     }
+    
+   
 }
 
 double State::compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
@@ -515,6 +499,32 @@ double State::compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
     //                                               p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
     //                                               p->invariant, parameter_indices, nullptr, p->attributes);
     return result;
+}
+int State::getNodeIdxById(size_t id){
+
+    if (roots.size()==0)
+        return -1;
+    
+    unsigned int i = 0;
+    while(i<roots.size() && roots[i]->index!=id)
+        i++;
+    if (i==roots.size())
+        return -1;
+    return i;
+}
+void State::printTree(std::shared_ptr<PartialTreeNode> root, std::ostream &stream) {
+  if (root->edge_l && root->edge_r) {
+    stream << "(";
+    printTree(root->edge_l->child, stream);
+    stream << ":" << root->edge_l->length;
+    stream << ", ";
+    printTree(root->edge_r->child, stream);
+    stream << ":" << root->edge_r->length;
+    stream << ")";
+  } else {
+    std::string label(root->label);
+    stream << label;
+  }
 }
 State::~State(){
     

@@ -49,7 +49,7 @@ public:
     
     State &operator=(const State &original);
     
-    std::shared_ptr<PartialTreeNode> connect(int i, int j, double height_delta, unsigned int index_population);
+    std::shared_ptr<PartialTreeNode> connect(int i, int j, double height_delta, size_t index_pop_i,size_t index_pop_j, size_t index_pop_new_node);
     
     std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
     
@@ -70,7 +70,7 @@ public:
     double compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
                                  const pll_partition_t *p);
     
-    void updateIndexesActiveGametes();
+    void updateIndexesActiveGametes(int idxFirstId, int idxSecondId, size_t idxPopFirst,size_t idxPopSecond, size_t newNodeId, size_t idxPopNewNode);
     
     PopulationSet& getPopulationSet()const  {return *populationSet;};
     
@@ -81,6 +81,8 @@ public:
     long double getHeightScaledByTheta()const{return heightScaledByTheta;}
     long double getHeightModelTime()const{return heightModelTime;}
     long double getTheta()const{return theta;}
+    
+    void printTree(std::shared_ptr<PartialTreeNode> root, std::ostream &stream);
     
     void setHeightScaledByTheta(long double  newHeight)
     {
@@ -94,7 +96,7 @@ public:
     void increaseNextAvailable(){nextAvailable++;}
     
     GenotypeErrorModel &getErrorModel() const{return *gtError;}
-    
+    int getNodeIdxById(size_t id);
     
     ~State();
 };

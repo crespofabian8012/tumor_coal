@@ -325,19 +325,23 @@ int main(int argc, char* argv[] )
         
         PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel);
         
-        size_t num_iter = programOptions.TotalTumorSequences-1 +programOptions.numClones-1;
+        size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
         PosetSMC posetSMC(programOptions.numClones,  num_iter);
         SMCOptions smcOptions;
         
-        smcOptions.ess_threshold = 1;
-        smcOptions.num_particles = 10500;
+       // smcOptions.num_threads = 4;
+        smcOptions.use_SPF = true;
+        smcOptions.ess_threshold = 1000;
+        smcOptions.num_particles = 10000;
         smcOptions.resample_last_round = true;
         //smcOptions.resampling_scheme= 0;
-        //smcOptions.use_SPF=true;
+   
         
-        smcOptions.ess_threshold = 1.0;
-       // smcOptions.main_seed = 66757593;
-        //smcOptions.resampling_seed = 64848399;
+        smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
+        //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
+        //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::SYSTEMATIC;
+       // smcOptions.main_seed = 7482984;
+        //smcOptions.resampling_seed = 849284;
         smcOptions.track_population = true;
         smcOptions.init();
         smcOptions.debug = true;
@@ -366,6 +370,10 @@ int main(int argc, char* argv[] )
         std::vector<long double> currentThetas;
         std::vector<long double> currentSeqError;
         std::vector<long double> currentADOError;
+        
+        vector<double> *normalized_weights = currenPop->get_normalized_weights();
+        double max = -DOUBLE_INF;
+        shared_ptr<State> best_particle;
         for (size_t i=0; i<num_particles; i++){
             State &s = pop0[0].get_particle(i);
             shared_ptr<State> currents = particles->at(i);
@@ -381,8 +389,12 @@ int main(int argc, char* argv[] )
             currentThetas.push_back(currents->getTheta());
             currentSeqError.push_back(currents->getErrorModel().getADOErrorRate());
             currentADOError.push_back(currents->getErrorModel().getSeqErrorRate());
-            
+            if ((*normalized_weights)[i] > max) {
+                 max = (*normalized_weights)[i]  ;
+                 best_particle = currents;
+               }
         }
+       std::sort(deltas0.begin(), deltas0.end());
         std::cout<< "Prior distribution" << std::endl;
         std::cout<< "Delta, mean: " << Utils::mean(deltas0) <<" var: " <<Utils::variance(deltas0) << std::endl;
         std::cout<< "T, mean: " << Utils::mean(Ts0) <<" var: " <<Utils::variance(Ts0) <<std::endl;
@@ -397,10 +409,14 @@ int main(int argc, char* argv[] )
                  std::cout<< "SeqError, mean: " << Utils::mean(currentSeqError) <<" var: " <<Utils::variance(currentSeqError) <<std::endl;
                 std::cout<< "ADOError, mean: " << Utils::mean(currentADOError) <<" var: " <<Utils::variance(currentADOError) <<std::endl;
         
-        vector<double> *normalized_weights = currenPop->get_normalized_weights();
+        
+        
         double log_marginal_lik = smc.get_log_marginal_likelihood();
         cout << "Estimate log marginal " << log_marginal  << endl;
         cout << "Estimate log P(y)= " << log_marginal_lik  << endl;
+        
+        assert(best_particle->getRoots().size() == 1);
+        best_particle->printTree(best_particle->getRoots()[0], std::cerr);
 
     }
     
@@ -414,7 +430,7 @@ int main(int argc, char* argv[] )
     trueTs.clear();
     sampleSizes.clear();
     
-    
+    pll_msa_destroy(msa);
     std::cout << "\nIf you need help type '-?' in the command line of the program\n"<<std::endl;
     
     return 0;

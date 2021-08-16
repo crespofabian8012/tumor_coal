@@ -397,6 +397,35 @@ Population::Population(int ind, int ord, int sampleSize, long double delta, long
     X = new MCMCParameter<long double>("Proportion",doubleSampleSize, 0.0);
     sampleSizePar = new MCMCParameter<long double>("SampleSize",doubleSampleSize, 0.0);
 }
+Population::Population(const Population &original){
+    
+    index = original.index;
+    order = original.order;
+    sampleSize = original.sampleSize;
+    birthRate = original.birthRate;
+    deathRate = original.deathRate;
+    delta = original.delta;
+    deltaT = original.deltaT;
+    theta = original.theta;
+    x = original.x;
+    growthRate = original.growthRate;
+    idsGametes = original.idsGametes;
+    numCompletedCoalescences = original.numCompletedCoalescences;
+    numIncomingMigrations = original.numIncomingMigrations;
+    numPossibleMigrations = original.numPossibleMigrations;
+    
+    timeOriginSTD = original.timeOriginSTD;
+    scaledtimeOriginInput = original.scaledtimeOriginInput;
+    isAlive = original.isAlive;
+    numActiveGametes = original.numActiveGametes;
+    numGametes = original.numGametes;
+    
+    FatherPop = original.FatherPop;
+    
+    CoalescentEventTimes = original.CoalescentEventTimes;
+    idsActiveGametes = original.idsActiveGametes;
+    
+}
 long double Population::ProbabilityComeFromPopulation(Population *PopJ, std::vector<Population*> &populations, int numClones, long double K)
 {
     long double ProbabilityIJ, AboveTerm, BelowTerm;
@@ -1278,6 +1307,32 @@ void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double
     }
 
     
+}
+PopulationSet::PopulationSet(const PopulationSet &original)
+//: populations(original.populations.size())
+{
+    numClones = original.numClones;
+    proportionsVector = original.proportionsVector;
+    populations.reserve(original.populations.size());
+      for (auto p : original.populations)
+          populations.push_back(new Population(*p));
+//    try {
+//          // auto is preferable here but
+//          std::vector<Population*>::iterator thisit = populations.begin();
+//           std::vector<Population*>::const_iterator thatit = original.populations.cbegin();
+//
+//          for (; thatit != original.populations.cend(); ++thisit, ++thatit)
+//              *thisit = new Population(**thatit);
+//      } catch (...) {
+//          for (std::vector<Population*>::iterator i = populations.begin(); i != populations.end(); ++i)
+//              if (!*i)
+//                  break;
+//              else
+//                  delete *i;
+//
+//          throw;
+//      }
+
 }
 void  PopulationSet::initListPossibleMigrations()
 {

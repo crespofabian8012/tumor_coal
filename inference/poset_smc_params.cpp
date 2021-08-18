@@ -9,23 +9,23 @@
 
 
 PosetSMCParams::PosetSMCParams(int numberClones,
-                 int sampleSize,
-                std::vector<int> &sampleSizes,
-                 unsigned int num_sites,
-                 pll_msa_t *msa,
-                 const Partition *partition,
-                 PLLBufferManager *const pll_buffer_manager,
-                 std::vector<int> &positions,
-                 ProgramOptions &programOptions,GenotypeErrorModel *gtErrorModel):
+                               int sampleSize,
+                               std::vector<int> &sampleSizes,
+                               unsigned int num_sites,
+                               pll_msa_t *msa,
+                               const Partition *partition,
+                               PLLBufferManager *const pll_buffer_manager,
+                               std::vector<int> &positions,
+                               ProgramOptions &programOptions,GenotypeErrorModel *gtErrorModel):
 numberClones(numberClones),sampleSize(sampleSize), msa(msa), partition(partition),
 pll_buffer_manager(pll_buffer_manager), gtErrorModel(gtErrorModel), sampleSizes(sampleSizes)
 {
-
+    
     this->positions= positions;
     this->programOptions = &programOptions;
     
-
-        
+    
+    
 }
 ProgramOptions& PosetSMCParams::getProgramOptions(){
     
@@ -33,19 +33,19 @@ ProgramOptions& PosetSMCParams::getProgramOptions(){
     
 }
 void PosetSMCParams::set(std::shared_ptr<MCMCParameterWithKernel> thetaPar,
-                std::shared_ptr<MCMCParameterWithKernel> seqErrorPar,
-                std::shared_ptr<MCMCParameterWithKernel> dropoutErrorPar,
-                std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationDeltaTsPar,
-                std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationToriginSTDsPar,
-                std::shared_ptr<MCMCVectorParameterWithKernel>proportionsPar
-                )
+                         std::shared_ptr<MCMCParameterWithKernel> seqErrorPar,
+                         std::shared_ptr<MCMCParameterWithKernel> dropoutErrorPar,
+                         std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationDeltaTsPar,
+                         std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationToriginSTDsPar,
+                         std::shared_ptr<MCMCVectorParameterWithKernel>proportionsPar
+                         )
 {
     this->proportions = proportionsPar;
     this->theta = thetaPar;
     populationDeltaTs=   populationDeltaTsPar;
     populationToriginSTDs=   populationToriginSTDsPar;
     
-
+    
 }
 std::shared_ptr<MCMCParameterWithKernel> PosetSMCParams::getTheta(){
     

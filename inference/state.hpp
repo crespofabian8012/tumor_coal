@@ -49,7 +49,7 @@ public:
     
     State &operator=(const State &original);
     
-    std::shared_ptr<PartialTreeNode> connect(int i, int j, double height_delta, size_t index_pop_i,size_t index_pop_j, size_t index_pop_new_node);
+    std::shared_ptr<PartialTreeNode> connect(int i, int j,  size_t index_pop_new_node);
     
     std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
     

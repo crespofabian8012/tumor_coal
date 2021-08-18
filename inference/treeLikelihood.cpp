@@ -327,7 +327,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) c
     
     auto clv_size = msa->length * number_states;
     if( clv.size()!=clv_size)
-       clv.resize(clv_size);
+        clv.resize(clv_size);
     
     auto clvp = clv.begin();
     auto seq = msa->sequence[tip_id];
@@ -339,7 +339,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) c
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
-    
+        
         gtErrorModel->computeStateErrorProbPT17(state, clvp);
         
         //if (j == 0 && 0)
@@ -358,10 +358,10 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) c
 void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, pll_msa_t *msaP, GenotypeErrorModel &gtError,unsigned int number_statesP)
 {
     
-
+    
     auto clv_size = msaP->length * number_statesP;
     if( clv.size()!=clv_size)
-     clv.resize(clv_size);
+        clv.resize(clv_size);
     
     auto clvp = clv.begin();
     //auto seq = msa->at(tip_id);
@@ -374,7 +374,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, p
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
-    
+        
         gtError.computeStateErrorProbPT17(state, clvp);
         
         //if (j == 0 && 0)
@@ -388,7 +388,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, p
         clvp += number_statesP;
     }
     
-   assert(clvp == clv.end());
+    assert(clvp == clv.end());
 }
 void TreeLikelihood::recomputeTipClvs()
 {

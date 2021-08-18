@@ -17,6 +17,13 @@ GenotypeErrorModel::GenotypeErrorModel(std::string name, long double seqErrorRat
     this->states= states;
     undefinedState = ((pll_state_t) 1 << states) - 1 ;
 }
+GenotypeErrorModel::GenotypeErrorModel(GenotypeErrorModel& original){
+    this->seqErrorRate= original.seqErrorRate;
+    this->ADOErrorRate = original.ADOErrorRate;
+    this->name = original.name;
+    this->states= original.states;
+    undefinedState = original.undefinedState ;
+}
 long double GenotypeErrorModel::getSeqErrorRate() const{
     return seqErrorRate;
 }

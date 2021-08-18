@@ -150,7 +150,7 @@ tipPatternCompression(tipPatternCompression)
     
     //pllmod_subst_model_t * model = pllmod_util_model_info_genotype("GT16JC");
     //assert(model->states ==numberStates);
-
+    
     // double  rate_categories[number_states];
     // std::fill_n (rate_categories, number_states*(number_states-1) /2, 1);
     
@@ -268,11 +268,10 @@ int Partition::initTipCLV(unsigned int tipClvIndex, double * clv)const{
 }
 void Partition::buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel, std::vector<double> &clv, bool normalize)const{
     
-    auto clv_size = msa->length * numberStates;
+   // auto clv_size = msa->length * numberStates;
     //auto clv_size = msa->length * numberStates*numberRateCats;
     //here we assume numberRateCats=1
     auto clvp = clv.begin();
-
     
     auto seq = msa->sequence[tip_id];
     //auto charmap = _model.charmap();
@@ -288,18 +287,18 @@ void Partition::buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtError
         
         if (j == 0 && 0)
         {
-              printf("state: %llu ", state);
-              printf("char: %c ", seq[j]);
-              for (size_t k = 0; k < numberStates; ++k)
-                printf("%lf ", clvp[k]);
-              printf("\n");
+            printf("state: %llu ", state);
+            printf("char: %c ", seq[j]);
             for (size_t k = 0; k < numberStates; ++k)
-              printf("%lf ", clv[k]);
+                printf("%lf ", clvp[k]);
             printf("\n");
-         }
+            for (size_t k = 0; k < numberStates; ++k)
+                printf("%lf ", clv[k]);
+            printf("\n");
+        }
         
         clvp += numberStates;
-       //  clvp += numberStates*numberRateCats;
+        //  clvp += numberStates*numberRateCats;
     }
     
     assert(clvp == clv.end());
@@ -427,89 +426,50 @@ void Partition::showEigenDecomp(unsigned int float_precision) const{
     
     unsigned int i,j,k;
     double * ev;
-
-
+    
+    
     /* eigenvals */
     printf("Eigenvalues\n");
     printf("[");
     for (i = 0; i < partition->rate_matrices; ++i)
     {
-      printf("(");
-      for (j = 0; j < partition->states-1; ++j)
-      {
+        printf("(");
+        for (j = 0; j < partition->states-1; ++j)
+        {
+            printf("%.*f,", float_precision, partition->eigenvals[i][j]);
+        }
         printf("%.*f,", float_precision, partition->eigenvals[i][j]);
-      }
-      printf("%.*f,", float_precision, partition->eigenvals[i][j]);
-      printf(")");
-      if (i < partition->rate_matrices - 1) printf(",");
+        printf(")");
+        if (i < partition->rate_matrices - 1) printf(",");
     }
     printf("]\n");
-
+    
     /* eigen vectors */
     printf("Eigenvectors\n");
     for (k = 0; k < partition->rate_matrices; ++k)
     {
-      ev = partition->eigenvecs[k] + k*partition->states*partition->states;
-      for (i = 0; i < partition->states; ++i)
-      {
-        for (j = 0; j < partition->states; ++j)
-          printf("%+2.*f   ", float_precision, ev[i*partition->states+j]);
+        ev = partition->eigenvecs[k] + k*partition->states*partition->states;
+        for (i = 0; i < partition->states; ++i)
+        {
+            for (j = 0; j < partition->states; ++j)
+                printf("%+2.*f   ", float_precision, ev[i*partition->states+j]);
+            printf("\n");
+        }
         printf("\n");
-      }
-      printf("\n");
     }
-
+    
     printf("Inverse eigenvectors\n");
     for (k = 0; k < partition->rate_matrices; ++k)
     {
-      ev = partition->inv_eigenvecs[k] + k*partition->states*partition->states;
-      for (i = 0; i < partition->states; ++i)
-      {
-        for (j = 0; j < partition->states; ++j)
-          printf("%+2.*f   ", float_precision, ev[i*partition->states+j]);
+        ev = partition->inv_eigenvecs[k] + k*partition->states*partition->states;
+        for (i = 0; i < partition->states; ++i)
+        {
+            for (j = 0; j < partition->states; ++j)
+                printf("%+2.*f   ", float_precision, ev[i*partition->states+j]);
+            printf("\n");
+        }
         printf("\n");
-      }
-      printf("\n");
     }
     
     
 }
-// Partition::Partition& operator=(const Partition &original){
-//    
-//    if (this == &original)
-//      return *this;
-//     
-//       numberTips = original.numberTips;
-//       numberSites = original.numberSites;
-//       clvBuffers = original.clvBuffers;
-//       numberStates = original.numberStates;
-//       numberRateMatrices = original.numberRateMatrices;
-//       probMatrices = original.probMatrices;
-//       numberRateCats = original.numberRateCats;
-//       numberScaleBuffers = original.numberScaleBuffers;
-//       attributes = original.attributes;
-//
-//    partition =   pll_partition_create(numberTips, clvBuffers, numberStates, numberSites, numberRateMatrices, probMatrices, numberRateCats, numberScaleBuffers, attributes);
-//    
-//    if(!partition)
-//    {
-//        printf("Fail creating partition \n");
-//        //pll_partition_destroy(partition);
-//        exit(pll_errno);
-//        
-//    }
-//
-//    sumtable = (double *)pll_aligned_alloc(numberSites * numberRateCats * statesPadded * sizeof(double), partition->alignment);
-//    
-//    if (!sumtable)
-//       {
-//         printf("Fail creating sumtable \n");
-//         //pll_partition_destroy(partition);
-//         exit(pll_errno);
-//       }
-//   
-//    return *this;
-//    
-//    
-//    
-//}

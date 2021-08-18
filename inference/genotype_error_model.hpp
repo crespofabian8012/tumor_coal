@@ -25,8 +25,10 @@ class GenotypeErrorModel{
     long double ADOErrorRate;
 public:
     GenotypeErrorModel(std::string name, long double seqErrorRate,long double ADOErrorRate, int states );
+    GenotypeErrorModel(GenotypeErrorModel& original);
     long double getSeqErrorRate() const;
     long double getADOErrorRate() const;
+    
     GenotypeErrorModel &operator=(const GenotypeErrorModel &original);
     void computeStateErrorProbPT19(pll_state_t state,
                                    std::vector<double>::iterator &clv) const;

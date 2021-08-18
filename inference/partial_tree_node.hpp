@@ -59,11 +59,11 @@ public:
   std::shared_ptr<PartialTreeEdge> edge_l;
   std::shared_ptr<PartialTreeEdge> edge_r;
     
-  std::vector<double>& getCLV(){return clv;};
+  //std::vector<double>& getCLV(){return clv;};
   void buildCLV(int tip_id,int numberStates, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel,  bool normalize);
-  double * getCLVPointer(){return clv.data();};
-  unsigned int * getScaleBufferPointer(){return scale_buffer.data();};
-  std::vector<unsigned int>& getScaleBuffer(){return scale_buffer;};
+  //double * getCLVPointer(){return clv.data();};
+  //unsigned int * getScaleBufferPointer(){return scale_buffer.data();};
+  //std::vector<unsigned int>& getScaleBuffer(){return scale_buffer;};
 
   std::string label;
   double height;
@@ -75,8 +75,8 @@ public:
   
   double *pclv;
   unsigned int *pscale_buffer;
-  std::vector<double> clv;
-  std::vector<unsigned int> scale_buffer;
+  //std::vector<double> clv;
+  //std::vector<unsigned int> scale_buffer;
     
 ~PartialTreeNode();
  

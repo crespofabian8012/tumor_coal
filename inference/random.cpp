@@ -230,8 +230,8 @@ long double  Random::RandomExponential (long double  lambda, long int *seed, boo
         if (useGSlgenerator)
             U = randomUniformFromGsl2(randomGsl);
         else
-           U = randomUniformBoost(rngBoost);
-       }
+            U = randomUniformBoost(rngBoost);
+    }
     while (U == 0 || U == 1);
     
     exponentialNumber = -log (U) / lambda;
@@ -249,16 +249,16 @@ long double  Random::RandomExponentialStartingFrom (long double  lambda, long do
     long double   exponentialNumber, U;
     
     do{
-         if (useGSlgenerator)
-           U = randomUniformFromGsl2(randomGsl);
+        if (useGSlgenerator)
+            U = randomUniformFromGsl2(randomGsl);
         else
             U = randomUniformBoost(rngBoost);
     }
     while (U == 1 || U == 0);
     
- //  exponentialNumber = -log ( (1 - U)/ exp(lambda* from)) / lambda;
+    //  exponentialNumber = -log ( (1 - U)/ exp(lambda* from)) / lambda;
     exponentialNumber = from - log (1-U) / lambda;
-
+    
     return exponentialNumber;
 }
 /********************* RandomPowerLawDistribution ********************/
@@ -274,7 +274,7 @@ long double  Random::RandomPowerLawDistribution (long double  a, long double fro
         U = randomUniformFromGsl2(randomGsl);
     else
         U = randomUniformBoost(rngBoost);
-   
+    
     output =from + U / (a*(1-U));
     return output;
 }
@@ -352,9 +352,9 @@ void  Random::randomDirichletFromVector (std::vector<long double> alpha, std::ve
         
         if (useGSlgenerator)
             current = RandomGamma (alpha.at(i), NULL, useGSlgenerator, rngGsl,  rngBoost);
-            //current = RandomGamma(alpha.at(i), &seed);
+        //current = RandomGamma(alpha.at(i), &seed);
         else
-           current = randomGammaShapeScale(alpha.at(i), 1, rngBoost);
+            current = randomGammaShapeScale(alpha.at(i), 1, rngBoost);
         outputVector.push_back(current);
         sum=sum+current;
     }
@@ -378,7 +378,7 @@ void   Random::randomDirichletFromGsl(int vectorSize,  double  alpha[], long dou
     struct timeval tv; // Seed generation based on time
     gettimeofday(&tv,0);
     unsigned long mySeed = tv.tv_sec + tv.tv_usec;
-   
+    
     //T = gsl_rng_ranlux389; // Generator setup
     T = gsl_rng_default;
     r = gsl_rng_alloc(T);
@@ -391,18 +391,18 @@ void   Random::randomDirichletFromGsl(int vectorSize,  double  alpha[], long dou
     gsl_ran_dirichlet( r,  vectorSize, alpha, thetaDouble);
     for (unsigned int i = 0; i < vectorSize; ++i){
         theta[i]=thetaDouble[i];
-       }
+    }
     gsl_rng_free (r);
 }
 
 long double  Random::RandomLogUniform( long double  from, long double  to,  bool useGSlgenerator, const gsl_rng * rngGsl,  boost::mt19937* rngBoost){
     long double U;
     
-       if (useGSlgenerator)
-            U = randomUniformFromGsl2(rngGsl);
-        else
-            U = randomUniformBoost(rngBoost);
-        
+    if (useGSlgenerator)
+        U = randomUniformFromGsl2(rngGsl);
+    else
+        U = randomUniformBoost(rngBoost);
+    
     return(exp(from + U*(to -from)));
 }
 // from https://stackoverflow.com/questions/9768519/gsl-uniform-random-number-generator
@@ -423,17 +423,17 @@ long double  Random::RandomLogUniform( long double  from, long double  to,  bool
 //    
 //}
 long double  Random::randomUniformFromGsl2(const gsl_rng * r){
-
+    
     long double  u = gsl_rng_uniform(r);
     return u;
     
 }
 int  Random::randomUniformIntegerInterval(const gsl_rng * r, int from, int to){
-   
+    
     assert(to>=from);
     long int  u;
     if (to>from)
-     u = gsl_rng_uniform_int(r, to-from);
+        u = gsl_rng_uniform_int(r, to-from);
     else
         u=0;
     return (from +u);
@@ -461,9 +461,9 @@ gsl_rng* Random::generateRandomObject(long seed)
     //const gsl_rng_type * T = gsl_rng_ranmar;
     const gsl_rng_type * T = gsl_rng_taus;
     gsl_rng *random;
-
+    
     gsl_rng_env_setup();
-
+    
     random = gsl_rng_alloc(T);
     gsl_rng_set(random, seed);
     return random;
@@ -489,7 +489,7 @@ void Random::freeListRandomNumbersGenerators(std::vector<gsl_rng * > &vec)
 {
     for(unsigned int i=0; i < vec.size(); i++)
     {
-      gsl_rng_free (vec.at(i));
+        gsl_rng_free (vec.at(i));
         
     }
 }
@@ -521,7 +521,7 @@ long double  Distributions::logMultinomialProbability(const  size_t size, const 
     return gsl_ran_multinomial_lnpdf(size, p, n);
 }
 long  double   Random::randomNormalBoost(long double mean, long double sigma, boost::mt19937* rng){
-
+    
     boost::normal_distribution< boost::multiprecision::cpp_dec_float_50> normal_dist(0, sigma);
     boost::random::independent_bits_engine<boost::mt19937, 50L * 1000L / 301L, boost::multiprecision::number<boost::multiprecision::cpp_int::backend_type, boost::multiprecision::et_off> > gen;
     
@@ -536,7 +536,7 @@ long  double   Random::randomNormalGreaterThan(long double mean, long double sig
     }
     else{
         result= randomNormalBoost(mean, sigma, rngBoost);
-        }
+    }
     
     
     while(result < from)
@@ -558,9 +558,9 @@ long double  Random::RandomDensityModelTimeOrigin (long double  lambda, bool use
     }
     while (U == 0);
     
- 
+    
     result = from +  (1.0 / lambda) * log(1- lambda / (log(U)));
-
+    
     return result;
 }
 /********************* RandomDensityModelTimeOriginLambda ********************/
@@ -597,7 +597,7 @@ long double Distributions::LogExponentialDensity(long double& value, long double
         auto const lambda1 = lambda;
         const auto d = boost::math::exponential_distribution<>{static_cast<double>(lambda1)};
         result=  log(boost::math::pdf(d, value-from));
-      
+        
         return result;
     }
     else
@@ -619,7 +619,7 @@ long double Distributions::LogBetaDensity(long double& value, long double& alpha
         auto const beta1 = beta;
         const auto d = boost::math::beta_distribution<>(alpha1, beta1);
         result=  log(boost::math::pdf(d, value));
-      
+        
         return result;
     }
     else
@@ -635,22 +635,22 @@ long double Random::randomBeta(long double  alpha, long double beta, bool useGSl
     assert(alpha>0);
     assert(beta>0);
     long double    U;
-       
-       do{
-            if (useGSlgenerator)
-              U = randomUniformFromGsl2(rngGsl);
-           else
-               U = randomUniformBoost(rngBoost);
-       }
-       while (U == 1 || U == 0);
-       
-      auto const alpha1 = alpha;
-      auto const beta1 = beta;
-      const auto dist = boost::math::beta_distribution<>(alpha1, beta1);
-     
-      result = quantile(dist, U);
-
-       return result;
+    
+    do{
+        if (useGSlgenerator)
+            U = randomUniformFromGsl2(rngGsl);
+        else
+            U = randomUniformBoost(rngBoost);
+    }
+    while (U == 1 || U == 0);
+    
+    auto const alpha1 = alpha;
+    auto const beta1 = beta;
+    const auto dist = boost::math::beta_distribution<>(alpha1, beta1);
+    
+    result = quantile(dist, U);
+    
+    return result;
     
 }
 long double Random::randomGamma(long double  mean, long double variance, bool useGSlgenerator,const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost)
@@ -659,29 +659,29 @@ long double Random::randomGamma(long double  mean, long double variance, bool us
     const double shape = ( mean*mean )/variance;
     double scale = variance/mean;
     long double    U;
-       
-       do{
-            if (useGSlgenerator)
-              U = randomUniformFromGsl2(rngGsl);
-           else
-               U = randomUniformBoost(rngBoost);
-       }
-       while (U == 1 || U == 0);
-       
-   
-      const auto dist = boost::gamma_distribution<>(shape);
-      boost::variate_generator<boost::mt19937&,boost::gamma_distribution<> > var_gamma(*rngBoost, dist );
-     
-      //result = quantile(dist, U);
-      result=  scale*var_gamma();
-
-       return result;
+    
+    do{
+        if (useGSlgenerator)
+            U = randomUniformFromGsl2(rngGsl);
+        else
+            U = randomUniformBoost(rngBoost);
+    }
+    while (U == 1 || U == 0);
+    
+    
+    const auto dist = boost::gamma_distribution<>(shape);
+    boost::variate_generator<boost::mt19937&,boost::gamma_distribution<> > var_gamma(*rngBoost, dist );
+    
+    //result = quantile(dist, U);
+    result=  scale*var_gamma();
+    
+    return result;
 }
 long double Random::randomUniformBoost(boost::random::mt19937 * rngBoost)
 {
     
- boost::random::independent_bits_engine<boost::random::mt19937, 50L*1000L/301L, cpp_int> gen;
-     std::setprecision(50);
+    boost::random::independent_bits_engine<boost::random::mt19937, 50L*1000L/301L, cpp_int> gen;
+    std::setprecision(50);
     
     long double result = (long double)boost::random::generate_canonical<cpp_bin_float_50, std::numeric_limits<cpp_bin_float_50>::digits>(gen);
     

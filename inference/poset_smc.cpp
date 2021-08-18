@@ -14,21 +14,20 @@
 #include <iostream>
 
 PosetSMC::PosetSMC(size_t numClones, size_t num_iter)
-  {
-      this->numClones=numClones;
-      this->num_iter = num_iter;
-      
+{
+    this->numClones=numClones;
+    this->num_iter = num_iter;
+    
 }
 std::shared_ptr<State> PosetSMC::propose_initial(gsl_rng *random, double &log_w, PosetSMCParams &params){
     
     std::shared_ptr<State> result = std::make_shared<State>(params, random );
-     
+    
     return result;
 }
 std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, const State &curr, double &log_w, PosetSMCParams &params){
     
     //make a  copy of curr
-    //State * newState= new State(curr);
     std::shared_ptr<State> result(new State(curr));
     log_w=0;
     
@@ -37,7 +36,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
         Population *pop,*chosenPop, *oldestPop;
         long double minTimeNextEvent = DOUBLE_INF ;
         
-       // std::cout << " curr root count " << curr.root_count()<<" result root count " << result->root_count()<< std::endl;
+        // std::cout << " curr root count " << curr.root_count()<<" result root count " << result->root_count()<< std::endl;
         long double waitingTime, timeNextEvent;
         bool isCoalescentEvent=false;
         double currentTime=0.0;
@@ -46,8 +45,8 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             
             pop= result->getPopulationByIndex( i);
             oldestPop = result->getPopulationByIndex( result->getNumberPopulations()-1);
-             //std::cout << "num active gametes pop " << pop->numActiveGametes<< std::endl;
-        
+            //std::cout << "num active gametes pop " << pop->numActiveGametes<< std::endl;
+            
             if (pop->numActiveGametes >1){
                 
                 currentTime = result->getHeightModelTime() ;
@@ -77,8 +76,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                 chosenPop=pop;
             }
         }
-        
-       // chosenPop= result->getPopulationByIndex( idx_pop);
+        // chosenPop= result->getPopulationByIndex( idx_pop);
         // std::cout<< "chosen pop "<< idx_pop <<  " T " << chosenPop->timeOriginSTD << std::endl;
         if (chosenPop->numActiveGametes >1){
             //next event a coalescence
@@ -86,69 +84,66 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             int idxFirst = 0,  idxSecond = 0;
             int firstInd = 0,  secondInd = 0;
             int choosePairIndividuals = YES;
-               
-           // std::cout << "num active gametes chosenPop " << chosenPop->numActiveGametes<< std::endl;
+            
+            //std::cout << "num active gametes chosenPop " << chosenPop->numActiveGametes<< std::endl;
             
             if (result->getNumberPopulations()==1)
-                assert(chosenPop->numActiveGametes == result->getPopulationByIndex(0)->numActiveGametes);
-                
-            chosenPop->ChooseRandomIndividual(&idxFirst, numClones,   &idxSecond, random, choosePairIndividuals);
+                assert(chosenPop->numActiveGametes == result->root_count());
             
+            chosenPop->ChooseRandomIndividual(&idxFirst, numClones,   &idxSecond, random, choosePairIndividuals);
             
             firstInd = chosenPop->idsActiveGametes[idxFirst];
             secondInd = chosenPop->idsActiveGametes[idxSecond];
             
-           // assert(firstInd< result->root_count());
-            //assert(secondInd< result->root_count());
-                      //std::cout<< "first idx "<< firstInd <<  " second " << secondInd<< std::endl;
-                     // std::cout<< "first label "<< result->getRootAt(firstInd)->label <<  " second " << result->getRootAt(secondInd)->label<< std::endl;
-                     // std::cout<< "timeNextEvent "<<  minTimeNextEvent<<  " T "<< chosenPop->timeOriginSTD  << std::endl;
-              
-                      
-           unsigned int chosep_pop_idx = chosenPop->index;
-           result->setHeightScaledByTheta(minTimeNextEvent* result->getTheta());
-                      
-                     // std::cout << "new  height scaled by theta"<<  " is "<< result->getHeightScaledByTheta()<< std::endl;
-                      
-        std::shared_ptr<PartialTreeNode> node = result->connect(firstInd, secondInd, minTimeNextEvent* result->getTheta()-result->getHeightScaledByTheta(), chosep_pop_idx, chosep_pop_idx, chosep_pop_idx);
-          
+            //std::cout<< "first idx "<< firstInd <<  " second " << secondInd<< std::endl;
+            // std::cout<< "first label "<< result->getRootAt(firstInd)->label <<  " second " << result->getRootAt(secondInd)->label<< std::endl;
+            // std::cout<< "timeNextEvent "<<  minTimeNextEvent<<  " T "<< chosenPop->timeOriginSTD  << std::endl;
+    
+            unsigned int chosep_pop_idx = chosenPop->index;
+            result->setHeightScaledByTheta(minTimeNextEvent* result->getTheta());
             
-             result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  node->index, node->index_population);
+            // std::cout << "new  height scaled by theta"<<  " is "<< result->getHeightScaledByTheta()<< std::endl;
+            
+            std::shared_ptr<PartialTreeNode> node = result->connect(firstInd, secondInd, chosep_pop_idx);
+            
+            //node->ln_likelihood =0;
+            
+            result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  node->index, node->index_population);
             
             long double logLikNextCoal = 0.0;
             
-       
-            
             logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeightModelTime(), chosenPop->numActiveGametes, params.getProgramOptions().K);
             
-             chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
+            chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
             
-            node->ln_likelihood = node->ln_likelihood +logLikNextCoal;
+            log_w = log_w +logLikNextCoal;
             
-    
+            
             long double logLikNoCoal;
+            long double logDensityTorigin;
             //do we  need to add loglik of no coal events in  other populations?
-          
-            for(size_t i=0; i <  result->getNumberPopulations(); i++){
-                    pop= result->getPopulationByIndex( i);
-                // do we need to include this in the node->ln_likelihood?
-                    node->ln_likelihood +=pop->LogDensityTimeSTDFrom(pop->timeOriginSTD, 0);
-                    
-                    if (pop!=chosenPop){
-                        logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeightModelTime(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
-                       
-                        node->ln_likelihood = node->ln_likelihood +logLikNoCoal;
-                        
-                    }
-                }
             
-           // std::cout << "log lik of parent node after the coal part "<<  " is "<< node->ln_likelihood<< std::endl;
+            for(size_t i=0; i <  result->getNumberPopulations(); i++){
+                pop= result->getPopulationByIndex( i);
+                // do we need to include this in the node->ln_likelihood?
+                logDensityTorigin = pop->LogDensityTime(pop->timeOriginSTD);
+                
+                //node->ln_likelihood = node->ln_likelihood +logDensityTorigin;
+                
+                if (pop!=chosenPop){
+                    logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeightModelTime(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
+                    
+                    log_w = log_w +logLikNoCoal;
+                }
+            }
+    
+            // std::cout << "log lik of parent node after the coal part "<<  " is "<< node->ln_likelihood<< std::endl;
             double weight = result->likelihood_factor(node);
             
-             
-           assert(!isnan(weight) && !isinf(weight));
-                   
-            log_w = weight;
+           
+            assert(!isnan(weight) && !isinf(weight));
+            
+            log_w += weight;
             
             //std::cout << "log weight "<<  " is "<<  log_w<< std::endl;
             
@@ -158,13 +153,13 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             result->setHeightScaledByTheta(minTimeNextEvent* result->getTheta());
             //the new log_weight is the log of probability of no events
             // in any of the other populations
-//             long double logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(curr.getHeight(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
+            //             long double logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(curr.getHeight(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
             
         }
-       
+        
     }
     
- 
+    
     return result;
 }
 //void PosetSMC::generate_data(gsl_rng *random, size_t T, SMCOptions &params, std::vector<double> &latent, std::vector<double> &obs){
@@ -179,12 +174,12 @@ unsigned long PosetSMC::num_iterations(){
 double PosetSMC::log_weight(unsigned int t, const shared_ptr<ParticleGenealogy<State> > &genealogy, const PosetSMCParams &p){
     
     double result=0.0;
-   
+    
     return result;
     
 }
-   
-   
+
+
 void PosetSMC::set_particle_population(const std::vector<shared_ptr<State> > &particles) {
     
     

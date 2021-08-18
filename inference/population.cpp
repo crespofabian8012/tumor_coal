@@ -34,9 +34,9 @@
 #include "utils.hpp"
 
 extern "C"
-{
+    {
 #include "random.h"
-}
+    }
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
@@ -53,7 +53,7 @@ extern "C"
 //Parametrized Constructor
 Population::Population(int ind, int ord, long double timeOriginInput,
                        int sampleSize,  int popSize, long double birthRate,
-                      long  double deathRate, bool estimateTOR, MCMCoptions &mcmcOptions)
+                       long  double deathRate, bool estimateTOR, MCMCoptions &mcmcOptions)
 {
     if (ind >=0)
         index=ind;
@@ -64,13 +64,13 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     else
         fprintf (stderr, "\n ERROR: Population order cannot be negative \n");
     
-//    if (popSize >= 0)
-//    {
-//        this->popSize=popSize;
-//    }
-//    else
-//        fprintf (stderr, "\n ERROR: Population size cannot be negative \n");
-//
+    //    if (popSize >= 0)
+    //    {
+    //        this->popSize=popSize;
+    //    }
+    //    else
+    //        fprintf (stderr, "\n ERROR: Population size cannot be negative \n");
+    //
     if (sampleSize >= 0)
     {
         this->sampleSize=sampleSize;
@@ -103,18 +103,18 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     }
     else
         fprintf (stderr, "\n ERROR: Population time of origin   cannot be negative \n");
-//    if (birthRate >0)
-//        effectPopSize = popSize / birthRate;
+    //    if (birthRate >0)
+    //        effectPopSize = popSize / birthRate;
     
     //delta= growthRate * effectPopSize;
     delta = 0.0;
     
     isAlive = YES;
     
-//    if (effectPopSize>0)
-//      timeOriginSTD = timeOriginInput /effectPopSize;
-//    else
-        timeOriginSTD=0;
+    //    if (effectPopSize>0)
+    //      timeOriginSTD = timeOriginInput /effectPopSize;
+    //    else
+    timeOriginSTD=0;
     
     numActiveGametes = sampleSize;
     
@@ -133,7 +133,7 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     deltaT = 0.0;
     olddeltaT = 0.0;
     
-   
+    
     x= 1;
     
     oldx = 0.0;
@@ -155,24 +155,24 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     DeltaT = new MCMCParameterWithKernel("DeltaT_pop"+std::to_string(index), 0.0,mcmcOptions.paramMultiplierGrowthRate, 0.0);
     
     if(mcmcOptions.priorsType==0)
-       {
-           DeltaT->getParameter()->setPrior(&Distributions::LogUniformDensity);
-          
-           DeltaT->getParameter()->setSecondParLogPrior(mcmcOptions.GrowthRatefrom); //from parameter
-           DeltaT->getParameter()->setThirdParLogPrior(mcmcOptions.GrowthRateto); //to parameter
-       }
-       else if(mcmcOptions.priorsType==2)
-       {
-           DeltaT->getParameter()->setPrior(&Distributions::LogPowerLawDistibutionDensity);
-           DeltaT->getParameter()->setSecondParLogPrior(mcmcOptions. parameterPowerLawDistributionGrowthRate);
-            DeltaT->getParameter()->setThirdParLogPrior(zero); //from parameter
-       }
-       
-      else if(mcmcOptions.priorsType==1) {
-           DeltaT->getParameter()->setPrior(&Distributions::LogExponentialDensity);
-           DeltaT->getParameter()->setThirdParLogPrior(mcmcOptions.lambdaExponentialPriorGrowthRate);//lambda parameter
-            DeltaT->getParameter()->setSecondParLogPrior(zero);//from paremeter
-       }
+    {
+        DeltaT->getParameter()->setPrior(&Distributions::LogUniformDensity);
+        
+        DeltaT->getParameter()->setSecondParLogPrior(mcmcOptions.GrowthRatefrom); //from parameter
+        DeltaT->getParameter()->setThirdParLogPrior(mcmcOptions.GrowthRateto); //to parameter
+    }
+    else if(mcmcOptions.priorsType==2)
+    {
+        DeltaT->getParameter()->setPrior(&Distributions::LogPowerLawDistibutionDensity);
+        DeltaT->getParameter()->setSecondParLogPrior(mcmcOptions. parameterPowerLawDistributionGrowthRate);
+        DeltaT->getParameter()->setThirdParLogPrior(zero); //from parameter
+    }
+    
+    else if(mcmcOptions.priorsType==1) {
+        DeltaT->getParameter()->setPrior(&Distributions::LogExponentialDensity);
+        DeltaT->getParameter()->setThirdParLogPrior(mcmcOptions.lambdaExponentialPriorGrowthRate);//lambda parameter
+        DeltaT->getParameter()->setSecondParLogPrior(zero);//from paremeter
+    }
     
     
     TimeOriginSTD = new MCMCParameterWithKernel("TimeOriginSTD_pop"+std::to_string(index),0.0,mcmcOptions.paramMultiplierTimeOriginOldestPop, 0.0);
@@ -197,12 +197,12 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     else
         fprintf (stderr, "\n ERROR: Population order cannot be negative \n");
     
-//    if (popSize >= 0)
-//    {
-//        this->popSize=popSize;
-//    }
-//    else
-//        fprintf (stderr, "\n ERROR: Population size cannot be negative \n");
+    //    if (popSize >= 0)
+    //    {
+    //        this->popSize=popSize;
+    //    }
+    //    else
+    //        fprintf (stderr, "\n ERROR: Population size cannot be negative \n");
     
     if (sampleSize >= 0)
     {
@@ -251,25 +251,25 @@ Population::Population(int ind, int ord, long double timeOriginInput,
             delta=growthRate;
             deltaT = growthRate;
         }
-            
+        
     }
-   else
-      delta =0.0;
+    else
+        delta =0.0;
     
     isAlive = YES;
     
     if (!estimateTOR){
         
         if ( effectPopSize>0){
-           // timeOriginSTD = timeOriginInput /effectPopSize;
+            // timeOriginSTD = timeOriginInput /effectPopSize;
             timeOriginSTD = timeOriginInput ;
         }
         else
-           timeOriginSTD=timeOriginInput;
+            timeOriginSTD=timeOriginInput;
         
         
     }
-
+    
     numActiveGametes = sampleSize;
     
     numGametes = sampleSize;
@@ -288,9 +288,9 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     olddeltaT = 0.0;
     
     if (totalSampleSize >0)
-           x = (1.0 *popSize) /totalPopSize;
+        x = (1.0 *popSize) /totalPopSize;
     else
-          x = 1.0;
+        x = 1.0;
     
     oldx = 0.0;
     theta = 0.0;
@@ -299,7 +299,7 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     oldScaledTimeOriginInput=0.0;
     olddelta=0.0;
     oldDeathRate=0.0;
-
+    
     oldGrowthRate =0.0;
     oldTimeOriginSTD=0.0;
     oldTimeOriginInput=0.0;
@@ -317,7 +317,7 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     sampleSizePar = new MCMCParameter<long double>("SampleSize",doubleSampleSize, 0.0);
 }
 Population::Population(int ind, int ord, int sampleSize, long double delta, long double theta,
-                         ProgramOptions &programOptions)
+                       ProgramOptions &programOptions)
 {
     if (ind >=0)
         index=ind;
@@ -328,8 +328,8 @@ Population::Population(int ind, int ord, int sampleSize, long double delta, long
     else
         fprintf (stderr, "\n ERROR: Population order cannot be negative \n");
     
-
-        if (sampleSize >= 0)
+    
+    if (sampleSize >= 0)
     {
         this->sampleSize=sampleSize;
     }
@@ -338,22 +338,22 @@ Population::Population(int ind, int ord, int sampleSize, long double delta, long
     
     
     if (delta > 0)
-       {
-           this->delta = delta;
-       }
-       else
-           fprintf (stderr, "\n ERROR: Population scaled growth rate cannot be negative \n");
+    {
+        this->delta = delta;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population scaled growth rate cannot be negative \n");
     
     if (theta > 0)
-         {
-             this->theta = theta;
-         }
-         else
-             fprintf (stderr, "\n ERROR: Population scaled growth rate cannot be negative \n");
+    {
+        this->theta = theta;
+    }
+    else
+        fprintf (stderr, "\n ERROR: Population scaled growth rate cannot be negative \n");
     
- 
     
-
+    
+    
     isAlive = YES;
     
     numActiveGametes = sampleSize;
@@ -365,14 +365,14 @@ Population::Population(int ind, int ord, int sampleSize, long double delta, long
     nextAvailableIdInmigrant = 0;
     numIncomingMigrations = 0;
     numPossibleMigrations = 0;
-
+    
     lowerBoundTimeOriginInput=0;
     
     MRCA=0;
     
     deltaT = 0.0;
     olddeltaT = 0.0;
-     
+    
     x = 1.0;
     oldx = 0.0;
     oldTheta = 0.0;
@@ -380,7 +380,7 @@ Population::Population(int ind, int ord, int sampleSize, long double delta, long
     oldScaledTimeOriginInput=0.0;
     olddelta=0.0;
     oldDeathRate=0.0;
-
+    
     oldGrowthRate =0.0;
     oldTimeOriginSTD=0.0;
     oldTimeOriginInput=0.0;
@@ -457,14 +457,14 @@ long double Population::ProbabilityComeFromPopulation(Population *PopJ, std::vec
         t = (timeOriginSTD ) * (x) / ( p->x);
         h = exp(LogCalculateH(t, p->timeOriginSTD, p->delta, K));
         
-       // cum = cum + ( ( p->popSize) * h);
+        // cum = cum + ( ( p->popSize) * h);
         cum = cum +  h;
     }
     
     BelowTerm = cum;
     
     ProbabilityIJ = AboveTerm / BelowTerm;
-
+    
     return ProbabilityIJ;
 }
 
@@ -476,8 +476,8 @@ long double Population::CalculateH (long double t, long double TOrigin, long dou
     assert(delta>0.0);
     assert(TOrigin>t);
     
-  
-
+    
+    
     a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     firstTerm = a * a;
     secondTerm = exp(-1.0 * delta * t);
@@ -487,12 +487,12 @@ long double Population::CalculateH (long double t, long double TOrigin, long dou
     if (BelowTerm == 0.0)
         printf ("\n Error!: BelowTerm = 0.0 \n");
     if (a == 0.0)
-          printf ("\n Error!: a = 0.0 \n");
+        printf ("\n Error!: a = 0.0 \n");
     
     extraTerm = 1+ (K /delta)*b*(secondTerm -1.0) / a ;
     
     H = (AboveTerm / BelowTerm)*extraTerm;
- 
+    
     return H;
 }
 long double Population::LogCalculateH (long double t, long double TOrigin, long double delta, long double K)
@@ -502,21 +502,21 @@ long double Population::LogCalculateH (long double t, long double TOrigin, long 
     long double extraTerm;
     assert(delta> 0.0);
     assert(TOrigin>t);
-  
-
+    
+    
     a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     firstTerm = 2.0 * log(a);
     secondTerm = -1.0 * delta * t;
     thirdTerm = exp(delta * t);
     AboveTerm = firstTerm + secondTerm;
-
+    
     
     b = 1.0 - exp(-1.0 * delta * TOrigin);
     BelowTerm = 2.0 * log(b);
     
     if (a == 0.0)
-             std::cout << "\n Error!: a = 0.0 in LogCalculateH \n" << std::endl;
-       
+        std::cout << "\n Error!: a = 0.0 in LogCalculateH \n" << std::endl;
+    
     extraTerm = log(1+ (K /delta)*b*(thirdTerm -1.0) / a ) ;
     
     if (K==0){
@@ -526,8 +526,8 @@ long double Population::LogCalculateH (long double t, long double TOrigin, long 
     else {
         logH = -log(2.0) + AboveTerm - BelowTerm + extraTerm;
     }
-   
-
+    
+    
     return logH;
 }
 
@@ -547,7 +547,7 @@ long double Population::FmodelTstandard (long double t, long double TOrigin, lon
     b = 0.0;
     c = 0.0;
     d=0.0;
-
+    
     ModelTimeF = 0.0;
     firstTerm = 0.0;
     secondTerm = 0.0;
@@ -558,36 +558,36 @@ long double Population::FmodelTstandard (long double t, long double TOrigin, lon
     
     if (K==0){
         a = exp(delta * t) - 1.0;
-         b = 1.0 - exp(-1.0 * delta * TOrigin);
-         c = 1.0 - exp(-1.0 * delta * (TOrigin - t));
-
-         if ( c == 0.0)
-             std::cout << "\n  c = 0.0, TOrigin = " << TOrigin << " t = " <<  t << std::endl;
-         if ( delta == 0.0)
-              std::cout << "\n delta  = 0.0 in FmodelTstandard "<< std::endl;
-         
-         ModelTimeF = a * b / (delta * c);
+        b = 1.0 - exp(-1.0 * delta * TOrigin);
+        c = 1.0 - exp(-1.0 * delta * (TOrigin - t));
         
-         //std::cout << "ModelTimeF " <<  ModelTimeF<< std::endl;
-
+        if ( c == 0.0)
+            std::cout << "\n  c = 0.0, TOrigin = " << TOrigin << " t = " <<  t << std::endl;
+        if ( delta == 0.0)
+            std::cout << "\n delta  = 0.0 in FmodelTstandard "<< std::endl;
+        
+        ModelTimeF = a * b / (delta * c);
+        
+        //std::cout << "ModelTimeF " <<  ModelTimeF<< std::endl;
+        
     }
     else{
-
-      c = exp(-1.0 * delta * TOrigin);
-      d = 1.0 -c;
-      a = ((K / delta) * d) - c;
-      b = 1.0 - (K/ delta)*d;
-    
-      long double numerator =(a*exp(delta*t)+b);
-    
-      if ( numerator == 0)
-          std::cout << "\n t= b => log(0) in FmodelTstandard \n"<< std::endl;
-    
-       long double denominator = 1-exp(-delta*(TOrigin-t));
-    
-      if ( denominator == 0)
-        std::cout << "\n  log(Inf) in FmodelTstandard \n" << std::endl;
-    
+        
+        c = exp(-1.0 * delta * TOrigin);
+        d = 1.0 -c;
+        a = ((K / delta) * d) - c;
+        b = 1.0 - (K/ delta)*d;
+        
+        long double numerator =(a*exp(delta*t)+b);
+        
+        if ( numerator == 0)
+            std::cout << "\n t= b => log(0) in FmodelTstandard \n"<< std::endl;
+        
+        long double denominator = 1-exp(-delta*(TOrigin-t));
+        
+        if ( denominator == 0)
+            std::cout << "\n  log(Inf) in FmodelTstandard \n" << std::endl;
+        
         ModelTimeF= (2.0 / K )*log(numerator/denominator);
     }
     return ModelTimeF;
@@ -609,34 +609,34 @@ long double Population::GstandardTmodel (long double V, long double TOrigin, lon
     e = 0.0;
     
     if (V==0)
-           return 0.0;
- 
+        return 0.0;
+    
     firstTerm = TOrigin;
-
+    
     secondTerm = 1.0 / delta;
     
     if (K==0){
-         
+        
         a =  exp(-1.0 * delta * TOrigin);
-
+        
         b = (1 - a) * (1 - a) * (1.0 / a);
-
+        
         c = 1 - a;
-
+        
         d = (1 - a) * (1.0 / a);
         e = V + d;
-
+        
         thirdTerm = log(1 - b / e);
-
+        
         thirdTerm = log(1 - ((1 - a) * (1 - a) * (1.0 / a)) / (V * delta + (1 - a) * (1.0 / a)));
-
+        
         thirdTerm = log(1 + delta * V - a) - log(1 + (delta * V - 1) * a);
-
+        
         StandardTimeG = secondTerm * thirdTerm;
-
+        
         if ( (1 + delta * V - a) <= 0 ||   (1 + (delta * V - 1)*a ) <= 0 ) // do approximation if required
         {
-           std::cout << "\nApplying approximation of math formula to avoid log(0)\n" << std::endl;
+            std::cout << "\nApplying approximation of math formula to avoid log(0)\n" << std::endl;
             StandardTimeG = 0.0;
             firstTerm = 0.0;
             secondTerm = 0.0;
@@ -657,16 +657,16 @@ long double Population::GstandardTmodel (long double V, long double TOrigin, lon
     }
     else {
         x = exp(K*V /2.0);
-          c = exp(-1.0 * delta * TOrigin);
-          d= 1.0 -c;
-          a = ((K/delta) * d ) - c;
-          b = 1.0 - (K/ delta)*d;
+        c = exp(-1.0 * delta * TOrigin);
+        d= 1.0 -c;
+        a = ((K/delta) * d ) - c;
+        b = 1.0 - (K/ delta)*d;
         
         long double numerator = x -b;
         if ( numerator == 0.0)
-                 fprintf (stderr, "\n x= b => log(0) \n");
+            fprintf (stderr, "\n x= b => log(0) \n");
         
-         long double denominator = (x*c) +a;
+        long double denominator = (x*c) +a;
         
         if ( denominator == 0.0)
             fprintf (stderr, "\n (x*c +a) == 0 => log(Inf) \n");
@@ -674,7 +674,7 @@ long double Population::GstandardTmodel (long double V, long double TOrigin, lon
         thirdTerm= log(numerator/denominator);
         
         StandardTimeG = secondTerm * thirdTerm;
-    
+        
     }
     return StandardTimeG;
 }
@@ -711,7 +711,7 @@ void Population::UpdateListMigrants( int numClones, Population *PopChild, Popula
         //exit (-1);
     }
     int updatedNumIncomingMigrations = PopFather->numIncomingMigrations;
-  
+    
     long double updatedMigrationTime = (PopChild->timeOriginSTD) * (PopChild->x) / (PopFather->x);
     if(updatedNumIncomingMigrations + 1 <= PopFather->numPossibleMigrations){
         updatedNumIncomingMigrations = updatedNumIncomingMigrations + 1;
@@ -765,7 +765,7 @@ void Population::InitIdsActiveGametes()
 void Population::InitIdsGametes(int numClones)
 {
     int j = 0;
-   
+    
     assert(sampleSize >0);
     idsGametes.clear();
     for (j = 0; j < (2* sampleSize + numClones - 2) ; j++) {
@@ -811,7 +811,7 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
         cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (numActiveGametes);
     
     w = 0;
-
+    
     random = Random::RandomUniform(seed);
     *firstInd = Population::bbinClones(random, cumPopulPart, numActiveGametes)-1;
     w = 0;
@@ -837,9 +837,9 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
 {
     long double random;
     int k, w;
-  
+    
     std::vector<long double> cumPopulPart(numActiveGametes + 1);
-
+    
     cumPopulPart[0] = 0;
     for (k = 1; k <= numActiveGametes; k++)
         cumPopulPart[k] = 0;
@@ -866,7 +866,7 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
             
         } while (*firstInd == *secondInd  );
     }
-  
+    
 }
 //void Population::getIdsActiveGametes(int *firstId,  int *secondId, int i, int j )
 //{
@@ -905,7 +905,7 @@ int Population::bbinClones (long double dat, long double *v, int n)
     return -1;
 }
 long double Population::LogDensityTime2(long double u){
-   boost::multiprecision::cpp_dec_float_50  term1 = exp(-1.0*delta*u);
+    boost::multiprecision::cpp_dec_float_50  term1 = exp(-1.0*delta*u);
     double doubleTerm= term1.convert_to<double>();
     boost::multiprecision::cpp_dec_float_50 term2 = delta * term1;
     doubleTerm= term2.convert_to<double>();
@@ -921,7 +921,7 @@ long double Population::LogDensityTime(long double u){
     long double term1 = exp(-1.0*delta*u);
     long double term2 = delta * term1;
     long double term3 = 1.0-term1;
-    long double result = log(delta * term2 /(term3 * term3));
+    long double result = 2*log(delta) -1.0*delta*u -2*log(term3);
     result = result - term2/term3;
     if (term3 ==0 || term2 == 0)
         fprintf (stderr, "\n LogDensityTime -inf, result %Lf  \n ", result);
@@ -1048,7 +1048,7 @@ void Population::savePosteriorValues(){
     
 }
 void Population::resetPosteriorValues(){
-
+    
     posteriorDeltaT.clear();
     DeltaT->resetParameterValues();
     
@@ -1098,16 +1098,16 @@ void  Population::setPopulationToriginConditionalDelta( const gsl_rng *rngGsl ){
     //timeOriginSTD = Random::RandomDensityModelTimeOriginLambda(birthRate,true,delta, sampleSize*10,  rngGsl, NULL);
     timeOriginInput = timeOriginSTD *x;
     
-   //std::cout << "Population with sample size "<< sampleSize << " torigin std: "<<timeOriginSTD<< " and scaled physical torigin: "  << timeOriginInput << " ,  order "<< order << " and delta "<< delta << std::endl;
-
+    //std::cout << "Population with sample size "<< sampleSize << " torigin std: "<<timeOriginSTD<< " and scaled physical torigin: "  << timeOriginInput << " ,  order "<< order << " and delta "<< delta << std::endl;
+    
 }
 long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K){
     
-   long double  RateCA = (long double)  numActiveLineages * ((long double) numActiveLineages - 1) / 2.0;
-   long double  ThisTimeCA_W = Random::RandomExponentialStartingFrom (RateCA,0,  true, rngGsl,NULL ) ;
-  
-
-  
+    long double  RateCA = (long double)  numActiveLineages * ((long double) numActiveLineages - 1) / 2.0;
+    long double  ThisTimeCA_W = Random::RandomExponentialStartingFrom (RateCA,0,  true, rngGsl,NULL ) ;
+    
+    
+    
     return ThisTimeCA_W;
     
 }
@@ -1121,11 +1121,11 @@ long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,lo
         result= result + temp;
         temp = -1.0 * Population::LogCalculateH(timeNextEvent,timeOriginSTD, delta, K);
         result= result + temp;
-//        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
+        //        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
         termOnlyAfterFirstCoalEvent =Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K);//if no coalescent
         temp =  (numActiveLineages / 2.0)* (numActiveLineages - 1.0)*(Population::FmodelTstandard(timeNextEvent, timeOriginSTD, delta, K)-termOnlyAfterFirstCoalEvent);
         result= result - temp;
-    
+        
     }
     return result;
 }
@@ -1138,7 +1138,7 @@ PopulationSet::PopulationSet(int numClones){
     
     initPopulation();
     initProportionsVector();
-  
+    
     setPopulationsBirthRate( 1);
     
 }
@@ -1192,9 +1192,9 @@ std::vector<long double> PopulationSet::samplePopulationGrowthRateFromPriors(MCM
             if (mcmcOptions.fixedValuesForSimulation)
                 randomGrowthRate= 1.0 / mcmcOptions.lambdaExponentialGrowthRateSimulation;
             else
-            randomGrowthRate =Random::RandomExponentialStartingFrom(mcmcOptions.lambdaExponentialGrowthRateSimulation,0, mcmcOptions.useGSLRandomGenerator, randomGenerator, NULL);
+                randomGrowthRate =Random::RandomExponentialStartingFrom(mcmcOptions.lambdaExponentialGrowthRateSimulation,0, mcmcOptions.useGSLRandomGenerator, randomGenerator, NULL);
         }
-       // randomGrowthRate=100;
+        // randomGrowthRate=100;
         popI->deltaT =  randomGrowthRate;
         popI->DeltaT->setParameterValue(randomGrowthRate);
         result.at(i)= randomGrowthRate;
@@ -1288,24 +1288,24 @@ void PopulationSet::initPopulationsThetaDelta(long double theta)
         popI->X->setValue(proportionsVector[i]);
         popI->theta = popI->x * theta;
         popI->Theta->setParameterValue(popI->theta);
-
+        
         popI->delta = popI->deltaT * popI->x;
     }
 }
 
 void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double &theta){
     long double delta;
-
+    
     theta =  Random::RandomExponential(1, NULL, true, rngGsl, NULL);
     for (unsigned int i = 0; i < numClones; ++i){
-         auto popI =  populations[i];
+        auto popI =  populations[i];
         delta = Random::RandomExponential(0.01, NULL, true, rngGsl, NULL);
         
         popI->theta = theta * popI->x;
         popI->delta = delta;
         
     }
-
+    
     
 }
 PopulationSet::PopulationSet(const PopulationSet &original)
@@ -1314,25 +1314,25 @@ PopulationSet::PopulationSet(const PopulationSet &original)
     numClones = original.numClones;
     proportionsVector = original.proportionsVector;
     populations.reserve(original.populations.size());
-      for (auto p : original.populations)
-          populations.push_back(new Population(*p));
-//    try {
-//          // auto is preferable here but
-//          std::vector<Population*>::iterator thisit = populations.begin();
-//           std::vector<Population*>::const_iterator thatit = original.populations.cbegin();
-//
-//          for (; thatit != original.populations.cend(); ++thisit, ++thatit)
-//              *thisit = new Population(**thatit);
-//      } catch (...) {
-//          for (std::vector<Population*>::iterator i = populations.begin(); i != populations.end(); ++i)
-//              if (!*i)
-//                  break;
-//              else
-//                  delete *i;
-//
-//          throw;
-//      }
-
+    for (auto p : original.populations)
+        populations.push_back(new Population(*p));
+    //    try {
+    //          // auto is preferable here
+    //          std::vector<Population*>::iterator thisit = populations.begin();
+    //           std::vector<Population*>::const_iterator thatit = original.populations.cbegin();
+    //
+    //          for (; thatit != original.populations.cend(); ++thisit, ++thatit)
+    //              *thisit = new Population(**thatit);
+    //      } catch (...) {
+    //          for (std::vector<Population*>::iterator i = populations.begin(); i != populations.end(); ++i)
+    //              if (!*i)
+    //                  break;
+    //              else
+    //                  delete *i;
+    //
+    //          throw;
+    //      }
+    
 }
 void  PopulationSet::initListPossibleMigrations()
 {
@@ -1362,10 +1362,10 @@ void PopulationSet::initProportionsVector(){
     
 }
 void PopulationSet::sortPopulationsByTorigin(){
- 
-        sort(populations.begin(), populations.end(), comparePopulationsByTimeOrigin);
-        //    qsort(populations, numClones, sizeof(Population), comparePopulationsByTimeOrigin);
-
+    
+    sort(populations.begin(), populations.end(), comparePopulationsByTimeOrigin);
+    //qsort(populations, numClones, sizeof(Population), comparePopulationsByTimeOrigin);
+    
 }
 Population* PopulationSet::ChooseFatherPopulation( Population  *PopChild, const gsl_rng *randomGenerator, int noisy, long double K)
 {
@@ -1405,10 +1405,10 @@ Population* PopulationSet::ChooseFatherPopulation( Population  *PopChild, const 
     return (result); //the father population has  order  (PopChild->order) + w
 }
 void PopulationSet::AssignSequencesToPopulations(std::vector<pll_rnode_t*> rnodes,
-                                         ProgramOptions &programOptions,
-                                          int noisy,  int TotalTumorSequences,
-                                         int &numActiveGametes, int &nextAvailable,
-                                         int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames, std::vector<int> &sampleSizes)
+                                                 ProgramOptions &programOptions,
+                                                 int noisy,  int TotalTumorSequences,
+                                                 int &numActiveGametes, int &nextAvailable,
+                                                 int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames, std::vector<int> &sampleSizes)
 
 {
     Population *pop;
@@ -1554,9 +1554,9 @@ StructuredCoalescentTree::StructuredCoalescentTree(int numClones, std::vector<in
         fprintf (stderr, "\n ERROR: The sequencing error rate cannot be negative \n");
     
     if (dropoutRate >=0)
-           this->dropoutRate = dropoutRate;
-       else
-           fprintf (stderr, "\n ERROR: The dropout error rate cannot be negative \n");
+        this->dropoutRate = dropoutRate;
+    else
+        fprintf (stderr, "\n ERROR: The dropout error rate cannot be negative \n");
     
     
     if (numClones >0)
@@ -1566,12 +1566,12 @@ StructuredCoalescentTree::StructuredCoalescentTree(int numClones, std::vector<in
     
     this->populationSet = new PopulationSet(numClones);
     assert(sampleSizes.size()==numClones);
-      copy(sampleSizes.begin(), sampleSizes.end(), back_inserter(this->sampleSizes));
+    copy(sampleSizes.begin(), sampleSizes.end(), back_inserter(this->sampleSizes));
     
     auto deltaTs  = populationSet->samplePopulationGrowthRateFromPriors(mcmcOptions, rngGsl );
     
     if (theta >0)
-       this->theta = theta;
+        this->theta = theta;
     else
         fprintf (stderr, "\n ERROR: Theta cannot be negative \n");
     
@@ -1598,15 +1598,15 @@ StructuredCoalescentTree::StructuredCoalescentTree(int numClones, std::vector<in
     populationSet->initPopulationsCoalescentEvents();
     
     healthyTip=NULL;
- 
+    
     root =   MakeCoalescenceTree (rngGsl,rngBoost,
-                                                          msa,
-                                                          programOptions.numNodes,
-                                                          programOptions,
-                                                          ObservedData,
-                                                          ObservedCellNames,
-                                                          sampleSizes
-                                                          ) ;
+                                  msa,
+                                  programOptions.numNodes,
+                                  programOptions,
+                                  ObservedData,
+                                  ObservedCellNames,
+                                  sampleSizes
+                                  ) ;
     
     
     rtree = pll_rtree_wraptree(root,programOptions.numCells);
@@ -1625,9 +1625,9 @@ StructuredCoalescentTree::StructuredCoalescentTree(PopulationSet *populationSet,
         fprintf (stderr, "\n ERROR: The sequencing error rate cannot be negative \n");
     
     if (dropoutRate >=0)
-           this->dropoutRate = dropoutRate;
-       else
-           fprintf (stderr, "\n ERROR: The dropout error rate cannot be negative \n");
+        this->dropoutRate = dropoutRate;
+    else
+        fprintf (stderr, "\n ERROR: The dropout error rate cannot be negative \n");
     
     if (populationSet->numClones >0)
     {
@@ -1641,7 +1641,7 @@ StructuredCoalescentTree::StructuredCoalescentTree(PopulationSet *populationSet,
     assert(sampleSizes.size()==numClones);
     
     auto deltaTs  = populationSet->samplePopulationGrowthRateFromPriors(mcmcOptions, rngGsl );
- 
+    
     if (theta >0)
         this->theta = theta;
     else
@@ -1661,7 +1661,7 @@ StructuredCoalescentTree::StructuredCoalescentTree(PopulationSet *populationSet,
     Population* oldestPop=populationSet->getPopulationbyIndex(numClones -1);
     
     oldestPop->timeOriginSTD  =   Random::RandomDensityModelTimeOrigin (oldestPop->delta, mcmcOptions.useGSLRandomGenerator, 0, rngGsl, NULL );
-  
+    
     
     std::cout << "\n True time of origin oldest pop: " << oldestPop->timeOriginSTD << std::endl;
     initEdgesRootedTree(numberTips);
@@ -1670,27 +1670,27 @@ StructuredCoalescentTree::StructuredCoalescentTree(PopulationSet *populationSet,
     populationSet->initListPossibleMigrations();
     populationSet->initPopulationsCoalescentEvents();
     healthyTip=NULL;
-
+    
     root =   MakeCoalescenceTree (rngGsl, rngBoost,
-                                                          msa,
-                                                          programOptions.numNodes,
-                                                          programOptions,
-                                                          ObservedData,
-                                                          ObservedCellNames,
-                                                          sampleSizes) ;
-
+                                  msa,
+                                  programOptions.numNodes,
+                                  programOptions,
+                                  ObservedData,
+                                  ObservedCellNames,
+                                  sampleSizes) ;
+    
     rtree = pll_rtree_wraptree(root,programOptions.numCells);
 }
 pll_rnode_t * StructuredCoalescentTree::MakeCoalescenceTree (
-                                   const gsl_rng *rngGsl,
-                                   boost::mt19937 *rngBoost,
-                                   pll_msa_t *msa,
-                                   int &numNodes,
-                                   ProgramOptions &programOptions,
-                                   std::vector<std::vector<int> > &ObservedData,
-                                   char* ObservedCellNames[],
-                                   std::vector<int> &sampleSizes
-                                   ) {
+                                                             const gsl_rng *rngGsl,
+                                                             boost::mt19937 *rngBoost,
+                                                             pll_msa_t *msa,
+                                                             int &numNodes,
+                                                             ProgramOptions &programOptions,
+                                                             std::vector<std::vector<int> > &ObservedData,
+                                                             char* ObservedCellNames[],
+                                                             std::vector<int> &sampleSizes
+                                                             ) {
     
     int      c,  i,  m, cumIndivid, isCoalescence, whichInd,
     newInd, eventNum, numActiveGametes,
@@ -1790,7 +1790,7 @@ pll_rnode_t * StructuredCoalescentTree::MakeCoalescenceTree (
     
     
     populationSet->AssignSequencesToPopulations( rnodes, programOptions,  programOptions.noisy, programOptions.TotalTumorSequences, numActiveGametes,  nextAvailable,
-                                               labelNodes, ObservedCellNames, programOptions.doUseObservedCellNames, sampleSizes);
+                                                labelNodes, ObservedCellNames, programOptions.doUseObservedCellNames, sampleSizes);
     Population *currentPop;
     Population *fatherPop;
     i=0;
@@ -1820,14 +1820,14 @@ pll_rnode_t * StructuredCoalescentTree::MakeCoalescenceTree (
     }
     pll_rnode_t *root=NULL;
     
-        root =  BuildTree( currentPop,rngGsl,
-                          programOptions,
-                          root,
-                          nextAvailable,
-                          newInd,
-                          currentTime,
-                          labelNodes
-                          );
+    root =  BuildTree( currentPop,rngGsl,
+                      programOptions,
+                      root,
+                      nextAvailable,
+                      newInd,
+                      currentTime,
+                      labelNodes
+                      );
     
     
     // RelabelNodes(treeRootInit[0], treeRootInit, &intLabel );
@@ -1852,25 +1852,25 @@ void StructuredCoalescentTree::initEdgesRootedTree(int numberTips)
 }
 void StructuredCoalescentTree::initLogLikelihoodSequences(const ProgramOptions &programOptions, const pll_msa_t *msa){
     
-      long double result=0;
-      long double currentlogSumDensitiesTimeOriginSTDPopulations = SumLogDensitiesTimeOriginSTDPopulations();
-      result=currentlogSumDensitiesTimeOriginSTDPopulations;
-      long double currentlogProbFatherPopulations = SumLogProbFatherPopulations(programOptions.K);
-           result= result + currentlogProbFatherPopulations;
-      long double currentlogDensityCoalescentTimesForPopulation= LogDensityCoalescentTimesForPopulation(programOptions.K);
+    long double result=0;
+    long double currentlogSumDensitiesTimeOriginSTDPopulations = SumLogDensitiesTimeOriginSTDPopulations();
+    result=currentlogSumDensitiesTimeOriginSTDPopulations;
+    long double currentlogProbFatherPopulations = SumLogProbFatherPopulations(programOptions.K);
+    result= result + currentlogProbFatherPopulations;
+    long double currentlogDensityCoalescentTimesForPopulation= LogDensityCoalescentTimesForPopulation(programOptions.K);
     
-      result = result + currentlogDensityCoalescentTimesForPopulation;
-           logLikelihoodTree= result;
+    result = result + currentlogDensityCoalescentTimesForPopulation;
+    logLikelihoodTree= result;
     
-      std::cout << "True log likelihood of the tree  is " << logLikelihoodTree << std::endl;
-          // if (mcmcOptions.useSequencesLikelihood ==1)
-         //  {
+    std::cout << "True log likelihood of the tree  is " << logLikelihoodTree << std::endl;
+    // if (mcmcOptions.useSequencesLikelihood ==1)
+    //  {
     char *  rootedNewick2 = pll_rtree_export_newick( root, NULL);
     //initialRootedTree = pll_rtree_parse_newick_string(rootedNewick3);
     
     //logLikelihoodSequences= LogConditionalLikelihoodSequences( msa,  rootedNewick2, programOptions, seqErrorRate, dropoutRate);
-   
-   // std::cout << "True log likelihood of the sequences  is " << logLikelihoodTree << std::endl;
+    
+    // std::cout << "True log likelihood of the sequences  is " << logLikelihoodTree << std::endl;
     free(rootedNewick2);
     
 }
@@ -1886,7 +1886,7 @@ long double StructuredCoalescentTree::SumLogDensitiesTimeOriginSTDPopulations() 
         popI= populationSet->getPopulationbyIndex(i);
         temp=popI->LogDensityTimeSTDFrom( popI->timeOriginSTD, 0);
         //if (isnan(temp) || isinf(temp))
-         //   fprintf (stderr, "\n isNan temp LogDensityTime, Delta: %Lf, T:%.20Lf \n",popI->delta ,popI->timeOriginSTD);
+        //   fprintf (stderr, "\n isNan temp LogDensityTime, Delta: %Lf, T:%.20Lf \n",popI->delta ,popI->timeOriginSTD);
         result = result + temp;
         // fprintf (stderr, "\n Product log Density Time   = %lf after pop order %d,  popI->LogDensityTime( popI->timeOriginSTD) %lf,  popI->timeOriginSTD: %lf, popI->delta: %lf\n", product, popI->order, popI->LogDensityTime( popI->timeOriginSTD), popI->timeOriginSTD,popI->delta );
     }
@@ -1905,7 +1905,7 @@ long double StructuredCoalescentTree::SumLogDensitiesTimeOriginSTDPopulations(st
         popI= populations[i];
         temp=popI->LogDensityTimeSTDFrom( popI->timeOriginSTD, 0);
         //if (isnan(temp) || isinf(temp))
-         //   fprintf (stderr, "\n isNan temp LogDensityTime, Delta: %Lf, T:%.20Lf \n",popI->delta ,popI->timeOriginSTD);
+        //   fprintf (stderr, "\n isNan temp LogDensityTime, Delta: %Lf, T:%.20Lf \n",popI->delta ,popI->timeOriginSTD);
         result = result + temp;
         // fprintf (stderr, "\n Product log Density Time   = %lf after pop order %d,  popI->LogDensityTime( popI->timeOriginSTD) %lf,  popI->timeOriginSTD: %lf, popI->delta: %lf\n", product, popI->order, popI->LogDensityTime( popI->timeOriginSTD), popI->timeOriginSTD,popI->delta );
     }
@@ -1993,10 +1993,10 @@ long double  StructuredCoalescentTree::LogDensityCoalescentTimesForPopulation(lo
         }
         else{
             
-             //fprintf (stderr, "\n All coalescent times are positive \n\n");
+            //fprintf (stderr, "\n All coalescent times are positive \n\n");
             
         }
-    //assert(std::find(popI->CoalescentEventTimes.begin(), popI->CoalescentEventTimes.end(), 0) == popI->CoalescentEventTimes.end());
+        //assert(std::find(popI->CoalescentEventTimes.begin(), popI->CoalescentEventTimes.end(), 0) == popI->CoalescentEventTimes.end());
         
         for ( unsigned j = 0; j < allEventsSorted.size(); j++)
         {
@@ -2073,10 +2073,10 @@ long double  StructuredCoalescentTree::LogDensityCoalescentTimesForPopulation(st
         }
         else{
             
-             //fprintf (stderr, "\n All coalescent times are positive \n\n");
+            //fprintf (stderr, "\n All coalescent times are positive \n\n");
             
         }
-    //assert(std::find(popI->CoalescentEventTimes.begin(), popI->CoalescentEventTimes.end(), 0) == popI->CoalescentEventTimes.end());
+        //assert(std::find(popI->CoalescentEventTimes.begin(), popI->CoalescentEventTimes.end(), 0) == popI->CoalescentEventTimes.end());
         
         for ( unsigned j = 0; j < allEventsSorted.size(); j++)
         {
@@ -2118,9 +2118,9 @@ long double  StructuredCoalescentTree::LogDensityCoalescentTimesForPopulation(st
     return result;
 }
 void StructuredCoalescentTree::MakeCoalescenceEvent( Population &population,const gsl_rng *randomGenerator, int noisy,   int &numActiveGametes, int &nextAvailable,
-                                 int &labelNodes, long double  &currentTime, int &numNodes)
+                                                    int &labelNodes, long double  &currentTime, int &numNodes)
 {
-   
+    
     // TreeNode  *p, *q, *r;
     pll_rnode_t  *p, *q,  *r ;
     TreeNode * tp, *tq, *tr ;
@@ -2175,7 +2175,7 @@ void StructuredCoalescentTree::MakeCoalescenceEvent( Population &population,cons
         
         tr->timePUnits =currentTime * theta * population.x;
     }
- 
+    
     tr->timeInputTreeUnits = tr->timePUnits;
     
     p->length = tr->timePUnits -tp->timePUnits;
@@ -2203,12 +2203,12 @@ void StructuredCoalescentTree::MakeCoalescenceEvent( Population &population,cons
     
     assert(tr->time>0);
     //printf ( "\n number of completed coal %d with time %Lf \n",population.numCompletedCoalescences,tr->time  );
-  
+    
     population.CoalescentEventTimes[ population.numCompletedCoalescences]=  tr->time;
     population.numCompletedCoalescences= population.numCompletedCoalescences+1;
     
     population.numActiveGametes = population.numActiveGametes - 1; /* now this clone
-                                                                      has 1 less node */
+                                                                    has 1 less node */
     
     
     /* memory for number of nodes */
@@ -2233,7 +2233,7 @@ void StructuredCoalescentTree::SimulatePopulation(Population &popI,
                                                   int &labelNodes,
                                                   long double  &currentTime,
                                                   int &eventNum,
-                                                   long double K)
+                                                  long double K)
 {
     int   i,  k, isCoalescence,
     firstInd,  newInd,
@@ -2423,7 +2423,7 @@ void StructuredCoalescentTree::SimulatePopulation(Population &popI,
                         u1->timePUnits =  currentTime * theta * popI.x;
                         p->length = currentTime * theta * popI.x;
                     }
-                  
+                    
                     u1->timeInputTreeUnits = u1->timePUnits;
                     popI.rMRCA = p;
                     //insertMRCAMap(r,popI);
@@ -2484,13 +2484,13 @@ pll_rtree_t* StructuredCoalescentTree::getTree()
 }
 
 pll_rnode_t* StructuredCoalescentTree::BuildTree(Population *CurrentPop,
-                              const gsl_rng *randomGenerator,
-                              ProgramOptions &programOptions,
-                              pll_rnode_t *tumour_mrca,
-                              int &nextAvailable,
-                              int &newInd,
-                              long double   &currentTime,
-                              int &labelNodes)
+                                                 const gsl_rng *randomGenerator,
+                                                 ProgramOptions &programOptions,
+                                                 pll_rnode_t *tumour_mrca,
+                                                 int &nextAvailable,
+                                                 int &newInd,
+                                                 long double   &currentTime,
+                                                 int &labelNodes)
 {
     int i, j;
     int indexCurrentTip;

@@ -165,7 +165,7 @@ double pll_core_root_loglikelihood2(unsigned int states,
         site_lk = log(site_lk);
         if (scaler && scaler[i]){
             site_lk += scaler[i] * log(PLL_SCALE_THRESHOLD);
-            
+           // std::cout<< "scaling" << std::endl;
         }
         
         site_lk *= pattern_weights[i];
@@ -590,8 +590,9 @@ void pll_core_update_partial_ii2(unsigned int states,
         init_mask = (scale_mode == 1) ? 1 : 0;
         const size_t scaler_size = (scale_mode == 2) ? sites * rate_cats : sites;
         
+        assert(scaler_size == sites );
         /* add up the scale vectors of the two children if available */
-      //  fill_parent_scaler2(scaler_size, parent_scaler, left_scaler, right_scaler);
+        fill_parent_scaler2(scaler_size, parent_scaler, left_scaler, right_scaler);
     }
     else
     {

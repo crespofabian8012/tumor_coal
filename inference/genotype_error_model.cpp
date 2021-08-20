@@ -306,7 +306,7 @@ void GenotypeErrorModel::computeStateErrorProbPT20(pll_state_t state,
        for (size_t k = 0; k < states; ++k)
          clvp[k] = 0.;
 
-       while ((ctz = PLL_STATE_CTZ(tstate)) < states)
+    while (tstate && (ctz = PLL_STATE_CTZ(tstate)) < states)
        {
          state_id = state_id ?  state_id + ctz + 1 : ctz;
          tstate >>= ctz + 1;
@@ -346,16 +346,21 @@ void GenotypeErrorModel::computeStateErrorProbPT20(pll_state_t state,
            sum_lh += lh;
          }
         assert(sum_lh>0);
-        std::cout << sum_lh << std::endl;
+        //std::cout << sum_lh << std::endl;
        }
      }
-   
+//     printf("sumlh: %lf\n", sum_lh);
+//     if (state != undefinedState)
+//     {
+//       for (size_t k = 0; k < states; ++k)
+//         clvp[k] /= sum_lh;
+//     }
 }
 
 void GenotypeErrorModel::computeStateErrorProbPT17(pll_state_t state,
                             double *clvp) const{
     
-    unsigned int state_id = PLL_STATE_CTZ(state);
+    unsigned int state_id = PLL_STATE_CTZ(state);//id of observed state
     static const double one_3 = 1. / 3.;
     static const double one_6 = 1. / 6.;
 

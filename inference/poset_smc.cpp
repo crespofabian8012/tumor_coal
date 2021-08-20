@@ -20,17 +20,21 @@ PosetSMC::PosetSMC(size_t numClones, size_t num_iter)
     
 }
 std::shared_ptr<State> PosetSMC::propose_initial(gsl_rng *random, double &log_w, PosetSMCParams &params){
-    
+    log_w = 0;
     std::shared_ptr<State> result = std::make_shared<State>(params, random );
-    
+    log_w = result->getInitialLogWeight();
     return result;
 }
 std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, const State &curr, double &log_w, PosetSMCParams &params){
     
     //make a  copy of curr
-    std::shared_ptr<State> result(new State(curr));
+    // to avoid 2 allocations like in the next line
+   // std::shared_ptr<State> result(new State(curr));
+    //std::cout << " particle with delta : "<< curr.getPopulationByIndex(0)->delta <<std:: endl;
+    std::shared_ptr<State> result(make_shared<State>(curr));
     log_w=0;
-    
+    //std::cout << " curr root count " << curr.root_count()<<" result root count " << result->root_count()<< std::endl;
+    //std::cout << " curr height " << curr.getHeightScaledByTheta()<<" result height" << result->getHeightScaledByTheta()<< std::endl;
     if (result->root_count()>1){
         // select 2 nodes to coalesce
         Population *pop,*chosenPop, *oldestPop;
@@ -145,7 +149,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             
             log_w += weight;
             
-            //std::cout << "log weight "<<  " is "<<  log_w<< std::endl;
+           // std::cout << "total log weight  "<<    log_w<< " log weight F "<< weight << std::endl;
             
         }
         else{//next event is an origin
@@ -158,8 +162,10 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
         }
         
     }
-    
-    
+  //  std::cout << " curr root count  after  " << curr.root_count()<<" result root count after " << result->root_count()<< std::endl;
+   //  std::cout << " curr height after " << curr.getHeightScaledByTheta()<<" result height after " << result->getHeightScaledByTheta()<< std::endl;
+  //   std::cout << " curr nextavailable after " << curr.getNextAvailable()<<" result nextavailable after " << result->getNextAvailable()<< std::endl;
+     
     return result;
 }
 //void PosetSMC::generate_data(gsl_rng *random, size_t T, SMCOptions &params, std::vector<double> &latent, std::vector<double> &obs){

@@ -144,19 +144,18 @@ int main(int argc, char* argv[] )
     Utils::ReadParametersFromFastaFile(fileNameFasta,  programOptions.numCells, programOptions.TotalNumSequences, programOptions.numSites);
     std::vector<std::vector<int> > ObservedData;
     
-    char *ObservedCellNames[programOptions.numCells];
-    Utils::ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
-    programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
-    programOptions.numCells = programOptions.TotalNumSequences;
+  //  char *ObservedCellNames[programOptions.numCells];
+//    Utils::ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
+//    programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
+//    programOptions.numCells = programOptions.TotalNumSequences;
+//
+//    programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
     
-    programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
     
-    if (programOptions.numClones==1)
-        sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
     
     fileNamePhylip =filePaths.inputGenotypeFilePhylip;
     msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
-    if (!msa)
+    if (msa==NULL)
         std::cout << "Error reading phylip file \n"<< std::endl;
     // }
     unsigned long stats_mask = PLLMOD_MSA_STATS_DUP_TAXA;
@@ -185,19 +184,30 @@ int main(int argc, char* argv[] )
     
     for (unsigned long c = 0; c < dup_stats->dup_seqs_pairs_count; ++c)
     {
-        std::cout << dup_stats->dup_seqs_pairs[c]<< std::endl;
         //dup_seqs.emplace_back(dup_stats->dup_seqs_pairs[c*2]);
         dup_seqs.emplace_back(dup_stats->dup_seqs_pairs[c*2],
                               dup_stats->dup_seqs_pairs[c*2+1]);
         
-        std::cout << "Error, Duplicate sequences found: \n" <<  std::endl;
+        std::cout << "Error, Duplicate sequences found: seq " << dup_stats->dup_seqs_pairs[c] <<  "\n" <<  std::endl;
         
     }
+    
     pllmod_msa_destroy_stats(dup_stats);
     
+    programOptions.numClones = 1;
+    programOptions.TotalNumSequences = msa->count;
+    programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
+    programOptions.numCells = programOptions.TotalNumSequences;
     
+    programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
+    
+    char *ObservedCellNames[programOptions.numCells];
+    
+    if (programOptions.numClones==1)
+    sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
     
     treefileName = filePaths.inputTreeFile;
+    
     if ((treefileName != NULL) && (treefileName[0] == '\0'))
     {
         std::cout << "\nERROR: No tree file  specified (use command line or parameter file)" << std::endl;
@@ -301,9 +311,9 @@ int main(int argc, char* argv[] )
         programOptions.varADOsite=0.01;
         programOptions.meanADOcell = 0.1;
         programOptions.varADOcell=0.01;
-        programOptions.meanGenotypingError= 0.01;
+        programOptions.meanGenotypingError= 0.05;
         programOptions.varGenotypingError=0.001;
-        programOptions.fixedADOrate=0.01;
+        programOptions.fixedADOrate=0.1;
         
         
         std::vector<int> positions(programOptions.TotalTumorSequences);
@@ -332,19 +342,20 @@ int main(int argc, char* argv[] )
         smcOptions.num_threads = 1;
         smcOptions.use_SPF = false;
         smcOptions.ess_threshold = 1;
-        smcOptions.num_particles = 7000;
-        smcOptions.resample_last_round = true;
+        smcOptions.num_particles = 2000;
+        smcOptions.resample_last_round = false;
         //smcOptions.resampling_scheme= 0;
         
         
         smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
         //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
         //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::SYSTEMATIC;
-        // smcOptions.main_seed = 7482984;
-        //smcOptions.resampling_seed = 849284;
-        smcOptions.track_population = true;
+       //  smcOptions.main_seed = 346435;
+       // smcOptions.resampling_seed = 2345666;
+        smcOptions.track_population = false;
         smcOptions.init();
         smcOptions.debug = true;
+        
         
         SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
         
@@ -354,10 +365,10 @@ int main(int argc, char* argv[] )
         ParticlePopulation<State> *currenPop = smc.get_curr_population();
         vector<shared_ptr<State>> *particles = currenPop->get_particles();
         double   log_marginal = smc.get_log_marginal_likelihood();
-        ParticlePopulation<State> *pop0 = smc.get_population(0);
+        //ParticlePopulation<State> *pop0 = smc.get_population(0);
         
         
-        int num_particles = pop0[0].get_num_particles();
+        int num_particles = currenPop->get_num_particles();
         
         std::vector<long double> deltas0;
         std::vector<long double> Ts0;
@@ -375,15 +386,15 @@ int main(int argc, char* argv[] )
         double max = -DOUBLE_INF;
         shared_ptr<State> best_particle;
         for (size_t i=0; i<num_particles; i++){
-            State &s = pop0[0].get_particle(i);
+            //State &s = pop0[0].get_particle(i);
             shared_ptr<State> currents = particles->at(i);
             // Population *pop= s.getPopulationByIndex(0);
-            deltas0.push_back(s.getPopulationByIndex(0)->delta);
-            Ts0.push_back(s.getPopulationByIndex(0)->timeOriginSTD);
-            Thetas.push_back(s.getTheta());
-            ADOError.push_back(s.getErrorModel().getADOErrorRate());
-            SeqError.push_back(s.getErrorModel().getSeqErrorRate());
-            
+//            deltas0.push_back(s.getPopulationByIndex(0)->delta);
+//            Ts0.push_back(s.getPopulationByIndex(0)->timeOriginSTD);
+//            Thetas.push_back(s.getTheta());
+//            ADOError.push_back(s.getErrorModel().getADOErrorRate());
+//            SeqError.push_back(s.getErrorModel().getSeqErrorRate());
+//
             currentDeltas.push_back(currents->getPopulationByIndex(0)->delta);
             currentTs.push_back(currents->getPopulationByIndex(0)->timeOriginSTD);
             currentThetas.push_back(currents->getTheta());
@@ -394,13 +405,13 @@ int main(int argc, char* argv[] )
                 best_particle = currents;
             }
         }
-        std::sort(deltas0.begin(), deltas0.end());
-        std::cout<< "Prior distribution" << std::endl;
-        std::cout<< "Delta, mean: " << Utils::mean(deltas0) <<" var: " <<Utils::variance(deltas0) << std::endl;
-        std::cout<< "T, mean: " << Utils::mean(Ts0) <<" var: " <<Utils::variance(Ts0) <<std::endl;
-        std::cout<< "Theta, mean: " << Utils::mean(Thetas) <<" var: " <<Utils::variance(Thetas) <<std::endl;
-        std::cout<< "SeqError, mean: " << Utils::mean(SeqError) <<" var: " <<Utils::variance(SeqError) <<std::endl;
-        std::cout<< "ADOError, mean: " << Utils::mean(ADOError) <<" var: " <<Utils::variance(ADOError) <<std::endl;
+//        std::sort(deltas0.begin(), deltas0.end());
+//        std::cout<< "Prior distribution" << std::endl;
+//        std::cout<< "Delta, mean: " << Utils::mean(deltas0) <<" var: " <<Utils::variance(deltas0) << std::endl;
+//        std::cout<< "T, mean: " << Utils::mean(Ts0) <<" var: " <<Utils::variance(Ts0) <<std::endl;
+//        std::cout<< "Theta, mean: " << Utils::mean(Thetas) <<" var: " <<Utils::variance(Thetas) <<std::endl;
+//        std::cout<< "SeqError, mean: " << Utils::mean(SeqError) <<" var: " <<Utils::variance(SeqError) <<std::endl;
+//        std::cout<< "ADOError, mean: " << Utils::mean(ADOError) <<" var: " <<Utils::variance(ADOError) <<std::endl;
         
         std::cout<< "Posterior distribution" << std::endl;
         std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;

@@ -753,7 +753,7 @@ const pll_partition_t *pll_utils::createReferencePartition(pll_msa_t * msa) {
     
     for (unsigned int i = 0; i < msa->count; i++) {
         
-        if (pll_set_tip_states(partition, i, pll_map_nt, msa->sequence[i]) != PLL_SUCCESS)
+        if (pll_set_tip_states(partition, i, pll_map_gt10, msa->sequence[i]) != PLL_SUCCESS)
         {
             fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
             exit(pll_errno);

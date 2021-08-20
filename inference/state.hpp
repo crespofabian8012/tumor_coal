@@ -36,6 +36,7 @@ class State{
     //std::shared_ptr<GenotypeErrorModel> gtError;
     GenotypeErrorModel *gtError;
     long double theta;
+    double initialLogWeight;
 public:
 
     State( PosetSMCParams &params, gsl_rng *random);
@@ -45,7 +46,7 @@ public:
 
     void initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions);
     std::shared_ptr<PartialTreeNode> getRootAt(int i) const {return roots[i];};
-    //std::shared_ptr<State> makeDeepCopy();
+ 
     
     State &operator=(const State &original);
     
@@ -96,6 +97,7 @@ public:
     void increaseNextAvailable(){nextAvailable++;}
     
     GenotypeErrorModel &getErrorModel() const{return *gtError;}
+    double getInitialLogWeight() const {return initialLogWeight;}
     int getNodeIdxById(size_t id);
     
     ~State();

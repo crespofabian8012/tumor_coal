@@ -1419,12 +1419,7 @@ void Chain::GenerateTimesFromPriorsOriginal(int noisy, const gsl_rng* randomGene
     ranHere = 0.0;
     if (noisy > 1)
         printf("Estimation of times of origin of clones ..\n");
-    // Uvector = (long double  *) malloc((numClones )* (long) sizeof(double));
-    //    if (!Uvector)
-    //    {
-    //        fprintf (stderr, "Could not allocate Xvector (%lu bytes)\n", (numClones ) * (long) sizeof(double));
-    //        exit (-1);
-    //    }
+ 
     int doAcceptTimes = NO;
     int doEstimateTimesOriginClones=YES;
     Population *popJ, *popI, *popL;

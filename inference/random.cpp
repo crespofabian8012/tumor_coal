@@ -321,9 +321,7 @@ void  Random::RandomDirichlet (long double  s, int vectorSize, std::vector<doubl
 {   int i;
     long double  sum=0.0;
     long double  current;
-    // *outputVector = malloc(vectorSize * sizeof(double));
-    // if (*outputVector == NULL)
-    //     return;
+ 
     for (i=0; i < vectorSize; i++){
         current = RandomGamma(s, seed, true, randomGsl, rngBoost);
         outputVector[i] = current;
@@ -342,10 +340,7 @@ void  Random::randomDirichletFromVector (std::vector<long double> alpha, std::ve
 {   int i;
     long double sum=0.0;
     long double current;
-    //long int seed =0;
-    // *outputVector = malloc(vectorSize * sizeof(double));
-    // if (*outputVector == NULL)
-    //     return;
+
     outputVector.clear();
     
     for (i=0; i < alpha.size(); i++){

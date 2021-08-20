@@ -29,6 +29,28 @@ PartialTreeEdge::PartialTreeEdge(PLLBufferManager *manager,
         std::memset(pmatrix, 0, pmatrix_elements*sizeof(double));
     }
 }
+
+PartialTreeEdge::PartialTreeEdge(const PartialTreeEdge& original)
+{
+ 
+    length = original.length;
+    matrix_size = original.matrix_size;
+    manager            = original.manager;
+    pmatrix = new double(*original.pmatrix);
+    //shallow copy of child
+    child = original.child;
+    
+}
+PartialTreeEdge& PartialTreeEdge::operator= (PartialTreeEdge rhs) {
+    std::swap(*this, rhs);
+    return *this;
+}
+PartialTreeEdge::PartialTreeEdge(PartialTreeEdge&& rhs) : child(std::move(rhs.child)) {
+   length = rhs.length;
+   matrix_size = rhs.matrix_size;
+   manager            = rhs.manager;
+   pmatrix = new double(*rhs.pmatrix);
+}
 void PartialTreeEdge::showPMatrix( unsigned int states, unsigned int rate_cats, unsigned int states_padded,  unsigned int float_precision){
     
     unsigned int i,j,k;
@@ -43,6 +65,11 @@ void PartialTreeEdge::showPMatrix( unsigned int states, unsigned int rate_cats, 
         }
         printf("\n");
     }
+}
+void PartialTreeEdge::freeMatrix(){
+    
+    delete []pmatrix;
+    
 }
 PartialTreeEdge::~PartialTreeEdge() {
     manager->pmatrix_buffer.push(pmatrix);
@@ -62,32 +89,99 @@ PartialTreeNode::PartialTreeNode(PLLBufferManager *manager,
 height(height), index(index), clv_size(clv_elements)
 //, clv(clv_elements,0.0), scale_buffer(clv_elements,0.0)
 {
-    //  if (manager->clv_buffer.empty()) {
-    pclv = (double *)std::malloc(clv_elements*sizeof(double));
+     if (manager->clv_buffer.empty()) {
+   // pclv = std::make_unique<double[]>(clv_elements);
+
+       pclv = (double *)std::malloc(clv_elements*sizeof(double));
     //    //clv =  (double*)pll_aligned_alloc(clv_size, PLL_ALIGNMENT_SSE);
-    //  } else {
-    //
-    //    std::cout<< "reusing clv from PLLBufferManager"<< std::endl;
-    //    clv = manager->clv_buffer.top();
-    //    manager->clv_buffer.pop();
-    //
-    //    std::memset(clv, 0, clv_size);
-    //  }
-    //
-    //  if (manager->scale_buffer_buffer.empty()) {
-    pscale_buffer = (unsigned int *)std::malloc(scale_buffer_elements*sizeof(unsigned int));
-    //      //scale_buffer =  (unsigned int *)pll_aligned_alloc(clv_size, PLL_ALIGNMENT_SSE);
-    //
-    //  } else {
-    //
-    //       std::cout<< "reusing scale_buffer from PLLBufferManager"<< std::endl;
-    //    scale_buffer = manager->scale_buffer_buffer.top();
-    //    manager->scale_buffer_buffer.pop();
-    //
-    //    std::memset(scale_buffer, 0, scale_buffer_size);
-    //  }
+      } else {
+
+      std::cout<< "reusing clv from PLLBufferManager"<< std::endl;
+        pclv = manager->clv_buffer.top();
+        manager->clv_buffer.pop();
+
+        std::memset(pclv, 0, clv_size);
+      }
+    
+      if (manager->scale_buffer_buffer.empty()) {
+   // pscale_buffer = std::make_unique<unsigned int[]>(clv_elements);
+    
+      pscale_buffer = (unsigned int *)std::malloc(scale_buffer_elements*sizeof(unsigned int));
+          //scale_buffer =  (unsigned int *)pll_aligned_alloc(clv_size, PLL_ALIGNMENT_SSE);
+
+      } else {
+
+           std::cout<< "reusing scale_buffer from PLLBufferManager"<< std::endl;
+        pscale_buffer = manager->scale_buffer_buffer.top();
+        manager->scale_buffer_buffer.pop();
+
+        std::memset(pscale_buffer, 0, scale_buffer_elements*sizeof(unsigned int));
+      }
     // init(clv_elements);
     ln_likelihood=0.0;
+}
+PartialTreeNode::PartialTreeNode(const PartialTreeNode& original){
+    height =  original.height;
+    clv_size =  original.clv_size;
+    index =  original.index;
+    index_population =  original.index_population;
+    label =  original.label;
+    ln_likelihood =  original.ln_likelihood;
+    
+    //pclv(std::make_unique<double[]>(*original.pclv))
+   // pclv(std::move(original.pclv));
+   // pclv = std::move( original.pclv );
+   // pscale_buffer = std::move( original.pscale_buffer );
+    pclv = original.pclv;
+    pscale_buffer = original.pscale_buffer;
+    //pclv( new double[](original.pclv.get()));
+    //pscale_buffer( original.pscale_buffer );
+
+}
+PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode& rhs ){
+    
+    height =  rhs.height;
+    clv_size =  rhs.clv_size;
+    index =  rhs.index;
+    index_population =  rhs.index_population;
+    label =  rhs.label;
+    ln_likelihood =  rhs.ln_likelihood;
+    
+     pclv = rhs.pclv;
+     pscale_buffer = rhs.pscale_buffer;
+     //pclv( new double[](original.pclv.get()));
+     //pscale_buffer( original.pscale_buffer );
+     return *this;
+    
+}
+PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode&& rhs )
+{
+  pclv = std::move( rhs.pclv );
+  pscale_buffer = std::move( rhs.pscale_buffer );
+  height =  rhs.height;
+  clv_size =  rhs.clv_size;
+  index =  rhs.index;
+  index_population =  rhs.index_population;
+  label =  rhs.label;
+  ln_likelihood =  rhs.ln_likelihood;
+  return *this;
+}
+//PartialTreeNode& PartialTreeNode::operator= (PartialTreeNode rhs) {
+//    std::swap(*this, rhs);
+//    return *this;
+//}
+PartialTreeNode::PartialTreeNode(PartialTreeNode&& rhs){
+     
+      height =  rhs.height;
+      clv_size =  rhs.clv_size;
+      index =  rhs.index;
+      index_population =  rhs.index_population;
+      label =  rhs.label;
+      ln_likelihood =  rhs.ln_likelihood;
+      pclv = std::move( rhs.pclv );
+      pscale_buffer = std::move( rhs.pscale_buffer );
+    
+    
 }
 void PartialTreeNode::getNormalizeCLV(unsigned int sites, unsigned int states, std::vector<double> &norm_clv )
 {
@@ -155,8 +249,8 @@ void PartialTreeNode::showpClV(unsigned int states, unsigned int rate_cats, unsi
     
     unsigned int i,j,k;
     double prob;
+
     const double * pclv2 = pclv;
-    
     printf ("[ ");
     for (i = 0; i < sites; ++i)
     {
@@ -186,7 +280,7 @@ void PartialTreeNode::buildCLV(int tip_id,int numberStates, pll_msa_t *msa, Geno
     auto clv_size = msa->length * numberStates;
     //auto clv_size = msa->length * numberStates*numberRateCats;
     //here we assume numberRateCats=1
-    //auto clvp = clv.begin();
+    double * pclv2 = pclv;
     
     auto seq = msa->sequence[tip_id];
     //auto charmap = _model.charmap();
@@ -196,8 +290,8 @@ void PartialTreeNode::buildCLV(int tip_id,int numberStates, pll_msa_t *msa, Geno
     {
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
-        
-        gtErrorModel->computeStateErrorProbPT17(state, pclv);
+
+        gtErrorModel->computeStateErrorProbPT20(state, pclv2);
         
         //        if (true)
         //        {
@@ -211,12 +305,12 @@ void PartialTreeNode::buildCLV(int tip_id,int numberStates, pll_msa_t *msa, Geno
         //            printf("\n");
         //         }
         
-        pclv += numberStates;
+        pclv2 += numberStates;
         //  clvp += numberStates*numberRateCats;
     }
     
     //restore the pointer to the beginning
-    pclv-= clv_size;
+    pclv2 -= clv_size;
 }
 void  PartialTreeNode::unscale(double * prob, unsigned int times)
 {
@@ -233,15 +327,23 @@ void PartialTreeNode::init(int clv_elements){
         
     }
 }
+void PartialTreeNode::freeVectors(){
+    //if (pclv!=nullptr) delete []pclv;
+    //if (pscale_buffer!=nullptr) delete []pscale_buffer;
+    pclv = nullptr;
+    pscale_buffer = nullptr;
+}
 
 
 PartialTreeNode::~PartialTreeNode() {
-    // manager->clv_buffer.push(clv);
-    //manager->scale_buffer_buffer.push(scale_buffer);
+    //manager->clv_buffer.push(pclv);
+   // manager->scale_buffer_buffer.push(pscale_buffer);
     
     //pll_aligned_free(clv);
     //pll_aligned_free(scale_buffer);
     
+    //if (pclv!=0) delete []pclv;
+    //if (pscale_buffer!=0) delete []pscale_buffer;
     pclv = nullptr;
     pscale_buffer = nullptr;
     // delete clv ;

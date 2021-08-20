@@ -2631,10 +2631,10 @@ double SumBranches (TreeNode *p, double mutationRate, std::string &healthyTipLab
             //            sum += p->length;
         }
         //            sum += p->lengthModelUnits;//length;
-        if (p->left->cellName && std::strcmp(p->left->cellName, healthyTipLabel.c_str())==0){
+        if (strlen(p->left->cellName) > 0 && std::strcmp(p->left->cellName, healthyTipLabel.c_str())==0){
              SumBranches (p->left,  mutationRate, healthyTipLabel);
         }
-        if (p->right->cellName && std::strcmp(p->right->cellName, healthyTipLabel.c_str())==0){
+        if (strlen(p->left->cellName) > 0 && std::strcmp(p->right->cellName, healthyTipLabel.c_str())==0){
                     SumBranches (p->right,   mutationRate, healthyTipLabel);
                }
 

@@ -1297,6 +1297,7 @@ void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double
     long double delta;
     
     theta =  Random::RandomExponential(1, NULL, true, rngGsl, NULL);
+   
     for (unsigned int i = 0; i < numClones; ++i){
         auto popI =  populations[i];
         delta = Random::RandomExponential(0.01, NULL, true, rngGsl, NULL);
@@ -1305,7 +1306,7 @@ void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double
         popI->delta = delta;
         
     }
-    
+    //std::cout<< "initial delta "<<populations[0]->delta << " initial theta " << populations[0]->theta << " initial x" << populations[0]->x << std::endl;
     
 }
 PopulationSet::PopulationSet(const PopulationSet &original)

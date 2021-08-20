@@ -1200,10 +1200,7 @@ void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell
    double temp;
     //double **alleleADOrate;
 
-    /* allocate space for the ADO rates */
-    //alleleADOrate = (double**) calloc (numCells+1, sizeof(double**));
     std::vector<std::vector<double> >   alleleADOrate ;
-
 
     // fixed ADO rate
     if (doADOcell == NO && doADOsite == NO)

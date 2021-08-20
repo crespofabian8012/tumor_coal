@@ -22,11 +22,17 @@ class PartialTreeEdge {
   PLLBufferManager *manager;
 public:
  
-  PartialTreeEdge(PLLBufferManager *manager, std::shared_ptr<PartialTreeNode> child,
+  PartialTreeEdge(PLLBufferManager *manager,
+                  std::shared_ptr<PartialTreeNode> child,
                 double length, unsigned int pmatrix_elements, size_t alignment);
+    
+  PartialTreeEdge(const PartialTreeEdge& original);
+  PartialTreeEdge& operator= (PartialTreeEdge rhs);
+  PartialTreeEdge(PartialTreeEdge&& rhs);
 
   void showPMatrix( unsigned int states, unsigned int rate_cats, unsigned int states_padded,  unsigned int float_precision);
-  ~PartialTreeEdge();
+  void freeMatrix();
+~PartialTreeEdge();
 
   std::shared_ptr<PartialTreeNode> child;
 
@@ -47,6 +53,12 @@ public:
                 double height, unsigned int clv_size,
                 unsigned int scale_buffer_size, size_t alignment,
                 unsigned  int index);
+    
+  PartialTreeNode(const PartialTreeNode& original);
+  //PartialTreeNode& operator= (PartialTreeNode rhs);
+    PartialTreeNode& operator=( PartialTreeNode& rhs );
+  PartialTreeNode(PartialTreeNode&& rhs);
+  PartialTreeNode& operator=( PartialTreeNode&& rhs );
 
   void getNormalizeCLV(unsigned int sites, unsigned int states, std::vector<double> &norm_clv);
   void showClV(unsigned int states, unsigned int rate_cats, unsigned int states_padded,
@@ -61,8 +73,9 @@ public:
     
   //std::vector<double>& getCLV(){return clv;};
   void buildCLV(int tip_id,int numberStates, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel,  bool normalize);
-  //double * getCLVPointer(){return clv.data();};
-  //unsigned int * getScaleBufferPointer(){return scale_buffer.data();};
+  void freeVectors();
+ // double * getCLVPointer(){return pclv.get();};
+ // unsigned int * getScaleBufferPointer(){return pscale_buffer.get();};
   //std::vector<unsigned int>& getScaleBuffer(){return scale_buffer;};
 
   std::string label;
@@ -73,7 +86,10 @@ public:
     
   unsigned int clv_size;//number of elements in clv and scale_buffer
   
+   // std::unique_ptr<double[]> pclv;
+ // std::unique_ptr<double> pclv;
   double *pclv;
+   // std::unique_ptr<unsigned int[]> pscale_buffer;
   unsigned int *pscale_buffer;
   //std::vector<double> clv;
   //std::vector<unsigned int> scale_buffer;

@@ -19,9 +19,19 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
 {
     heightModelTime = 0.0;
     heightScaledByTheta =0.0;
+    initialLogWeight = 0.0;
     
-    //TODO put random values on Genotype errors model
-    gtError =  new GenotypeErrorModel("GT20", smcParams.getProgramOptions().meanGenotypingError,  1.0 - sqrt (1.0 - smcParams.getProgramOptions().fixedADOrate), 16);;
+   
+   // double ADORateMean = 1 -sqrt(1-smcParams.getProgramOptions().fixedADOrate);
+    double ADORateMean = smcParams.getProgramOptions().fixedADOrate;
+    double ADORateVar =0.2*ADORateMean*(1-ADORateMean);
+    double ADOrate = Random::RandomBetaMeanVar(ADORateMean, ADORateVar, NULL, true, random, NULL );
+    
+    double SeqErrorRateMean = smcParams.getProgramOptions().meanGenotypingError;
+    double SeqErrorRateVar = 0.1*SeqErrorRateMean*(1-SeqErrorRateMean);
+    double SeqErrorRate = Random::RandomBetaMeanVar(SeqErrorRateMean, SeqErrorRateVar, NULL, true, random, NULL );
+    
+    gtError =  new GenotypeErrorModel("GT20", SeqErrorRate,  ADOrate, 16);;
     populationSet = new PopulationSet(smcParams.getProgramOptions().numClones);
     
     populationSet->initPopulationSampleSizes(smcParams.sampleSizes);
@@ -43,16 +53,25 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
 }
 State::State(const State &original):pll_buffer_manager(original.pll_buffer_manager){
     
-    heightModelTime=original.heightModelTime;
-    heightScaledByTheta=original.heightScaledByTheta;
+    heightModelTime = original.heightModelTime;
+    heightScaledByTheta = original.heightScaledByTheta;
     num_sites=original.num_sites;
     
     populationSet=new PopulationSet(*(original.populationSet));
     gtError = new GenotypeErrorModel(*(original.gtError));
-    roots=original.roots;
-    partition= original.partition;
+    
+    roots = original.roots;
+    //roots.reserve(original.root_count());
+//    for (auto const& fptr : original.getRoots())
+//         roots.emplace_back(fptr->clone());
+   // for(int i=0;i<original.root_count();i++)
+   //    roots.emplace_back(std::make_shared<PartialTreeNode>(original.getRootAt(i)));
+    
+    partition = original.partition;
     nextAvailable = original.nextAvailable;
     theta = original.theta;
+    initialLogWeight = original.initialLogWeight;
+   
     
 }
 void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions){
@@ -117,6 +136,9 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         // p->showpClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
         p->ln_likelihood = compute_ln_likelihood(p->pclv, nullptr, reference_partition->getPartition());
         
+        initialLogWeight +=p->ln_likelihood;
+       
+        // std::cout << " tip " << i << " loglik " <<p->ln_likelihood << std::endl;
         if (p->ln_likelihood <= -10000000 ){
           std::cout << " tip " << i << " loglik " <<p->ln_likelihood << std::endl;
           p->showpClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
@@ -171,8 +193,8 @@ State &State::operator=(const State &original){
 
 std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_t index_pop_new_node ){
     
-    std::vector<std::shared_ptr<PartialTreeNode>> result;
-    unsigned int float_precision = 3;
+   // std::vector<std::shared_ptr<PartialTreeNode>> result;
+    //unsigned int float_precision = 3;
     
     assert(roots.size() > 1 && "Expected more than one root");
     
@@ -192,6 +214,8 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     
     std::shared_ptr<PartialTreeNode> child_left = roots[idxFirstID];
     std::shared_ptr<PartialTreeNode> child_right = roots[idxSecondId];
+    
+    //std::cout<< "first idx "<< idxFirstID <<  " idxSecondId " << idxSecondId<< std::endl;
     
     double left_length =heightScaledByTheta - child_left->height;
     double right_length = heightScaledByTheta - child_right->height;
@@ -233,7 +257,7 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     //const unsigned int param_indices[4] = {0, 0, 0, 0};
     const unsigned int param_indices[1] = {0};
     
-    //    double * pmatrix = (double *)xcalloc(16,sizeof(double));
+  
     //    pll_core_update_pmatrix(&pmatrix,
     //                               4,
     //                               1,
@@ -345,16 +369,22 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     
     // assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
     
-    // Remove children
+   // std::cout<< "deleting clv of first idx "<< idxFirstID <<  " idxSecondId " << idxSecondId<< std::endl;
+    // free memory for children clvs and scaler
+   //roots[idxFirstID]->freeVectors();
+   //roots[idxSecondId]->freeVectors();
     
+    // free memory for pmatrix
+    //parent->edge_r->freeMatrix();
+    //parent->edge_l->freeMatrix();
+    
+    // Remove children
     remove_roots(idxFirstID, idxSecondId);
     // Add new internal node
     roots.push_back(parent);
+    //std::cout<< "root count "<< roots.size()<< std::endl;
+    //std::cout<< "height scaled by theta "<< heightScaledByTheta<< std::endl;
     
-    
-    // pll_aligned_free(left_norm_clv);
-    //pll_aligned_free(right_norm_clv);
-    //pll_aligned_free(parent_norm_clv);
     return parent;
 }
 

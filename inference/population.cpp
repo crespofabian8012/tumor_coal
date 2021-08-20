@@ -32,6 +32,7 @@
 #include "data_utils.hpp"
 #include "mcmc_parameter.hpp"
 #include "utils.hpp"
+#include <gsl/gsl_randist.h>
 
 extern "C"
     {
@@ -838,11 +839,9 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
     long double random;
     int k, w;
     
-    std::vector<long double> cumPopulPart(numActiveGametes + 1);
+    std::vector<long double> cumPopulPart(numActiveGametes + 1, 0.0);
     
-    cumPopulPart[0] = 0;
-    for (k = 1; k <= numActiveGametes; k++)
-        cumPopulPart[k] = 0;
+    
     for (k = 1; k <= numActiveGametes; k++)
         cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (numActiveGametes);
     
@@ -859,13 +858,12 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
     }
     if (choosePairIndividuals== YES && numActiveGametes > 1) {
         
-        do//choose randomly another individual to coalesce
-        {
-            random = Random::randomUniformFromGsl2(randomGenerator);
-            *secondInd = Population::bbinClones(random, &cumPopulPart[0], numActiveGametes)-1;
-            
-        } while (*firstInd == *secondInd  );
+        *firstInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
+        do {
+            *secondInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
+        } while (*firstInd == *secondInd);
     }
+        
     
 }
 //void Population::getIdsActiveGametes(int *firstId,  int *secondId, int i, int j )

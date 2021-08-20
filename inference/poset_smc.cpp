@@ -99,6 +99,8 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             firstInd = chosenPop->idsActiveGametes[idxFirst];
             secondInd = chosenPop->idsActiveGametes[idxSecond];
             
+            assert(firstInd != secondInd);
+            
             //std::cout<< "first idx "<< firstInd <<  " second " << secondInd<< std::endl;
             // std::cout<< "first label "<< result->getRootAt(firstInd)->label <<  " second " << result->getRootAt(secondInd)->label<< std::endl;
             // std::cout<< "timeNextEvent "<<  minTimeNextEvent<<  " T "<< chosenPop->timeOriginSTD  << std::endl;

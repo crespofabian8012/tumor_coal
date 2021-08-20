@@ -38,7 +38,7 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     
     populationSet->initPopulationGametes();
     populationSet->initPopulationRTips();
-    populationSet->initProportionsVectorFromSampleSizes(smcParams.sampleSizes);
+   populationSet->initProportionsVectorFromSampleSizes(smcParams.sampleSizes);
     
     populationSet->initDeltaThetaFromPriors(random, theta);
     populationSet->setPopulationsToriginConditionalDelta(random);
@@ -60,10 +60,10 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     populationSet=new PopulationSet(*(original.populationSet));
     gtError = new GenotypeErrorModel(*(original.gtError));
     
-    roots = original.roots;
-    //roots.reserve(original.root_count());
-//    for (auto const& fptr : original.getRoots())
-//         roots.emplace_back(fptr->clone());
+    // roots = original.roots;
+    roots.reserve(original.root_count());
+    for (auto const& fptr : original.getRoots())
+         roots.emplace_back(fptr->Clone());
    // for(int i=0;i<original.root_count();i++)
    //    roots.emplace_back(std::make_shared<PartialTreeNode>(original.getRootAt(i)));
     

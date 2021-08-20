@@ -836,26 +836,8 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
 }
 void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, const gsl_rng *randomGenerator, int choosePairIndividuals)
 {
-    long double random;
-    int k, w;
-    
-    std::vector<long double> cumPopulPart(numActiveGametes + 1, 0.0);
-    
-    
-    for (k = 1; k <= numActiveGametes; k++)
-        cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (numActiveGametes);
-    
-    w = 0;
-    
-    random = Random::randomUniformFromGsl2(randomGenerator);
-    *firstInd = Population::bbinClones(random, &cumPopulPart[0], numActiveGametes)-1;
-    w = 0;
-    
-    if (*firstInd >= numActiveGametes || *firstInd < 0 ) /* checking */
-    {
-        fprintf (stderr, "\n\nERROR: firstInd out of range!\n");
-        exit (-1);
-    }
+   
+ 
     if (choosePairIndividuals== YES && numActiveGametes > 1) {
         
         *firstInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
@@ -866,15 +848,6 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
         
     
 }
-//void Population::getIdsActiveGametes(int *firstId,  int *secondId, int i, int j )
-//{
-//
-//    assert(i>=0 && i<numActiveGametes && i < idsActiveGametes.size());
-//    assert(j>=0 && j<numActiveGametes && j < idsActiveGametes.size());
-//
-//    *firstId = idsActiveGametes[i];
-//    *secondId = idsActiveGametes[j];
-//}
 /***************** bbinClones *****************/
 /* binary search in the probabilities with clones */
 int Population::bbinClones (long double dat, long double *v, int n)

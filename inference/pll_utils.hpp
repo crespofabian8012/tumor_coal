@@ -74,5 +74,8 @@ double computeLogLikelihood(double *clv, unsigned int *scale_buffer,
 int cb_rfull_traversal(pll_rnode_t * node);
 double meanHeterozygosity(long seq_count, long site_count, pll_msa_t* msa);
 double meanDistance(long seq_count, long site_count, pll_msa_t* msa);
+void computeCoalTimesInsideNode(pll_rnode_t *node,std::string& healthyTipLabel );
+std::vector<double> getOrderedCoalTimesFromRootedTree(pll_rtree_t *rootedTree, std::string& healthyTipLabel);
+
 }
 #endif /* pll_utils_hpp */

@@ -325,27 +325,40 @@ int main(int argc, char* argv[] )
         PLLBufferManager *pll_buffer_manager = new PLLBufferManager;
         //        const pll_partition_t* pll_partition= pll_utils::createGTReferencePartition(msa);
         
+        std::vector<double> coalTimes = pll_utils::getOrderedCoalTimesFromRootedTree(initialRootedTree, healthyTipLabel);
+        
         Partition * partition = new Partition(msa,
                                               16,// model->states,//numberStates
                                               1,//RATE_CATS, // unsigned  int  numberRateCats
                                               0, //int statesPadded
                                               true,//PLL_ATTRIB_ARCH_SSE
                                               false, false, false, false, false);
+        double theta = 0.019;
+        std::vector<double> deltas  = {21.519};
+        std::vector<double> timeOriginSTDs = {0.128};
+        std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
         
+        transform(coalTimes.begin(), coalTimes.end(), coalTimes.begin(), [theta](double &c){ return c/theta; });
         
-        PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel);
+        coalTimesModelTimePerPopulation.push_back(coalTimes);
+        
+        PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
+                           theta,
+                          deltas,
+                          timeOriginSTDs,
+                            {1.0},
+                          coalTimesModelTimePerPopulation);
         
         size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
         PosetSMC posetSMC(programOptions.numClones,  num_iter);
         SMCOptions smcOptions;
         
-        smcOptions.num_threads = 1;
+        smcOptions.num_threads = 5;
         smcOptions.use_SPF = false;
         smcOptions.ess_threshold = 1;
-        smcOptions.num_particles = 2000;
+        smcOptions.num_particles = 5000;
         smcOptions.resample_last_round = false;
-        //smcOptions.resampling_scheme= 0;
-        
+    
         
         smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
         //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
@@ -400,19 +413,17 @@ int main(int argc, char* argv[] )
             currentThetas.push_back(currents->getTheta());
             currentSeqError.push_back(currents->getErrorModel().getADOErrorRate());
             currentADOError.push_back(currents->getErrorModel().getSeqErrorRate());
+            currents->printTree(currents->getRoots()[0], std::cerr);
+            std::cout << " weight "<< i << " " <<(*normalized_weights)[i] <<std::endl;
+            assert(currents->getRoots().size() == 1);
+            std::cout << " loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
             if ((*normalized_weights)[i] > max) {
+                
                 max = (*normalized_weights)[i]  ;
                 best_particle = currents;
             }
         }
-//        std::sort(deltas0.begin(), deltas0.end());
-//        std::cout<< "Prior distribution" << std::endl;
-//        std::cout<< "Delta, mean: " << Utils::mean(deltas0) <<" var: " <<Utils::variance(deltas0) << std::endl;
-//        std::cout<< "T, mean: " << Utils::mean(Ts0) <<" var: " <<Utils::variance(Ts0) <<std::endl;
-//        std::cout<< "Theta, mean: " << Utils::mean(Thetas) <<" var: " <<Utils::variance(Thetas) <<std::endl;
-//        std::cout<< "SeqError, mean: " << Utils::mean(SeqError) <<" var: " <<Utils::variance(SeqError) <<std::endl;
-//        std::cout<< "ADOError, mean: " << Utils::mean(ADOError) <<" var: " <<Utils::variance(ADOError) <<std::endl;
-        
+
         std::cout<< "Posterior distribution" << std::endl;
         std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;
         std::cout<< "T, mean: " << Utils::mean(currentTs) <<" var: " <<Utils::variance(currentTs) <<std::endl;

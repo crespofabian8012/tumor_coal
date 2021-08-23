@@ -175,6 +175,7 @@ public:
     void setScaledTimeOriginInputTree(long double scaledTimeOriginInputTree);
     void setTheta(long double theta);
     void setProportion(long double x);
+    void setDelta(long double parDelta);
     void setPopulationToriginConditionalDelta( const gsl_rng *rngGsl );
     long double proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K);
     long double logLikelihoodNextCoalescent(long double timeNextEvent,long double currentTime, int numActiveLineages,  double K);
@@ -205,9 +206,13 @@ public:
     void initPopulationRTips();
     void initProportionsVectorFromSampleSizes(std::vector<int> &sampleSizes);
     void initPopulationsThetaDelta(long double theta);
-    void  initListPossibleMigrations();
+    void initListPossibleMigrations();
     void initPopulationsCoalescentEvents();
     void initProportionsVector();
+    
+    void initPopulationDeltas(std::vector<double> &deltas);
+    void initPopulationTOriginSTD(std::vector<double> &TOriginSTD);
+    void initTheta( long double &theta);
     std::vector <long double> getDeltaTs();
     std::vector <long double> getDeltas();
     std::vector <long double> getTs();

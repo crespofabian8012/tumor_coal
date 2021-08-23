@@ -345,7 +345,9 @@ void GenotypeErrorModel::computeStateErrorProbPT20(pll_state_t state,
 
            sum_lh += lh;
          }
+     
         assert(sum_lh>0);
+        
         //std::cout << sum_lh << std::endl;
        }
      }

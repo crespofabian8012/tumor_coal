@@ -21,27 +21,22 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     heightScaledByTheta =0.0;
     initialLogWeight = 0.0;
     
-   
-   // double ADORateMean = 1 -sqrt(1-smcParams.getProgramOptions().fixedADOrate);
-    double ADORateMean = smcParams.getProgramOptions().fixedADOrate;
-    double ADORateVar =0.2*ADORateMean*(1-ADORateMean);
-    double ADOrate = Random::RandomBetaMeanVar(ADORateMean, ADORateVar, NULL, true, random, NULL );
+    initIdsNextCoalEvents(smcParams.getProgramOptions().numClones);
+    gtError =  smcParams.gtErrorModel;
     
-    double SeqErrorRateMean = smcParams.getProgramOptions().meanGenotypingError;
-    double SeqErrorRateVar = 0.1*SeqErrorRateMean*(1-SeqErrorRateMean);
-    double SeqErrorRate = Random::RandomBetaMeanVar(SeqErrorRateMean, SeqErrorRateVar, NULL, true, random, NULL );
-    
-    gtError =  new GenotypeErrorModel("GT20", SeqErrorRate,  ADOrate, 16);;
     populationSet = new PopulationSet(smcParams.getProgramOptions().numClones);
-    
     populationSet->initPopulationSampleSizes(smcParams.sampleSizes);
-    
     populationSet->initPopulationGametes();
     populationSet->initPopulationRTips();
-   populationSet->initProportionsVectorFromSampleSizes(smcParams.sampleSizes);
+    populationSet->initProportionsVectorFromSampleSizes(smcParams.sampleSizes);
     
-    populationSet->initDeltaThetaFromPriors(random, theta);
-    populationSet->setPopulationsToriginConditionalDelta(random);
+    //populationSet->initDeltaThetaFromPriors(random, theta);
+    theta = *smcParams.theta;
+    populationSet->initPopulationDeltas( smcParams.populationDeltaTs);
+    populationSet->initPopulationTOriginSTD( smcParams.populationToriginSTDs);
+    populationSet->initTheta(theta);
+    
+   // populationSet->setPopulationsToriginConditionalDelta(random);
     populationSet->sortPopulationsByTorigin();
     
     populationSet->initListPossibleMigrations();
@@ -60,19 +55,18 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     populationSet=new PopulationSet(*(original.populationSet));
     gtError = new GenotypeErrorModel(*(original.gtError));
     
+    idsNextCoalEvents = original.idsNextCoalEvents;
     // roots = original.roots;
     roots.reserve(original.root_count());
     for (auto const& fptr : original.getRoots())
          roots.emplace_back(fptr->Clone());
-   // for(int i=0;i<original.root_count();i++)
-   //    roots.emplace_back(std::make_shared<PartialTreeNode>(original.getRootAt(i)));
+   
     
     partition = original.partition;
     nextAvailable = original.nextAvailable;
     theta = original.theta;
     initialLogWeight = original.initialLogWeight;
-   
-    
+
 }
 void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions){
     
@@ -93,12 +87,10 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         CumSumNodes[i] = CumSumNodes[i - 1] + pop->sampleSize;
     }
     
-    
     for(size_t i=0; i< positions.size();++i){
         
         cumIndivid++;
-        
-        
+    
         unsigned int sites_alloc =
         reference_partition->ascBiasCorrection() ? reference_partition->numberSites + reference_partition->numberStates : reference_partition->numberSites;
         
@@ -108,32 +100,16 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         unsigned int scaler_size = (reference_partition->attributes & PLL_ATTRIB_RATE_SCALERS)
         ? sites_alloc * reference_partition->numberRateCats
         : sites_alloc;
-        
-        // unsigned int scale_buffer_size = scaler_size * sizeof(unsigned int);
-        //        if (i==0)
-        //            std::cout << "tip clv elements "<<  sites_alloc * reference_partition->numberStates * reference_partition->numberRateCats << " clv size " << clv_size<< " scale size " <<  scaler_size << " scale_buffer_size  " <<  scale_buffer_size<< std::endl;
-        //
+
         p=std::make_shared<PartialTreeNode>(pll_buffer_manager, nullptr, nullptr, msa->label[i], heightScaledByTheta, clv_num_elements,
                                             scaler_size, reference_partition->alignment(), i);
         
         // delete (p->clv);
         //delete (p->scale_buffer);
-        
         // auto clv_elem = reference_partition->numberSites * reference_partition->numberStates;
-        
-        //reference_partition->buildCLV(i, msa, gtError, p->getCLV(), false);
+ 
         p->buildCLV(i,reference_partition->numberStates,  msa, gtError,  false);
         
-        // reference_partition->initTipCLV(i, tmp_clv.data());
-        // p->showClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
-        
-        // p->scale_buffer = nullptr;
-        
-        //  double temp= compute_ln_likelihood(p->clv, nullptr, reference_partition);
-        
-        //p->ln_likelihood = compute_ln_likelihood(p->getCLV(), p->getScaleBuffer(), reference_partition->getPartition());
-        
-        // p->showpClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
         p->ln_likelihood = compute_ln_likelihood(p->pclv, nullptr, reference_partition->getPartition());
         
         initialLogWeight +=p->ln_likelihood;
@@ -143,10 +119,7 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
           std::cout << " tip " << i << " loglik " <<p->ln_likelihood << std::endl;
           p->showpClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
         }
-        //p->showClV(reference_partition->numberStates, reference_partition->numberRateCats, reference_partition->getStatesPadded(), reference_partition->numberSites, 3);
-        
-       // std::cout << "initial log lik node "<< i << " is "<< p->ln_likelihood<< std::endl;
-        
+   
         for (size_t j = 1; j <= programOptions.numClones; j++)
         {
             pop =populationSet->getPopulationbyIndex(j-1);
@@ -166,8 +139,7 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
     }
     if (programOptions.numClones==1)
         assert(populationSet->getPopulationbyIndex(0)->numActiveGametes == positions.size());
-    
-    
+
 }
 
 
@@ -186,6 +158,7 @@ State &State::operator=(const State &original){
     gtError=original.gtError;
     populationSet = original.populationSet;
     nextAvailable = original.nextAvailable;
+    idsNextCoalEvents = original.idsNextCoalEvents;
     return *this;
     
 }
@@ -215,7 +188,7 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     std::shared_ptr<PartialTreeNode> child_left = roots[idxFirstID];
     std::shared_ptr<PartialTreeNode> child_right = roots[idxSecondId];
     
-    //std::cout<< "first idx "<< idxFirstID <<  " idxSecondId " << idxSecondId<< std::endl;
+    //std::cout<< "roots first idx "<< idxFirstID <<  " idxSecondId " << idxSecondId<< std::endl;
     
     double left_length =heightScaledByTheta - child_left->height;
     double right_length = heightScaledByTheta - child_right->height;
@@ -354,7 +327,7 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     //                          parent->getScaleBuffer(),
     //                          p->getPartition());
     
-    // std::cout << "log lik of parent node before the coal part "<<  " is "<< parent->ln_likelihood<< std::endl;
+    // std::cout << "log lik of parent node "<<  " is "<< parent->ln_likelihood<< std::endl;
     
     if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
         
@@ -383,7 +356,15 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     // Add new internal node
     roots.push_back(parent);
     //std::cout<< "root count "<< roots.size()<< std::endl;
-    //std::cout<< "height scaled by theta "<< heightScaledByTheta<< std::endl;
+    
+//    if (1){
+//        for(size_t i=0; i < roots.size(); i++ ){
+//            
+//             std::cout<< "root "<< i << "index" << roots[i]->index<< std::endl;
+//        }
+//        
+//    }
+   // std::cout<< "height scaled by theta "<< heightScaledByTheta<< std::endl;
     
     return parent;
 }
@@ -565,6 +546,19 @@ void State::printTree(std::shared_ptr<PartialTreeNode> root, std::ostream &strea
         std::string label(root->label);
         stream << label;
     }
+}
+void State::initIdsNextCoalEvents(int numClones){
+    for(size_t i =0; i< numClones; i++ ){
+        
+        idsNextCoalEvents.push_back(0);
+    }
+    
+}
+int State::getIdNextCoalEventForPopulation(int i){
+    return idsNextCoalEvents[i];
+}
+void State::moveNextIdEventForPopulation(int i){
+    idsNextCoalEvents[i]= idsNextCoalEvents[i]+1;
 }
 State::~State(){
     

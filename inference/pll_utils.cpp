@@ -880,3 +880,56 @@ double pll_utils::meanDistance(long seq_count, long site_count, pll_msa_t* msa)
     md /= seq_count * (seq_count - 1.0) / 2.0 * site_count;
     return(md);
 }
+std::vector<double> pll_utils::getOrderedCoalTimesFromRootedTree(pll_rtree_t *rootedTree, std::string& healthyTipLabel){
+    
+    std::vector<double> result;
+    if (!rootedTree || !(rootedTree->root) || rootedTree->inner_count ==0)
+        return result;
+
+    computeCoalTimesInsideNode(rootedTree->root, healthyTipLabel);
+    pll_rnode_t *node;
+    for( size_t i=0;i < (rootedTree->tip_count + rootedTree->inner_count); i ++){
+        node = rootedTree->nodes[i];
+        if (node->left && node->right ){
+            TreeNode* data = (TreeNode*)(node->data);
+            result.push_back(data->time);
+        }
+        
+    }
+    std::sort (result.begin(), result.end());
+    return result;
+}
+void pll_utils::computeCoalTimesInsideNode(pll_rnode_t *node,std::string& healthyTipLabel ){
+    
+    if (node==NULL)
+        return;
+    if (node->left == NULL && node->right == NULL ){
+        
+        if (std::string(node->label).compare(healthyTipLabel)!=0){
+                TreeNode * data = new TreeNode(0);
+                data->time = 0.0;
+                node->data = data;
+        }
+    }
+    else{
+//        if (node->right->label!=NULL && std::string(node->left->label).compare(healthyTipLabel)==0){
+//
+            computeCoalTimesInsideNode(node->left,  healthyTipLabel );
+          
+//          }
+//        if (std::string(node->right->label).compare(healthyTipLabel)==0){
+                computeCoalTimesInsideNode(node->right,  healthyTipLabel );
+                   
+//            }
+        TreeNode * data = new TreeNode(0);
+        TreeNode *leftData =(TreeNode*)(node->left->data);
+        TreeNode *rightData =(TreeNode*)(node->right->data);
+        if (leftData && rightData)
+           data->time = std::max(leftData->time +node->left->length, rightData->time +node->right->length );
+        else if(leftData)
+            data->time = leftData->time +node->left->length;
+        else
+            data->time = rightData->time +node->right->length;
+        node->data = data;
+   }
+}

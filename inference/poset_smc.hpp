@@ -32,7 +32,7 @@ public:
  
     double log_weight(unsigned int t, const shared_ptr<ParticleGenealogy<State> > &genealogy, const PosetSMCParams &p) override;
     
-    void set_particle_population(const vector<shared_ptr<State> > &particles) override;
+    //void set_particle_population(const vector<shared_ptr<State> > &particles) override;
     
     ~PosetSMC(){};
 };

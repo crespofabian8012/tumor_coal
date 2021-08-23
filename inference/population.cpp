@@ -848,6 +848,7 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
         
     
 }
+
 /***************** bbinClones *****************/
 /* binary search in the probabilities with clones */
 int Population::bbinClones (long double dat, long double *v, int n)
@@ -1034,29 +1035,42 @@ void Population::resetPosteriorValues(){
 }
 void Population::setTimeOriginInputTree(long double timeOriginInputTree){
     
+    assert(timeOriginInputTree>0);
     timeOriginInput = timeOriginInputTree;
-    TimeOriginInput->setParameterValue(timeOriginInputTree);
+    if(TimeOriginInput)
+      TimeOriginInput->setParameterValue(timeOriginInputTree);
     scaledtimeOriginInput = timeOriginInput / theta;
     
     timeOriginSTD = scaledtimeOriginInput / x;
-    TimeOriginSTD->setParameterValue(timeOriginSTD);
-    //timeOriginSTD ->
+    if(TimeOriginSTD)
+      TimeOriginSTD->setParameterValue(timeOriginSTD);
+   
 }
 void Population::setTimeOriginSTD(long double parTimeOriginSTD){
     
+    assert(parTimeOriginSTD>0);
     timeOriginSTD = parTimeOriginSTD;
-    TimeOriginSTD->setParameterValue(parTimeOriginSTD);
+    if (TimeOriginSTD)
+      TimeOriginSTD->setParameterValue(parTimeOriginSTD);
     
     scaledtimeOriginInput = timeOriginSTD * x;
     timeOriginInput = scaledtimeOriginInput * theta;
-    TimeOriginInput->setParameterValue(timeOriginInput);
+    if (TimeOriginInput)
+       TimeOriginInput->setParameterValue(timeOriginInput);
 }
 void Population::setScaledTimeOriginInputTree(long double parScaledTimeOriginInputTree){
+    assert(parScaledTimeOriginInputTree>0);
     scaledtimeOriginInput = parScaledTimeOriginInputTree;
 }
 void Population::setTheta(long double parTheta){
+    assert(parTheta>=0);
     theta = parTheta;
-    Theta->setParameterValue(parTheta);
+    if (Theta)
+      Theta->setParameterValue(parTheta);
+}
+void Population::setDelta(long double parDelta){
+    assert(parDelta>=0);
+    delta = parDelta;
 }
 void Population::setProportion(long double parX){
     x=parX;
@@ -1076,8 +1090,6 @@ long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveL
     
     long double  RateCA = (long double)  numActiveLineages * ((long double) numActiveLineages - 1) / 2.0;
     long double  ThisTimeCA_W = Random::RandomExponentialStartingFrom (RateCA,0,  true, rngGsl,NULL ) ;
-    
-    
     
     return ThisTimeCA_W;
     
@@ -1256,9 +1268,11 @@ void PopulationSet::initPopulationsThetaDelta(long double theta)
     {
         auto popI =  populations[i];
         popI->x = proportionsVector[i];
-        popI->X->setValue(proportionsVector[i]);
+        if(popI->X)
+           popI->X->setValue(proportionsVector[i]);
         popI->theta = popI->x * theta;
-        popI->Theta->setParameterValue(popI->theta);
+        if (popI->Theta)
+           popI->Theta->setParameterValue(popI->theta);
         
         popI->delta = popI->deltaT * popI->x;
     }
@@ -1275,6 +1289,17 @@ void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double
         
         popI->theta = theta * popI->x;
         popI->delta = delta;
+        
+    }
+    //std::cout<< "initial delta "<<populations[0]->delta << " initial theta " << populations[0]->theta << " initial x" << populations[0]->x << std::endl;
+    
+}
+void PopulationSet::initTheta( long double &theta){
+    assert(theta>0);
+    for (unsigned int i = 0; i < numClones; ++i){
+        auto popI =  populations[i];
+        assert(popI->x>0);
+        popI->theta = theta * popI->x;
         
     }
     //std::cout<< "initial delta "<<populations[0]->delta << " initial theta " << populations[0]->theta << " initial x" << populations[0]->x << std::endl;
@@ -1513,6 +1538,29 @@ std::vector <long double> PopulationSet::getSampleSizes()
         result.at(i)=p->sampleSize;
     }
     return result;
+    
+}
+void PopulationSet::initPopulationDeltas(std::vector<double> &deltas){
+    
+    assert(numClones==deltas.size());
+    Population *p;
+    int i;
+    for (i = 0; i < numClones; i++) {
+        p = populations[i];
+        assert(deltas[i] >0);
+        p->setDelta(deltas[i]);
+    }
+    
+}
+void PopulationSet::initPopulationTOriginSTD(std::vector<double> &TOriginSTDs){
+    assert(numClones==TOriginSTDs.size());
+       Population *p;
+       int i;
+       for (i = 0; i < numClones; i++) {
+           p = populations[i];
+           assert(TOriginSTDs[i] >0);
+           p->setTimeOriginSTD(TOriginSTDs[i]);
+       }
     
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////

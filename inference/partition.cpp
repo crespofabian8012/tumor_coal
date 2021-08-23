@@ -283,7 +283,7 @@ void Partition::buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtError
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
         
-        gtErrorModel->computeStateErrorProbPT17(state, clvp);
+        gtErrorModel->computeStateErrorProbPT20(state, clvp);
         
         if (j == 0 && 0)
         {

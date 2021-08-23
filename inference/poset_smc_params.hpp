@@ -36,13 +36,14 @@ public:
     GenotypeErrorModel *gtErrorModel;
     std::vector<int> sampleSizes;
     
-    std::shared_ptr<MCMCParameterWithKernel> theta;
+    std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
     
-    std::shared_ptr<MCMCParameterWithKernel> seqError;
-    std::shared_ptr<MCMCParameterWithKernel> dropoutError;
-    std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationDeltaTs;
-    std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationToriginSTDs;
-    std::shared_ptr<MCMCVectorParameterWithKernel>proportions;
+    std::shared_ptr<double> theta;
+    std::shared_ptr<double> seqError;
+    std::shared_ptr<double> dropoutError;
+    std::vector<double> populationDeltaTs;
+    std::vector<double> populationToriginSTDs;
+    std::vector<double>proportions;
 
     PosetSMCParams(int numberClones,
                    int sampleSize,
@@ -53,25 +54,31 @@ public:
                    PLLBufferManager *const pll_buffer_manager,
                    std::vector<int> &positions,
                    ProgramOptions &programOptions,
-                   GenotypeErrorModel *gtErrorModel);
+                   GenotypeErrorModel *gtErrorModel,
+                   double theta,
+                   std::vector<double> populationDeltaTs,
+                   std::vector<double> populationToriginSTDs,
+                   std::vector<double>proportions,
+                   std::vector<std::vector<double>> coalTimesModelTimePerPopulation);
     
-    void set(std::shared_ptr<MCMCParameterWithKernel> thetaPar,
-             std::shared_ptr<MCMCParameterWithKernel> seqErrorPar,
-             std::shared_ptr<MCMCParameterWithKernel> dropoutErrorPar,
-             std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationDeltaTPar,
-             std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationToriginSTDPar,
-             std::shared_ptr<MCMCVectorParameterWithKernel>proportionsPar
-             );
+//    void set(std::shared_ptr<MCMCParameterWithKernel> thetaPar,
+//             std::shared_ptr<MCMCParameterWithKernel> seqErrorPar,
+//             std::shared_ptr<MCMCParameterWithKernel> dropoutErrorPar,
+//             std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationDeltaTPar,
+//             std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationToriginSTDPar,
+//             std::shared_ptr<MCMCVectorParameterWithKernel>proportionsPar
+//             );
     ProgramOptions& getProgramOptions();
-    std::shared_ptr<MCMCParameterWithKernel> getTheta();
-    std::shared_ptr<MCMCParameterWithKernel> getSeqError();
-    std::shared_ptr<MCMCParameterWithKernel> getDropoutError() ;
-    std::shared_ptr<MCMCParameterWithKernel> getPopulationDeltaT(int i);
-    std::shared_ptr<MCMCParameterWithKernel> getPopulationToriginSTD(int i);
-    std::shared_ptr<MCMCVectorParameterWithKernel> getProportionVector() ;
+//    std::shared_ptr<MCMCParameterWithKernel> getTheta();
+//    std::shared_ptr<MCMCParameterWithKernel> getSeqError();
+//    std::shared_ptr<MCMCParameterWithKernel> getDropoutError() ;
+//    std::shared_ptr<MCMCParameterWithKernel> getPopulationDeltaT(int i);
+//    std::shared_ptr<MCMCParameterWithKernel> getPopulationToriginSTD(int i);
+//    std::shared_ptr<MCMCVectorParameterWithKernel> getProportionVector() ;
     int  getSampleSize() const;
     int  getNumClones() const;
-    
+    double getPopulationEvent(int idx_population, int idx_event);
+    void buildListEventTimesPerPopulation();
 };
 
 #endif /* poset_smc_params_hpp */

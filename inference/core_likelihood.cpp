@@ -483,9 +483,9 @@ int pll_core_update_pmatrix_16x16_jc69(double ** pmatrix,
                 double b = (1 - a) / 15;
 #endif
                 
-                double exptm1 = expm1(-5*t/3);
-                double a = 1 + 15/16. * exptm1;
-                double b = -exptm1/16;
+                double exptm1 = expm1(-5*t/3.0);
+                double a = 1 + 15.0/16.0 * exptm1;
+                double b = -exptm1/16.0;
                 
                 for(unsigned int i=0; i< states*states;i++)
                 {

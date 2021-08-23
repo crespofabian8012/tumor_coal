@@ -33,7 +33,8 @@ class State{
     const Partition *partition;
     unsigned int num_sites;
     std::vector<std::shared_ptr<PartialTreeNode>> roots;
-    //std::shared_ptr<GenotypeErrorModel> gtError;
+   
+    std::vector<int> idsNextCoalEvents;
     GenotypeErrorModel *gtError;
     long double theta;
     double initialLogWeight;
@@ -84,6 +85,7 @@ public:
     long double getTheta()const{return theta;}
     
     void printTree(std::shared_ptr<PartialTreeNode> root, std::ostream &stream);
+    void initIdsNextCoalEvents(int numClones);
     
     void setHeightScaledByTheta(long double  newHeight)
     {
@@ -93,12 +95,14 @@ public:
         
     }
     unsigned int getNextAvailable()const{return nextAvailable;}
-    
     void increaseNextAvailable(){nextAvailable++;}
     
     GenotypeErrorModel &getErrorModel() const{return *gtError;}
     double getInitialLogWeight() const {return initialLogWeight;}
+    
     int getNodeIdxById(size_t id);
+    int getIdNextCoalEventForPopulation(int i);
+    void moveNextIdEventForPopulation(int i);
     
     ~State();
 };

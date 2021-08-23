@@ -399,15 +399,8 @@ int main(int argc, char* argv[] )
         double max = -DOUBLE_INF;
         shared_ptr<State> best_particle;
         for (size_t i=0; i<num_particles; i++){
-            //State &s = pop0[0].get_particle(i);
+
             shared_ptr<State> currents = particles->at(i);
-            // Population *pop= s.getPopulationByIndex(0);
-//            deltas0.push_back(s.getPopulationByIndex(0)->delta);
-//            Ts0.push_back(s.getPopulationByIndex(0)->timeOriginSTD);
-//            Thetas.push_back(s.getTheta());
-//            ADOError.push_back(s.getErrorModel().getADOErrorRate());
-//            SeqError.push_back(s.getErrorModel().getSeqErrorRate());
-//
             currentDeltas.push_back(currents->getPopulationByIndex(0)->delta);
             currentTs.push_back(currents->getPopulationByIndex(0)->timeOriginSTD);
             currentThetas.push_back(currents->getTheta());

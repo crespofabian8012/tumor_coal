@@ -120,5 +120,27 @@ void PosetSMCParams::buildListEventTimesPerPopulation(){
     //            }
     
     
+           // long double logLikNextCoal = 0.0;
+           
+           // logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeightModelTime(), chosenPop->numActiveGametes, params.getProgramOptions().K);
+      //log_w = log_w +logLikNextCoal;
+    // long double logLikNoCoal;
+              //long double logDensityTorigin;
+              //do we  need to add loglik of no coal events in  other populations?
+              
+              //            for(size_t i=0; i <  result->getNumberPopulations(); i++){
+              //                pop= result->getPopulationByIndex( i);
+              //                // do we need to include this in the node->ln_likelihood?
+              //                //logDensityTorigin = pop->LogDensityTime(pop->timeOriginSTD);
+              //
+              //                //node->ln_likelihood = node->ln_likelihood +logDensityTorigin;
+              //
+              //                if (pop!=chosenPop){
+              //                    logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeightModelTime(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
+              //
+              //                    log_w = log_w +logLikNoCoal;
+              //                }
+              //            }
+              
     
 }

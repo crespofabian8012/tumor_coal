@@ -9,9 +9,10 @@
 [maximum number of proposals before rejection]  r1
 
 [PATHS]
-[tree file path] t/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_20_Delta=1T=0.5.tre
+[tree file path] t/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Model_time_Delta=21.519_T=0.128_theta=0.019_epsilon=0.000_n=14_0002_0100.tre
 [genotypes file path, fasta file] g/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_20_Delta=1T=0.5.fasta
-[genotypes file path Philip file] p/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/IUPAC_data_1clon_Gamma10_0002_0138_0001.phylip
+[genotypes file path Philip file] p/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_Delta=21.519_T=0.128_theta=0.019_nMU=1.108_n=14_0002_0100_0001.phylip
+[IUPAC_data_1clon_Gamma10_0002_0138_0001.phylip]
 
 
 [OTHER OPTIONS]

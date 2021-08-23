@@ -56,10 +56,10 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     gtError = new GenotypeErrorModel(*(original.gtError));
     
     idsNextCoalEvents = original.idsNextCoalEvents;
-    // roots = original.roots;
-    roots.reserve(original.root_count());
-    for (auto const& fptr : original.getRoots())
-         roots.emplace_back(fptr->Clone());
+     roots = original.roots;
+//    roots.reserve(original.root_count());
+//    for (auto const& fptr : original.getRoots())
+//         roots.emplace_back(fptr->Clone());
    
     
     partition = original.partition;

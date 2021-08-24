@@ -432,24 +432,41 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     const unsigned int param_indices[1] = {0};
     
     
-    int left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
-                                                                     1,
-                                                                     p->attributes);
+//    int left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+//                                                                     1,
+//                                                                    p->attributes);
+
+        int left_edge_pmatrix_result = pll_core_update_pmatrix(
+                                                                 &parent->edge_l->pmatrix,//double **pmatrix,
+                                                                 p->numberStates,// unsigned int states
+                                                                 p->numberRateCats,//unsigned int rate_cats
+                                                                 p->rates(),//const double *rates
+                                                                 &parent->edge_l->length,//const double *branch_lengths
+                                                                 matrix_indices,//const unsigned int *matrix_indices
+                                                                 param_indices,//const unsigned int *param_indices
+                                                                 p->propInvar(),//const double *prop_invar
+                                                                 p->eigenVals(),//double *const *eigenvals
+                                                                 p->eigenVecs(),//double *const *eigenvecs
+                                                                 p->invEigenVecs(),//double *const *inv_eigenvecs
+                                                                 1,//unsigned int count
+                                                                 p->attributes);
 
     assert(left_edge_pmatrix_result == PLL_SUCCESS);
     
-    int right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
-                                                                      1,
-                                                                      p->attributes);
+//    int right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
+//                                                                      1,
+//                                                                      p->attributes);
     
- 
+    int right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
+                                                                &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
+                                                                p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
     assert(right_edge_pmatrix_result == PLL_SUCCESS);
     
     
     unsigned int sites= (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites);
     
 
-    pll_core_update_partial_ii2(p->numberStates, sites,
+    pll_core_update_partial_ii(p->numberStates, sites,
                                 p->numberRateCats, parent->pclv,
                                 parent->pscale_buffer,
                                 child_left->pclv,
@@ -564,16 +581,16 @@ double State::compute_ln_likelihood(std::vector<double> &clv, std::vector<unsign
     // const unsigned int parameter_indices[16] = {0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     
     
-    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
-                                                 clv.data(), scale_buffer.data(),
-                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
-    //    double result=  pll_core_root_loglikelihood(
-    //                                                p->numberStates, p->numberSites, p->numberRateCats,
-    //
-    //                                                clv.data(), scale_buffer.data(),
-    //
-    //                                                p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
-    //                                                p->invariant(), parameter_indices, nullptr, p->attributes);
+//    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
+//                                                 clv.data(), scale_buffer.data(),
+//                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
+        double result=  pll_core_root_loglikelihood(
+                                                    p->numberStates, p->numberSites, p->numberRateCats,
+    
+                                                    clv.data(), scale_buffer.data(),
+    
+                                                    p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
+                                                    p->invariant(), parameter_indices, nullptr, p->attributes);
     return result;
 }
 double State::compute_ln_likelihood(double *pclv, unsigned int *pscale_buffer,
@@ -583,16 +600,16 @@ double State::compute_ln_likelihood(double *pclv, unsigned int *pscale_buffer,
     // const unsigned int parameter_indices[16] = {0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     
     
-    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
-                                                 pclv, pscale_buffer,
-                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
-    //    double result=  pll_core_root_loglikelihood(
-    //                                                p->numberStates, p->numberSites, p->numberRateCats,
-    //
-    //                                                clv.data(), scale_buffer.data(),
-    //
-    //                                                p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
-    //                                                p->invariant(), parameter_indices, nullptr, p->attributes);
+//    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
+//                                                 pclv, pscale_buffer,
+//                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
+        double result=  pll_core_root_loglikelihood(
+                                                    p->numberStates, p->numberSites, p->numberRateCats,
+    
+                                                    pclv, pscale_buffer,
+    
+                                                    p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
+                                                    p->invariant(), parameter_indices, nullptr, p->attributes);
     return result;
 }
 
@@ -620,15 +637,15 @@ double State::compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
     const unsigned int parameter_indices[1] = {0};
     
     
-    double result = pll_core_root_loglikelihood2(  p->states, p->sites, p->rate_cats,
-                                                 pclv, pscale_buffer,
-                                                 p->frequencies, p->rate_weights, p->pattern_weights, parameter_indices,  nullptr, p->attributes);
+//    double result = pll_core_root_loglikelihood2(  p->states, p->sites, p->rate_cats,
+//                                                 pclv, pscale_buffer,
+//                                                 p->frequencies, p->rate_weights, p->pattern_weights, parameter_indices,  nullptr, p->attributes);
     
-    //    double result= pll_core_root_loglikelihood(
-    //                                               p->states, p->sites, p->rate_cats,
-    //                                               clv, scale_buffer,
-    //                                               p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
-    //                                               p->invariant, parameter_indices, nullptr, p->attributes);
+    double result= pll_core_root_loglikelihood(
+                                                   p->states, p->sites, p->rate_cats,
+                                                   pclv, pscale_buffer,
+                                                   p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
+                                                   p->invariant, parameter_indices, nullptr, p->attributes);
     return result;
 }
 int State::getNodeIdxById(size_t id){

@@ -35,6 +35,7 @@ public:
     ProgramOptions *programOptions;
     GenotypeErrorModel *gtErrorModel;
     std::vector<int> sampleSizes;
+    bool doPriorPost;
     
     std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
     

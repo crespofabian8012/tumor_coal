@@ -348,6 +348,7 @@ int main(int argc, char* argv[] )
                           timeOriginSTDs,
                             {1.0},
                           coalTimesModelTimePerPopulation);
+        psParams.doPriorPost= true;
         
         size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
         PosetSMC posetSMC(programOptions.numClones,  num_iter);
@@ -356,7 +357,7 @@ int main(int argc, char* argv[] )
         smcOptions.num_threads = 5;
         smcOptions.use_SPF = false;
         smcOptions.ess_threshold = 1;
-        smcOptions.num_particles = 5000;
+        smcOptions.num_particles = 200;
         smcOptions.resample_last_round = false;
     
         
@@ -394,8 +395,10 @@ int main(int argc, char* argv[] )
         std::vector<long double> currentThetas;
         std::vector<long double> currentSeqError;
         std::vector<long double> currentADOError;
+        std::vector<long double> weights;
+        std::vector<long double> rootLogLiks;
         
-        vector<double> *normalized_weights = currenPop->get_normalized_weights();
+        std::vector<double> *normalized_weights = currenPop->get_normalized_weights();
         double max = -DOUBLE_INF;
         shared_ptr<State> best_particle;
         for (size_t i=0; i<num_particles; i++){
@@ -409,6 +412,8 @@ int main(int argc, char* argv[] )
             currents->printTree(currents->getRoots()[0], std::cerr);
             std::cout << " weight "<< i << " " <<(*normalized_weights)[i] <<std::endl;
             assert(currents->getRoots().size() == 1);
+            weights.push_back((*normalized_weights)[i]);
+            rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
             std::cout << " loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
             if ((*normalized_weights)[i] > max) {
                 
@@ -423,8 +428,8 @@ int main(int argc, char* argv[] )
         std::cout<< "Theta, mean: " << Utils::mean(currentThetas) <<" var: " <<Utils::variance(currentThetas) <<std::endl;
         std::cout<< "SeqError, mean: " << Utils::mean(currentSeqError) <<" var: " <<Utils::variance(currentSeqError) <<std::endl;
         std::cout<< "ADOError, mean: " << Utils::mean(currentADOError) <<" var: " <<Utils::variance(currentADOError) <<std::endl;
-        
-        
+        std::cout<< "Normalized weight " << Utils::mean(weights) <<" var: " <<Utils::variance(weights) <<std::endl;
+        std::cout<< "Root log liks " << Utils::mean(rootLogLiks) <<" var: " <<Utils::variance(rootLogLiks) <<std::endl;
         
         double log_marginal_lik = smc.get_log_marginal_likelihood();
         cout << "Estimate log marginal " << log_marginal  << endl;
@@ -447,6 +452,9 @@ int main(int argc, char* argv[] )
     
     pll_msa_destroy(msa);
     std::cout << "\nIf you need help type '-?' in the command line of the program\n"<<std::endl;
+    
+    
+    //test HMC
     
     return 0;
     

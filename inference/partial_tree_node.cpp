@@ -22,7 +22,7 @@ PartialTreeEdge::PartialTreeEdge(PLLBufferManager *manager,
         //pmatrix =  (double*)pll_aligned_alloc(pmatrix_size, PLL_ALIGNMENT_SSE);
     } else {
         
-        std::cout<< "reusing pmatrix from PLLBufferManager"<< std::endl;
+        //std::cout<< "reusing pmatrix from PLLBufferManager"<< std::endl;
         pmatrix = manager->pmatrix_buffer.top();
         manager->pmatrix_buffer.pop();
         
@@ -111,7 +111,7 @@ height(height), index(index), clv_size(clv_elements)
         //    //clv =  (double*)pll_aligned_alloc(clv_size, PLL_ALIGNMENT_SSE);
     } else {
         
-        std::cout<< "reusing clv from PLLBufferManager"<< std::endl;
+        //std::cout<< "reusing clv from PLLBufferManager"<< std::endl;
         pclv = manager->clv_buffer.top();
         manager->clv_buffer.pop();
         
@@ -126,7 +126,7 @@ height(height), index(index), clv_size(clv_elements)
         
     } else {
         
-        std::cout<< "reusing scale_buffer from PLLBufferManager"<< std::endl;
+        //std::cout<< "reusing scale_buffer from PLLBufferManager"<< std::endl;
         pscale_buffer = manager->scale_buffer_buffer.top();
         manager->scale_buffer_buffer.pop();
         
@@ -390,8 +390,8 @@ std::shared_ptr<PartialTreeNode> PartialTreeNode::Clone(){
 }
 
 PartialTreeNode::~PartialTreeNode() {
-    //manager->clv_buffer.push(pclv);
-    // manager->scale_buffer_buffer.push(pscale_buffer);
+    manager->clv_buffer.push(pclv);
+    manager->scale_buffer_buffer.push(pscale_buffer);
     
     //pll_aligned_free(clv);
     //pll_aligned_free(scale_buffer);

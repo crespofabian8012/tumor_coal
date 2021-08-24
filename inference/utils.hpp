@@ -295,6 +295,8 @@ static     double normalize(const std::vector<double> &log_weights, std::vector<
 static     void normalize(const std::vector<double> &log_weights, std::vector<double> &weights, double log_norm);
 static     double log_add(std::vector<double> x);
 static     double log_add(double x, double y);
+static     std::vector<std::pair<int, int>> allPairs(int vectorSize);
+static std::vector<std::pair<int, int>> allPairCombinations(int vectorSize);
     // void autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft);
   
 };

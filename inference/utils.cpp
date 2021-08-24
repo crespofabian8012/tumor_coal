@@ -1021,7 +1021,39 @@ double Utils::log_add(std::vector<double> x)
     }
     
 }
+std::vector<std::pair<int, int>> Utils::allPairCombinations(int vectorSize){
+    
+    assert(vectorSize >1);
+    std::vector<std::pair<int, int>> result;
+    std::pair<int, int> pair;
+    for(size_t i=0; i < vectorSize -1 ; i++){
+        pair.first = i;
+        for(size_t j = i+1; j < vectorSize;j++){
+              pair.second = j;
+              result.push_back(pair);
+        }
+        
+    }
 
+    return result;
+}
+std::vector<std::pair<int, int>> Utils::allPairs(int vectorSize){
+    
+    assert(vectorSize >1);
+    std::vector<std::pair<int, int>> result;
+    std::pair<int, int> pair;
+    for(size_t i=0; i < vectorSize; i++){
+        pair.first = i;
+        for(size_t j = 0; j < vectorSize;j++){
+            if (i!=j){
+                pair.second = j;
+                result.push_back(pair);
+            }
+        }
+    }
+
+    return result;
+}
 //void Utils::autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft)
 //{
 //    int no2,i;

@@ -74,7 +74,8 @@ namespace Random
      long double randomBeta(long double  alpha, long double beta, bool useGSlgenerator, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
      long double randomGamma(long double  mean, long double variance, bool useGSlgenerator,const  gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
      long double RandomBetaMeanVar(long double mean, long double var, long int* seed, bool useGSlgenerator, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
-
+    int randomDiscreteFromProbabilityVector( const gsl_rng *rngGsl,  double  *prob, int size);
+     
 };
 namespace Distributions{
     

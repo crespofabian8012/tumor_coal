@@ -579,6 +579,17 @@ long double  Random::RandomDensityModelTimeOriginLambda (long double  lambda, bo
     result =    -(1.0 / (gamma)) * log(1- gamma / (U+gamma));
     return result;
 }
+int Random::randomDiscreteFromProbabilityVector( const gsl_rng *rngGsl,  double  *prob, int size){
+    long double   U;
+    long double   cumProb=0.0;
+    int i =0;
+    U = randomUniformFromGsl2(rngGsl);
+    while(i< size && cumProb <U){
+        cumProb+=prob[i];
+        i++;
+    }
+    return (i-1);
+}
 /***************************** LogExponentialDensity *******************************/
 /* Log Exponential distribution density */
 long double Distributions::LogExponentialDensity(long double& value, long double& from, long double& lambda)

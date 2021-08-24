@@ -59,6 +59,8 @@ public:
     
     void remove_roots(int i, int j);
     
+    std::shared_ptr<PartialTreeNode> proposeNewNode(int firstId, int secondId, size_t index_pop_new_node );
+    
     int root_count() const{return roots.size();};
     
     double compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
@@ -86,6 +88,7 @@ public:
     
     void printTree(std::shared_ptr<PartialTreeNode> root, std::ostream &stream);
     void initIdsNextCoalEvents(int numClones);
+    void addRoot(std::shared_ptr<PartialTreeNode> node);
     
     void setHeightScaledByTheta(long double  newHeight)
     {

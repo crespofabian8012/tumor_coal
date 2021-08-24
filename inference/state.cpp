@@ -368,7 +368,116 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     
     return parent;
 }
+std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId, size_t index_pop_new_node ){
+        
+    assert(roots.size() > 1 && "Expected more than one root");
+    
+    const Partition *p =partition;
+    
+    //heightScaledByTheta = heightScaledByTheta+ height_delta;
+    int idxFirstID = getNodeIdxById(firstId);
+    int idxSecondId = getNodeIdxById(secondId);
+    
+    assert(idxFirstID>=0 &&  idxSecondId >=0 && "Indexes must be positive");
+    // assert(height_delta >= 0.0 && "Height change can't be negative");
+    assert(idxFirstID != idxSecondId && "Cannot connect, this would make a loop");
+    // assert(height_delta >= 0.0 && "Height change can't be negative");
+    assert(idxFirstID >= 0 && idxFirstID < roots.size() && idxSecondId >= 0 && idxSecondId < roots.size() &&
+           "Index out of bounds");
+    
+    std::shared_ptr<PartialTreeNode> child_left = roots[idxFirstID];
+    std::shared_ptr<PartialTreeNode> child_right = roots[idxSecondId];
+    
+  //  std::cout<< "roots first idx "<< idxFirstID <<  " idxSecondId " << idxSecondId<< std::endl;
+    
+  //  if (!(child_left->label.empty()) && !(child_right->label.empty()))
+  //      std::cout<< "child_left->label "<< child_left->label <<  " child_right->label " << child_right->label<< std::endl;
+    
+    double left_length =heightScaledByTheta - child_left->height;
+    double right_length = heightScaledByTheta - child_right->height;
+    
+    unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
+    //unsigned int pmatrix_size = pmatrix_elements * sizeof(double);
+    
+   //  std::cout<< "left_length "<< left_length <<  " right_length " << right_length<< std::endl;
+    
+    std::shared_ptr<PartialTreeEdge> edge_left = std::make_shared<PartialTreeEdge>(
+                                                                                   pll_buffer_manager, child_left, left_length, pmatrix_elements, partition->alignment());
+    
+    std::shared_ptr<PartialTreeEdge> edge_right = std::make_shared<PartialTreeEdge>(
+                                                                                    pll_buffer_manager, child_right, right_length, pmatrix_elements, partition->alignment());
+    
+    unsigned int sites_alloc =
+    p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites;
+    
+    unsigned int clv_elements = sites_alloc  * p->numberStates *  p->numberRateCats;
+    
+    // unsigned int clv_size = clv_elements * sizeof(double);
+    //sites_alloc * p->getStatesPadded() * p->numberRateCats * sizeof(double);
+    
+    unsigned int scaler_size = (p->attributes & PLL_ATTRIB_RATE_SCALERS)
+    ? sites_alloc * p->numberRateCats
+    : sites_alloc;
+    // unsigned int scale_buffer_size = scaler_size * sizeof(double);
+    
+    std::shared_ptr<PartialTreeNode> parent = std::make_shared<PartialTreeNode>(
+                                                                                pll_buffer_manager, edge_left, edge_right, "", heightScaledByTheta, clv_elements,
+                                                                                scaler_size, partition->alignment(), nextAvailable);
+    
+    parent->index_population=index_pop_new_node;
+    
+    const unsigned int matrix_indices[1] = {0};
+    //Array params_indices holds the indices of rate matrices that will be used for each rate category. This array must be of size rate_cats
 
+    const unsigned int param_indices[1] = {0};
+    
+    
+    int left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+                                                                     1,
+                                                                     p->attributes);
+
+    assert(left_edge_pmatrix_result == PLL_SUCCESS);
+    
+    int right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
+                                                                      1,
+                                                                      p->attributes);
+    
+ 
+    assert(right_edge_pmatrix_result == PLL_SUCCESS);
+    
+    
+    unsigned int sites= (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites);
+    
+
+    pll_core_update_partial_ii2(p->numberStates, sites,
+                                p->numberRateCats, parent->pclv,
+                                parent->pscale_buffer,
+                                child_left->pclv,
+                                child_right->pclv,
+                                edge_left->pmatrix,
+                                edge_right->pmatrix,
+                                child_left->pscale_buffer,
+                                child_right->pscale_buffer,
+                                p->attributes);
+    
+
+    parent->ln_likelihood =
+    compute_ln_likelihood(parent->pclv,
+                          parent->pscale_buffer,
+                          p->getPartition());
+
+    if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
+        
+        std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
+        
+    }
+    
+    assert(!isnan(parent->ln_likelihood) && !isinf(parent->ln_likelihood));
+    
+    // assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
+  
+    return parent;
+}
 double State::likelihood_factor(std::shared_ptr<PartialTreeNode> root)const{
     
     double result=0.0;
@@ -381,9 +490,9 @@ double State::likelihood_factor(std::shared_ptr<PartialTreeNode> root)const{
     double ln_l = left->ln_likelihood;
     double ln_r = right->ln_likelihood;
     
-    if (ln_l <= -10000000 || ln_r <= -10000000 || ln_m <= -10000000)
-       std::cout << " left loglik " <<ln_l << " right loglik " <<ln_r << " parent loglik " <<ln_m << std::endl;
-    
+//    if (ln_l <= -10000000 || ln_r <= -10000000 || ln_m <= -10000000)
+//       std::cout << " left loglik " <<ln_l << " right loglik " <<ln_r << " parent loglik " <<ln_m << std::endl;
+//    
     assert(ln_m <= 0 && ln_l <= 0 && ln_r <= 0 &&
            "Likelihood can't be more than 100%");
     
@@ -424,6 +533,7 @@ void State::updateIndexesActiveGametes(int idxFirstId, int idxSecondId, size_t i
     }
     else//migration
     {
+        std::cout<< "migration" << std::endl;
         popFirst = populationSet->getPopulationbyIndex(idxPopFirst);
         popSecond = populationSet->getPopulationbyIndex(idxSecondId);
         
@@ -560,6 +670,12 @@ int State::getIdNextCoalEventForPopulation(int i){
 void State::moveNextIdEventForPopulation(int i){
     idsNextCoalEvents[i]= idsNextCoalEvents[i]+1;
 }
+void State::addRoot(std::shared_ptr<PartialTreeNode> node){
+    
+   roots.push_back(node);
+   
+}
+
 State::~State(){
     
     

@@ -5,6 +5,7 @@
 //  Created by Fausto Fabian Crespo Fernandez on 16/03/2021.
 //
 
+#include "utils.hpp"
 #include "poset_smc.hpp"
 #include "state.hpp"
 #include "random.h"
@@ -33,14 +34,15 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
     //std::cout << " particle with delta : "<< curr.getPopulationByIndex(0)->delta <<std:: endl;
     std::shared_ptr<State> result(make_shared<State>(curr));
     log_w=0;
-
+    double weight = 0.0;
+    
     if (result->root_count()>1){
         // select 2 nodes to coalesce
         Population *pop,*chosenPop, *oldestPop;
         long double minTimeNextEvent = DOUBLE_INF ;
         
         long double timeNextEvent;
-
+        
         for(size_t i=0; i <  result->getNumberPopulations(); i++){
             
             pop= result->getPopulationByIndex( i);
@@ -61,45 +63,94 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
         if (chosenPop->numActiveGametes >1){
             //next event a coalescence
             //choose 2 active lineages to coalesce inside population chosenPop
+            
             int idxFirst = 0,  idxSecond = 0;
-            int firstInd = 0,  secondInd = 0;
+            int idxFirstRoot = 0,  idxSecondRoot = 0;
             int choosePairIndividuals = YES;
-            
-            //std::cout << "num active gametes chosenPop " << chosenPop->numActiveGametes<< std::endl;
-        
-            if (result->getNumberPopulations()==1)
-                assert(chosenPop->numActiveGametes == result->root_count());
-            
-            chosenPop->ChooseRandomIndividual(&idxFirst, numClones,   &idxSecond, random, choosePairIndividuals);
-            
-            firstInd = chosenPop->idsActiveGametes[idxFirst];
-            secondInd = chosenPop->idsActiveGametes[idxSecond];
-            
-            assert(firstInd != secondInd);
-        
-            
             unsigned int chosep_pop_idx = chosenPop->index;
+            //std::cout << "num active gametes chosenPop " << chosenPop->numActiveGametes<< std::endl;
             
             assert(minTimeNextEvent* result->getTheta()>0);
             result->setHeightScaledByTheta(minTimeNextEvent* result->getTheta());
-    
+                           
             
-            std::shared_ptr<PartialTreeNode> node = result->connect(firstInd, secondInd, chosep_pop_idx);
+            if (params.doPriorPost){
+                
+                std::vector<std::pair<int, int>> allCoalPairs = Utils::allPairs(chosenPop->numActiveGametes);
+                std::vector<double> logWeights(allCoalPairs.size(), 0.0);
+                std::vector<double> normWeights(allCoalPairs.size(), 0.0);
+                std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(allCoalPairs.size());
+                
+                for(size_t i=0; i <  allCoalPairs.size(); i++){
+                    idxFirst = allCoalPairs[i]. first;
+                    idxSecond = allCoalPairs[i]. second;
+                    
+                    idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
+                    idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
+                    
+                   // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
+                    assert(idxFirstRoot != idxSecondRoot);
+                    nodeProposals[i] = result->proposeNewNode( idxFirstRoot,  idxSecondRoot, chosep_pop_idx );
+                    
+                    logWeights[i] = result->likelihood_factor(nodeProposals[i]);
+                }
+                unsigned int pos;
+                weight = Utils::normalize(logWeights, normWeights);
+                pos = Random::randomDiscreteFromProbabilityVector(random, &normWeights[0], normWeights.size());
+              
+
+                idxFirst = allCoalPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
+                idxSecond = allCoalPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
+                
+                
+                idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
+                idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
+                
+                assert(idxFirstRoot != idxSecondRoot);
+                
+                int posFirstRoot= result->getNodeIdxById(idxFirstRoot);
+                int posSecondRoot = result->getNodeIdxById(idxSecondRoot);
+                
+                result->remove_roots(posFirstRoot, posSecondRoot);
+                
+                result->addRoot(nodeProposals[pos]);
+                result->increaseNextAvailable();
+                result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
+                               
+                chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
+            }
+            else{//PriorPrior
+                
+               
+                if (result->getNumberPopulations()==1)
+                    assert(chosenPop->numActiveGametes == result->root_count());
+                
         
+                chosenPop->ChooseRandomIndividual(&idxFirst, numClones,   &idxSecond, random, choosePairIndividuals);
+                
+                idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
+                idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
+                
+                assert(idxFirstRoot != idxSecondRoot);
+                
+               
+                
+                std::shared_ptr<PartialTreeNode> node = result->connect(idxFirstRoot, idxSecondRoot, chosep_pop_idx);
+                
+                
+                result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  node->index, node->index_population);
+                
+                chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
+                
+                weight = result->likelihood_factor(node);
+                assert(!isnan(weight) && !isinf(weight));
+                
+            }
             
-            result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  node->index, node->index_population);
-       
-            
-            chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
-         
-            double weight = result->likelihood_factor(node);
-            
-            // log_w += weight;
-            assert(!isnan(weight) && !isinf(weight));
-            
-            for (size_t i =0; i < result->root_count(); i ++)
-                log_w += result->getRootAt(i)->ln_likelihood;
         
+            log_w += weight;
+            
+            
             
         }
         else{//next event is an origin
@@ -119,7 +170,7 @@ unsigned long PosetSMC::num_iterations(){
 double PosetSMC::log_weight(unsigned int t, const shared_ptr<ParticleGenealogy<State> > &genealogy, const PosetSMCParams &p){
     
     double result=0.0;
-
+    
     return result;
     
 }

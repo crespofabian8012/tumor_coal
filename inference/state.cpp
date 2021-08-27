@@ -430,7 +430,7 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     compute_ln_likelihood(parent->pclv,
                           parent->pscale_buffer,
                           p->getPartition());
-    std::cout << " log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
+   
 
     if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
         

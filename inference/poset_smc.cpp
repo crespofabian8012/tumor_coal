@@ -104,7 +104,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                 idxFirst = allCoalPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
                 idxSecond = allCoalPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
                 
-                std::cout<< "first " << idxFirst << "second " << idxSecond << " weight " << weight << " norm weight " << &normWeights[pos] << std::endl;
+                std::cout<< "first " << idxFirst << "second " << idxSecond << " weight " << weight << " norm weight " << normWeights[pos] << std::endl;
                 
                 idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
                 idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];

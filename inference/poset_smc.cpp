@@ -95,7 +95,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                     
                    // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
                     assert(idxFirstRoot != idxSecondRoot);
-                    if (t>1){
+                    if (t==1){
                        nodeProposals[i] = result->proposeNewNode( idxFirstRoot,  idxSecondRoot, chosep_pop_idx );
                         logWeights[i] = nodeProposals[i]->ln_likelihood;
                     }

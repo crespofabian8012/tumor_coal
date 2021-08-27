@@ -384,14 +384,16 @@ int main(int argc, char* argv[] )
             currentThetas.push_back(currents->getTheta());
             currentSeqError.push_back(currents->getErrorModel().getADOErrorRate());
             currentADOError.push_back(currents->getErrorModel().getSeqErrorRate());
+            std::cout<<std::endl;
             currents->printTree(currents->getRoots()[0], std::cerr);
+            std::cout<<std::endl;
             std::cout << " weight "<< i << " " <<(*normalized_weights)[i] <<std::endl;
             assert(currents->getRoots().size() == 1);
             weights.push_back((*normalized_weights)[i]);
             rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
             std::cout << " loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
             currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
-            
+            std::cout<<std::endl;
             if ((*normalized_weights)[i] > max) {
                 
                 max = (*normalized_weights)[i]  ;

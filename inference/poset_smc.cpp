@@ -76,10 +76,15 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             
             if (params.doPriorPost){
                 
-                std::vector<std::pair<int, int>> allCoalPairs = Utils::allPairs(chosenPop->numActiveGametes);
-                std::vector<double> logWeights(allCoalPairs.size(), 0.0);
-                std::vector<double> normWeights(allCoalPairs.size(), 0.0);
-                std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(allCoalPairs.size());
+                std::vector<std::pair<int, int>> allCoalPairs = Utils::allCombinations(chosenPop->numActiveGametes, 2);
+                int numberProposals = allCoalPairs.size();
+                if (t>1)
+                    numberProposals = 2* numberProposals;
+              
+                std::vector<double> logWeights(numberProposals, 0.0);
+                std::vector<double> normWeights(numberProposals, 0.0);
+                
+                std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
                 
                 for(size_t i=0; i <  allCoalPairs.size(); i++){
                     idxFirst = allCoalPairs[i]. first;
@@ -90,11 +95,17 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                     
                    // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
                     assert(idxFirstRoot != idxSecondRoot);
-                    nodeProposals[i] = result->proposeNewNode( idxFirstRoot,  idxSecondRoot, chosep_pop_idx );
-                    
-                    logWeights[i] = nodeProposals[i]->ln_likelihood;
-                    
-                    //result->likelihood_factor(nodeProposals[i]);
+                    if (t>1){
+                       nodeProposals[i] = result->proposeNewNode( idxFirstRoot,  idxSecondRoot, chosep_pop_idx );
+                        logWeights[i] = nodeProposals[i]->ln_likelihood;
+                    }
+                    else{
+                        nodeProposals[2*i] = result->proposeNewNode( idxFirstRoot,  idxSecondRoot, chosep_pop_idx );
+                        logWeights[2*i] = nodeProposals[2*i]->ln_likelihood;
+                        nodeProposals[2*i+1] = result->proposeNewNode(idxSecondRoot, idxFirstRoot,   chosep_pop_idx );
+                        logWeights[2*i+1] = nodeProposals[2*i+1] ->ln_likelihood;
+                    }
+         
                 }
                 unsigned int pos;
                 weight = Utils::normalize(logWeights, normWeights);

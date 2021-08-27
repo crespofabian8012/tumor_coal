@@ -295,6 +295,7 @@ struct Utils
     static     double log_add(double x, double y);
     static     std::vector<std::pair<int, int>> allPairs(int vectorSize);
     static std::vector<std::pair<int, int>> allPairCombinations(int vectorSize);
+    static std::vector<std::pair<int, int>> allCombinations(int N, int K);
     // void autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft);
     
 };

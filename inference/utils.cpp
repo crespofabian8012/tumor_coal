@@ -1054,6 +1054,33 @@ std::vector<std::pair<int, int>> Utils::allPairs(int vectorSize){
 
     return result;
 }
+std::vector<std::pair<int, int>> Utils::allCombinations(int N, int K)
+{
+    std::vector<std::pair<int, int>> result;
+    std::pair<int, int> pair;
+    std::string bitmask(K, 1); // K leading 1's
+    bitmask.resize(N, 0); // N-K trailing 0's
+    bool isfirst= true;
+    // print integers and permute bitmask
+    do {
+        for (int i = 0; i < N; ++i) // [0..N-1] integers
+        {
+            if (bitmask[i]){
+                if (isfirst){
+                    pair.first = i;
+                    isfirst = false;
+                }
+                else{
+                    pair.second = i;
+                    isfirst = true;
+                    result.push_back(pair);
+                }
+        
+            }
+        }
+    } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
+    return result;
+}
 //void Utils::autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft)
 //{
 //    int no2,i;

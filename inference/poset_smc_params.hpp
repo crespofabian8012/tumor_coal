@@ -17,12 +17,12 @@
 
 
 extern "C"
-{
+    {
 #include "libpll/pll.h"
-}
+    }
 
 class PosetSMCParams{
-       
+    
     
 public:
     int numberClones;
@@ -45,7 +45,7 @@ public:
     std::vector<double> populationDeltaTs;
     std::vector<double> populationToriginSTDs;
     std::vector<double>proportions;
-
+    
     PosetSMCParams(int numberClones,
                    int sampleSize,
                    std::vector<int> &sampleSizes,
@@ -62,20 +62,20 @@ public:
                    std::vector<double>proportions,
                    std::vector<std::vector<double>> coalTimesModelTimePerPopulation);
     
-//    void set(std::shared_ptr<MCMCParameterWithKernel> thetaPar,
-//             std::shared_ptr<MCMCParameterWithKernel> seqErrorPar,
-//             std::shared_ptr<MCMCParameterWithKernel> dropoutErrorPar,
-//             std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationDeltaTPar,
-//             std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationToriginSTDPar,
-//             std::shared_ptr<MCMCVectorParameterWithKernel>proportionsPar
-//             );
+    //    void set(std::shared_ptr<MCMCParameterWithKernel> thetaPar,
+    //             std::shared_ptr<MCMCParameterWithKernel> seqErrorPar,
+    //             std::shared_ptr<MCMCParameterWithKernel> dropoutErrorPar,
+    //             std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationDeltaTPar,
+    //             std::vector<std::shared_ptr<MCMCParameterWithKernel>> populationToriginSTDPar,
+    //             std::shared_ptr<MCMCVectorParameterWithKernel>proportionsPar
+    //             );
     ProgramOptions& getProgramOptions();
-//    std::shared_ptr<MCMCParameterWithKernel> getTheta();
-//    std::shared_ptr<MCMCParameterWithKernel> getSeqError();
-//    std::shared_ptr<MCMCParameterWithKernel> getDropoutError() ;
-//    std::shared_ptr<MCMCParameterWithKernel> getPopulationDeltaT(int i);
-//    std::shared_ptr<MCMCParameterWithKernel> getPopulationToriginSTD(int i);
-//    std::shared_ptr<MCMCVectorParameterWithKernel> getProportionVector() ;
+    //    std::shared_ptr<MCMCParameterWithKernel> getTheta();
+    //    std::shared_ptr<MCMCParameterWithKernel> getSeqError();
+    //    std::shared_ptr<MCMCParameterWithKernel> getDropoutError() ;
+    //    std::shared_ptr<MCMCParameterWithKernel> getPopulationDeltaT(int i);
+    //    std::shared_ptr<MCMCParameterWithKernel> getPopulationToriginSTD(int i);
+    //    std::shared_ptr<MCMCVectorParameterWithKernel> getProportionVector() ;
     int  getSampleSize() const;
     int  getNumClones() const;
     double getPopulationEvent(int idx_population, int idx_event);

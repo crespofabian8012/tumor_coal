@@ -340,7 +340,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) c
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
         
-        gtErrorModel->computeStateErrorProbPT17(state, clvp);
+        gtErrorModel->computeStateErrorProbPT20(state, clvp);
         
         //if (j == 0 && 0)
         //{
@@ -375,7 +375,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, p
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
         
-        gtError.computeStateErrorProbPT17(state, clvp);
+        gtError.computeStateErrorProbPT20(state, clvp);
         
         //if (j == 0 && 0)
         //{

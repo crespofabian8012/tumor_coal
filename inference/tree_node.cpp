@@ -64,6 +64,7 @@ numbersMaternalMutationsPerSite(numSites, 0),numbersPaternalMutationsPerSite(num
     init_to_empty_str(cellName);
     init_to_empty_str(observedCellName);
     numberOfTipsSubTree=0;
+    numberOfNodesSubTree=0;
     //initSequenceVectors(numSites);
     
 }

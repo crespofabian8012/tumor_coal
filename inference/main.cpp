@@ -43,6 +43,8 @@
 #include "constants.hpp"
 #include "output_functions.hpp"
 #include "mcmc.hpp"
+#include "msa.hpp"
+#include "tree.hpp"
 
 #include <gsl/gsl_randist.h>
 #include <boost/program_options.hpp>
@@ -144,13 +146,12 @@ int main(int argc, char* argv[] )
     Utils::ReadParametersFromFastaFile(fileNameFasta,  programOptions.numCells, programOptions.TotalNumSequences, programOptions.numSites);
     std::vector<std::vector<int> > ObservedData;
     
-  //  char *ObservedCellNames[programOptions.numCells];
-//    Utils::ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
-//    programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
-//    programOptions.numCells = programOptions.TotalNumSequences;
-//
-//    programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
-    
+    //  char *ObservedCellNames[programOptions.numCells];
+    //    Utils::ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
+    //    programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
+    //    programOptions.numCells = programOptions.TotalNumSequences;
+    //
+    //    programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
     
     
     fileNamePhylip =filePaths.inputGenotypeFilePhylip;
@@ -158,41 +159,11 @@ int main(int argc, char* argv[] )
     if (msa==NULL)
         std::cout << "Error reading phylip file \n"<< std::endl;
     // }
-    unsigned long stats_mask = PLLMOD_MSA_STATS_DUP_TAXA;
-    pllmod_msa_stats_t * stats = pllmod_msa_compute_stats(msa,
-                                                          10,
-                                                          pll_map_gt10, // map is not used here
-                                                          NULL,
-                                                          stats_mask);
-    assert(stats);
-    if (stats->dup_taxa_pairs_count > 0){
+    MSA msaWrapper(msa);
+    if (!MSA::checkMSA(msaWrapper)){
         
-        std::cout << "Error, Duplicate sequence names found: \n"<< stats->dup_taxa_pairs_count <<  std::endl;
+        std::cout << "Error cheking the sequences alignment \n"<< std::endl;
     }
-    stats_mask = PLLMOD_MSA_STATS_DUP_SEQS;
-    vector<pair<unsigned long,unsigned long> > dup_seqs;
-    std::set<size_t> gap_seqs;
-    pllmod_msa_destroy_stats(stats);
-    pllmod_msa_stats_t * dup_stats = pllmod_msa_compute_stats(msa,
-                                                              10,
-                                                              pll_map_gt10,
-                                                              NULL,
-                                                              stats_mask);
-    
-    
-    assert(dup_stats);
-    
-    for (unsigned long c = 0; c < dup_stats->dup_seqs_pairs_count; ++c)
-    {
-        //dup_seqs.emplace_back(dup_stats->dup_seqs_pairs[c*2]);
-        dup_seqs.emplace_back(dup_stats->dup_seqs_pairs[c*2],
-                              dup_stats->dup_seqs_pairs[c*2+1]);
-        
-        std::cout << "Error, Duplicate sequences found: seq " << dup_stats->dup_seqs_pairs[c] <<  "\n" <<  std::endl;
-        
-    }
-    
-    pllmod_msa_destroy_stats(dup_stats);
     
     programOptions.numClones = 1;
     programOptions.TotalNumSequences = msa->count;
@@ -204,7 +175,7 @@ int main(int argc, char* argv[] )
     char *ObservedCellNames[programOptions.numCells];
     
     if (programOptions.numClones==1)
-    sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
+        sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
     
     treefileName = filePaths.inputTreeFile;
     
@@ -225,6 +196,7 @@ int main(int argc, char* argv[] )
     std::vector<boost::mt19937 *> randomGeneratorsBoost = Random::allocateListRandomNumbersGeneratorsBoost(mcmcOptions.numChains);
     
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
+    RootedTree rootedTree(*initialRootedTree, true);
     
     programOptions.seqErrorRate = 0.01;
     programOptions.dropoutRate =0.2;
@@ -327,6 +299,8 @@ int main(int argc, char* argv[] )
         
         std::vector<double> coalTimes = pll_utils::getOrderedCoalTimesFromRootedTree(initialRootedTree, healthyTipLabel);
         
+        pll_utils::printChronologicalOrderRootedTree(initialRootedTree,healthyTipLabel, std::cerr);
+        
         Partition * partition = new Partition(msa,
                                               16,// model->states,//numberStates
                                               1,//RATE_CATS, // unsigned  int  numberRateCats
@@ -342,12 +316,13 @@ int main(int argc, char* argv[] )
         
         coalTimesModelTimePerPopulation.push_back(coalTimes);
         
+        
         PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
-                           theta,
-                          deltas,
-                          timeOriginSTDs,
-                            {1.0},
-                          coalTimesModelTimePerPopulation);
+                                theta,
+                                deltas,
+                                timeOriginSTDs,
+                                {1.0},
+                                coalTimesModelTimePerPopulation);
         psParams.doPriorPost= true;
         
         size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
@@ -357,15 +332,15 @@ int main(int argc, char* argv[] )
         smcOptions.num_threads = 5;
         smcOptions.use_SPF = false;
         smcOptions.ess_threshold = 1;
-        smcOptions.num_particles = 200;
+        smcOptions.num_particles = 1000;
         smcOptions.resample_last_round = false;
-    
+        
         
         smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
         //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
         //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::SYSTEMATIC;
-       //  smcOptions.main_seed = 346435;
-       // smcOptions.resampling_seed = 2345666;
+        //  smcOptions.main_seed = 346435;
+        // smcOptions.resampling_seed = 2345666;
         smcOptions.track_population = false;
         smcOptions.init();
         smcOptions.debug = true;
@@ -373,7 +348,7 @@ int main(int argc, char* argv[] )
         
         SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
         
-        std::cout<< "Running Sequential Monte Carlo(SMC) with "<<smcOptions.num_particles <<" particles....\n" << std::endl;
+        std::cout<< "\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles....\n" << std::endl;
         smc.run_smc(psParams);
         
         ParticlePopulation<State> *currenPop = smc.get_curr_population();
@@ -402,7 +377,7 @@ int main(int argc, char* argv[] )
         double max = -DOUBLE_INF;
         shared_ptr<State> best_particle;
         for (size_t i=0; i<num_particles; i++){
-
+            
             shared_ptr<State> currents = particles->at(i);
             currentDeltas.push_back(currents->getPopulationByIndex(0)->delta);
             currentTs.push_back(currents->getPopulationByIndex(0)->timeOriginSTD);
@@ -415,13 +390,15 @@ int main(int argc, char* argv[] )
             weights.push_back((*normalized_weights)[i]);
             rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
             std::cout << " loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
+            currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
+            
             if ((*normalized_weights)[i] > max) {
                 
                 max = (*normalized_weights)[i]  ;
                 best_particle = currents;
             }
         }
-
+        
         std::cout<< "Posterior distribution" << std::endl;
         std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;
         std::cout<< "T, mean: " << Utils::mean(currentTs) <<" var: " <<Utils::variance(currentTs) <<std::endl;
@@ -451,10 +428,11 @@ int main(int argc, char* argv[] )
     sampleSizes.clear();
     
     pll_msa_destroy(msa);
+    pll_rtree_destroy(initialRootedTree,NULL);
     std::cout << "\nIf you need help type '-?' in the command line of the program\n"<<std::endl;
     
     
-    //test HMC
+    
     
     return 0;
     

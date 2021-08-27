@@ -31,7 +31,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
     //make a  copy of curr
     // to avoid 2 allocations like in the next line
     // std::shared_ptr<State> result(new State(curr));
-    //std::cout << " particle with delta : "<< curr.getPopulationByIndex(0)->delta <<std:: endl;
+    // I used the following
     std::shared_ptr<State> result(make_shared<State>(curr));
     log_w=0;
     double weight = 0.0;
@@ -92,7 +92,9 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                     assert(idxFirstRoot != idxSecondRoot);
                     nodeProposals[i] = result->proposeNewNode( idxFirstRoot,  idxSecondRoot, chosep_pop_idx );
                     
-                    logWeights[i] = result->likelihood_factor(nodeProposals[i]);
+                    logWeights[i] = nodeProposals[i]->ln_likelihood;
+                    
+                    //result->likelihood_factor(nodeProposals[i]);
                 }
                 unsigned int pos;
                 weight = Utils::normalize(logWeights, normWeights);
@@ -102,6 +104,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                 idxFirst = allCoalPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
                 idxSecond = allCoalPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
                 
+                std::cout<< "first " << idxFirst << "second " << idxSecond << " weight " << weight << " norm weight " << &normWeights[pos] << std::endl;
                 
                 idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
                 idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
@@ -111,9 +114,11 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                 int posFirstRoot= result->getNodeIdxById(idxFirstRoot);
                 int posSecondRoot = result->getNodeIdxById(idxSecondRoot);
                 
+           
                 result->remove_roots(posFirstRoot, posSecondRoot);
-                
                 result->addRoot(nodeProposals[pos]);
+                
+              
                 result->increaseNextAvailable();
                 result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
                                
@@ -133,10 +138,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                 
                 assert(idxFirstRoot != idxSecondRoot);
                 
-               
-                
                 std::shared_ptr<PartialTreeNode> node = result->connect(idxFirstRoot, idxSecondRoot, chosep_pop_idx);
-                
                 
                 result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  node->index, node->index_population);
                 
@@ -147,11 +149,8 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                 
             }
             
-        
             log_w += weight;
-            
-            
-            
+        
         }
         else{//next event is an origin
             

@@ -21,6 +21,11 @@ class PartialTreeNode;
 class PartialTreeEdge {
     PLLBufferManager *manager;
 public:
+    double length;
+    double *pmatrix;
+    unsigned int matrix_size;//number of elements in matrix
+    std::shared_ptr<PartialTreeNode> child;
+    //constructors
     
     PartialTreeEdge(PLLBufferManager *manager,
                     std::shared_ptr<PartialTreeNode> child,
@@ -39,11 +44,6 @@ public:
     void freeMatrix();
     ~PartialTreeEdge();
     
-    std::shared_ptr<PartialTreeNode> child;
-    
-    double length;
-    double *pmatrix;
-    unsigned int matrix_size;//number of elements in matrix
 };
 
 class PartialTreeNode {
@@ -92,6 +92,7 @@ public:
     //std::vector<double>& getCLV(){return clv;};
     void buildCLV(int tip_id,int numberStates, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel,  bool normalize);
     void freeVectors();
+    
     // double * getCLVPointer(){return pclv.get();};
     // unsigned int * getScaleBufferPointer(){return pscale_buffer.get();};
     //std::vector<unsigned int>& getScaleBuffer(){return scale_buffer;};
@@ -101,14 +102,17 @@ public:
     double ln_likelihood;
     unsigned int index_population;
     unsigned int index;
+    unsigned int number_nodes_cluster;
+    unsigned int number_leaves_cluster;
     
     unsigned int clv_size;//number of elements in clv and scale_buffer
     
+    double *pclv;
+    unsigned int *pscale_buffer;
+    
+    // std::unique_ptr<unsigned int[]> pscale_buffer;
     // std::unique_ptr<double[]> pclv;
     // std::unique_ptr<double> pclv;
-    double *pclv;
-    // std::unique_ptr<unsigned int[]> pscale_buffer;
-    unsigned int *pscale_buffer;
     //std::vector<double> clv;
     //std::vector<unsigned int> scale_buffer;
     

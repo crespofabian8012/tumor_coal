@@ -74,7 +74,11 @@ double computeLogLikelihood(double *clv, unsigned int *scale_buffer,
 int cb_rfull_traversal(pll_rnode_t * node);
 double meanHeterozygosity(long seq_count, long site_count, pll_msa_t* msa);
 double meanDistance(long seq_count, long site_count, pll_msa_t* msa);
-void computeCoalTimesInsideNode(pll_rnode_t *node,std::string& healthyTipLabel );
+void computeCoalTimesInsideNode(pll_rnode_t *node,std::string& healthyTipLabel, unsigned int &consecutiveIndex );
+void printPostOrderRootedTree(pll_rtree_t *tree,std::string& healthyTipLabel, std::ostream &stream);
+void printChronologicalOrderRootedTree(pll_rtree_t *tree,std::string& healthyTipLabel, std::ostream &stream);
+bool compareByTime (pll_rnode_t* x,pll_rnode_t* y);
+bool isLeaf(pll_rnode_t *node);
 std::vector<double> getOrderedCoalTimesFromRootedTree(pll_rtree_t *rootedTree, std::string& healthyTipLabel);
 
 }

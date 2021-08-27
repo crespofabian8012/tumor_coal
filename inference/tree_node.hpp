@@ -58,6 +58,7 @@ public:
     
     bool         isLeaf;
     int numberOfTipsSubTree;
+    int numberOfNodesSubTree;
     std::vector<int> numberTipsByPopulation;
     TreeNode(int numSites);
     void initNumberTipsVector(int numberClones);

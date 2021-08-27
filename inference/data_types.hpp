@@ -31,6 +31,8 @@
 //#include <string>
 //#include <sstream>
 #include <iostream>
+#include <unordered_map>
+#include <unordered_set>
 
 //#include "definitions.hpp"
 
@@ -339,6 +341,6 @@ typedef struct {
     FilePath *fpLikelihood;
 }Files;
 
-
+typedef std::unordered_map<std::string,size_t> NameIdMap;
 
 #endif /* data_types_h */

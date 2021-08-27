@@ -210,6 +210,7 @@ public:
     void buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel, std::vector<double> &clv, bool normalize)const ;
     
     int initTipCLV(unsigned int tipClvIndex, double * clv)const;
+    
     void showEigenDecomp(unsigned int float_precision) const;
     
     ~Partition()

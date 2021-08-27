@@ -134,6 +134,19 @@ height(height), index(index), clv_size(clv_elements)
     }
     // init(clv_elements);
     ln_likelihood=0.0;
+    number_nodes_cluster = 0;
+    number_leaves_cluster = 0;
+    if (edge_l && edge_r){
+        if(edge_l->child){
+           number_nodes_cluster += edge_l->child->number_nodes_cluster + 1;
+           number_leaves_cluster += edge_l->child->number_leaves_cluster ;
+        }
+        if(edge_r->child){
+                  number_nodes_cluster += edge_r->child->number_nodes_cluster + 1;
+                  number_leaves_cluster += edge_r->child->number_leaves_cluster;
+               }
+    }
+    
 }
 PartialTreeNode::PartialTreeNode(PLLBufferManager *manager,
                                  std::shared_ptr<PartialTreeEdge> edge_l,
@@ -160,6 +173,8 @@ PartialTreeNode::PartialTreeNode(const PartialTreeNode& original){
     index_population =  original.index_population;
     label =  original.label;
     ln_likelihood =  original.ln_likelihood;
+    number_nodes_cluster = original.number_nodes_cluster;
+    number_leaves_cluster = original.number_leaves_cluster;
     
     //pclv(std::make_unique<double[]>(*original.pclv))
     // pclv(std::move(original.pclv));
@@ -179,6 +194,8 @@ PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode& rhs ){
     index_population =  rhs.index_population;
     label =  rhs.label;
     ln_likelihood =  rhs.ln_likelihood;
+    number_nodes_cluster = rhs.number_nodes_cluster;
+    number_leaves_cluster = rhs.number_leaves_cluster;
     
     pclv = rhs.pclv;
     pscale_buffer = rhs.pscale_buffer;
@@ -197,6 +214,8 @@ PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode&& rhs )
     index_population =  rhs.index_population;
     label =  rhs.label;
     ln_likelihood =  rhs.ln_likelihood;
+    number_nodes_cluster = rhs.number_nodes_cluster;
+    number_leaves_cluster = rhs.number_leaves_cluster;
     return *this;
 }
 //PartialTreeNode& PartialTreeNode::operator= (PartialTreeNode& rhs) {
@@ -211,6 +230,8 @@ PartialTreeNode::PartialTreeNode(PartialTreeNode&& rhs){
     index_population =  rhs.index_population;
     label =  rhs.label;
     ln_likelihood =  rhs.ln_likelihood;
+    number_nodes_cluster = rhs.number_nodes_cluster;
+    number_leaves_cluster = rhs.number_leaves_cluster;
     pclv = std::move( rhs.pclv );
     pscale_buffer = std::move( rhs.pscale_buffer );
     

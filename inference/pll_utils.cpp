@@ -7,7 +7,7 @@
 
 #include "pll_utils.hpp"
 
-
+//#include "msa.hpp"
 #include "constants.hpp"
 #include "output_functions.hpp"
 
@@ -885,8 +885,8 @@ std::vector<double> pll_utils::getOrderedCoalTimesFromRootedTree(pll_rtree_t *ro
     std::vector<double> result;
     if (!rootedTree || !(rootedTree->root) || rootedTree->inner_count ==0)
         return result;
-
-    computeCoalTimesInsideNode(rootedTree->root, healthyTipLabel);
+    unsigned int consecutiveIndex = 0;
+    computeCoalTimesInsideNode(rootedTree->root, healthyTipLabel,  consecutiveIndex);
     pll_rnode_t *node;
     for( size_t i=0;i < (rootedTree->tip_count + rootedTree->inner_count); i ++){
         node = rootedTree->nodes[i];
@@ -899,37 +899,148 @@ std::vector<double> pll_utils::getOrderedCoalTimesFromRootedTree(pll_rtree_t *ro
     std::sort (result.begin(), result.end());
     return result;
 }
-void pll_utils::computeCoalTimesInsideNode(pll_rnode_t *node,std::string& healthyTipLabel ){
+void pll_utils::computeCoalTimesInsideNode(pll_rnode_t *node,std::string& healthyTipLabel, unsigned int &consecutiveIndex ){
     
     if (node==NULL)
         return;
     if (node->left == NULL && node->right == NULL ){
+         
         
-        if (std::string(node->label).compare(healthyTipLabel)!=0){
-                TreeNode * data = new TreeNode(0);
-                data->time = 0.0;
-                node->data = data;
-        }
+       // if (std::string(node->label).compare(healthyTipLabel)!=0){
+            TreeNode * data = new TreeNode(0);
+            data->time = 0.0;
+            data->numberOfTipsSubTree =0;
+            data->numberOfNodesSubTree =0;
+            data->index = consecutiveIndex;
+            consecutiveIndex++;
+            node->data = data;
+            
+        //}
     }
     else{
-//        if (node->right->label!=NULL && std::string(node->left->label).compare(healthyTipLabel)==0){
-//
-            computeCoalTimesInsideNode(node->left,  healthyTipLabel );
-          
-//          }
-//        if (std::string(node->right->label).compare(healthyTipLabel)==0){
-                computeCoalTimesInsideNode(node->right,  healthyTipLabel );
-                   
-//            }
+        computeCoalTimesInsideNode(node->left,  healthyTipLabel, consecutiveIndex );
+        computeCoalTimesInsideNode(node->right,  healthyTipLabel, consecutiveIndex );
+        
         TreeNode * data = new TreeNode(0);
         TreeNode *leftData =(TreeNode*)(node->left->data);
         TreeNode *rightData =(TreeNode*)(node->right->data);
-        if (leftData && rightData)
-           data->time = std::max(leftData->time +node->left->length, rightData->time +node->right->length );
-        else if(leftData)
+        if (leftData && rightData){
+            data->time = std::max(leftData->time +node->left->length, rightData->time +node->right->length );
+            data->numberOfTipsSubTree = leftData-> numberOfTipsSubTree+ rightData-> numberOfTipsSubTree ;
+            data->numberOfNodesSubTree =leftData->numberOfNodesSubTree +rightData->numberOfNodesSubTree+2;
+            
+            data->index = consecutiveIndex;
+            consecutiveIndex++;
+        }
+        else if(leftData){
             data->time = leftData->time +node->left->length;
-        else
+            data->numberOfTipsSubTree = leftData-> numberOfTipsSubTree ;
+            data->numberOfNodesSubTree =leftData->numberOfNodesSubTree +1;
+            data->index = consecutiveIndex;
+            consecutiveIndex++;
+        }
+        else{
             data->time = rightData->time +node->right->length;
+            data->numberOfTipsSubTree = rightData-> numberOfTipsSubTree ;
+            data->numberOfNodesSubTree = rightData->numberOfNodesSubTree+1;
+            data->index = consecutiveIndex;
+            consecutiveIndex++;
+        }
         node->data = data;
-   }
+    }
 }
+void pll_utils::printPostOrderRootedTree(pll_rtree_t *tree,std::string& healthyTipLabel, std::ostream &stream){
+    
+    unsigned int tipCount =tree->tip_count;
+    pll_rnode_t ** outbuffer = (pll_rnode_t **)malloc((2*tipCount-1) * sizeof(pll_rnode_t *));
+    unsigned int traversalSize;
+    if  (!pll_rtree_traverse(tree->root,
+                             PLL_TREE_TRAVERSE_POSTORDER,
+                             pll_utils::cb_rfull_traversal,
+                             outbuffer, // pll_rnode_t ** outbuffer,
+                             &traversalSize//unsigned int * trav_size
+                             ))
+    {
+        std::cout<< "Error while postorder traverse of the tree" << std::endl;
+    }
+    
+    
+    pll_rnode_t *node;
+    TreeNode *data ;
+    
+    for (size_t i = 0; i < traversalSize; ++i)
+    {
+        node = outbuffer[i];
+        if (node->left==NULL && node->right==NULL ){
+            if (std::string(node->label).compare(healthyTipLabel)!=0){
+               data =(TreeNode*)(node->data);
+               stream << node->label <<"("<< data->numberOfNodesSubTree<< ")";
+               if (i<(traversalSize-1))
+                 stream <<", ";
+            }
+            
+        }
+        else{
+            data =(TreeNode*)(node->data);
+            stream << node->clv_index <<"("<< data->numberOfNodesSubTree<< ")";
+            if (i<(traversalSize-1))
+                        stream <<", ";
+            
+        }
+        
+    }
+    
+    free(outbuffer);
+}
+bool pll_utils::compareByTime (pll_rnode_t* x,pll_rnode_t* y) {
+    TreeNode *xdata =(TreeNode*)(x->data)  ;
+    TreeNode *ydata =(TreeNode*)(y->data)  ;
+    return (xdata->time < ydata->time);
+    
+}
+void pll_utils::printChronologicalOrderRootedTree(pll_rtree_t *tree,std::string& healthyTipLabel, std::ostream &stream){
+    
+    unsigned int tipCount =tree->tip_count;
+    pll_rnode_t ** outbuffer = (pll_rnode_t **)malloc((2*tipCount-1) * sizeof(pll_rnode_t *));
+    unsigned int traversalSize;
+ 
+     if  (!pll_rtree_traverse(tree->root,
+                              PLL_TREE_TRAVERSE_POSTORDER,
+                              pll_utils::cb_rfull_traversal,
+                              outbuffer, // pll_rnode_t ** outbuffer,
+                              &traversalSize//unsigned int * trav_size
+                              ))
+     {
+         std::cout<< "Error while postorder traverse of the tree" << std::endl;
+     }
+    
+    std::sort(outbuffer, outbuffer + traversalSize, compareByTime);
+    pll_rnode_t *node;
+    TreeNode *data ;
+    for (size_t i = 0; i < traversalSize; ++i)
+    {
+        node = outbuffer[i];
+        if (node->left!=NULL || node->right!=NULL ){
+            data =(TreeNode*)(node->data);
+            std::string leftLabel= "";
+            std::string rightLabel = "";
+            if((node->left->label != NULL) && (node->left->label[0] != '\0'))
+                   leftLabel = node->left->label;
+            if((node->right->label != NULL) && (node->right->label[0] != '\0'))
+                   rightLabel=  node->right->label;
+            stream << "left: "<< leftLabel << " "<< node->left->clv_index << " right: " << rightLabel << " "<< node->right->clv_index << " parent:" << node->clv_index <<"("<< data->numberOfNodesSubTree<< ")" << " time: " << data->time;
+            if (i<(traversalSize-1))
+                        stream <<", \n";
+            
+        }
+        
+    }
+    
+    free(outbuffer);
+}
+bool pll_utils::isLeaf(pll_rnode_t *node){
+    assert(node);
+    return(node->left==NULL && node->right==NULL);
+    
+}
+

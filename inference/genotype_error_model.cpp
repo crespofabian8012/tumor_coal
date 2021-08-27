@@ -128,7 +128,7 @@ void GenotypeErrorModel::computeStateErrorProbPT20(pll_state_t state,
        for (size_t k = 0; k < states; ++k)
          clvp[k] = 0.;
 
-       while ((ctz = PLL_STATE_CTZ(tstate)) < states)
+       while (tstate && (ctz = PLL_STATE_CTZ(tstate)) < states)
        {
          state_id = state_id ?  state_id + ctz + 1 : ctz;
          tstate >>= ctz + 1;
@@ -407,49 +407,3 @@ void GenotypeErrorModel::computeStateErrorProbPT17(pll_state_t state,
 
 }
 
-//void GenotypeErrorModel::computeStateErrorProbPT17(pll_state_t state,
-//                           std::vector<double>::iterator &clvp, long double seqErrorRateP,long double ADOErrorRateP,int statesP ) const{
-//    
-//    unsigned int state_id = PLL_STATE_CTZ(state);
-//    static const double one_3 = 1. / 3.;
-//    static const double one_6 = 1. / 6.;
-//    pll_state_t undefinedStateP = ((pll_state_t) 1 << states) - 1 ;
-//
-//    double sum_lh = 0.;
-//
-//    for (size_t k = 0; k < statesP; ++k)
-//    {
-//      if (state == undefinedStateP)
-//        clvp[k] = 1.;
-//      else
-//      {
-//        if (k == state_id)
-//        {
-//          if (HOMO(state_id))
-//            clvp[k] = 1. - seqErrorRateP + 0.5 * seqErrorRateP * ADOErrorRateP;
-//          else
-//            clvp[k] = 1. - seqErrorRateP - ADOErrorRateP + seqErrorRateP * ADOErrorRateP;
-//        }
-//        else if (mut_dist[state_id][k] == 1)
-//        {
-//          if (HOMO(k))
-//            clvp[k] = (1. - ADOErrorRateP) * seqErrorRateP * one_3;
-//          else
-//          {
-//            if (HOMO(state_id))
-//              clvp[k] = 0.5 * ADOErrorRateP + one_6 * seqErrorRateP -
-//                  one_3 * seqErrorRateP * ADOErrorRateP;
-//            else
-//              clvp[k] = (1. - ADOErrorRateP) * seqErrorRateP * one_6;
-//          }
-//        }
-//        else if (HOMO(state_id))
-//          clvp[k] = one_6 * seqErrorRateP * ADOErrorRateP;
-//        else
-//          clvp[k] = 0.;
-//
-//        sum_lh += clvp[k];
-//      }
-//    }
-//    
-//}

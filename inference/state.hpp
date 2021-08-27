@@ -17,64 +17,36 @@
 
 #include  <vector>
 extern "C"
-{
+    {
 #include "libpll/pll.h"
-}
+    }
 class PosetSMCParams;
 class State{
-   
+    
     long double heightScaledByTheta;
     long double heightModelTime;
     //std::shared_ptr<PopulationSet> populationSet;
     PopulationSet * populationSet;
     unsigned int nextAvailable;
     PLLBufferManager *const pll_buffer_manager;
-
     const Partition *partition;
     unsigned int num_sites;
     std::vector<std::shared_ptr<PartialTreeNode>> roots;
-   
+    std::vector<std::shared_ptr<PartialTreeNode>> postorder;
     std::vector<int> idsNextCoalEvents;
     GenotypeErrorModel *gtError;
     long double theta;
     double initialLogWeight;
 public:
-
+    //constructors
     State( PosetSMCParams &params, gsl_rng *random);
     
     State(const State &original);
-    std::vector<pll_rnode_t *> getForest() const;
-
-    void initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions);
-    std::shared_ptr<PartialTreeNode> getRootAt(int i) const {return roots[i];};
- 
     
     State &operator=(const State &original);
     
-    std::shared_ptr<PartialTreeNode> connect(int i, int j,  size_t index_pop_new_node);
-    
-    std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
-    
-    double likelihood_factor(std::shared_ptr<PartialTreeNode> root)const;
-    
-    void remove_roots(int i, int j);
-    
-    std::shared_ptr<PartialTreeNode> proposeNewNode(int firstId, int secondId, size_t index_pop_new_node );
-    
-    int root_count() const{return roots.size();};
-    
-    double compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
-                                 const Partition *p);
-                              
-    double compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
-                            const Partition *p);
-    double compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
-                                        const pll_partition_t *p);
-
-    double compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
-                                 const pll_partition_t *p);
-    
-    void updateIndexesActiveGametes(int idxFirstId, int idxSecondId, size_t idxPopFirst,size_t idxPopSecond, size_t newNodeId, size_t idxPopNewNode);
+    //getters
+    std::vector<pll_rnode_t *> getForest() const;
     
     PopulationSet& getPopulationSet()const  {return *populationSet;};
     
@@ -86,8 +58,50 @@ public:
     long double getHeightModelTime()const{return heightModelTime;}
     long double getTheta()const{return theta;}
     
+    std::shared_ptr<PartialTreeNode> getRootAt(int i) const {return roots[i];};
+    
+    std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
+    
+    double getInitialLogWeight() const {return initialLogWeight;}
+    
+    int getNodeIdxById(size_t id);
+    int getIdNextCoalEventForPopulation(int i);
+    GenotypeErrorModel &getErrorModel() const{return *gtError;}
+    unsigned int getNextAvailable()const{return nextAvailable;}
+    
+    //methods
+    void initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions);
+    
+    std::shared_ptr<PartialTreeNode> connect(int i, int j,  size_t index_pop_new_node);
+    
+    double likelihood_factor(std::shared_ptr<PartialTreeNode> root)const;
+    
+    void remove_roots(int i, int j);
+    
+    std::shared_ptr<PartialTreeNode> proposeNewNode(int firstId, int secondId, size_t index_pop_new_node );
+    
+    int root_count() const{return roots.size();};
+    
+    double compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
+                                 const Partition *p);
+    
+    double compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
+                                 const Partition *p);
+    double compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
+                                 const pll_partition_t *p);
+    
+    double compute_ln_likelihood(double *pclv, unsigned int* pscale_buffer,
+                                 const pll_partition_t *p);
+    
+    void updateIndexesActiveGametes(int idxFirstId, int idxSecondId, size_t idxPopFirst,size_t idxPopSecond, size_t newNodeId, size_t idxPopNewNode);
+    
+    
     void printTree(std::shared_ptr<PartialTreeNode> root, std::ostream &stream);
+    
+    void printTreeChronologicalOrder(std::shared_ptr<PartialTreeNode> root, std::ostream &stream);
+    
     void initIdsNextCoalEvents(int numClones);
+    
     void addRoot(std::shared_ptr<PartialTreeNode> node);
     
     void setHeightScaledByTheta(long double  newHeight)
@@ -97,15 +111,13 @@ public:
         heightModelTime = heightScaledByTheta/theta;
         
     }
-    unsigned int getNextAvailable()const{return nextAvailable;}
+    
     void increaseNextAvailable(){nextAvailable++;}
     
-    GenotypeErrorModel &getErrorModel() const{return *gtError;}
-    double getInitialLogWeight() const {return initialLogWeight;}
-    
-    int getNodeIdxById(size_t id);
-    int getIdNextCoalEventForPopulation(int i);
     void moveNextIdEventForPopulation(int i);
+    
+    void addNodeToPostorderByIndex(int idx);
+    
     
     ~State();
 };

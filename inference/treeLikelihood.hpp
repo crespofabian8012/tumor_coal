@@ -31,21 +31,21 @@ public:
     TreeLikelihood(Partition *reference_partition, pll_rtree_t * rooted_tree, pll_msa_t * msa, GenotypeErrorModel *gtErrorModel);
     
     TreeLikelihood(int numberTips,
-       int clvBuffers,
-       int numberStates,
-       int numberSites,
-       int numberRateMatrices,
-       int probMatrices,
-       int numberRateCats,
-       int numberScaleBuffers,
-       int statesPadded,
-       bool sse,
-       bool avx,
-       bool  avx2,
-       bool avx512,
-       bool  asc,
-       bool tipPatternCompression, pll_rtree_t * rooted_tree, pll_msa_t * msa, GenotypeErrorModel *gtErrorModel);
-   
+                   int clvBuffers,
+                   int numberStates,
+                   int numberSites,
+                   int numberRateMatrices,
+                   int probMatrices,
+                   int numberRateCats,
+                   int numberScaleBuffers,
+                   int statesPadded,
+                   bool sse,
+                   bool avx,
+                   bool  avx2,
+                   bool avx512,
+                   bool  asc,
+                   bool tipPatternCompression, pll_rtree_t * rooted_tree, pll_msa_t * msa, GenotypeErrorModel *gtErrorModel);
+    
     double computeRootLogLikelihood();
     int setPartitionTips(bool doUseGenotypes);
     int initOperations();
@@ -57,15 +57,15 @@ public:
     static void fillTipClv(unsigned int tip_id, std::vector<double> &clv, pll_msa_t *msaP, GenotypeErrorModel &gtError, unsigned int number_statesP);
     
     ~TreeLikelihood()
-       {
-           //pll_msa_destroy(msa);
-           delete reference_partition;
-          // pll_rtree_destroy (rooted_tree, NULL);
-           
-           free( branch_lengths);
-           free( matrix_indices);
-           free(operations);
-           //destroyHashTable();
-       }
+    {
+        //pll_msa_destroy(msa);
+        delete reference_partition;
+        // pll_rtree_destroy (rooted_tree, NULL);
+        
+        free( branch_lengths);
+        free( matrix_indices);
+        free(operations);
+        //destroyHashTable();
+    }
 };
 #endif /* treeLikelihood_hpp */

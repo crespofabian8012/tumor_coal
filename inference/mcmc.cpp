@@ -60,6 +60,11 @@ void MCMC::runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &p
     }
     
 }
+ MCMC::~MCMC(){
+    if (chainManager)
+        delete chainManager;
+    
+}
 //for (size_t currentIteration = 0; currentIteration < mcmcOptions.Niterations; ++currentIteration)
 //         {
 //             chainManager->stepAllChainsNoSave( currentIteration,programOptions, mcmcOptions, randomGenerators  );

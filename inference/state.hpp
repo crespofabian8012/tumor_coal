@@ -34,6 +34,7 @@ class State{
     std::vector<std::shared_ptr<PartialTreeNode>> roots;
     std::vector<std::shared_ptr<PartialTreeNode>> postorder;
     std::vector<int> idsNextCoalEvents;
+    std::vector<int> idsNextInmigrationEvents;
     GenotypeErrorModel *gtError;
     long double theta;
     double initialLogWeight;
@@ -66,6 +67,7 @@ public:
     
     int getNodeIdxById(size_t id);
     int getIdNextCoalEventForPopulation(int i);
+    int getIdNextInmigrationEventForPopulation(int i);
     GenotypeErrorModel &getErrorModel() const{return *gtError;}
     unsigned int getNextAvailable()const{return nextAvailable;}
     
@@ -101,6 +103,7 @@ public:
     void printTreeChronologicalOrder(std::shared_ptr<PartialTreeNode> root, std::ostream &stream);
     
     void initIdsNextCoalEvents(int numClones);
+    void initIdsInmigrationEvents(int numClones);
     
     void addRoot(std::shared_ptr<PartialTreeNode> node);
     
@@ -114,9 +117,17 @@ public:
     
     void increaseNextAvailable(){nextAvailable++;}
     
-    void moveNextIdEventForPopulation(int i);
+
+    void moveNextIdEventForPopulation(int i, bool isCoal);
     
     void addNodeToPostorderByIndex(int idx);
+    
+    void resetNumActiveGametesCounter();
+    
+    std::string getNewickRecursive(std::shared_ptr<PartialTreeNode> root, std::string &newick);
+    std::string getNewick(std::shared_ptr<PartialTreeNode> root);
+    
+    
     
     
     ~State();

@@ -8,30 +8,37 @@
 #include "tree.hpp"
 #include "parsers.hpp"
 #include <iterator>
-RootedTree::RootedTree(const std::string &str, bool isFile ):pll_rooted_tree(Parsers::readRooted(str.c_str(),isFile)){
-    
+RootedTree::RootedTree(const std::string &str, bool isFile ):pll_rooted_tree(Parsers::readRooted(str,isFile)){
     
     if (!pll_rooted_tree){
         std::cout << "Error creating rooted tree from newick" << std:: endl;
     }
     num_tips = pll_rooted_tree->tip_count;
-        
     // setMissingBranchLengths();
-    
+}
+RootedTree::RootedTree (const RootedTree& other) : num_tips(other.num_tips),
+    pll_rooted_tree(pll_utils::cloneRTree(other.getPtr())), partition_brlens(other.partition_brlens)
+{
+}
+
+RootedTree::RootedTree (RootedTree&& other) :num_tips(other.num_tips), pll_rooted_tree(other.pll_rooted_tree.release())
+{
+  other.num_tips = 0;
+  swap(pll_rtree_tips, other.pll_rtree_tips);
+  swap(partition_brlens, other.partition_brlens);
 }
 pll_utree_t *RootedTree::getUnrootedPtr()const{
-    
-    pll_rtree_t * rtree_copy = pll_rtree_parse_newick_string( pll_rtree_export_newick( pll_rooted_tree->root, NULL));
-    
-    return(pll_rtree_unroot(rtree_copy));
-
-    
+    //unsigned int tip_count = 0;
+    pll_rtree_t * rtree_copy = pll_rtree_parse_newick_string(pll_rtree_export_newick( pll_rooted_tree->root, NULL));
+    pll_utree_t *utree =  pll_rtree_unroot(rtree_copy);
+    pll_unode_t * vroot = utree->nodes[utree->tip_count+utree->inner_count-1];
+    pll_utree_reset_template_indices(vroot, utree->tip_count);
+    return(utree);
 };
 //this will only look outgroup_label in the left and right child nodes of root!
 // is not efficient method
 RootedTree& RootedTree::getSubtreeWithoutOutgroup(std::string &outgroup_label) const{
     
-   
     std::unordered_set<std::string> leaves_labels = getLabels(true);
     RootedTree *subtree = nullptr;
     if (leaves_labels.find(outgroup_label) != leaves_labels.end()){
@@ -49,22 +56,16 @@ RootedTree& RootedTree::getSubtreeWithoutOutgroup(std::string &outgroup_label) c
         else if (pll_utils::isLeaf(right) && std::string(right->label).compare(outgroup_label)==0){
             
             pll_rtree_t* left_tree_copy = pll_rtree_parse_newick_string( pll_rtree_export_newick( left, NULL));
-                       
             std::unique_ptr<pll_rtree_t> u_ptr= std::make_unique<pll_rtree_t>(*left_tree_copy);
-            
             subtree = new RootedTree(u_ptr);
-                       
             return(*subtree);
         }
         else{
-            
             std::cout << "Outgroup is not direct child of root!";
         }
     }
     else{
         std::cout << "Ourgroup label not found!";
-      
-        
     }
     return(*subtree);
 }
@@ -126,7 +127,8 @@ std::vector<pll_rnode_t*> RootedTree::getNodes() const
 void RootedTree::fixMissingBranchLengths(double new_brlen)
 {
   pll_utree_t * utree= unRootedTreeCopy();
-  pllmod_utree_set_length_recursive(utree, new_brlen, 1);
+  if (utree)
+    pllmod_utree_set_length_recursive(utree, new_brlen, 1);
 }
 pll_utree_t * RootedTree::unRootedTreeCopy() const
 {
@@ -134,7 +136,15 @@ pll_utree_t * RootedTree::unRootedTreeCopy() const
   return utree ? pll_utree_clone(utree) : nullptr;
 }
 
+//pll_rtree_t * RootedTree::rootedTreeCopy() const
+//{
+//
+//   pll_utree_t * utree= unRootedTreeCopy();
+//    if (utree){
+//
+//        pllmod_utree_root_inplace(utree);
+//    }
+//
+//}
 RootedTree::~RootedTree(){
-    
-    
 }

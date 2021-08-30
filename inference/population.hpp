@@ -180,6 +180,9 @@ public:
     long double proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K);
     long double logLikelihoodNextCoalescent(long double timeNextEvent,long double currentTime, int numActiveLineages,  double K);
     
+    void sampleEventTimes(gsl_rng *random, int K);
+    double  nextCoalEventTime(int idxNextCoal, int indexNextMigration,  double currentTime, bool& isThereInmigration, Population* inmigrantPop );
+    
 private:
     static bool isNotPositive(long double d);
 };
@@ -226,7 +229,8 @@ public:
                                                      int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames, std::vector<int> &sampleSizes);
     std::vector<Population *>& getPopulations();
     void sortPopulationsByTorigin();
-    
+    void sampleEventTimes(gsl_rng * random, int K, int noisy);
+    void resetNumActiveGametesCounter();
     
 };
 class StructuredCoalescentTree{

@@ -667,7 +667,9 @@ void pll_utils::deallocRDataCostum(pll_rnode_t * node, void (*cb_destroy)(void *
 }
 pll_rnode_t * pll_utils::cloneRNode(const pll_rnode_t * node)
 {
+   
     if (node!=NULL){
+       
         pll_rnode_t * new_node = (pll_rnode_t *)malloc(sizeof(pll_rnode_t));
         memcpy(new_node, node, sizeof(pll_rnode_t));
         
@@ -709,13 +711,17 @@ pll_rtree_t * pll_utils::cloneRTree(const pll_rtree_t * tree){
         return NULL;
     }
     else{
-        pll_rtree_t * new_tree = (pll_rtree_t *)malloc(sizeof(pll_rtree_t));
-        
-        if (tree->root){
-            new_tree->root = cloneRNode(tree->root);
-        }
+        pll_rtree_t * new_tree =  pll_rtree_parse_newick_string(pll_rtree_export_newick(tree->root, NULL));
+//        pll_rtree_t * new_tree = (pll_rtree_t *)malloc(sizeof(pll_rtree_t));
+//
+//        if (tree->root){
+//            new_tree->root = cloneRNode(tree->root);
+//        }
+//        pll_rtree_reset_template_indices(tree->root, tip_cnt);
+//
+//        tree = pll_rtree_wraptree(tree->root,tip_cnt);
         return new_tree;
-    }
+      }
 }
 char * pll_utils::xstrdup(const char * s)
 {
@@ -1044,3 +1050,37 @@ bool pll_utils::isLeaf(pll_rnode_t *node){
     
 }
 
+//pll_rtree_t * pll_utils::pll_rtree_parse_newick_string2(const char * s)
+//{
+//  int rc;
+//  struct pll_rnode_s * root;
+//  pll_rtree_t * tree = NULL;
+//
+//  /* reset tip count */
+//  tip_cnt = 0;
+//
+//  if (!(root = (pll_rnode_t *)calloc(1, sizeof(pll_rnode_t))))
+//  {
+//    pll_errno = PLL_ERROR_MEM_ALLOC;
+//    snprintf(pll_errmsg, 200, "Unable to allocate enough memory.");
+//    return PLL_FAILURE;
+//  }
+//
+//  struct pll_rtree_buffer_state * buffer = pll_rtree__scan_string(s);
+////  rc = pll_rtree_parse(root);
+////  pll_rtree__delete_buffer(buffer);
+////
+////  pll_rtree_lex_destroy();
+////
+////  if (!rc)
+////  {
+////    /* initialize clv and scaler indices */
+////    pll_rtree_reset_template_indices(root, tip_cnt);
+////
+////    tree = pll_rtree_wraptree(root,tip_cnt);
+////  }
+////  else
+////    free(root);
+//
+//  return tree;
+//}

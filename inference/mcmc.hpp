@@ -44,6 +44,7 @@ public:
     void runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths);
     
     
+    ~MCMC();
 };
 
 #endif /* mcmc_hpp */

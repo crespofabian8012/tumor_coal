@@ -62,10 +62,10 @@ public:
     RootedTree& operator=(RootedTree&& other);
     
     size_t numTips() const { return num_tips; };
-    size_t numInner() const { return num_tips - 2; };
+    size_t numInner() const { return num_tips - 1; };
     size_t numNodes() const { return numTips() + numInner(); };
     size_t numSubnodes() const { return numBranches() * 2; };
-    size_t numBranches() const { return num_tips ? num_tips + num_tips - 3 : 0; };
+    size_t numBranches() const { return num_tips ? num_tips + num_tips - 2 : 0; };
     size_t numSplits() const { return numBranches() - num_tips; };
     
     pll_rtree_t *getPtr() {return pll_rooted_tree.get();}
@@ -84,7 +84,7 @@ public:
     pll_utree_t *unRootedTreeCopy() const;
     
     void fixMissingBranchLengths(double new_brlen);
-    ~RootedTree();
+    virtual ~RootedTree();
     
     friend std::ostream& operator<<(std::ostream& os, const RootedTree &tree)
     {

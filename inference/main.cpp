@@ -45,6 +45,7 @@
 #include "mcmc.hpp"
 #include "msa.hpp"
 #include "tree.hpp"
+#include "RF_distance_calculator.hpp"
 
 #include <gsl/gsl_randist.h>
 #include <boost/program_options.hpp>
@@ -196,7 +197,12 @@ int main(int argc, char* argv[] )
     std::vector<boost::mt19937 *> randomGeneratorsBoost = Random::allocateListRandomNumbersGeneratorsBoost(mcmcOptions.numChains);
     
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
-    RootedTree rootedTree(*initialRootedTree, true);
+
+    //pll_rnode_t * healtyTip = initialRootedTree->root->right;
+    char * newickWithoutHealthy = pll_rtree_export_newick(initialRootedTree->root->left, NULL);
+    std::cout << " true tree " << newickWithoutHealthy<< std::endl;
+    //RootedTree rootedTree(*initialRootedTree, true);
+    RootedTree rootedTree(newickWithoutHealthy, false);
     
     programOptions.seqErrorRate = 0.01;
     programOptions.dropoutRate =0.2;
@@ -324,6 +330,7 @@ int main(int argc, char* argv[] )
                                 {1.0},
                                 coalTimesModelTimePerPopulation);
         psParams.doPriorPost= true;
+        psParams.doFixedEventimes= false;
         
         size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
         PosetSMC posetSMC(programOptions.numClones,  num_iter);
@@ -376,6 +383,8 @@ int main(int argc, char* argv[] )
         std::vector<double> *normalized_weights = currenPop->get_normalized_weights();
         double max = -DOUBLE_INF;
         shared_ptr<State> best_particle;
+        
+        std::vector<RootedTree> lastPopulationTrees;
         for (size_t i=0; i<num_particles; i++){
             
             shared_ptr<State> currents = particles->at(i);
@@ -392,14 +401,19 @@ int main(int argc, char* argv[] )
             weights.push_back((*normalized_weights)[i]);
             rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
             std::cout << " loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-            currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
+            //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
             std::cout<<std::endl;
             if ((*normalized_weights)[i] > max) {
                 
                 max = (*normalized_weights)[i]  ;
                 best_particle = currents;
             }
+            std::string newick = currents->getNewick(currents->getRootAt(0));
+            lastPopulationTrees.emplace_back(RootedTree(newick, false));
         }
+       
+        std::unique_ptr<RFDistanceCalculator> rfCalculator;
+        rfCalculator.reset(new RFDistanceCalculator(lastPopulationTrees, false));
         
         std::cout<< "Posterior distribution" << std::endl;
         std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;
@@ -409,10 +423,15 @@ int main(int argc, char* argv[] )
         std::cout<< "ADOError, mean: " << Utils::mean(currentADOError) <<" var: " <<Utils::variance(currentADOError) <<std::endl;
         std::cout<< "Normalized weight " << Utils::mean(weights) <<" var: " <<Utils::variance(weights) <<std::endl;
         std::cout<< "Root log liks " << Utils::mean(rootLogLiks) <<" var: " <<Utils::variance(rootLogLiks) <<std::endl;
+        double avgRF = rfCalculator->avgRF();
+        size_t numUniqueTrees = rfCalculator->numUniqueTrees();
+      
+        std::cout << "Avg RF " << avgRF  << endl;
+        std::cout << "Number unique topologies " << numUniqueTrees  << endl;
         
         double log_marginal_lik = smc.get_log_marginal_likelihood();
-        cout << "Estimate log marginal " << log_marginal  << endl;
-        cout << "Estimate log P(y)= " << log_marginal_lik  << endl;
+        std::cout << "Estimate log marginal " << log_marginal  << endl;
+        std::cout << "Estimate log P(y)= " << log_marginal_lik  << endl;
         
         assert(best_particle->getRoots().size() == 1);
         best_particle->printTree(best_particle->getRoots()[0], std::cerr);

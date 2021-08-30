@@ -86,61 +86,63 @@ double PosetSMCParams::getPopulationEvent(int idx_population, int idx_event){
 }
 void PosetSMCParams::buildListEventTimesPerPopulation(){
     
-    //        long double waitingTime, timeNextEvent;
- 
-           //        bool isCoalescentEvent=false;
-           //        double currentTime=0.0;
-           //        double currentTimeKingman=0.0;
-    //for(size_t i=0; i <  result->getNumberPopulations(); i++){
-               
-     //          pop= result->getPopulationByIndex( i);
-    //            if (pop->numActiveGametes >1){
-    //
-    //                currentTime = result->getHeightModelTime() ;
-    //                currentTimeKingman = Population::FmodelTstandard (currentTime , pop->timeOriginSTD, pop->delta,   params.getProgramOptions().K);//this is current time in Kingman coalescent
-    //
-    //                waitingTime= pop->proposeTimeNextCoalEvent(random, pop->numActiveGametes, params.getProgramOptions().K);
-    //
-    //                currentTimeKingman = currentTimeKingman + waitingTime;
-    //
-    //                timeNextEvent =   Population::GstandardTmodel(currentTimeKingman, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);;
-    //                isCoalescentEvent=true;
-    //
-    //            }
-    //            else{//last event
-    //
-    //                if (result->getNumberPopulations()==1 || pop == oldestPop){
-    //                    timeNextEvent = pop->timeOriginSTD;
-    //                }
-    //                else{
-    //
-    //                    timeNextEvent= pop->timeOriginSTD * pop->x / oldestPop->x;
-    //                }
-    //                isCoalescentEvent=false;
-    //            }
+ //   long double waitingTime, timeNextEvent;
     
-    
-           // long double logLikNextCoal = 0.0;
-           
-           // logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeightModelTime(), chosenPop->numActiveGametes, params.getProgramOptions().K);
-      //log_w = log_w +logLikNextCoal;
-    // long double logLikNoCoal;
-              //long double logDensityTorigin;
-              //do we  need to add loglik of no coal events in  other populations?
-              
-              //            for(size_t i=0; i <  result->getNumberPopulations(); i++){
-              //                pop= result->getPopulationByIndex( i);
-              //                // do we need to include this in the node->ln_likelihood?
-              //                //logDensityTorigin = pop->LogDensityTime(pop->timeOriginSTD);
-              //
-              //                //node->ln_likelihood = node->ln_likelihood +logDensityTorigin;
-              //
-              //                if (pop!=chosenPop){
-              //                    logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeightModelTime(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
-              //
-              //                    log_w = log_w +logLikNoCoal;
-              //                }
-              //            }
-              
-    
-}
+//    std::vector<std::vector<double>> coalTimesModelTimePerPopulation(numberClones );
+//    bool isCoalescentEvent=false;
+//    double currentTime=0.0;
+//    double currentTimeKingman=0.0;
+//    Population *pop;
+//    for(size_t i=0; i <  numberClones; i++){
+//
+//        pop= result->getPopulationByIndex( i);
+//        if (pop->numActiveGametes >1){
+//
+//            currentTime = result->getHeightModelTime() ;
+//            currentTimeKingman = Population::FmodelTstandard (currentTime , pop->timeOriginSTD, pop->delta,   params.getProgramOptions().K);//this is current time in Kingman coalescent
+//
+//            waitingTime= pop->proposeTimeNextCoalEvent(random, pop->numActiveGametes, params.getProgramOptions().K);
+//
+//            currentTimeKingman = currentTimeKingman + waitingTime;
+//
+//            timeNextEvent =   Population::GstandardTmodel(currentTimeKingman, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);;
+//            isCoalescentEvent=true;
+//
+//        }
+//        else{//last event
+//
+//            if (result->getNumberPopulations()==1 || pop == oldestPop){
+//                timeNextEvent = pop->timeOriginSTD;
+//            }
+//            else{
+//
+//                timeNextEvent= pop->timeOriginSTD * pop->x / oldestPop->x;
+//            }
+//            isCoalescentEvent=false;
+//        }
+//
+//
+//        long double logLikNextCoal = 0.0;
+//
+//        logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeightModelTime(), chosenPop->numActiveGametes, params.getProgramOptions().K);
+//        log_w = log_w +logLikNextCoal;
+//        long double logLikNoCoal;
+//        long double logDensityTorigin;
+//        //do we  need to add loglik of no coal events in  other populations?
+//
+//        for(size_t i=0; i <  result->getNumberPopulations(); i++){
+//            pop= result->getPopulationByIndex( i);
+//            // do we need to include this in the node->ln_likelihood?
+//            //logDensityTorigin = pop->LogDensityTime(pop->timeOriginSTD);
+//
+//            //node->ln_likelihood = node->ln_likelihood +logDensityTorigin;
+//
+//            if (pop!=chosenPop){
+//                logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(result->getHeightModelTime(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
+//
+//                log_w = log_w +logLikNoCoal;
+//            }
+//        }
+//
+//
+    }

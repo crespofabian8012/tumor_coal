@@ -13,10 +13,11 @@ using namespace std;
 pll_rtree_t *Parsers::readRooted(const std::string &newick, bool isFile)
 {
   pll_rtree_t* tree;
+ 
   if (isFile)
-     tree = pll_rtree_parse_newick(newick.c_str());
+     tree = pll_rtree_parse_newick(&newick[0]);
   else {
-     tree =  pll_rtree_parse_newick_string(newick.c_str());
+     tree =  pll_rtree_parse_newick_string(&newick[0]);
       
   }
   if (!tree) {

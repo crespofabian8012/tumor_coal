@@ -16,7 +16,7 @@ extern "C"
 PartialTreeEdge::PartialTreeEdge(PLLBufferManager *manager,
                                  std::shared_ptr<PartialTreeNode> child,
                                  double length, unsigned int pmatrix_elements, size_t alignment)
-: manager(manager), child(child), length(length), matrix_size(pmatrix_elements) {
+: manager(manager),  length(length),  matrix_size(pmatrix_elements), child(child) {
     if (manager->pmatrix_buffer.empty()) {
         pmatrix = (double *)std::malloc(pmatrix_elements*sizeof(double));
         //pmatrix =  (double*)pll_aligned_alloc(pmatrix_size, PLL_ALIGNMENT_SSE);
@@ -32,7 +32,7 @@ PartialTreeEdge::PartialTreeEdge(PLLBufferManager *manager,
 PartialTreeEdge::PartialTreeEdge(PLLBufferManager *manager,
                                  std::shared_ptr<PartialTreeNode> child,
                                  double length, unsigned int pmatrix_elements, double * pmatrix, size_t alignment)
-: manager(manager), child(child), length(length), pmatrix(pmatrix), matrix_size(pmatrix_elements) {
+: manager(manager), length(length),  pmatrix(pmatrix), matrix_size(pmatrix_elements), child(child) {
     
 }
 

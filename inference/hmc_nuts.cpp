@@ -95,7 +95,7 @@ Eigen::MatrixXd sample_nuts_cpp(const Eigen::VectorXi v_n,
 
     // Build a trajectory until the NUTS criterion is no longer satisfied
     int depth_ = 0;
-    int divergent_ = 0;
+    //int divergent_ = 0;
     util.n_tree = 0;
     util.sum_prob = 0;
 
@@ -192,7 +192,7 @@ int BuildNutsTree(pq_point& z, pq_point& z_propose,
 
   //std::default_random_engine generator;
   std::uniform_real_distribution<double> unif01(0.0,1.0);
-  int F = postparams.W.rows();
+  //int F = postparams.W.rows();
   float delta_max = 1000; // Recommended in the NUTS paper: 1000
   
   // Base case - take a single leapfrog step in the direction v

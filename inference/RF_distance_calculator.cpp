@@ -42,12 +42,14 @@ void RFDistanceCalculator::addTreeSplits(size_t tree_idx, const RootedTree& tree
     
 
   pll_utree_t * utree = (&tree)->getUnrootedPtr();
-  pll_unode_t * vroot =  utree->nodes[tree.numTips()];
+ 
+  //pll_unode_t * vroot =  utree->nodes[tree.numTips()];
+  pll_unode_t * vroot = utree->nodes[utree->tip_count+utree->inner_count-1];
   pll_split_t * splits = pllmod_utree_split_create(vroot,
-                                                 tree.numTips(),
+                                                 utree->tip_count,
                                                  nullptr);
-
-  for (size_t i = 0; i < tree.numSplits(); ++i)
+  int num_splits = utree->edge_count - utree->tip_count;
+  for (size_t i = 0; i < num_splits; ++i)
   {
     bitv_hash_entry_t * e = pllmod_utree_split_hashtable_insert_single(splits_hash,
                                                                        splits[i],
@@ -151,9 +153,10 @@ void RFDistanceCalculator::calcRFdistanceLowmem(const std::vector<RootedTree>& t
   {
     const auto& tree = trees.at(i);
       pll_utree_t * utree = (&tree)->getUnrootedPtr();
-      pll_unode_t * vroot =  utree->nodes[tree.numTips()];
-    splits[i] = pllmod_utree_split_create(vroot,
-                                          tree.numTips(),
+      //pll_unode_t * vroot =  utree->nodes[tree.numTips()];
+      pll_unode_t * vroot = utree->nodes[utree->tip_count+utree->inner_count-1];
+      splits[i] = pllmod_utree_split_create(vroot,
+                                          utree->tip_count,
                                           nullptr);
   }
 

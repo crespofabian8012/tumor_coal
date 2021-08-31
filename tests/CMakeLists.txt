@@ -3,6 +3,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++17 -stdlib=libc++")
 include_directories(/usr/local/opt/llvm/include ${CMAKE_SOURCE_DIR}/install/include/ /usr/local/include/
 /usr/local/include/gsl )
 
+link_directories(${CMAKE_SOURCE_DIR}/install/lib/)
+
 link_directories(/usr/local/lib)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -24,7 +26,8 @@ include_directories(/usr/local/include/spf)
 
 file(GLOB TESTS *.cpp *.hpp)
 find_package(GSL REQUIRED)
-#add_executable(phylo-smc ${SRC})
+
+
 #target_link_libraries(phylo-smc ${PROJECT_LINK_LIBS} GSL::gsl GSL::gslcblas)
 
 find_package (PkgConfig REQUIRED)
@@ -45,14 +48,14 @@ if(Boost_FOUND)
     include_directories( PRIVATE ${Boost_INCLUDE_DIRS})
 endif()
 
-target_link_libraries(run  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a  ${Boost_LIBRARIES}  GSL::gsl  OpenMP::OpenMP_CXX ${CMAKE_SOURCE_DIR}/install/lib/libSPF.a Eigen3::Eigen)
 
-target_link_libraries(libTumorCoal
-    ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a   GSL::gsl OpenMP::OpenMP_CXX ${CMAKE_SOURCE_DIR}/install/lib/libSPF.a Eigen3::Eigen)
+add_executable(tests ${SRCS})
+
+include_directories(simul /usr/local/include/ ${CMAKE_SOURCE_DIR}/inference/ ${CMAKE_SOURCE_DIR}/install/include/ /usr/local/opt/llvm/include)
 
 
+target_link_libraries(tests libTumorCoal)
 
-add_executable(tests ${TESTS})
-target_link_libraries(tests   ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a   GSL::gsl OpenMP::OpenMP_CXX ${CMAKE_SOURCE_DIR}/install/lib/libSPF.a Eigen3::Eigen) 
+
 
 #add_test(SMCTests tests) #

@@ -18,6 +18,8 @@
 #include "output_functions.hpp"
 #include "mcmc.hpp"
 #include "msa.hpp"
+#include "tree.hpp"
+#include "RF_distance_calculator.hpp"
 
 #include <gsl/gsl_randist.h>
 #include <boost/program_options.hpp>
@@ -26,6 +28,8 @@
 #include "smc.hpp"
 #include "state.hpp"
 #include "poset_smc.hpp"
+
+
 
 
 extern "C"
@@ -132,8 +136,7 @@ int main(int argc, char* argv[] )
     
     programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
     
-    char *ObservedCellNames[programOptions.numCells];
-    
+
     if (programOptions.numClones==1)
         sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
     
@@ -147,8 +150,7 @@ int main(int argc, char* argv[] )
     std::string healthyTipLabel = "healthycell";
     programOptions.healthyTipLabel ="healthycell";
     
-    //int sampleEvery = mcmcOptions.thinning;
-    
+   
     std::vector<gsl_rng * > randomGenerators(mcmcOptions.numChains);
     
     // int maxNumberThreads = omp_get_max_threads();
@@ -156,6 +158,9 @@ int main(int argc, char* argv[] )
     std::vector<boost::mt19937 *> randomGeneratorsBoost = Random::allocateListRandomNumbersGeneratorsBoost(mcmcOptions.numChains);
     
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
+    char * newickWithoutHealthy = pll_rtree_export_newick(initialRootedTree->root->left, NULL);
+    std::cout << " true tree " << newickWithoutHealthy<< std::endl;
+    RootedTree rootedTree(newickWithoutHealthy, false);
     
     programOptions.seqErrorRate = 0.01;
     programOptions.dropoutRate =0.2;
@@ -192,132 +197,157 @@ int main(int argc, char* argv[] )
     //std::random_shuffle( positions.begin(), positions.end());
     
     
-    GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
-    PLLBufferManager *pll_buffer_manager = new PLLBufferManager;
-    //        const pll_partition_t* pll_partition= pll_utils::createGTReferencePartition(msa);
-    
-    std::vector<double> coalTimes = pll_utils::getOrderedCoalTimesFromRootedTree(initialRootedTree, healthyTipLabel);
-    
-    pll_utils::printChronologicalOrderRootedTree(initialRootedTree,healthyTipLabel, std::cerr);
-    
-    Partition * partition = new Partition(msa,
-                                          16,// model->states,//numberStates
-                                          1,//RATE_CATS, // unsigned  int  numberRateCats
-                                          0, //int statesPadded
-                                          true,//PLL_ATTRIB_ARCH_SSE
-                                          false, false, false, false, false);
-    double theta = 0.019;
-    std::vector<double> deltas  = {21.519};
-    std::vector<double> timeOriginSTDs = {0.128};
-    std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
-    
-    transform(coalTimes.begin(), coalTimes.end(), coalTimes.begin(), [theta](double &c){ return c/theta; });
-    
-    coalTimesModelTimePerPopulation.push_back(coalTimes);
-    
-    
-    PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
-                            theta,
-                            deltas,
-                            timeOriginSTDs,
-                            {1.0},
-                            coalTimesModelTimePerPopulation);
-    psParams.doPriorPost= true;
-    
-    size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
-    PosetSMC posetSMC(programOptions.numClones,  num_iter);
-    SMCOptions smcOptions;
-    
-    smcOptions.num_threads = 5;
-    smcOptions.use_SPF = false;
-    smcOptions.ess_threshold = 1;
-    smcOptions.num_particles = 200;
-    smcOptions.resample_last_round = false;
-    
-    
-    smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
-    //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
-    //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::SYSTEMATIC;
-    //  smcOptions.main_seed = 346435;
-    // smcOptions.resampling_seed = 2345666;
-    smcOptions.track_population = false;
-    smcOptions.init();
-    smcOptions.debug = true;
-    
-    
-    SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
-    
-    std::cout<< "\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles....\n" << std::endl;
-    smc.run_smc(psParams);
-    
-    ParticlePopulation<State> *currenPop = smc.get_curr_population();
-    vector<shared_ptr<State>> *particles = currenPop->get_particles();
-    double   log_marginal = smc.get_log_marginal_likelihood();
-    //ParticlePopulation<State> *pop0 = smc.get_population(0);
-    
-    
-    int num_particles = currenPop->get_num_particles();
-    
-    std::vector<long double> deltas0;
-    std::vector<long double> Ts0;
-    std::vector<long double> Thetas;
-    std::vector<long double> SeqError;
-    std::vector<long double> ADOError;
-    
-    std::vector<long double> currentDeltas;
-    std::vector<long double> currentTs;
-    std::vector<long double> currentThetas;
-    std::vector<long double> currentSeqError;
-    std::vector<long double> currentADOError;
-    std::vector<long double> weights;
-    std::vector<long double> rootLogLiks;
-    
-    std::vector<double> *normalized_weights = currenPop->get_normalized_weights();
-    double max = -DOUBLE_INF;
-    shared_ptr<State> best_particle;
-    for (size_t i=0; i<num_particles; i++){
+  GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", 0.0, 0.0, 16);
         
-        shared_ptr<State> currents = particles->at(i);
-        currentDeltas.push_back(currents->getPopulationByIndex(0)->delta);
-        currentTs.push_back(currents->getPopulationByIndex(0)->timeOriginSTD);
-        currentThetas.push_back(currents->getTheta());
-        currentSeqError.push_back(currents->getErrorModel().getADOErrorRate());
-        currentADOError.push_back(currents->getErrorModel().getSeqErrorRate());
-        currents->printTree(currents->getRoots()[0], std::cerr);
-        std::cout << " weight "<< i << " " <<(*normalized_weights)[i] <<std::endl;
-        assert(currents->getRoots().size() == 1);
-        weights.push_back((*normalized_weights)[i]);
-        rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
-        std::cout << " loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-        currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
+        PLLBufferManager *pll_buffer_manager = new PLLBufferManager;
+        //        const pll_partition_t* pll_partition= pll_utils::createGTReferencePartition(msa);
         
-        if ((*normalized_weights)[i] > max) {
+        std::vector<double> coalTimes = pll_utils::getOrderedCoalTimesFromRootedTree(initialRootedTree, healthyTipLabel);
+        
+        pll_utils::printChronologicalOrderRootedTree(initialRootedTree,healthyTipLabel, std::cerr);
+        
+        Partition * partition = new Partition(msa,
+                                              16,// model->states,//numberStates
+                                              1,//RATE_CATS, // unsigned  int  numberRateCats
+                                              0, //int statesPadded
+                                              true,//PLL_ATTRIB_ARCH_SSE
+                                              false, false, false, false, false);
+        double theta = 0.019;
+        std::vector<double> deltas  = {21.519};
+        std::vector<double> timeOriginSTDs = {0.128};
+        std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
+        
+        transform(coalTimes.begin(), coalTimes.end(), coalTimes.begin(), [theta](double &c){ return c/theta; });
+        
+        coalTimesModelTimePerPopulation.push_back(coalTimes);
+        
+        
+        PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
+                                theta,
+                                deltas,
+                                timeOriginSTDs,
+                                {1.0},
+                                coalTimesModelTimePerPopulation);
+        psParams.doPriorPost= true;
+        psParams.doFixedEventimes= false;
+        
+        size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
+        PosetSMC posetSMC(programOptions.numClones,  num_iter);
+        SMCOptions smcOptions;
+        
+        smcOptions.num_threads = 5;
+        smcOptions.use_SPF = false;
+        smcOptions.ess_threshold = 1;
+        smcOptions.num_particles = 1000;
+        smcOptions.resample_last_round = false;
+        
+        
+        smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
+        //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
+        //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::SYSTEMATIC;
+        //  smcOptions.main_seed = 346435;
+        // smcOptions.resampling_seed = 2345666;
+        smcOptions.track_population = false;
+        smcOptions.init();
+        smcOptions.debug = true;
+        
+        
+        SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
+        
+        std::cout<< "\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles....\n" << std::endl;
+        smc.run_smc(psParams);
+        
+        ParticlePopulation<State> *currenPop = smc.get_curr_population();
+        vector<shared_ptr<State>> *particles = currenPop->get_particles();
+        double   log_marginal = smc.get_log_marginal_likelihood();
+        //ParticlePopulation<State> *pop0 = smc.get_population(0);
+        
+        
+        int num_particles = currenPop->get_num_particles();
+        
+        std::vector<long double> deltas0;
+        std::vector<long double> Ts0;
+        std::vector<long double> Thetas;
+        std::vector<long double> SeqError;
+        std::vector<long double> ADOError;
+        
+        std::vector<long double> currentDeltas;
+        std::vector<long double> currentTs;
+        std::vector<long double> currentThetas;
+        std::vector<long double> currentSeqError;
+        std::vector<long double> currentADOError;
+        std::vector<long double> weights;
+        std::vector<long double> rootLogLiks;
+        
+        std::vector<double> *normalized_weights = currenPop->get_normalized_weights();
+        double max = -DOUBLE_INF;
+        shared_ptr<State> best_particle;
+        
+        std::vector<RootedTree> lastPopulationTrees;
+        for (size_t i=0; i<num_particles; i++){
             
-            max = (*normalized_weights)[i]  ;
-            best_particle = currents;
+            shared_ptr<State> currents = particles->at(i);
+            currentDeltas.push_back(currents->getPopulationByIndex(0)->delta);
+            currentTs.push_back(currents->getPopulationByIndex(0)->timeOriginSTD);
+            currentThetas.push_back(currents->getTheta());
+            currentSeqError.push_back(currents->getErrorModel().getADOErrorRate());
+            currentADOError.push_back(currents->getErrorModel().getSeqErrorRate());
+            std::cout<<std::endl;
+            currents->printTree(currents->getRoots()[0], std::cerr);
+            std::cout<<std::endl;
+            std::cout << " weight "<< i << " " <<(*normalized_weights)[i] <<std::endl;
+            assert(currents->getRoots().size() == 1);
+            weights.push_back((*normalized_weights)[i]);
+            rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
+            std::cout << " loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
+            //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
+            std::cout<<std::endl;
+            if ((*normalized_weights)[i] > max) {
+                
+                max = (*normalized_weights)[i]  ;
+                best_particle = currents;
+            }
+            std::string newick = currents->getNewick(currents->getRootAt(0));
+            lastPopulationTrees.emplace_back(RootedTree(newick, false));
         }
+        lastPopulationTrees.emplace_back(rootedTree);
+        
+        std::unique_ptr<RFDistanceCalculator> rfCalculator;
+        rfCalculator.reset(new RFDistanceCalculator(lastPopulationTrees, false));
+        
+        std::cout<< "Posterior distribution" << std::endl;
+        std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;
+        std::cout<< "T, mean: " << Utils::mean(currentTs) <<" var: " <<Utils::variance(currentTs) <<std::endl;
+        std::cout<< "Theta, mean: " << Utils::mean(currentThetas) <<" var: " <<Utils::variance(currentThetas) <<std::endl;
+        std::cout<< "SeqError, mean: " << Utils::mean(currentSeqError) <<" var: " <<Utils::variance(currentSeqError) <<std::endl;
+        std::cout<< "ADOError, mean: " << Utils::mean(currentADOError) <<" var: " <<Utils::variance(currentADOError) <<std::endl;
+        std::cout<< "Normalized weight " << Utils::mean(weights) <<" var: " <<Utils::variance(weights) <<std::endl;
+        std::cout<< "Root log liks " << Utils::mean(rootLogLiks) <<" var: " <<Utils::variance(rootLogLiks) <<std::endl;
+        
+        
+        double avgRF = rfCalculator->avgRF();
+        
+        size_t numUniqueTrees = rfCalculator->numUniqueTrees();
+        
+        std::cout << "Avg RF " << avgRF  << endl;
+        std::cout << "Number unique topologies " << numUniqueTrees  << endl;
+        
+        double log_marginal_lik = smc.get_log_marginal_likelihood();
+        std::cout << "Estimate log marginal " << log_marginal  << endl;
+        std::cout << "Estimate log P(y)= " << log_marginal_lik  << endl;
+        
+        assert(best_particle->getRoots().size() == 1);
+        best_particle->printTree(best_particle->getRoots()[0], std::cerr);
+        
     }
     
-    std::cout<< "Posterior distribution" << std::endl;
-    std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;
-    std::cout<< "T, mean: " << Utils::mean(currentTs) <<" var: " <<Utils::variance(currentTs) <<std::endl;
-    std::cout<< "Theta, mean: " << Utils::mean(currentThetas) <<" var: " <<Utils::variance(currentThetas) <<std::endl;
-    std::cout<< "SeqError, mean: " << Utils::mean(currentSeqError) <<" var: " <<Utils::variance(currentSeqError) <<std::endl;
-    std::cout<< "ADOError, mean: " << Utils::mean(currentADOError) <<" var: " <<Utils::variance(currentADOError) <<std::endl;
-    std::cout<< "Normalized weight " << Utils::mean(weights) <<" var: " <<Utils::variance(weights) <<std::endl;
-    std::cout<< "Root log liks " << Utils::mean(rootLogLiks) <<" var: " <<Utils::variance(rootLogLiks) <<std::endl;
-    
-    double log_marginal_lik = smc.get_log_marginal_likelihood();
-    cout << "Estimate log marginal " << log_marginal  << endl;
-    cout << "Estimate log P(y)= " << log_marginal_lik  << endl;
-    
-    assert(best_particle->getRoots().size() == 1);
-    best_particle->printTree(best_particle->getRoots()[0], std::cerr);
     /* clean memory*/
+    
     //Random::freeListRandomNumbersGenerators(randomGenerators);
+ 
+
     pll_msa_destroy(msa);
     pll_rtree_destroy(initialRootedTree,NULL);
-
     return 0;
 }
 

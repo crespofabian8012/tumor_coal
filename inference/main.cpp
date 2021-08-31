@@ -71,6 +71,51 @@ extern "C"
 #include <search.h>
 #include <time.h>
 
+namespace po = boost::program_options;
+bool process_command_line(int argc, char** argv,
+                          std::string& config_file)
+{
+  po::options_description desc("Program options");
+  po::variables_map vm;
+    try
+    {
+        desc.add_options()
+        ("help", "produce help message.")
+        ("config_file,c", po::value<std::string>(&config_file)->required(), "path to configuration file.")
+        ;
+      
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+
+        if (vm.count("help"))
+        {
+            std::cout << desc << "\n";
+            return false;
+        }
+
+        // There must be an easy way to handle the relationship between the
+        // option "help" and "host"-"port"-"config"
+        // Yes, the magic is putting the po::notify after "help" option check
+        po::notify(vm);
+    }
+    catch (const boost::program_options::required_option & e) {
+     if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 1;
+      } else {
+        throw e;
+     }
+    }
+    catch(...)
+    {
+        std::cerr << "Unknown error!" << "\n";
+        return false;
+    }
+
+    std::stringstream ss;
+   
+
+    return true;
+}
 
 
 int main(int argc, char* argv[] )
@@ -79,15 +124,9 @@ int main(int argc, char* argv[] )
     const char* input_path;
     std::string config_file;
     
-    namespace po = boost::program_options;
-    po::options_description desc("Program options");
-    desc.add_options()
-    ("help", "Put a help message here.")
-    ("config_file,c", po::value<std::string>(&config_file)->required(), "path to configuration file.")
-    ;
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+    bool result = process_command_line(argc, argv,config_file);
+    if (!result)
+        return 1;
     
     input_path = config_file.c_str();
     
@@ -222,12 +261,9 @@ int main(int argc, char* argv[] )
     mcmcOptions.maxNumberIndependentPosteriorValues=500;
     mcmcOptions.numberIterationsAfterConvergence = 10000;
     
-    
     programOptions.doUsefixedMutationRate = false;
     programOptions.K=0.8;
-    
-    
-    
+
     if (doMCMC){
         std::vector<Chain*> chainsFortheSameTree(mcmcOptions.numberChainsPerTree);
         int numberTrees = floor((double)mcmcOptions.numChains / mcmcOptions.numberChainsPerTree);
@@ -292,11 +328,9 @@ int main(int argc, char* argv[] )
         programOptions.varGenotypingError=0.001;
         programOptions.fixedADOrate=0.1;
         
-        
         std::vector<int> positions(programOptions.TotalTumorSequences);
         std::iota( std::begin( positions ), std::end( positions ), 1 );
         //std::random_shuffle( positions.begin(), positions.end());
-        
         
         // GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
         
@@ -416,7 +450,7 @@ int main(int argc, char* argv[] )
         lastPopulationTrees.emplace_back(rootedTree);
         
         std::unique_ptr<RFDistanceCalculator> rfCalculator;
-        rfCalculator.reset(new RFDistanceCalculator(lastPopulationTrees, false));
+        rfCalculator.reset(new RFDistanceCalculator(lastPopulationTrees, true));
         
         std::cout<< "Posterior distribution" << std::endl;
         std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;
@@ -458,9 +492,7 @@ int main(int argc, char* argv[] )
     pll_rtree_destroy(initialRootedTree,NULL);
     std::cout << "\nIf you need help type '-?' in the command line of the program\n"<<std::endl;
     
-    
-    
-    
+
     return 0;
     
 }

@@ -197,11 +197,10 @@ int main(int argc, char* argv[] )
     std::vector<boost::mt19937 *> randomGeneratorsBoost = Random::allocateListRandomNumbersGeneratorsBoost(mcmcOptions.numChains);
     
     pll_rtree_t * initialRootedTree = pll_rtree_parse_newick(treefileName);
-
+    
     //pll_rnode_t * healtyTip = initialRootedTree->root->right;
     char * newickWithoutHealthy = pll_rtree_export_newick(initialRootedTree->root->left, NULL);
     std::cout << " true tree " << newickWithoutHealthy<< std::endl;
-    //RootedTree rootedTree(*initialRootedTree, true);
     RootedTree rootedTree(newickWithoutHealthy, false);
     
     programOptions.seqErrorRate = 0.01;
@@ -299,7 +298,10 @@ int main(int argc, char* argv[] )
         //std::random_shuffle( positions.begin(), positions.end());
         
         
-        GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
+        // GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
+        
+        GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", 0.0, 0.0, 16);
+        
         PLLBufferManager *pll_buffer_manager = new PLLBufferManager;
         //        const pll_partition_t* pll_partition= pll_utils::createGTReferencePartition(msa);
         
@@ -411,7 +413,8 @@ int main(int argc, char* argv[] )
             std::string newick = currents->getNewick(currents->getRootAt(0));
             lastPopulationTrees.emplace_back(RootedTree(newick, false));
         }
-       
+        lastPopulationTrees.emplace_back(rootedTree);
+        
         std::unique_ptr<RFDistanceCalculator> rfCalculator;
         rfCalculator.reset(new RFDistanceCalculator(lastPopulationTrees, false));
         
@@ -423,9 +426,12 @@ int main(int argc, char* argv[] )
         std::cout<< "ADOError, mean: " << Utils::mean(currentADOError) <<" var: " <<Utils::variance(currentADOError) <<std::endl;
         std::cout<< "Normalized weight " << Utils::mean(weights) <<" var: " <<Utils::variance(weights) <<std::endl;
         std::cout<< "Root log liks " << Utils::mean(rootLogLiks) <<" var: " <<Utils::variance(rootLogLiks) <<std::endl;
+        
+        
         double avgRF = rfCalculator->avgRF();
+        
         size_t numUniqueTrees = rfCalculator->numUniqueTrees();
-      
+        
         std::cout << "Avg RF " << avgRF  << endl;
         std::cout << "Number unique topologies " << numUniqueTrees  << endl;
         

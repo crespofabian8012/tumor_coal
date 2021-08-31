@@ -704,52 +704,6 @@ void State::addNodeToPostorderByIndex(int idx){
     postorder.push_back(roots[idx]);
     
 }
-//
-//void State::sampleCoalescentEventTimes(PosetSMCParams &params,  gsl_rng *random){
-//    
-//    long double waitingTime, timeNextEvent;
-//    int numberPopulations = getNumberPopulations();
-//
-//    double currentTime=0.0;
-//    double currentTimeKingman=0.0;
-//    Population *pop, *chosenPop;
-//    double log_w = 0;
-//
-//    //here we assumed that populations are sorted by Ti*x_i/x_oldest_pop
-//    for(size_t i=0; i < numberPopulations; i++){
-//
-//        pop = getPopulationByIndex( i);
-//
-//        pop->sampleCoalescentEventTimes(random, params.getProgramOptions().K);
-//
-//
-//
-//        long double logLikNextCoal = 0.0;
-//
-//        logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, getHeightModelTime(), chosenPop->numActiveGametes, params.getProgramOptions().K);
-//        log_w = log_w +logLikNextCoal;
-//
-//        long double logLikNoCoal;
-//        long double logDensityTorigin;
-//        //do we  need to add loglik of no coal events in  other populations?
-//
-//        for(size_t i=0; i <  numberPopulations; i++){
-//            pop= getPopulationByIndex( i);
-//
-//            //logDensityTorigin = pop->LogDensityTime(pop->timeOriginSTD);
-//            //node->ln_likelihood = node->ln_likelihood +logDensityTorigin;
-//
-//            if (pop!=chosenPop){
-//                logLikNoCoal=pop->LogProbNoCoalescentEventBetweenTimes(getHeightModelTime(), minTimeNextEvent,  pop->numActiveGametes, pop->timeOriginSTD, pop->delta, params.getProgramOptions().K);
-//
-//                log_w = log_w +logLikNoCoal;
-//            }
-//        }
-//
-//
-//
-//
-//    }
     State::~State(){
         
         

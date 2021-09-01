@@ -15,7 +15,7 @@
 using Eigen::Dynamic;
 using namespace std;
 
-Eigen::MatrixXd sample_nuts_cpp(const Eigen::VectorXi v_n,
+Eigen::MatrixXd runNutsSampler(const Eigen::VectorXi v_n,
                                 const Eigen::MatrixXd& W, Eigen::VectorXd current_q,
                                 double alpha = 1, double beta = 1,
                                 float epsilon = 0.01,
@@ -36,7 +36,7 @@ Eigen::MatrixXd sample_nuts_cpp(const Eigen::VectorXi v_n,
   const Eigen::VectorXd u_(F);
   postparams.W           = W;
   postparams.v_n      = v_n;
-  postparams.norms_W = u_ * W;
+  postparams.norms_W = u_.transpose() * W;
   postparams.alpha      = alpha;
   postparams.beta      = beta;
 
@@ -141,7 +141,7 @@ Eigen::MatrixXd sample_nuts_cpp(const Eigen::VectorXi v_n,
 
       // Break when NUTS criterion is no longer satisfied
       rho += rho_subtree;
-      util.criterion = util.criterion && compute_criterion(p_sharp_minus, p_sharp_plus, rho);
+      util.criterion = util.criterion && computeCriterion(p_sharp_minus, p_sharp_plus, rho);
     } // end while
     
 
@@ -172,7 +172,7 @@ void leapfrog(pq_point &z, float epsilon, posterior_params& postparams){
 
 // U-Turn criterion in the generalized form applicable to Riemanian spaces
 // See Betancourt's Conceptual HMC (page 58)
-bool compute_criterion(Eigen::VectorXd& p_sharp_minus,
+bool computeCriterion(Eigen::VectorXd& p_sharp_minus,
                                Eigen::VectorXd& p_sharp_plus,
                                Eigen::VectorXd& rho) {
   return (p_sharp_plus.array() * rho.array()).sum()  > 0 && (p_sharp_minus.array() * rho.array()).sum() > 0;
@@ -241,7 +241,7 @@ int BuildNutsTree(pq_point& z, pq_point& z_propose,
   // Break when NUTS criterion is no longer satisfied
   Eigen::VectorXd rho_subtree = rho_left + rho_right;
   rho += rho_subtree;
-  util.criterion = compute_criterion(p_sharp_left, p_sharp_right, rho);
+  util.criterion = computeCriterion(p_sharp_left, p_sharp_right, rho);
 
   int n_valid_subtree = n1 + n2;
   return(n_valid_subtree);
@@ -302,3 +302,119 @@ double posterior_eta_cpp(const Eigen::VectorXd& eta_n, const Eigen::VectorXi& v_
   double logp = posterior_h_cpp(exp_eta, v_n, W, alpha, beta) + eta_n.sum();
   return logp;
 }
+
+//bool NUTS::buildTree(int depth, pq_point& z_propose, Eigen::VectorXd& p_sharp_beg,
+//                  Eigen::VectorXd& p_sharp_end, Eigen::VectorXd& rho,
+//                  Eigen::VectorXd& p_beg, Eigen::VectorXd& p_end, double H0,
+//                  double sign, int& n_leapfrog, double& log_sum_weight,
+//                  double& sum_metro_prob) {
+//    // Base case
+//    if (depth == 0) {
+//      this->integrator_.evolve(this->z_, this->hamiltonian_,
+//                               sign * this->epsilon_, logger);
+//      ++n_leapfrog;
+//
+//      double h = this->hamiltonian_.H(this->z_);
+//      if (std::isnan(h))
+//        h = std::numeric_limits<double>::infinity();
+//
+//      if ((h - H0) > this->max_deltaH_)
+//        this->divergent_ = true;
+//
+//      log_sum_weight = log_sum_exp(log_sum_weight, H0 - h);
+//
+//      if (H0 - h > 0)
+//        sum_metro_prob += 1;
+//      else
+//        sum_metro_prob += std::exp(H0 - h);
+//
+//      z_propose = this->z_;
+//
+//      p_sharp_beg = this->hamiltonian_.dtau_dp(this->z_);
+//      p_sharp_end = p_sharp_beg;
+//
+//      rho += this->z_.p;
+//      p_beg = this->z_.p;
+//      p_end = p_beg;
+//
+//      return !this->divergent_;
+//    }
+//    // General recursion
+//
+//    // Build the initial subtree
+//    double log_sum_weight_init = -std::numeric_limits<double>::infinity();
+//
+//    // Momentum and sharp momentum at end of the initial subtree
+//    Eigen::VectorXd p_init_end(this->z_.p.size());
+//    Eigen::VectorXd p_sharp_init_end(this->z_.p.size());
+//
+//    Eigen::VectorXd rho_init = Eigen::VectorXd::Zero(rho.size());
+//
+//    bool valid_init
+//        = build_tree(depth - 1, z_propose, p_sharp_beg, p_sharp_init_end,
+//                     rho_init, p_beg, p_init_end, H0, sign, n_leapfrog,
+//                     log_sum_weight_init, sum_metro_prob, logger);
+//
+//    if (!valid_init)
+//      return false;
+//
+//    // Build the final subtree
+//    ps_point z_propose_final(this->z_);
+//
+//    double log_sum_weight_final = -std::numeric_limits<double>::infinity();
+//
+//    // Momentum and sharp momentum at beginning of the final subtree
+//    Eigen::VectorXd p_final_beg(this->z_.p.size());
+//    Eigen::VectorXd p_sharp_final_beg(this->z_.p.size());
+//
+//    Eigen::VectorXd rho_final = Eigen::VectorXd::Zero(rho.size());
+//
+//    bool valid_final
+//        = build_tree(depth - 1, z_propose_final, p_sharp_final_beg, p_sharp_end,
+//                     rho_final, p_final_beg, p_end, H0, sign, n_leapfrog,
+//                     log_sum_weight_final, sum_metro_prob, logger);
+//
+//    if (!valid_final)
+//      return false;
+//
+//    // Multinomial sample from right subtree
+//    double log_sum_weight_subtree
+//        = math::log_sum_exp(log_sum_weight_init, log_sum_weight_final);
+//    log_sum_weight = math::log_sum_exp(log_sum_weight, log_sum_weight_subtree);
+//
+//    if (log_sum_weight_final > log_sum_weight_subtree) {
+//      z_propose = z_propose_final;
+//    } else {
+//      double accept_prob
+//          = std::exp(log_sum_weight_final - log_sum_weight_subtree);
+//      if (this->rand_uniform_() < accept_prob)
+//        z_propose = z_propose_final;
+//    }
+//
+//    Eigen::VectorXd rho_subtree = rho_init + rho_final;
+//    rho += rho_subtree;
+//
+//    // Demand satisfaction around merged subtrees
+//    bool persist_criterion
+//        = compute_criterion(p_sharp_beg, p_sharp_end, rho_subtree);
+//
+//    // Demand satisfaction between subtrees
+//    rho_subtree = rho_init + p_final_beg;
+//    persist_criterion
+//        &= compute_criterion(p_sharp_beg, p_sharp_final_beg, rho_subtree);
+//
+//    rho_subtree = rho_final + p_init_end;
+//    persist_criterion
+//        &= compute_criterion(p_sharp_init_end, p_sharp_end, rho_subtree);
+//
+//    return persist_criterion;
+//  }
+//
+//  int depth_;
+//  int max_depth_;
+//  double max_deltaH_;
+//
+//  int n_leapfrog_;
+//  bool divergent_;
+//  double energy_;
+//};

@@ -9,5 +9,5 @@
 #define hcm_test_hpp
 
 #include <stdio.h>
-
+void  test_hmc();
 #endif /* hcm_test_hpp */

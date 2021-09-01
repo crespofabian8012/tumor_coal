@@ -16,7 +16,7 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS}) 
 endif()
 
-file( GLOB SRCS *.cpp *.hpp *.c *.h)
+file( GLOB TESTS *.cpp *.hpp *.c *.h)
 
 
 set ( PROJECT_LINK_LIBS libSPF.a )
@@ -24,7 +24,7 @@ link_directories(/usr/local/bin)
 include_directories(/usr/local/include)
 include_directories(/usr/local/include/spf)
 
-file(GLOB TESTS *.cpp *.hpp)
+
 find_package(GSL REQUIRED)
 
 
@@ -49,13 +49,11 @@ if(Boost_FOUND)
 endif()
 
 
-add_executable(tests ${SRCS})
+add_executable(tests ${TESTS})
 
 include_directories(simul /usr/local/include/ ${CMAKE_SOURCE_DIR}/inference/ ${CMAKE_SOURCE_DIR}/install/include/ /usr/local/opt/llvm/include)
 
 
 target_link_libraries(tests libTumorCoal)
 
-
-
-#add_test(SMCTests tests) #
+add_test(SMCTests tests)

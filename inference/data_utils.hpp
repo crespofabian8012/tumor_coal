@@ -198,6 +198,7 @@ int countTrueVariants (std::vector<TreeNode *> &nodes,  int numSites, int numCel
 long double computeParamPowerDistribQuantileUntil(long double areaUntilb, long double b, long double from);
 void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions );
 void printProgramHeader();
+void printSimulatorProgramHeader();
 
 long double  initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, const gsl_rng * randomGenerator);
 long double  sampleMutationRateSimulation( MCMCoptions &mcmcOptions, ProgramOptions &programOptions,const gsl_rng *randomGsl, boost::mt19937* rngBoost) ;

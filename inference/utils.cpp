@@ -1054,6 +1054,7 @@ std::vector<std::pair<int, int>> Utils::allPairs(int vectorSize){
 
     return result;
 }
+//from http://rosettacode.org/wiki/Combinations#C.2B.2B
 std::vector<std::pair<int, int>> Utils::allCombinations(int N, int K)
 {
     std::vector<std::pair<int, int>> result;

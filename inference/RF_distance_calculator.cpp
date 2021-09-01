@@ -171,6 +171,8 @@ void RFDistanceCalculator::calcRFdistanceLowmem(const std::vector<RootedTree>& t
     for (size_t j = i+1; j < num_trees; ++j)
     {
       auto rf = pllmod_utree_split_rf_distance(splits[i], splits[j], num_tips);
+//      if (rf >0)
+//          std::cout << "RF dist between tree " <<i << " and tree " << j << " " << rf << std::endl;
       avg_rf += rf;
 
       // TODO: maxrf will be different for multifurcating trees

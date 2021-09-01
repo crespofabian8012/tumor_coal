@@ -137,6 +137,7 @@ int main(int argc, char *argv[])
    
     // 3. call function to simulate the data and
     // 4.output the files
+    printSimulatorProgramHeader();
     float start = clock();
     SimulateData(programOptions, CloneNameBegin, CloneSampleSizeBegin, ClonePopSizeBegin,
                     populations,
@@ -171,16 +172,17 @@ int main(int argc, char *argv[])
     std::cout << "\n\nOutput files are in folder Results" << std::endl;
     std::cout << "\n Trees saved to folder Results\\treeDir\\" << "\""<< std::endl;
     std::cout << "\n Times saved to folder  Results\\timesDir\\"<< std::endl;
-    std::cout << "\n True haplotypes(IUPAC codes) saved to folder  Results""\true_haplotypes_dir\\" << std::endl;
+    std::cout << "\n True haplotypes(IUPAC codes) saved to folder  Results\\true_haplotypes_dir\\" << std::endl;
     std::cout << "\n True genotypes saved to folder  Results\\true_genotypes_dir\\" << std::endl;
     std::cout << "\n Full haplotypes(IUPAC codes) with errors saved to folder  Results\\full_haplotypes_dir\\" <<std::endl;
     
+    std::cout << "\n Simulations parameter values and log likelihoods  saved to file Results\\loglik_file.txt" <<std::endl;
     std::cout <<  "\n\n*** Simulations finished ***"<< std::endl;
     /* execution time */
     double secs = (double)(clock() - start) / CLOCKS_PER_SEC;
     
-    std::cout << "\n\n_________________________________________________________________" << std::endl;
-    std::cout << "\nTime processing: %G seconds\n" <<  secs<< std::endl;
+    std::cout << "\n\n____________________________________________________________________________________" << std::endl;
+    std::cout << "\nTime processing: "<< secs << " seconds\n" <<  std::endl;
     std::cout << "\nIf you need help type '-?' in the command line of the program\n" << std::endl;
     return 0;
 }

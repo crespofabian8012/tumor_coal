@@ -4,20 +4,20 @@
 
 [*** GLOBAL SETTINGS ***]
 [parameter values from priors (mandatory): 1:Yes, 0: NO]  q0
-[number of replicates per parameter values(mandatory)]	n300
+[number of replicates per parameter values(mandatory)]	n10
 [number of sites] s1000
 
 [*** POPULATION GENETICS SETTINGS ***]
 [Haploid - Diploid (0-1) (mandatory)]	x2
 
 [number of clones; clone number, sample size, population size ratio (not effective), birth rate, death rate, time to origin (days, months, years; All clones with 0 = sampled from conditional distribution) (mandatory)]
-[c1
-	1 20 1000 1 0.9 0.0]
+c1
+	1 4 1000 1 0.9 0.0
 [c1
 	1 20  1000  1  0.99   0.0]
-c2
+[c2
 	1 8  1000  1  0.99   0.0
-	2 12 1000  1  0.85   0.0
+	2 12 1000  1  0.85   0.0]
 [c2
 	1 2 1000 0.1 0.0999  0.0
 	2 3 1000 0.1 0.0996 0.0]
@@ -51,7 +51,7 @@ c2
 [MUTATION MODEL]
 
 [alphabet 0:binary 1:DNA] b1
-[scaled substitution rate (mandatory)] u0.7
+[scaled substitution rate (mandatory)] u2.5
 [deletion rate] [d1e-6]
 [CN_LOH rate] [h1e-5]
 [fixed number of true SNVs - ISM] [j100]
@@ -75,7 +75,7 @@ c2
     							 	3 5 1 0
 
 [GENOTYPING PARAMETERS]
-[genotyping error; no reads] G0.01
+[genotyping error; no reads] G0.00 0.000
 
 
 [NGS PARAMETERS]
@@ -85,12 +85,12 @@ c2
 
 [scWGA PARAMETERS]
 [mat/pat allelic imbalance] [I0.5]
-[fixed allelic dropout] D0.01
+[fixed allelic dropout] D0.00
 [ADO per cell] [X0.1 0.01]
 [ADO per site] [F0.1 0.01]
 [haploid coverage] [R0.5]
 [amplification error] A0.2 0.01 0
-[sequencing error] E0.0001
-[doublet rate per cell] [B0.1][esto hay que cambiar la B que ya esta en uso]
+[sequencing error] E0.0000
+[doublet rate per cell] [B0.1]
 
 [used letters q n s  x  c  o t  k  # y  b  u d h j s m p w z f t  a r g  h v  I  D  x f R  A  E  B ]

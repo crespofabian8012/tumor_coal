@@ -30,3 +30,4 @@ enable_testing()
 
 add_subdirectory(inference)
 add_subdirectory(simul)
+add_subdirectory(tests)

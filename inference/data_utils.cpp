@@ -989,10 +989,10 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     ValidateParameters(programOptions,CloneNameBegin , CloneSampleSizeBegin, ClonePopSizeBegin);
     
     
-    std::vector<pll_msa_t *> msaList(programOptions.numDataSets* programOptions.MutationAssignNum);
-    std::vector<pll_rtree_t *> treesList(programOptions.numDataSets);
-    std::vector<Partition *> partitionList(programOptions.numDataSets* programOptions.MutationAssignNum);
-    std::vector<TreeLikelihood *> treeLikList(programOptions.numDataSets* programOptions.MutationAssignNum);
+    std::vector<MSA*> msaList(programOptions.numDataSets* programOptions.MutationAssignNum);
+    std::vector<RootedTree*> treesList(programOptions.numDataSets);
+    std::vector<Partition*> partitionList(programOptions.numDataSets* programOptions.MutationAssignNum);
+    std::vector<TreeLikelihood*> treeLikList(programOptions.numDataSets* programOptions.MutationAssignNum);
     
     PrepareLikelihoodOutputFile(filePaths, programOptions, files);
     writeHeaderLikelihoodFile(filePaths, programOptions,files, programOptions.numClones );
@@ -1014,12 +1014,12 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         }
         SetPopulationTimeOriginSTD(populations, programOptions.numClones, rngGslvector.at(dataSetNum), programOptions.doEstimateTimesOriginClones);
         InitNumberNodes( populations, programOptions);
-//        programOptions.meanADOsite = 0.1;
-//        programOptions.varADOsite=0.01;
-//        programOptions.meanADOcell = 0.1;
-//        programOptions.varADOcell=0.01;
-//        programOptions.meanGenotypingError= 0.01;
-//        programOptions.varGenotypingError=0.001;
+        //        programOptions.meanADOsite = 0.1;
+        //        programOptions.varADOsite=0.01;
+        //        programOptions.meanADOcell = 0.1;
+        //        programOptions.varADOcell=0.01;
+        //        programOptions.meanGenotypingError= 0.01;
+        //        programOptions.varGenotypingError=0.001;
         
         InitListPossibleMigrations(populations, programOptions.numClones);
         InitPopulationsCoalescentEvents( programOptions.numClones,  populations);
@@ -1115,7 +1115,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             fclose(files.fpTimes2->f);
         }
         
-        treesList[dataSetNum] = pll_rtree_parse_newick(files.fpTrees->path);
+        treesList[dataSetNum]= new RootedTree(files.fpTrees->path, true);
         
         long double logLikCoalTree=0;
         logLikCoalTree+= StructuredCoalescentTree::SumLogDensitiesTimeOriginSTDPopulations(populations, programOptions.numClones, programOptions.K);
@@ -1125,7 +1125,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         logLikCoalTree+= StructuredCoalescentTree::LogDensityCoalescentTimesForPopulation(populations, programOptions.numClones, programOptions.K);
         
         if (programOptions.noisy >1)
-           std::cout << "\n The coalescent tree likelihood is " << logLikCoalTree<< std::endl;
+            std::cout << "\n The coalescent tree likelihood is " << logLikCoalTree<< std::endl;
         
         if (programOptions.noisy > 1)
         {
@@ -1254,37 +1254,38 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                 fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
             int pos = (dataSetNum)*programOptions.MutationAssignNum+z;
             assert(pos>=0);
-            msaList[pos] = pll_phylip_parse_interleaved(phylip_file_true);
+            msaList[pos] = new MSA( pll_phylip_parse_interleaved(phylip_file_true));
             
             
             /* compute true likelihoods: coalescent tree and sequence likelihoods*/
             
-            GenotypeErrorModel *gtNoError= new GenotypeErrorModel("GT20", 0.0, 0.0, 16);
+            GenotypeErrorModel gtNoError("GT20", 0.0, 0.0, 16);
             
-            partitionList[pos] = new Partition(treesList[dataSetNum]->tip_count,// numberTips
-                                                                                             treesList[dataSetNum]->inner_count,//unsigned  int  clvBuffers
-                                                                                             16,// model->states,//numberStates
-                                                                                             (unsigned int)(msaList[pos] ->length),//unsigned  int  sites
-                                                                                             1,//unsigned  int numberRateMatrices
-                                                                                             treesList[dataSetNum]->edge_count, // unsigned int probMatrices
-                                                                                             RATE_CATS,//RATE_CATS, // unsigned  int  numberRateCats
-                                                                                             treesList[dataSetNum]->inner_count, // unsigned  int numberScaleBuffers
-                                                                                             0, //int statesPadded
-                                                                                             false, false, false, false, false, false);
+            partitionList[pos] = new Partition(treesList[dataSetNum]->numTips(),// numberTips
+                                               treesList[dataSetNum]->numInner(),//unsigned  int  clvBuffers
+                                               16,// model->states,//numberStates
+                                               (unsigned int)(msaList[pos]->getLength()),//unsigned  int  sites
+                                               1,//unsigned  int numberRateMatrices
+                                               treesList[dataSetNum]->numBranches(), // unsigned int probMatrices
+                                               RATE_CATS,//RATE_CATS, // unsigned  int  numberRateCats
+                                               treesList[dataSetNum]->numInner(), // unsigned  int numberScaleBuffers
+                                               0, //int statesPadded
+                                               false, false, false, false, false, false);
             
             
-            treeLikList[pos]= new TreeLikelihood(partitionList[pos], treesList[dataSetNum],  msaList[pos], gtNoError);
+            treeLikList[dataSetNum] = new TreeLikelihood(*(partitionList[pos]), *(treesList[dataSetNum]),  *(msaList[pos]), gtNoError)
+            ;
             
             
             double logLikGenotypes = treeLikList[pos]->computeRootLogLikelihood();
             
             assert(!isnan(logLikGenotypes) && !isinf(logLikGenotypes));
             
-             if (programOptions.noisy >1)
-               std::cout << "\n The sequences likelihood without errors is " << logLikGenotypes<< std::endl;
+            if (programOptions.noisy >1)
+                std::cout << "\n The sequences likelihood without errors is " << logLikGenotypes<< std::endl;
             
-            if (!msaList[pos] )
-                fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
+            //            if (msaList[pos]==NULL )
+            //                fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
             
             
             if (programOptions.fixedADOrate > 0 || programOptions.doADOcell == YES || programOptions.doADOsite == YES)
@@ -1360,27 +1361,24 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             //
             
             
-            GenotypeErrorModel* gtErrorModel= new GenotypeErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
+            GenotypeErrorModel gtErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
             
             
             
-            treeLikList[pos]->changeGenotypeErrorModel(gtErrorModel);
+            treeLikList[pos]->changeGenotypeErrorModel(&gtErrorModel);
             
             double logLikGenotypeErrors = treeLikList[pos]->computeRootLogLikelihood();
             
             if (programOptions.noisy >1)
-               std::cout << "\n The sequences likelihood with errors is " << logLikGenotypeErrors<< std::endl;
+                std::cout << "\n The sequences likelihood with errors is " << logLikGenotypeErrors<< std::endl;
             
             writeLineLikelihoodFile( dataSetNum, filePaths, programOptions,files , populations,
                                     logLikCoalTree,  logLikGenotypes,  logLikGenotypeErrors, totalTreeLength);
             
-            // pll_rtree_destroy (rootedTree, NULL);
+ 
             pll_phylip_close(phylip_file_true);
             pll_phylip_close(phylip_file_errors);
-            //pll_msa_destroy(msa);
-            // delete gtNoError;
-            // delete gtErrorModel;
-            // delete treeLik;
+          
             
         }/* end of mutation simulation process */
         
@@ -1416,17 +1414,10 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     
     
     
-    for (auto ptr : treeLikList)
+    for (auto ptr : partitionList)
     {
         delete ptr;
     }
-    treeLikList.clear();
-    
-    
-    //    for (auto ptr : partitionList)
-    //       {
-    //           delete ptr;
-    //       }
     partitionList.clear();
     
     for (auto ptr : treesList)
@@ -1435,17 +1426,10 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     }
     treesList.clear();
     
-    //    for (dataSetNum = 0; dataSetNum < programOptions.numDataSets; dataSetNum++){
-    //
-    //
-    //        for (z = 0; z < programOptions.MutationAssignNum; z++){
-    //
-    //            //pll_msa_destroy(msaList[(dataSetNum-1)*programOptions.MutationAssignNum+z] );
-    //            delete  partitionList[(dataSetNum-1)*programOptions.MutationAssignNum+z];
-    //            delete treeLikList[(dataSetNum-1)*programOptions.MutationAssignNum+z];
-    //        }
-    //        pll_rtree_destroy (treesList[dataSetNum] , NULL);
-    //    }
+
+    treeLikList.clear();
+    
+  
     
     return 0;
 }
@@ -2104,9 +2088,9 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
     char dir[MAX_NAME];
     /* contains the simulated tree in Newick format
      */
-//    if (boost::filesystem::exists( "Results"))
-//           boost::filesystem::remove_all("Results");
-//       boost::filesystem::create_directory("Results");
+    //    if (boost::filesystem::exists( "Results"))
+    //           boost::filesystem::remove_all("Results");
+    //       boost::filesystem::create_directory("Results");
     //mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
     //mkdir("Results",0);
 #ifdef MAC
@@ -2247,13 +2231,13 @@ void PrepareLikelihoodOutputFile(const FilePaths &filePaths, const ProgramOption
     char dir[MAX_NAME];
     /* contains the simulated tree in Newick format
      */
-   if (boost::filesystem::exists( "Results"))
+    if (boost::filesystem::exists( "Results"))
         boost::filesystem::remove_all("Results");
     boost::filesystem::create_directory("Results");
-   // mkdir("Results", S_IRWXU);
-   
+    // mkdir("Results", S_IRWXU);
+    
     /* Create "Results" folder (with type S_IRWXU (read, write and
-                              execute)) */
+     execute)) */
     //mkdir("Results",0);
 #ifdef MAC
     strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
@@ -2373,7 +2357,7 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
     char dir[MAX_NAME];
     /* contains the simulated tree in Newick format
      */
-   
+    
     //mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
     //mkdir("Results",0);
 #ifdef MAC

@@ -11,17 +11,17 @@
 
 #include "search.h"
 
-TreeLikelihood::TreeLikelihood(Partition *reference_partition, pll_rtree_t * rooted_tree, pll_msa_t * msa, GenotypeErrorModel *gtErrorModel):
-rooted_tree(rooted_tree),reference_partition(reference_partition),msa(msa),gtErrorModel(gtErrorModel)
+TreeLikelihood::TreeLikelihood(Partition &reference_partition, RootedTree &rooted_tree, MSA &msa, GenotypeErrorModel &gtErrorModel):
+rooted_tree(&rooted_tree),reference_partition(&reference_partition),msa(&msa),gtErrorModel(&gtErrorModel)
 {
     unsigned int leafCount, internalNodeCount, nodeCount, branchCount, patternCount;
     
     
-    leafCount = rooted_tree->tip_count;
-    internalNodeCount = rooted_tree->inner_count;
+    leafCount = rooted_tree.numTips();
+    internalNodeCount = rooted_tree.numInner();
     nodeCount = internalNodeCount + leafCount;
-    branchCount = rooted_tree->edge_count;
-    patternCount=msa->length;
+    branchCount = rooted_tree.numBranches();
+    patternCount = msa.getLength();
     
     number_genotype_states= 10;
     number_phased_genotype_states= 16;
@@ -47,12 +47,12 @@ rooted_tree(rooted_tree),reference_partition(reference_partition),msa(msa),gtErr
     std::fill_n (nucleotide_frequencies, number_states, 1.0/(number_states));
     
     pll_compute_gamma_cats(1, RATE_CATS, rate_categories, PLL_GAMMA_RATES_MEAN);
-    reference_partition->setCategoryRates(rate_categories);
+    reference_partition.setCategoryRates(rate_categories);
     
-    reference_partition->setCategoryWeights(category_weights);
-    reference_partition->setFrequencies(0, nucleotide_frequencies);
-    reference_partition->setSubstParams(0,subst_params);
-    reference_partition->updateEigen(0);
+    reference_partition.setCategoryWeights(category_weights);
+    reference_partition.setFrequencies(0, nucleotide_frequencies);
+    reference_partition.setSubstParams(0,subst_params);
+    reference_partition.updateEigen(0);
     
     initOperations();
 };
@@ -71,16 +71,16 @@ TreeLikelihood::TreeLikelihood(int numberTips,
                                bool  avx2,
                                bool avx512,
                                bool  asc,
-                               bool tipPatternCompression, pll_rtree_t * rooted_tree, pll_msa_t * msa, GenotypeErrorModel *gtErrorModel ):rooted_tree(rooted_tree),msa(msa), gtErrorModel(gtErrorModel){
+                               bool tipPatternCompression, RootedTree &rooted_tree, MSA &msa, GenotypeErrorModel &gtErrorModel ):rooted_tree(&rooted_tree),msa(&msa), gtErrorModel(&gtErrorModel){
     
     
     unsigned int leafCount, internalNodeCount, nodeCount, branchCount, patternCount;
     
-    leafCount = rooted_tree->tip_count;
-    internalNodeCount = rooted_tree->inner_count;
+    leafCount = rooted_tree.numTips();
+    internalNodeCount = rooted_tree.numInner();
     nodeCount = internalNodeCount + leafCount;
-    branchCount = rooted_tree->edge_count;
-    patternCount=msa->length;
+    branchCount = rooted_tree.numBranches();
+    patternCount = msa.getLength();
     
     branch_lengths = (double *)malloc(branchCount * sizeof(double));
     matrix_indices = (unsigned int *)malloc(branchCount * sizeof(unsigned int));
@@ -158,13 +158,13 @@ double TreeLikelihood::computeRootLogLikelihood(){
     
     double logLik=0.0;
     unsigned int paramsIndexes[RATE_CATS] = {0};
-    int ntips= rooted_tree->tip_count;
+    int ntips= rooted_tree->numTips();
     std::vector<unsigned int> a(ntips);
     std::iota(a.begin(), a.end(), 0);
     
     double * persite_lnl = (double *) malloc(reference_partition->numberSites * sizeof(double));
-    logLik = reference_partition->computeRootLogLikelihood(rooted_tree->root->clv_index,
-                                                           rooted_tree->root->scaler_index,
+    logLik = reference_partition->computeRootLogLikelihood(rooted_tree->getPtr()->root->clv_index,
+                                                           rooted_tree->getPtr()->root->scaler_index,
                                                            paramsIndexes,
                                                            persite_lnl);
     free(persite_lnl);
@@ -172,8 +172,8 @@ double TreeLikelihood::computeRootLogLikelihood(){
     return(logLik);
 }
 void TreeLikelihood::createHashTable(){
-    int leafsCount=rooted_tree->tip_count;
-    pll_rnode_t ** tipnodes = rooted_tree->nodes;
+    int leafsCount=rooted_tree->numTips();
+    pll_rnode_t ** tipnodes = rooted_tree->getPtr()->nodes;
     
     hcreate(leafsCount);
     
@@ -203,8 +203,8 @@ void TreeLikelihood::createHashTable(){
 }
 int TreeLikelihood::setPartitionTips(bool doUseGenotypes){
     
-    int leafsCount=rooted_tree->tip_count;
-    pll_rnode_t ** tipnodes = rooted_tree->nodes;
+    int leafsCount=rooted_tree->numTips();
+    pll_rnode_t ** tipnodes = rooted_tree->getPtr()->nodes;
     
     hcreate(leafsCount);
     
@@ -231,21 +231,21 @@ int TreeLikelihood::setPartitionTips(bool doUseGenotypes){
     unsigned int tip_clv_index;
     
     /* find sequences in hash table and link them with the corresponding taxa */
-    for (unsigned i = 0; i < msa->count; ++i)
+    for (unsigned i = 0; i < msa->getSize(); ++i)
     {
         ENTRY query;
-        query.key = msa->label[i];
+        query.key = msa->getRawPtr()->label[i];
         ENTRY * found = NULL;
         
         found = hsearch(query,FIND);
         
         if (!found)
-            fprintf(stderr,"Sequence with header %s does not appear in the tree", msa->label[i]);
+            fprintf(stderr,"Sequence with header %s does not appear in the tree", msa->label(i).c_str());
         
         tip_clv_index = *((unsigned int *)(found->data));
         // std::cout << "clv index for tip with label " <<msa->label[i] << " is "<< tip_clv_index << std::endl;
         
-        if (reference_partition->setTipStates(tip_clv_index, msa->sequence[i]) != PLL_SUCCESS)
+        if (reference_partition->setTipStates(tip_clv_index, msa->at(i).c_str()) != PLL_SUCCESS)
         {
             fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
             exit(pll_errno);
@@ -257,7 +257,7 @@ int TreeLikelihood::setPartitionTips(bool doUseGenotypes){
 }
 int TreeLikelihood::initOperations(){
     
-    int tip_nodes_count = rooted_tree->tip_count;
+    int tip_nodes_count = rooted_tree->numTips();
     int   inner_nodes_count = tip_nodes_count-1;
     int   nodes_count = inner_nodes_count + tip_nodes_count;
     int   branch_count = nodes_count - 1;
@@ -267,10 +267,10 @@ int TreeLikelihood::initOperations(){
     
     
     /* get inner nodes */
-    pll_rnode_t ** inner_nodes_list = (pll_rnode_t **)malloc(rooted_tree->tip_count *
+    pll_rnode_t ** inner_nodes_list = (pll_rnode_t **)malloc(rooted_tree->numTips() *
                                                              sizeof(pll_rnode_t *));
     memcpy(inner_nodes_list,
-           rooted_tree->nodes+tip_nodes_count,
+           rooted_tree->getPtr()->nodes+tip_nodes_count,
            inner_nodes_count*sizeof(pll_rnode_t *));
     
     unsigned int traversal_size;
@@ -278,7 +278,7 @@ int TreeLikelihood::initOperations(){
     /* compute a partial traversal starting from the randomly selected
      inner node */
     
-    if (!pll_rtree_traverse(rooted_tree->root,
+    if (!pll_rtree_traverse(rooted_tree->getPtr()->root,
                             PLL_TREE_TRAVERSE_POSTORDER,
                             pll_utils::cb_rfull_traversal,
                             travbuffer,
@@ -305,7 +305,7 @@ int TreeLikelihood::initOperations(){
     std::vector<unsigned int> a(branch_count);
     std::iota(a.begin(), a.end(), 0);
     
-    reference_partition->updateProbMatrices(paramsIndexes, &a[0], branch_lengths, rooted_tree->edge_count);
+    reference_partition->updateProbMatrices(paramsIndexes, &a[0], branch_lengths, rooted_tree->numBranches());
     
     reference_partition->updatePartials(operations, ops_count);
     //    unsigned  int precision =6;
@@ -325,16 +325,16 @@ int TreeLikelihood::initOperations(){
 void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) const
 {
     
-    auto clv_size = msa->length * number_states;
+    auto clv_size = msa->getLength() * number_states;
     if( clv.size()!=clv_size)
         clv.resize(clv_size);
     
     auto clvp = clv.begin();
-    auto seq = msa->sequence[tip_id];
+    auto seq = msa->at(tip_id);
     //auto charmap = _model.charmap();
     auto charmap = pll_map_gt10;
     
-    for (size_t j = 0; j < msa->length; ++j)
+    for (size_t j = 0; j < msa->getLength(); ++j)
     {
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
@@ -355,21 +355,21 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) c
     
     assert(clvp == clv.end());
 }
-void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, pll_msa_t *msaP, GenotypeErrorModel &gtError,unsigned int number_statesP)
+void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, MSA &msaP, GenotypeErrorModel &gtError,unsigned int number_statesP)
 {
     
     
-    auto clv_size = msaP->length * number_statesP;
+    auto clv_size = msaP.getLength() * number_statesP;
     if( clv.size()!=clv_size)
         clv.resize(clv_size);
     
     auto clvp = clv.begin();
     //auto seq = msa->at(tip_id);
-    auto seq = msaP->sequence[tip_id];
+    auto seq = msaP.at(tip_id);
     //auto charmap = _model.charmap();
     auto charmap = pll_map_gt10;
     
-    for (size_t j = 0; j < msaP->length; ++j)
+    for (size_t j = 0; j < msaP.getLength(); ++j)
     {
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
@@ -395,7 +395,7 @@ void TreeLikelihood::recomputeTipClvs()
     //assert(!(reference_partition->getPartition()->attributes & PLL_ATTRIB_PATTERN_TIP));
     
     std::vector<double> tmp_clv;
-    for (size_t i = 0; i < msa->count; ++i)
+    for (size_t i = 0; i < msa->getSize(); ++i)
     {
         fillTipClv(i, tmp_clv);
         reference_partition->setTipCLV(i, tmp_clv.data());

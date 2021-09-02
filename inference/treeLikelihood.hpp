@@ -10,15 +10,18 @@
 
 #include "pll_utils.hpp"
 #include "partition.hpp"
+#include "tree.hpp"
+#include "msa.hpp"
 #include "genotype_error_model.hpp"
 #include <stdio.h>
 
 
 class TreeLikelihood{
 private:
-    pll_rtree_t * rooted_tree;
-    Partition* reference_partition;
-    pll_msa_t * msa;
+    RootedTree *rooted_tree;
+    //pll_rtree_t * rooted_tree;
+    Partition *reference_partition;
+    MSA *msa;
     GenotypeErrorModel *gtErrorModel;
     pll_operation_t * operations ;
     unsigned int ops_count;
@@ -28,7 +31,7 @@ private:
     int number_phased_genotype_states;
     int number_states;
 public:
-    TreeLikelihood(Partition *reference_partition, pll_rtree_t * rooted_tree, pll_msa_t * msa, GenotypeErrorModel *gtErrorModel);
+    TreeLikelihood(Partition &reference_partition, RootedTree &rooted_tree, MSA &msa, GenotypeErrorModel &gtErrorModel);
     
     TreeLikelihood(int numberTips,
                    int clvBuffers,
@@ -44,7 +47,7 @@ public:
                    bool  avx2,
                    bool avx512,
                    bool  asc,
-                   bool tipPatternCompression, pll_rtree_t * rooted_tree, pll_msa_t * msa, GenotypeErrorModel *gtErrorModel);
+                   bool tipPatternCompression, RootedTree &rooted_tree, MSA &msa, GenotypeErrorModel &gtErrorModel);
     
     double computeRootLogLikelihood();
     int setPartitionTips(bool doUseGenotypes);
@@ -54,12 +57,15 @@ public:
     void createHashTable();
     void destroyHashTable();
     void changeGenotypeErrorModel(GenotypeErrorModel *gtErrorModel);
-    static void fillTipClv(unsigned int tip_id, std::vector<double> &clv, pll_msa_t *msaP, GenotypeErrorModel &gtError, unsigned int number_statesP);
-    
+   
+    static void fillTipClv(unsigned int tip_id, std::vector<double> &clv, MSA &msaP, GenotypeErrorModel &gtError,unsigned int number_statesP);
     ~TreeLikelihood()
     {
         //pll_msa_destroy(msa);
         delete reference_partition;
+        //delete rooted_tree;
+        delete rooted_tree;
+        delete msa;
         // pll_rtree_destroy (rooted_tree, NULL);
         
         free( branch_lengths);

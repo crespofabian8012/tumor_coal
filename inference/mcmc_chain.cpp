@@ -2722,7 +2722,7 @@ void Chain::initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, Program
     //currentlogConditionalLikelihoodSequences = pll_utils::LogConditionalLikelihoodSequences( msa,  rootedNewick2, programOptions, seqErrorRate, dropoutRate);
     gtErrorModel= new GenotypeErrorModel("GT20", seqErrorRate, dropoutRate, 16);
     
-      treeLik=  new TreeLikelihood(partition, initialRootedTree,  msa, gtErrorModel);
+     // treeLik=  new TreeLikelihood(*partition, RootedTree(initialRootedTree),  msa, gtErrorModel);
 //     treeLik= new TreeLikelihood(
 //                                                initialRootedTree->tip_count,
 //                                                initialRootedTree->inner_count,
@@ -2741,7 +2741,7 @@ void Chain::initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, Program
 //                                                false,initialRootedTree ,  msa,  gtErrorModel);
 //
     
-    currentlogConditionalLikelihoodSequences = treeLik->computeRootLogLikelihood();
+  //  currentlogConditionalLikelihoodSequences = treeLik->computeRootLogLikelihood();
   // currentlogConditionalLikelihoodSequences =   pll_utils::LogConditionalLikelihoodSequencesRootedTree( msa,  initialRootedTree, programOptions, seqErrorRate, dropoutRate );
     
    // if (mcmcOptions.verbose>=0)

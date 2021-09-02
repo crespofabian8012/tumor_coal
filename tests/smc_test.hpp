@@ -10,4 +10,5 @@
 
 #include <stdio.h>
 void  test_smc();
+void test_smc_1pop_4tips();
 #endif /* smc_test_hpp */

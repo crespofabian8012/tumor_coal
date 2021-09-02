@@ -1034,7 +1034,7 @@ void pll_utils::printChronologicalOrderRootedTree(pll_rtree_t *tree,std::string&
                    leftLabel = node->left->label;
             if((node->right->label != NULL) && (node->right->label[0] != '\0'))
                    rightLabel=  node->right->label;
-            stream << "left: "<< leftLabel << " "<< node->left->clv_index << " right: " << rightLabel << " "<< node->right->clv_index << " parent:" << node->clv_index <<"("<< data->numberOfNodesSubTree<< ")" << " time: " << data->time;
+            stream << "	\nleft: "<< leftLabel << " "<< node->left->clv_index << " right: " << rightLabel << " "<< node->right->clv_index << " parent:" << node->clv_index <<"("<< data->numberOfNodesSubTree<< ")" << " time: " << data->time;
             if (i<(traversalSize-1))
                         stream <<", \n";
             

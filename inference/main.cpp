@@ -287,9 +287,9 @@ int main(int argc, char* argv[] )
                                           0, //int statesPadded
                                           true,//PLL_ATTRIB_ARCH_SSE
                                           false, false, false, false, false);
-    double theta = 0.019;
-    std::vector<double> deltas  = {21.519};
-    std::vector<double> timeOriginSTDs = {0.128};
+    double theta = 2.5;//0.019;
+    std::vector<double> deltas  = {100};//{21.519};
+    std::vector<double> timeOriginSTDs = { 0.131686/theta };
     std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
     
     transform(coalTimes.begin(), coalTimes.end(), coalTimes.begin(), [theta](double &c){ return c/theta; });

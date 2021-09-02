@@ -52,6 +52,7 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     resetNumActiveGametesCounter();
     assert(smcParams.positions.size()>0);
     postorder.reserve(2*smcParams.positions.size()-1);
+    coalEventTimes.reserve(smcParams.positions.size()-1);
 }
 State::State(const State &original):pll_buffer_manager(original.pll_buffer_manager){
     
@@ -66,6 +67,7 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     idsNextInmigrationEvents = original.idsNextInmigrationEvents;
     roots = original.roots;
     postorder  = original.postorder;
+    coalEventTimes = original.coalEventTimes;
     //    roots.reserve(original.root_count());
     //    for (auto const& fptr : original.getRoots())
     //         roots.emplace_back(fptr->Clone());
@@ -158,8 +160,8 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
 void State::resetNumActiveGametesCounter(){
     
     populationSet->resetNumActiveGametesCounter();
-   
 }
+
 
 State &State::operator=(const State &original){
     
@@ -173,6 +175,7 @@ State &State::operator=(const State &original){
     num_sites=original.num_sites;
     roots = original.roots;
     postorder  = original.postorder;
+    coalEventTimes  = original.coalEventTimes;
     gtError=original.gtError;
     populationSet = original.populationSet;
     nextAvailable = original.nextAvailable;

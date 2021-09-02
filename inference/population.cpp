@@ -1121,7 +1121,7 @@ void Population::sampleEventTimes(gsl_rng *random, int K){
     double timeNextMigration = 0.;
     double currentTimeKingman = 0., waitingTimeKingman = 0., timeNextEvent = 0.;
     Population *incomingPop;
-    
+    double currentModelTime = 0.;
     numCompletedCoalescences =0;
     while (indexNextMigration < numMigrations) {
         timeNextMigration = immigrantsPopOrderedByModelTime[indexNextMigration].first;
@@ -1129,6 +1129,9 @@ void Population::sampleEventTimes(gsl_rng *random, int K){
         if (numActiveGametes >= 2) {
             
             currentTimeKingman = Population::FmodelTstandard (currentTime ,timeOriginSTD, delta,   K);//this is current time in Kingman coalescent
+           currentModelTime = Population::GstandardTmodel(currentTimeKingman, timeOriginSTD, delta,  K);//this is current time in Kingman coal time
+                       
+            assert(abs(currentTime-currentModelTime)<0.0000001);
             waitingTimeKingman= proposeTimeNextCoalEvent(random, numActiveGametes, K);
             currentTimeKingman = currentTimeKingman + waitingTimeKingman;
             //now from Kingman coal to  current population model time

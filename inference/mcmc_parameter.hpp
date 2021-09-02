@@ -157,11 +157,11 @@ public:
     virtual T getCurrentVariance()=0;
     virtual std::string getName()=0;
 };
-template <typename T>
- T operator+(const T& a, const T& b)
-{
-  return a + b;
-}
+//template <typename T>
+// T operator+(const T& a, const T& b)
+//{
+//  return a + b;
+//}
 template <typename T>
 bool operator <( const T &lhs, const long double  &rhs )
 {

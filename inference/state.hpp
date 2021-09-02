@@ -35,6 +35,7 @@ class State{
     std::vector<std::shared_ptr<PartialTreeNode>> postorder;
     std::vector<int> idsNextCoalEvents;
     std::vector<int> idsNextInmigrationEvents;
+    std::vector<double> coalEventTimes;
     GenotypeErrorModel *gtError;
     long double theta;
     double initialLogWeight;
@@ -64,6 +65,8 @@ public:
     std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
     
     double getInitialLogWeight() const {return initialLogWeight;}
+    
+    std::vector<double> getCoalEventTimes() const{return coalEventTimes;}
     
     int getNodeIdxById(size_t id);
     int getIdNextCoalEventForPopulation(int i);
@@ -112,7 +115,7 @@ public:
         assert(newHeight>=heightScaledByTheta);
         heightScaledByTheta= newHeight;
         heightModelTime = heightScaledByTheta/theta;
-        
+        coalEventTimes.push_back(newHeight);
     }
     
     void increaseNextAvailable(){nextAvailable++;}

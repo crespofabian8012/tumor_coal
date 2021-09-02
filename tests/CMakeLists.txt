@@ -44,7 +44,6 @@ find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 #find_package(Boost 1.67 COMPONENTS regex system filesystem unit_test_framework program_options REQUIRED)
 find_package(Boost 1.67 COMPONENTS  system filesystem unit_test_framework program_options REQUIRED)
 if(Boost_FOUND)
-    #target_include_directories(run PRIVATE ${Boost_INCLUDE_DIRS})
     include_directories( PRIVATE ${Boost_INCLUDE_DIRS})
 endif()
 

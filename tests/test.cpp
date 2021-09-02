@@ -18,9 +18,9 @@ using namespace std;
 
 int main()
 {
-    std::cout << "Running tests...!" << std::endl;
+    std::cout << "\n\nRunning tests...!\n" << std::endl;
     //test_hmc();
     test_smc();
-    std::cout << "All tests passed!" << std::endl;
+    std::cout << "\n\nAll tests passed!\n" << std::endl;
     return 0;
 }

@@ -3719,7 +3719,7 @@ void printProgramHeader()
     //std::time_t end_time = std::chrono::system_clock::to_time_t(end);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     std::cout << "+                                                                                      " << std::endl;
-    std::cout << "+Bayesian inference of tumour single cell growth rates using the structured coalescent " << std::endl;
+    std::cout << "\n\n+Bayesian inference of tumour single cell growth rates using the structured coalescent " << std::endl;
     std::cout << "+                                                                                      " << std::endl;
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     std::cout << "+                         Version 1.0.0    [August-1-2020]                             " << std::endl;

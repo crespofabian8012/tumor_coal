@@ -17,8 +17,8 @@
 State::State(PosetSMCParams &smcParams, gsl_rng *random):
 pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition), num_sites(smcParams.num_sites)
 {
-    heightModelTime = 0.0;
-    heightScaledByTheta =0.0;
+    heightModelTime =0.0;
+    heightScaledByTheta = 0.0;
     initialLogWeight = 0.0;
     
     initIdsNextCoalEvents(smcParams.getProgramOptions().numClones);
@@ -47,12 +47,13 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     initForest(smcParams.sampleSize, smcParams.msa, smcParams.positions,  smcParams.getProgramOptions());
     nextAvailable = smcParams.sampleSize-1;
     
-    populationSet->sampleEventTimes( random, smcParams.getProgramOptions().K,smcParams.getProgramOptions().noisy);
+    double K= smcParams.getProgramOptions().K;
+    populationSet->sampleEventTimesScaledByProportion( random, K,smcParams.getProgramOptions().noisy);
        
     resetNumActiveGametesCounter();
     assert(smcParams.positions.size()>0);
     postorder.reserve(2*smcParams.positions.size()-1);
-    coalEventTimes.reserve(smcParams.positions.size()-1);
+    coalEventTimesScaledByTheta.reserve(smcParams.positions.size()-1);
 }
 State::State(const State &original):pll_buffer_manager(original.pll_buffer_manager){
     
@@ -67,7 +68,7 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     idsNextInmigrationEvents = original.idsNextInmigrationEvents;
     roots = original.roots;
     postorder  = original.postorder;
-    coalEventTimes = original.coalEventTimes;
+    coalEventTimesScaledByTheta = original.coalEventTimesScaledByTheta;
     //    roots.reserve(original.root_count());
     //    for (auto const& fptr : original.getRoots())
     //         roots.emplace_back(fptr->Clone());
@@ -175,7 +176,7 @@ State &State::operator=(const State &original){
     num_sites=original.num_sites;
     roots = original.roots;
     postorder  = original.postorder;
-    coalEventTimes  = original.coalEventTimes;
+    coalEventTimesScaledByTheta  = original.coalEventTimesScaledByTheta;
     gtError=original.gtError;
     populationSet = original.populationSet;
     nextAvailable = original.nextAvailable;
@@ -438,7 +439,8 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
                                child_left->pscale_buffer,
                                child_right->pscale_buffer,
                                p->attributes);
-    
+//    if (1)
+//        parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
     
     parent->ln_likelihood =
     compute_ln_likelihood(parent->pclv,

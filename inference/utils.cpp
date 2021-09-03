@@ -38,7 +38,6 @@ extern "C"
 
 #include <algorithm>
 
-//#include <fftw3.h>
 #include "output_functions.hpp"
 //#include "autocovariance.hpp"
 

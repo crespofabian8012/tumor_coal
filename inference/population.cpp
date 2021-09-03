@@ -1095,6 +1095,15 @@ long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveL
     return ThisTimeCA_W;
     
 }
+long double Population::proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double K   ){
+    assert(numActiveGametes>1);
+  
+    long double  RateCA = (long double)  numActiveGametes * ((long double) numActiveGametes - 1) / 2.0;
+    long double  ThisTimeCA_W = Random::RandomExponential(RateCA,0,  true, rngGsl,NULL ) ;
+    
+    return ThisTimeCA_W;
+    
+}
 long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,long double currentTime, int numActiveLineages,  double K){
     
     long double result=0.0;
@@ -1113,7 +1122,7 @@ long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,lo
     }
     return result;
 }
-void Population::sampleEventTimes(gsl_rng *random, int K){
+void Population::sampleEventTimesScaledByProportion(gsl_rng *random, double K){
     
     int numMigrations = numIncomingMigrations;
     int indexNextMigration = 0;
@@ -1132,7 +1141,7 @@ void Population::sampleEventTimes(gsl_rng *random, int K){
            currentModelTime = Population::GstandardTmodel(currentTimeKingman, timeOriginSTD, delta,  K);//this is current time in Kingman coal time
                        
             assert(abs(currentTime-currentModelTime)<0.0000001);
-            waitingTimeKingman= proposeTimeNextCoalEvent(random, numActiveGametes, K);
+            waitingTimeKingman=proposeWaitingTimeNextCoalEvent(random, K) ;
             currentTimeKingman = currentTimeKingman + waitingTimeKingman;
             //now from Kingman coal to  current population model time
             timeNextEvent =   Population::GstandardTmodel(currentTimeKingman, timeOriginSTD, delta, K);
@@ -1147,7 +1156,8 @@ void Population::sampleEventTimes(gsl_rng *random, int K){
             //coalescent event
             currentTime = timeNextEvent; // update current time in model time
             assert(currentTime>0);
-            CoalescentEventTimes[numCompletedCoalescences]=  currentTime;
+            assert(x>0);
+            CoalescentEventTimes[numCompletedCoalescences]=  currentTime *x;
             numCompletedCoalescences= numCompletedCoalescences+1;
             numActiveGametes = numActiveGametes - 1;
             
@@ -1192,6 +1202,21 @@ double  Population::nextCoalEventTime(int idxNextCoal, int indexNextMigration,  
         inmigrantPop = immigrantsPopOrderedByModelTime[indexNextMigration].second;
     }
     return nextCoalTime;
+}
+void Population::printCoalEventTimes(std::ostream &stream){
+    
+    for (std::vector<long double>::const_iterator i = CoalescentEventTimes.begin(); i != CoalescentEventTimes.end(); ++i){
+        stream << *i << ' ';
+    }
+     stream <<  "\n";
+}
+void Population::printInmigrationEventTimes(std::ostream &stream){
+    std::pair<long double, Population *> temp;
+    for (std::vector<std::pair<long double, Population *>>::const_iterator i = immigrantsPopOrderedByModelTime.begin(); i != immigrantsPopOrderedByModelTime.end(); ++i){
+        temp = *i;
+        stream << temp.first << ' ';
+    }
+     stream <<  "\n";
 }
 // Class PopulationSet
 PopulationSet::PopulationSet(int numClones){
@@ -1632,7 +1657,7 @@ void PopulationSet::initPopulationTOriginSTD(std::vector<double> &TOriginSTDs){
     }
     
 }
-void PopulationSet::sampleEventTimes(gsl_rng * random, int K, int noisy){
+void PopulationSet::sampleEventTimesScaledByProportion(gsl_rng * random, double K, int noisy){
     
     Population *currentPop;
     Population *fatherPop;
@@ -1642,7 +1667,9 @@ void PopulationSet::sampleEventTimes(gsl_rng * random, int K, int noisy){
         //currentPop = *(populations + i);
         currentPop = populations[i];
         assert(currentPop->numCompletedCoalescences==0);
-        currentPop->sampleEventTimes(random, K);
+        currentPop->sampleEventTimesScaledByProportion(random, K);
+        
+        //currentPop->printCoalEventTimes(std::cout);
         if (i< numClones-1)   //if it is not the last one
         {
             //choose the father population from which the population i came

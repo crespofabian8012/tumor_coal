@@ -115,7 +115,7 @@ height(height), index(index), clv_size(clv_elements)
         pclv = manager->clv_buffer.top();
         manager->clv_buffer.pop();
         
-        std::memset(pclv, 0, clv_size);
+        std::memset(pclv, 0, clv_elements*sizeof(double));
     }
     
     if (manager->scale_buffer_buffer.empty()) {
@@ -130,6 +130,7 @@ height(height), index(index), clv_size(clv_elements)
         pscale_buffer = manager->scale_buffer_buffer.top();
         manager->scale_buffer_buffer.pop();
         
+       
         std::memset(pscale_buffer, 0, scale_buffer_elements*sizeof(unsigned int));
     }
     // init(clv_elements);

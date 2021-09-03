@@ -248,7 +248,7 @@ void test_smc_1pop_4tips( )
         weights.push_back((*normalized_weights)[i]);
         rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
         //std::cout << "Root loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimes().data(),num_iter-1 );
+        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimesScaledBytheta().data(),num_iter-1 );
         //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
         
         if ((*normalized_weights)[i] > max) {
@@ -285,15 +285,14 @@ void test_smc_1pop_4tips( )
     assert(abs(avgRF-0) <0.0000000001);
     assert(numUniqueTopologies ==1 );
     
-    Eigen::ArrayXXd allCoalTimes =allCoalTimesScaledByTheta *(1./theta) ;
     
-    Eigen::Array<double, 1, Eigen::Dynamic> means = allCoalTimes.colwise().mean();
-    Eigen::Array<double, 1, Eigen::Dynamic> mins = allCoalTimes.colwise().minCoeff();
-    Eigen::Array<double, 1, Eigen::Dynamic> maxs = allCoalTimes.colwise().maxCoeff();
-    Eigen::Array<double, 1, Eigen::Dynamic> std_dev = ((allCoalTimes.rowwise() - means.array()).square().colwise().sum()/(num_iter-2)).sqrt();
+    Eigen::Array<double, 1, Eigen::Dynamic> means = allCoalTimesScaledByTheta.colwise().mean();
+    Eigen::Array<double, 1, Eigen::Dynamic> mins = allCoalTimesScaledByTheta.colwise().minCoeff();
+    Eigen::Array<double, 1, Eigen::Dynamic> maxs = allCoalTimesScaledByTheta.colwise().maxCoeff();
+    Eigen::Array<double, 1, Eigen::Dynamic> std_dev = ((allCoalTimesScaledByTheta.rowwise() - means.array()).square().colwise().sum()/(num_iter-2)).sqrt();
     for (size_t i=0; i<(num_iter-1); i++){
         
-        std::cout << "coal time " << i << " min, max: "<< mins(i)<< ","<< maxs(i) << " mean: "<< means(i) <<" std: " << std_dev(i) << " true "<< coalTimes[i]<< "\n"<<std::endl;
+        std::cout << "coal time scaled by theta " << i << " min, max: "<< mins(i)<< ","<< maxs(i) << " mean: "<< means(i) <<" std: " << std_dev(i) << " true "<< coalTimes[i]*theta<< "\n"<<std::endl;
         
     }
     
@@ -514,7 +513,7 @@ void test_smc_1pop_15tips( )
         weights.push_back((*normalized_weights)[i]);
         rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
         // std::cout << "Root loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimes().data(),num_iter-1 );
+        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimesScaledBytheta().data(),num_iter-1 );
         //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
         
         if ((*normalized_weights)[i] > max) {
@@ -548,15 +547,15 @@ void test_smc_1pop_15tips( )
     std::cout << "Number unique topologies " << numUniqueTopologies  << std::endl;
     
     
-    Eigen::ArrayXXd allCoalTimes =allCoalTimesScaledByTheta *(1./theta) ;
+   // Eigen::ArrayXXd allCoalTimes =allCoalTimesScaledByTheta *(1./theta) ;
     
-    Eigen::Array<double, 1, Eigen::Dynamic> means = allCoalTimes.colwise().mean();
-    Eigen::Array<double, 1, Eigen::Dynamic> mins = allCoalTimes.colwise().minCoeff();
-    Eigen::Array<double, 1, Eigen::Dynamic> maxs = allCoalTimes.colwise().maxCoeff();
-    Eigen::Array<double, 1, Eigen::Dynamic> std_dev = ((allCoalTimes.rowwise() - means.array()).square().colwise().sum()/(num_iter-2)).sqrt();
+    Eigen::Array<double, 1, Eigen::Dynamic> means = allCoalTimesScaledByTheta.colwise().mean();
+    Eigen::Array<double, 1, Eigen::Dynamic> mins = allCoalTimesScaledByTheta.colwise().minCoeff();
+    Eigen::Array<double, 1, Eigen::Dynamic> maxs = allCoalTimesScaledByTheta.colwise().maxCoeff();
+    Eigen::Array<double, 1, Eigen::Dynamic> std_dev = ((allCoalTimesScaledByTheta.rowwise() - means.array()).square().colwise().sum()/(num_iter-2)).sqrt();
     for (size_t i=0; i<(num_iter-1); i++){
         
-        std::cout << "coal time " << i << " min, max: "<< mins(i)<< ","<< maxs(i) << " mean: "<< means(i) <<" std: " << std_dev(i) << " true "<< coalTimes[i]<< "\n"<<std::endl;
+        std::cout << "coal time scaled by theta " << i << " min, max: "<< mins(i)<< ","<< maxs(i) << " mean: "<< means(i) <<" std: " << std_dev(i) << " true "<< coalTimes[i]*theta<< "\n"<<std::endl;
         
     }
     
@@ -781,7 +780,7 @@ void test_smc_1pop_25tips( )
         weights.push_back((*normalized_weights)[i]);
         rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
         // std::cout << "Root loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimes().data(),num_iter-1 );
+        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimesScaledBytheta().data(),num_iter-1 );
         //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
         
         if ((*normalized_weights)[i] > max) {
@@ -815,15 +814,14 @@ void test_smc_1pop_25tips( )
     std::cout << "Number unique topologies " << numUniqueTopologies  << std::endl;
     
     
-    Eigen::ArrayXXd allCoalTimes =allCoalTimesScaledByTheta *(1./theta) ;
-    
-    Eigen::Array<double, 1, Eigen::Dynamic> means = allCoalTimes.colwise().mean();
-    Eigen::Array<double, 1, Eigen::Dynamic> mins = allCoalTimes.colwise().minCoeff();
-    Eigen::Array<double, 1, Eigen::Dynamic> maxs = allCoalTimes.colwise().maxCoeff();
-    Eigen::Array<double, 1, Eigen::Dynamic> std_dev = ((allCoalTimes.rowwise() - means.array()).square().colwise().sum()/(num_iter-2)).sqrt();
+ 
+    Eigen::Array<double, 1, Eigen::Dynamic> means = allCoalTimesScaledByTheta.colwise().mean();
+    Eigen::Array<double, 1, Eigen::Dynamic> mins = allCoalTimesScaledByTheta.colwise().minCoeff();
+    Eigen::Array<double, 1, Eigen::Dynamic> maxs = allCoalTimesScaledByTheta.colwise().maxCoeff();
+    Eigen::Array<double, 1, Eigen::Dynamic> std_dev = ((allCoalTimesScaledByTheta.rowwise() - means.array()).square().colwise().sum()/(num_iter-2)).sqrt();
     for (size_t i=0; i<(num_iter-1); i++){
         
-        std::cout << "coal time " << i << " min, max: "<< mins(i)<< ","<< maxs(i) << " mean: "<< means(i) <<" std: " << std_dev(i) << " true "<< coalTimes[i]<< "\n"<<std::endl;
+        std::cout << "coal time scaled by theta " << i << " min, max: "<< mins(i)<< ","<< maxs(i) << " mean: "<< means(i) <<" std: " << std_dev(i) << " true "<< coalTimes[i]*theta<< "\n"<<std::endl;
         
     }
     

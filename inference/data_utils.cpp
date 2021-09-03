@@ -1279,7 +1279,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             
             double logLikGenotypes = treeLikList[pos]->computeRootLogLikelihood();
             
-            assert(!isnan(logLikGenotypes) && !isinf(logLikGenotypes));
+           // assert(!isnan(logLikGenotypes) && !isinf(logLikGenotypes));
             
             if (programOptions.noisy >1)
                 std::cout << "\n The sequences likelihood without errors is " << logLikGenotypes<< std::endl;
@@ -1735,8 +1735,7 @@ void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  i
 void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *popI, std::vector<TreeNode *> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
                           int &labelNodes, double &currentTime, int &numNodes, const gsl_rng * rngGsl)
 {
-    
-    
+
     TreeNode  *p, *q, *r;
     int firstInd, secondInd=0, newInd=0;
     int choosePairIndividuals = YES;
@@ -1746,7 +1745,6 @@ void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *pop
     newInd = nextAvailable;
     if (noisy > 1)
         fprintf (stderr, "\n Coalescence involving %d and %d to create node %d (in clone %d)", popI->idsActiveGametes[firstInd], popI->idsActiveGametes[secondInd], newInd, popI->index);
-    
     
     /*  set pointers between nodes */
     p = nodes[popI->idsActiveGametes[firstInd]];
@@ -1767,12 +1765,12 @@ void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *pop
     q->anc1 = r;
     r->time = currentTime;
     
+    assert(popI->x > 0);
     if (popI->order == numClones-1)//oldest population
         r->timePUnits = currentTime;
     else
         r->timePUnits = currentTime * (popI->x);
-    
-    //fprintf (stderr, "\n r->index = %d, r->time = %lf, ClonePopSizeMeffectBegin[ThisCloneNumber] = %lf, ThisCloneNumber = %d\n", r->index, r->time, ClonePopSizeMeffectBegin[ThisCloneNumber], ThisCloneNumber);
+
     if (noisy > 1)
         fprintf (stderr, "\t|\tCurrentTime (input units) = %Lf", r->timePUnits);
     /* readjust active nodes */
@@ -1781,17 +1779,14 @@ void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *pop
     popI->idsActiveGametes[secondInd] = popI->idsActiveGametes[popI->numActiveGametes - 1];;
     numActiveGametes = numActiveGametes - 1; /* less 1 active node */
     
-    
-    
-    
-    
+
     //update list ids nodes
     // popI->idsGametes[popI->numGametes] = newInd;
     popI->numGametes = popI->numGametes +1;
     
     nextAvailable=nextAvailable+1; /* 1 node more is available */
     
-    popI->CoalescentEventTimes[ popI->numCompletedCoalescences]=  r->time;
+    popI->CoalescentEventTimes[ popI->numCompletedCoalescences]= r->timePUnits;//  r->time;
     popI->numActiveGametes = popI->numActiveGametes - 1; /* now this clone
                                                           has 1 less node */
     

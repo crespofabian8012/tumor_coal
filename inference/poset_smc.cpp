@@ -55,7 +55,8 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             pop= result->getPopulationByIndex( i);
             
             //std::cout << "num active gametes pop " << pop->numActiveGametes<< std::endl;
-            
+           // pop->printCoalEventTimes(std::cout);
+           // pop->printInmigrationEventTimes(std::cout);
             if ( params.doFixedEventimes){
                 timeNextCoalEvent = params.getPopulationEvent(i, result->getIdNextCoalEventForPopulation(i));
             }
@@ -75,7 +76,9 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
         }
         assert(timeNextCoalEvent > 0);
         assert(minTimeNextCoalEvent* result->getTheta()>0);
+       // std::cout<< "current height scaled by theta " << (minTimeNextCoalEvent* result->getTheta()) << std::endl;
         result->setHeightScaledByTheta(minTimeNextCoalEvent* result->getTheta());
+    
         
         result->moveNextIdEventForPopulation(chosenPop->index, isThereInmigrationBeforeNextCoalEvent);
         if (!isThereInmigrationBeforeNextCoalEvent && chosenPop->numActiveGametes >1){
@@ -129,7 +132,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                 idxFirst = allCoalPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
                 idxSecond = allCoalPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
                 
-                // std::cout<< "first " << idxFirst << "second " << idxSecond << " weight " << weight << " norm weight " << normWeights[pos] << std::endl;
+                 std::cout<< "first " << idxFirst << " second " << idxSecond << " weight " << weight << " norm weight " << normWeights[pos] << std::endl;
                 
                 // std::cout<< "Max weight: first " << allCoalPairs[posMax]. first << "second " << allCoalPairs[posMax]. second << " weight " << weight << " max weight " << logWeights[posMax] << std::endl;
                 

@@ -77,13 +77,13 @@ public:
     //methods
     void initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions);
     
-    std::shared_ptr<PartialTreeNode> connect(int i, int j,  size_t index_pop_new_node);
+    std::shared_ptr<PartialTreeNode> connect(int i, int j,  size_t index_pop_new_node, double newNodeHeight, double  logLikNewNode);
     
     double likelihood_factor(std::shared_ptr<PartialTreeNode> root)const;
     
     void remove_roots(int i, int j);
     
-    std::shared_ptr<PartialTreeNode> proposeNewNode(int firstId, int secondId, size_t index_pop_new_node );
+    std::shared_ptr<PartialTreeNode> proposeNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight , double logLikNewNode);
     
     int root_count() const{return roots.size();};
     
@@ -117,7 +117,10 @@ public:
         heightModelTime = heightScaledByTheta/theta;
         coalEventTimesScaledByTheta.push_back(newHeight);
     }
-    
+    void insertNewCoalTime(double newHeight){
+        assert(newHeight>0);
+        coalEventTimesScaledByTheta.push_back(newHeight);
+    }
     void increaseNextAvailable(){nextAvailable++;}
     
 
@@ -130,9 +133,16 @@ public:
     std::string getNewickRecursive(std::shared_ptr<PartialTreeNode> root, std::string &newick);
     std::string getNewick(std::shared_ptr<PartialTreeNode> root);
     
+    double getNextCoalTime(gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop,double &logLik, double K);
     
+    double proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
+    double  proposalCoalNodePriorPrior(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
     
-    
+    double  proposalPriorPrior(gsl_rng * random, Population *leftNodePop,Population *rightNodePop, double newNodeHeight, double logLikNewHeight);
+    double   proposalPriorPost(gsl_rng * random, Population *leftNodePop,Population *rightNodePop,  double newNodeHeight, double logLikNewHeight);
+    double   proposalCoalMRCANodePriorPost(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
+    double  proposalCoalMRCANodePriorPrior(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
+    unsigned int numberNonTrivialTrees();
     ~State();
 };
 #endif /* state_hpp */

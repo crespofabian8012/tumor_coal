@@ -248,7 +248,9 @@ void test_smc_1pop_4tips( )
         weights.push_back((*normalized_weights)[i]);
         rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
         //std::cout << "Root loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimesScaledBytheta().data(),num_iter-1 );
+        std::vector<double> sortedCoalTimes=currents->getCoalEventTimesScaledBytheta();
+               std::sort(sortedCoalTimes.begin(),sortedCoalTimes.end() );
+        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(sortedCoalTimes.data(),num_iter-1 );
         //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
         
         if ((*normalized_weights)[i] > max) {
@@ -513,7 +515,9 @@ void test_smc_1pop_15tips( )
         weights.push_back((*normalized_weights)[i]);
         rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
         // std::cout << "Root loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimesScaledBytheta().data(),num_iter-1 );
+        std::vector<double> sortedCoalTimes=currents->getCoalEventTimesScaledBytheta();
+        std::sort(sortedCoalTimes.begin(),sortedCoalTimes.end() );
+        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(sortedCoalTimes.data(),num_iter-1 );
         //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
         
         if ((*normalized_weights)[i] > max) {
@@ -780,7 +784,10 @@ void test_smc_1pop_25tips( )
         weights.push_back((*normalized_weights)[i]);
         rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
         // std::cout << "Root loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(currents->getCoalEventTimesScaledBytheta().data(),num_iter-1 );
+        std::vector<double> sortedCoalTimes=currents->getCoalEventTimesScaledBytheta();
+               std::sort(sortedCoalTimes.begin(),sortedCoalTimes.end() );
+        allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(sortedCoalTimes.data(),num_iter-1 );
+     
         //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
         
         if ((*normalized_weights)[i] > max) {

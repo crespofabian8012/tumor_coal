@@ -296,9 +296,10 @@ struct Utils
     static     std::vector<std::pair<int, int>> allPairs(int vectorSize);
     static std::vector<std::pair<int, int>> allPairCombinations(int vectorSize);
     static std::vector<std::pair<int, int>> allCombinations(int N, int K);
-    double findClosest(std::vector<double> &arr, int n, double target);
-    double getClosest(double val1, double val2,
+    static double findClosest(std::vector<double> &arr, int n, double target);
+    static double getClosest(double val1, double val2,
                       double target);
+    static double logSumExp(double a, double b);
     // void autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft);
     
 };

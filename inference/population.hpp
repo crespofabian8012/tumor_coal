@@ -71,6 +71,7 @@ public:
     long double oldx;
     long double theta;
     long double oldTheta;
+    long double currentModelTime;
 
     long double birthRate, deathRate, growthRate;
     long double oldDeathRate, oldGrowthRate;
@@ -82,6 +83,7 @@ public:
     int numCompletedCoalescences;
     int nextAvailableIdInmigrant; // TODO: check later
     int numIncomingMigrations, numPossibleMigrations;
+    int indexNextInmigrant;
     bool doEstimateTimeOrigin;
     bool isAlive, CellAssignationCompleted;
     //    double timeMigrationSTDCurrentPop;
@@ -169,6 +171,9 @@ public:
     void InitRTips();
     void savePosteriorValues();
     void resetPosteriorValues();
+    long double getCurrentModelTime() const{return currentModelTime;} ;
+    void setCurrentModelTime(long double newModelTime );
+  
     
     void setTimeOriginInputTree(long double timeOriginInputTree);
     void setTimeOriginSTD(long double timeOriginSTD);
@@ -179,7 +184,7 @@ public:
     void setPopulationToriginConditionalDelta( const gsl_rng *rngGsl );
     long double proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K);
     long double proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double K   );
-    long double logLikelihoodNextCoalescent(long double timeNextEvent,long double currentTime, int numActiveLineages,  double K);
+    long double logLikelihoodNextCoalescent(long double timeNextEvent,  double K);
     
     void sampleEventTimesScaledByProportion(gsl_rng *random, double K);
     double  nextCoalEventTime(int idxNextCoal, int indexNextMigration,  double currentTime, bool& isThereInmigration, Population* inmigrantPop );
@@ -234,7 +239,7 @@ public:
     void sortPopulationsByTorigin();
     void sampleEventTimesScaledByProportion(gsl_rng * random, double K, int noisy);
     void resetNumActiveGametesCounter();
-    
+    double proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop, double &logLik, double K);
 };
 class StructuredCoalescentTree{
 public:

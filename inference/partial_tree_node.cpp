@@ -135,17 +135,24 @@ height(height), index(index), clv_size(clv_elements)
     }
     // init(clv_elements);
     ln_likelihood=0.0;
-    number_nodes_cluster = 0;
+    ln_coal_likelihood = 0.0;
     number_leaves_cluster = 0;
-    if (edge_l && edge_r){
-        if(edge_l->child){
+    number_nodes_cluster = 0;
+   
+    if (edge_l!=nullptr && edge_r!=nullptr){
+        if(edge_l->child!=nullptr){
            number_nodes_cluster += edge_l->child->number_nodes_cluster + 1;
            number_leaves_cluster += edge_l->child->number_leaves_cluster ;
         }
-        if(edge_r->child){
-                  number_nodes_cluster += edge_r->child->number_nodes_cluster + 1;
+        if(edge_r->child!=nullptr){
+                  number_nodes_cluster += edge_r->child->number_nodes_cluster;
                   number_leaves_cluster += edge_r->child->number_leaves_cluster;
                }
+        std::cout<< " number leaves cluster " << number_leaves_cluster << std::endl;
+    }
+    else{
+      number_leaves_cluster = 1;
+      number_nodes_cluster = 1;
     }
     
 }
@@ -195,6 +202,7 @@ PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode& rhs ){
     index_population =  rhs.index_population;
     label =  rhs.label;
     ln_likelihood =  rhs.ln_likelihood;
+    ln_coal_likelihood = rhs.ln_coal_likelihood;
     number_nodes_cluster = rhs.number_nodes_cluster;
     number_leaves_cluster = rhs.number_leaves_cluster;
     
@@ -215,6 +223,7 @@ PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode&& rhs )
     index_population =  rhs.index_population;
     label =  rhs.label;
     ln_likelihood =  rhs.ln_likelihood;
+    ln_coal_likelihood = rhs.ln_coal_likelihood;
     number_nodes_cluster = rhs.number_nodes_cluster;
     number_leaves_cluster = rhs.number_leaves_cluster;
     return *this;
@@ -231,6 +240,7 @@ PartialTreeNode::PartialTreeNode(PartialTreeNode&& rhs){
     index_population =  rhs.index_population;
     label =  rhs.label;
     ln_likelihood =  rhs.ln_likelihood;
+    ln_coal_likelihood = rhs.ln_coal_likelihood;
     number_nodes_cluster = rhs.number_nodes_cluster;
     number_leaves_cluster = rhs.number_leaves_cluster;
     pclv = std::move( rhs.pclv );

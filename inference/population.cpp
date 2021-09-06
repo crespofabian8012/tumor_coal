@@ -151,6 +151,7 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     oldTimeOriginInput=0.0;
     indexFirstObservedCellName=0;
     scaledtimeOriginInput=0.0;
+    currentModelTime = 0.0;
     
     long double zero =0.0;
     DeltaT = new MCMCParameterWithKernel("DeltaT_pop"+std::to_string(index), 0.0,mcmcOptions.paramMultiplierGrowthRate, 0.0);
@@ -278,13 +279,14 @@ Population::Population(int ind, int ord, long double timeOriginInput,
     nodeIdAncestorMRCA = 0;
     numCompletedCoalescences = 0;
     nextAvailableIdInmigrant = 0;
+    indexNextInmigrant = 0;
     numIncomingMigrations = 0;
     numPossibleMigrations = 0;
     doEstimateTimeOrigin = estimateTOR;
     lowerBoundTimeOriginInput=0;
     
     MRCA=0;
-    
+    currentModelTime = 0.0;
     deltaT = 0.0;
     olddeltaT = 0.0;
     
@@ -366,6 +368,7 @@ Population::Population(int ind, int ord, int sampleSize, long double delta, long
     nextAvailableIdInmigrant = 0;
     numIncomingMigrations = 0;
     numPossibleMigrations = 0;
+    indexNextInmigrant = 0;
     
     lowerBoundTimeOriginInput=0;
     
@@ -387,6 +390,7 @@ Population::Population(int ind, int ord, int sampleSize, long double delta, long
     oldTimeOriginInput=0.0;
     indexFirstObservedCellName=0;
     scaledtimeOriginInput=0.0;
+    currentModelTime = 0.0;
     
     DeltaT = new MCMCParameterWithKernel("DeltaT",0.0,1, 0.0);
     
@@ -414,6 +418,8 @@ Population::Population(const Population &original){
     numCompletedCoalescences = original.numCompletedCoalescences;
     numIncomingMigrations = original.numIncomingMigrations;
     numPossibleMigrations = original.numPossibleMigrations;
+    indexNextInmigrant = original.indexNextInmigrant ;
+    currentModelTime = original.currentModelTime;
     
     timeOriginSTD = original.timeOriginSTD;
     scaledtimeOriginInput = original.scaledtimeOriginInput;
@@ -694,6 +700,11 @@ int Population::resetMigrationsList(){
     InitListPossibleMigrations(this->order);
     return 0;
 }
+void Population::setCurrentModelTime(long double newModelTime )
+{
+    assert(newModelTime>currentModelTime );
+    currentModelTime= newModelTime;
+}
 void Population::UpdateListMigrants( int numClones, Population *PopChild, Population *PopFather  )
 {
     assert(PopChild!=NULL);
@@ -838,16 +849,19 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
 void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *secondInd, const gsl_rng *randomGenerator, int choosePairIndividuals)
 {
     
-    
-    if (choosePairIndividuals== YES && numActiveGametes > 1) {
-        
+    if (choosePairIndividuals== YES && numActiveGametes > 1){
         *firstInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
-        do {
-            *secondInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
-        } while (*firstInd == *secondInd);
+               do {
+                   *secondInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
+               } while (*firstInd == *secondInd);
+        
+        
     }
-    
-    
+    else{
+        *firstInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
+        *secondInd = -1;
+        
+    }
 }
 
 /***************** bbinClones *****************/
@@ -1097,26 +1111,26 @@ long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveL
 }
 long double Population::proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double K   ){
     assert(numActiveGametes>1);
-  
+    
     long double  RateCA = (long double)  numActiveGametes * ((long double) numActiveGametes - 1) / 2.0;
     long double  ThisTimeCA_W = Random::RandomExponential(RateCA,0,  true, rngGsl,NULL ) ;
     
     return ThisTimeCA_W;
     
 }
-long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,long double currentTime, int numActiveLineages,  double K){
+long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,  double K){
     
     long double result=0.0;
     long double temp, termOnlyAfterFirstCoalEvent;
-    if (numActiveLineages > 1)
+    if (numActiveGametes > 1)
     {
-        temp=log(numActiveLineages * (numActiveLineages-1.0)/2.0);
+        temp=log(numActiveGametes * (numActiveGametes-1.0)/2.0);
         result= result + temp;
-        temp = -1.0 * Population::LogCalculateH(timeNextEvent,timeOriginSTD, delta, K);
+        temp = log(2)-1.0 * Population::LogCalculateH(timeNextEvent,timeOriginSTD, delta, K);
         result= result + temp;
-        //        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
-        termOnlyAfterFirstCoalEvent =Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K);//if no coalescent
-        temp =  (numActiveLineages / 2.0)* (numActiveLineages - 1.0)*(Population::FmodelTstandard(timeNextEvent, timeOriginSTD, delta, K)-termOnlyAfterFirstCoalEvent);
+//        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
+        termOnlyAfterFirstCoalEvent =(currentModelTime>0)? Population::FmodelTstandard(currentModelTime, timeOriginSTD, delta, K):0.0;//if no coalescent
+        temp =  (numActiveGametes / 2.0)* (numActiveGametes - 1.0)*(Population::FmodelTstandard(timeNextEvent, timeOriginSTD, delta, K)-termOnlyAfterFirstCoalEvent);
         result= result - temp;
         
     }
@@ -1138,8 +1152,8 @@ void Population::sampleEventTimesScaledByProportion(gsl_rng *random, double K){
         if (numActiveGametes >= 2) {
             
             currentTimeKingman = Population::FmodelTstandard (currentTime ,timeOriginSTD, delta,   K);//this is current time in Kingman coalescent
-           currentModelTime = Population::GstandardTmodel(currentTimeKingman, timeOriginSTD, delta,  K);//this is current time in Kingman coal time
-                       
+            currentModelTime = Population::GstandardTmodel(currentTimeKingman, timeOriginSTD, delta,  K);//this is current time in Kingman coal time
+            
             assert(abs(currentTime-currentModelTime)<0.0000001);
             waitingTimeKingman=proposeWaitingTimeNextCoalEvent(random, K) ;
             currentTimeKingman = currentTimeKingman + waitingTimeKingman;
@@ -1203,12 +1217,13 @@ double  Population::nextCoalEventTime(int idxNextCoal, int indexNextMigration,  
     }
     return nextCoalTime;
 }
+
 void Population::printCoalEventTimes(std::ostream &stream){
     
     for (std::vector<long double>::const_iterator i = CoalescentEventTimes.begin(); i != CoalescentEventTimes.end(); ++i){
         stream << *i << ' ';
     }
-     stream <<  "\n";
+    stream <<  "\n";
 }
 void Population::printInmigrationEventTimes(std::ostream &stream){
     std::pair<long double, Population *> temp;
@@ -1216,7 +1231,7 @@ void Population::printInmigrationEventTimes(std::ostream &stream){
         temp = *i;
         stream << temp.first << ' ';
     }
-     stream <<  "\n";
+    stream <<  "\n";
 }
 // Class PopulationSet
 PopulationSet::PopulationSet(int numClones){
@@ -1391,6 +1406,104 @@ void PopulationSet::initPopulationsThetaDelta(long double theta)
         
         popI->delta = popI->deltaT * popI->x;
     }
+}
+// this method assumes that populations are sorted in ascending order  by time of origin
+double PopulationSet::proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop, double &logLik, double K){
+    Population * pop, *incomingPop, *fatherPop;
+    double currentModelTimePop = 0.;
+    double currentTimeKingman = 0.;
+    double timeNextCoalEvent = 0.;
+    double waitingTime = 0.;
+    double timeNextMigration = 0.;
+    bool isCoalescentEvent;
+    logLik = 0.0;
+    int idxIncomingNode;
+    for(size_t i=0; i <  populations.size(); i++){
+        pop= populations[i];
+        
+        if(pop->indexNextInmigrant == pop->numIncomingMigrations)
+            continue;
+        
+        if (pop->getCurrentModelTime() == pop->timeOriginSTD)
+            continue;
+        
+        timeNextMigration = pop->immigrantsPopOrderedByModelTime[pop->indexNextInmigrant].first;
+        
+        if (pop->numActiveGametes >=2){
+            
+            currentModelTimePop = pop->getCurrentModelTime() ;
+            currentTimeKingman = Population::FmodelTstandard (currentModelTimePop , pop->timeOriginSTD, pop->delta,   K);//this is current time in Kingman coal time
+            
+            waitingTime= pop->proposeWaitingTimeNextCoalEvent(random, K);
+            
+            currentTimeKingman = currentTimeKingman+waitingTime;
+            
+            timeNextCoalEvent =   Population::GstandardTmodel(currentTimeKingman, pop->timeOriginSTD, pop->delta, K);;
+            isCoalescentEvent=true;
+            
+        }
+        else{
+            timeNextCoalEvent = timeNextMigration + 1.0;
+        }
+        if ( timeNextCoalEvent < timeNextMigration)
+        {
+            
+         pop->CoalescentEventTimes[pop->numCompletedCoalescences]=  pop->getCurrentModelTime() *pop->x;
+            pop->numCompletedCoalescences= pop->numCompletedCoalescences+1;
+            idxLeftNodePop = pop->index;
+            idxRightNodePop = pop->index;
+            logLik += pop->logLikelihoodNextCoalescent(timeNextCoalEvent, K);
+            pop->setCurrentModelTime( timeNextCoalEvent);
+            return(pop->getCurrentModelTime() *pop->x);
+            
+        }
+        else{
+             // logLik += probab no colaescent before the migration
+            logLik += pop->LogProbNoCoalescentEventBetweenTimes(pop->currentModelTime,timeNextMigration, pop->numActiveGametes, K );
+            
+            if (pop->indexNextInmigrant < pop->numIncomingMigrations - 1) //indexNextMigration corresponds to one of the true migrations
+            {
+                
+                pop->setCurrentModelTime( timeNextMigration);
+                
+                incomingPop = pop->immigrantsPopOrderedByModelTime[pop->indexNextInmigrant].second;
+                pop->indexNextInmigrant = pop->indexNextInmigrant + 1;
+                
+                assert(incomingPop->numActiveGametes==0);
+                idxIncomingNode = incomingPop->idsActiveGametes[incomingPop->numActiveGametes];
+               incomingPop->numActiveGametes = incomingPop->numActiveGametes - 1; /* now the other clone has 1 less node */
+                
+                idxLeftNodePop = incomingPop->index;
+                idxRightNodePop = pop->index;
+               
+                pop->idsActiveGametes[pop->numActiveGametes] = idxIncomingNode;
+                pop->numActiveGametes = pop->numActiveGametes + 1; /* now this clone has 1 more node */
+                
+            }
+            else {
+                //origin reached
+                pop->setCurrentModelTime( timeNextMigration);
+                pop->indexNextInmigrant = pop->indexNextInmigrant + 1;
+                if (i< numClones-1)   //if it is not the last one
+                {
+                    //choose the father population from which the population i came
+                    fatherPop= ChooseFatherPopulation(  pop, random,  0, K);
+                    pop->FatherPop = fatherPop;
+                    //update list of migrant times
+                    Population::UpdateListMigrants( numClones, pop, fatherPop);
+                }
+            }
+        }
+        
+    }
+    //            if ( params.doFixedEventimes){
+    //                timeNextCoalEvent = params.getPopulationEvent(i, result->getIdNextCoalEventForPopulation(i));
+    //            }
+    //            else{
+    ////                timeNextCoalEvent = pop->nextCoalEventTime(result->getIdNextCoalEventForPopulation(i), result->getIdNextInmigrationEventForPopulation(i),   result->getHeightModelTime() ,isThereInmigration,  inmigrantPop );
+    //            }
+    //this line would never be reached
+    return -1.0;
 }
 
 void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double &theta){
@@ -1669,7 +1782,7 @@ void PopulationSet::sampleEventTimesScaledByProportion(gsl_rng * random, double 
         assert(currentPop->numCompletedCoalescences==0);
         currentPop->sampleEventTimesScaledByProportion(random, K);
         
-        //currentPop->printCoalEventTimes(std::cout);
+        currentPop->printCoalEventTimes(std::cout);
         if (i< numClones-1)   //if it is not the last one
         {
             //choose the father population from which the population i came

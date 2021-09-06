@@ -1142,6 +1142,11 @@ double Utils::getClosest(double val1, double val2,
     else
         return val1;
 }
+double Utils::logSumExp(double a, double b){
+    
+    return(log(exp(a)+exp(b)));
+    
+}
 //void Utils::autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft)
 //{
 //    int no2,i;

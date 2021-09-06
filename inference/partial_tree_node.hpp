@@ -100,6 +100,8 @@ public:
     std::string label;
     double height;
     double ln_likelihood;
+    double ln_coal_likelihood;
+  
     unsigned int index_population;
     unsigned int index;
     unsigned int number_nodes_cluster;

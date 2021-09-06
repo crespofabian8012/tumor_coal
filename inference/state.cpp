@@ -7,6 +7,7 @@
 
 
 #include "state.hpp"
+#include "utils.hpp"
 #include "pll_utils.hpp"
 #include "core_likelihood.hpp"
 #include "treeLikelihood.hpp"
@@ -20,19 +21,18 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     heightModelTime =0.0;
     heightScaledByTheta = 0.0;
     initialLogWeight = 0.0;
-    
+    theta = *smcParams.theta;
     initIdsNextCoalEvents(smcParams.getProgramOptions().numClones);
     initIdsInmigrationEvents(smcParams.getProgramOptions().numClones);
     gtError =  smcParams.gtErrorModel;
     
+    
     populationSet = new PopulationSet(smcParams.getProgramOptions().numClones);
+    
     populationSet->initPopulationSampleSizes(smcParams.sampleSizes);
     populationSet->initPopulationGametes();
     populationSet->initPopulationRTips();
     populationSet->initProportionsVectorFromSampleSizes(smcParams.sampleSizes);
-    
-    //populationSet->initDeltaThetaFromPriors(random, theta);
-    theta = *smcParams.theta;
     populationSet->initPopulationDeltas( smcParams.populationDeltaTs);
     populationSet->initPopulationTOriginSTD( smcParams.populationToriginSTDs);
     populationSet->initTheta(theta);
@@ -42,15 +42,15 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     
     populationSet->initListPossibleMigrations();
     populationSet->initPopulationsCoalescentEvents();
+  
     
-   
+    
     initForest(smcParams.sampleSize, smcParams.msa, smcParams.positions,  smcParams.getProgramOptions());
     nextAvailable = smcParams.sampleSize-1;
     
-    double K= smcParams.getProgramOptions().K;
-    populationSet->sampleEventTimesScaledByProportion( random, K,smcParams.getProgramOptions().noisy);
-       
-    resetNumActiveGametesCounter();
+//    double K= smcParams.getProgramOptions().K;
+//       populationSet->sampleEventTimesScaledByProportion( random, K,smcParams.getProgramOptions().noisy);
+//      populationSet->resetNumActiveGametesCounter();
     assert(smcParams.positions.size()>0);
     postorder.reserve(2*smcParams.positions.size()-1);
     coalEventTimesScaledByTheta.reserve(smcParams.positions.size()-1);
@@ -187,7 +187,7 @@ State &State::operator=(const State &original){
 }
 
 
-std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_t index_pop_new_node ){
+std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight, double logLikNewNode ){
     
     // std::vector<std::shared_ptr<PartialTreeNode>> result;
     //unsigned int float_precision = 3;
@@ -213,8 +213,8 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     
     //std::cout<< "roots first idx "<< idxFirstID <<  " idxSecondId " << idxSecondId<< std::endl;
     
-    double left_length =heightScaledByTheta - child_left->height;
-    double right_length = heightScaledByTheta - child_right->height;
+    double left_length = newNodeHeight - child_left->height;
+    double right_length =  newNodeHeight - child_right->height;
     
     unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
     //unsigned int pmatrix_size = pmatrix_elements * sizeof(double);
@@ -320,6 +320,10 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     
     assert(!isnan(parent->ln_likelihood) && !isinf(parent->ln_likelihood));
     
+    parent->ln_coal_likelihood = (child_left->height >  child_right->height)? child_left->ln_coal_likelihood: child_right->ln_coal_likelihood;
+      
+    parent->ln_coal_likelihood+= logLikNewNode;
+    
     // assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
     
     // Remove children
@@ -330,7 +334,7 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     
     return parent;
 }
-std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId, size_t index_pop_new_node ){
+std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight, double logLikNewNode){
     
     assert(roots.size() > 1 && "Expected more than one root");
     
@@ -355,8 +359,8 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     //  if (!(child_left->label.empty()) && !(child_right->label.empty()))
     //      std::cout<< "child_left->label "<< child_left->label <<  " child_right->label " << child_right->label<< std::endl;
     
-    double left_length =heightScaledByTheta - child_left->height;
-    double right_length = heightScaledByTheta - child_right->height;
+    double left_length = newNodeHeight - child_left->height;
+    double right_length = newNodeHeight - child_right->height;
     
     unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
     //unsigned int pmatrix_size = pmatrix_elements * sizeof(double);
@@ -383,7 +387,7 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     // unsigned int scale_buffer_size = scaler_size * sizeof(double);
     
     std::shared_ptr<PartialTreeNode> parent = std::make_shared<PartialTreeNode>(
-                                                                                pll_buffer_manager, edge_left, edge_right, "", heightScaledByTheta, clv_elements,
+                                                                                pll_buffer_manager, edge_left, edge_right, "", newNodeHeight, clv_elements,
                                                                                 scaler_size, partition->alignment(), nextAvailable);
     
     parent->index_population=index_pop_new_node;
@@ -439,21 +443,22 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
                                child_left->pscale_buffer,
                                child_right->pscale_buffer,
                                p->attributes);
-//    if (1)
-//        parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
+    //    if (1)
+    //        parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
     
     parent->ln_likelihood =
     compute_ln_likelihood(parent->pclv,
                           parent->pscale_buffer,
                           p->getPartition());
-    
-    
     if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
-        
-        std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
-        
-    }
+          
+          std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
+      }
+    parent->ln_coal_likelihood = (child_left->height >  child_right->height)? child_left->ln_coal_likelihood: child_right->ln_coal_likelihood;
+   
+    parent->ln_coal_likelihood+= logLikNewNode;
     
+
     assert(!isnan(parent->ln_likelihood) && !isinf(parent->ln_likelihood));
     
     //assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
@@ -539,10 +544,7 @@ void State::updateIndexesActiveGametes(int idxFirstId, int idxSecondId, size_t i
 
 double State::compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
                                     const Partition *p) {
-    // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
     const unsigned int parameter_indices[1] = {0};
-    // const unsigned int parameter_indices[16] = {0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    
     
     //    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
     //                                                 clv.data(), scale_buffer.data(),
@@ -558,11 +560,7 @@ double State::compute_ln_likelihood(std::vector<double> &clv, std::vector<unsign
 }
 double State::compute_ln_likelihood(double *pclv, unsigned int *pscale_buffer,
                                     const Partition *p) {
-    // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
     const unsigned int parameter_indices[1] = {0};
-    // const unsigned int parameter_indices[16] = {0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    
-    
     //    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
     //                                                 pclv, pscale_buffer,
     //                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
@@ -578,19 +576,18 @@ double State::compute_ln_likelihood(double *pclv, unsigned int *pscale_buffer,
 
 double State::compute_ln_likelihood(std::vector<double> &clv, std::vector<unsigned int>  &scale_buffer,
                                     const pll_partition_t *p) {
-    // const unsigned int parameter_indices[4] = {0, 0, 0, 0};
-    const unsigned int parameter_indices[1] = {0};
     
+    const unsigned int parameter_indices[1] = {0};
     
     double result = pll_core_root_loglikelihood2(  p->states, p->sites, p->rate_cats,
                                                  clv.data(), scale_buffer.data(),
                                                  p->frequencies, p->rate_weights, p->pattern_weights, parameter_indices,  nullptr, p->attributes);
     
-    //    double result= pll_core_root_loglikelihood(
-    //                                               p->states, p->sites, p->rate_cats,
-    //                                               clv, scale_buffer,
-    //                                               p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
-    //                                               p->invariant, parameter_indices, nullptr, p->attributes);
+    //        double result= pll_core_root_loglikelihood(
+    //                                                   p->states, p->sites, p->rate_cats,
+    //                                                   clv, scale_buffer,
+    //                                                   p->frequencies, p->rate_weights, p->pattern_weights, p->prop_invar,
+    //                                                   p->invariant, parameter_indices, nullptr, p->attributes);
     return result;
 }
 
@@ -692,10 +689,10 @@ int State::getIdNextInmigrationEventForPopulation(int i){
     return idsNextInmigrationEvents[i];
 }
 void State::moveNextIdEventForPopulation(int i, bool thereIsInmigration){
-  
-      idsNextCoalEvents[i]= idsNextCoalEvents[i]+1;
+    
+    idsNextCoalEvents[i]= idsNextCoalEvents[i]+1;
     if (thereIsInmigration)
-      idsNextInmigrationEvents[i]= idsNextInmigrationEvents[i]+1;
+        idsNextInmigrationEvents[i]= idsNextInmigrationEvents[i]+1;
 }
 
 void State::addRoot(std::shared_ptr<PartialTreeNode> node){
@@ -709,7 +706,220 @@ void State::addNodeToPostorderByIndex(int idx){
     postorder.push_back(roots[idx]);
     
 }
-    State::~State(){
+double State::getNextCoalTime(gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop, double &logLik, double K){
+    
+    double result = populationSet->proposeNextCoalEventTime(  random,  idxLeftNodePop,  idxRightNodePop, logLik,  K);
+    assert(result >0);
+    return result;
+    
+}
+double   State::proposalPriorPost(gsl_rng * random, Population *leftNodePop,Population *rightNodePop,  double newNodeHeight, double logLikNewHeight){
+    
+    if (leftNodePop->index == rightNodePop->index)
+        return proposalCoalNodePriorPost( random, leftNodePop,  newNodeHeight,  logLikNewHeight);
+    else{
         
-        
+        Population *inmigrantPop = (leftNodePop->numActiveGametes == 1)?leftNodePop:rightNodePop;
+        Population *receiverPop = (leftNodePop->numActiveGametes == 1)?rightNodePop:leftNodePop;
+        assert(inmigrantPop->numActiveGametes==1);
+        return proposalCoalMRCANodePriorPost(random, inmigrantPop, receiverPop,  newNodeHeight,  logLikNewHeight);
+    
     }
+}
+double   State::proposalCoalMRCANodePriorPost(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight){
+    
+    int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    double weight;
+    int numberProposals= receiverPop->idsActiveGametes.size();
+    std::vector<double> logWeights(numberProposals, 0.0);
+    std::vector<double> normWeights(numberProposals, 0.0);
+    
+    std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
+    
+    double maxlogWeight = DOUBLE_NEG_INF;
+    size_t posMax;
+    
+    for(size_t i=0; i <  receiverPop->idsActiveGametes.size(); i++){
+        
+        idxFirstRoot = inmigrantPop->idsActiveGametes[0];
+        idxSecondRoot = receiverPop->idsActiveGametes[i];
+        
+        // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
+        assert(idxFirstRoot != idxSecondRoot);
+        nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, receiverPop->index, newNodeHeight, logLikNewHeight );
+        logWeights[i] = nodeProposals[i]->ln_likelihood;
+       
+        if (logWeights[i]>maxlogWeight)
+        {
+            maxlogWeight = logWeights[i];
+            posMax = i;
+        }
+    }
+    unsigned int pos;
+    Utils::normalize(logWeights, normWeights);
+    pos = Random::randomDiscreteFromProbabilityVector(random, &normWeights[0], normWeights.size());
+    
+    
+    weight = likelihood_factor(nodeProposals[pos]);;
+    idxFirst =inmigrantPop->idsActiveGametes[0];//first idx is the inmigrant root
+    idxSecond = receiverPop->idsActiveGametes[pos];//second idx inside the list of active gametes of the chosen pop
+    
+    int posFirstRoot= getNodeIdxById(idxFirstRoot);
+    int posSecondRoot = getNodeIdxById(idxSecondRoot);
+    
+    
+    remove_roots(posFirstRoot, posSecondRoot);
+    addRoot(nodeProposals[pos]);
+    
+    
+    increaseNextAvailable();
+    updateIndexesActiveGametes( idxFirst, idxSecond,  inmigrantPop->index, receiverPop->index,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
+    
+    receiverPop->numActiveGametes= receiverPop->numActiveGametes-1;
+    
+    return weight;
+}
+double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPop, double newNodeHeight, double logLikNewHeight){
+    
+    int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    double weight;
+    std::vector<std::pair<int, int>> allCoalPairs = Utils::allCombinations(chosenPop->numActiveGametes, 2);
+    int numberProposals = allCoalPairs.size();
+    
+    std::vector<double> logWeights(numberProposals, 0.0);
+    std::vector<double> normWeights(numberProposals, 0.0);
+    
+    std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
+    
+    double maxlogWeight = DOUBLE_NEG_INF;
+    size_t posMax;
+    for(size_t i=0; i <  allCoalPairs.size(); i++){
+        idxFirst = allCoalPairs[i]. first;
+        idxSecond = allCoalPairs[i]. second;
+        
+        idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
+        idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
+        
+        // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
+        assert(idxFirstRoot != idxSecondRoot);
+        nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight );
+        
+        logWeights[i] = nodeProposals[i]->ln_likelihood;
+        if (logWeights[i]>maxlogWeight)
+        {
+            maxlogWeight = logWeights[i];
+            posMax = i;
+        }
+    }
+    unsigned int pos;
+    Utils::normalize(logWeights, normWeights);
+    pos = Random::randomDiscreteFromProbabilityVector(random, &normWeights[0], normWeights.size());
+    
+    weight = likelihood_factor(nodeProposals[pos]);
+    //weight += nodeProposals[pos]->ln_coal_likelihood;
+    
+    
+    
+    idxFirst = allCoalPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
+    idxSecond = allCoalPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
+    
+    std::cout<< "first " << idxFirst << " second " << idxSecond << " time "<< newNodeHeight<< " weight " << weight << " norm weight " << normWeights[pos] << std::endl;
+    
+    // std::cout<< "Max weight: first " << allCoalPairs[posMax]. first << "second " << allCoalPairs[posMax]. second << " weight " << weight << " max weight " << logWeights[posMax] << std::endl;
+    idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
+    idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
+    
+    assert(idxFirstRoot != idxSecondRoot);
+    
+    int posFirstRoot= getNodeIdxById(idxFirstRoot);
+    int posSecondRoot = getNodeIdxById(idxSecondRoot);
+    
+    remove_roots(posFirstRoot, posSecondRoot);
+    assert(nodeProposals[pos]->number_leaves_cluster>1);
+    addRoot(nodeProposals[pos]);
+    
+    increaseNextAvailable();
+    updateIndexesActiveGametes( idxFirst, idxSecond,  chosenPop->index, chosenPop->index,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
+    
+    chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
+    unsigned int numNonTrivialTrees = numberNonTrivialTrees();
+    assert(numNonTrivialTrees>0);
+    weight -= log(numNonTrivialTrees);
+    return weight;
+}
+double  State::proposalPriorPrior(gsl_rng * random, Population *leftNodePop,Population *rightNodePop, double newNodeHeight, double logLikNewHeight){
+    
+    if (leftNodePop->index == rightNodePop->index)
+        return proposalCoalNodePriorPrior( random, leftNodePop,  newNodeHeight,  logLikNewHeight);
+    else{
+        
+        Population *inmigrantPop = (leftNodePop->numActiveGametes == 1)?leftNodePop:rightNodePop;
+        Population *receiverPop = (leftNodePop->numActiveGametes == 1)?rightNodePop:leftNodePop;
+        assert(inmigrantPop->numActiveGametes==1);
+        return proposalCoalMRCANodePriorPrior(random, inmigrantPop, receiverPop,  newNodeHeight,  logLikNewHeight);
+    
+    }
+    
+    
+}
+double  State::proposalCoalNodePriorPrior(gsl_rng * random, Population *chosenPop, double newNodeHeight,  double logLikNewHeight){
+    int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    double weight;
+    int choosePairIndividuals = YES;
+    if (getNumberPopulations()==1)
+        assert(chosenPop->numActiveGametes == root_count());
+    
+    chosenPop->ChooseRandomIndividual(&idxFirst, getNumberPopulations(),   &idxSecond, random, choosePairIndividuals);
+    
+    idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
+    idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
+    
+    assert(idxFirstRoot != idxSecondRoot);
+    
+    std::shared_ptr<PartialTreeNode> node = connect(idxFirstRoot, idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight );
+    
+    updateIndexesActiveGametes( idxFirst, idxSecond,  chosenPop->index, chosenPop->index,  node->index, node->index_population);
+    
+    chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
+    
+    weight = likelihood_factor(node);
+    assert(!isnan(weight) && !isinf(weight));
+    
+    return weight;
+}
+double  State::proposalCoalMRCANodePriorPrior(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight){
+    int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    double weight;
+    int choosePairIndividuals = NO;
+ 
+    receiverPop->ChooseRandomIndividual(&idxFirst, getNumberPopulations(),   &idxSecond, random, choosePairIndividuals);
+    
+    idxFirstRoot = receiverPop->idsActiveGametes[idxFirst];
+    idxSecondRoot = inmigrantPop->idsActiveGametes[0];
+    
+    assert(idxFirstRoot != idxSecondRoot);
+    
+    std::shared_ptr<PartialTreeNode> node = connect(idxFirstRoot, idxSecondRoot, receiverPop->index, newNodeHeight, logLikNewHeight );
+    
+    updateIndexesActiveGametes( idxFirst, idxSecond,  receiverPop->index, receiverPop->index,  node->index, node->index_population);
+    
+    receiverPop->numActiveGametes= receiverPop->numActiveGametes-1;
+    
+    weight = likelihood_factor(node);
+    weight += node->ln_coal_likelihood;
+    assert(!isnan(weight) && !isinf(weight));
+    
+    return weight;
+}
+unsigned int State::numberNonTrivialTrees(){
+    unsigned int result = 0;
+    for( int i=0; i< roots.size();++i){
+        if (roots[i]->number_leaves_cluster >1)
+            result++;
+    }
+    return(result);
+}
+State::~State(){
+    
+    
+}

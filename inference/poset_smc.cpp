@@ -29,211 +29,41 @@ std::shared_ptr<State> PosetSMC::propose_initial(gsl_rng *random, double &log_w,
 std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, const State &curr, double &log_w, PosetSMCParams &params){
     
     //make a  copy of curr
-    // to avoid 2 allocations like in the next line
-    // std::shared_ptr<State> result(new State(curr));
-    // I used the following
     std::shared_ptr<State> result(make_shared<State>(curr));
     log_w=0;
-    double weight = 0.0;
-    bool isThereInmigrationBeforeNextCoalEvent = false;
-    int idxFirst = 0,  idxSecond = 0;
-    int idxFirstRoot = 0,  idxSecondRoot = 0;
-    
+    double logLikNewHeight = 0.0;
+    double logWeight = 0.0;
+    double newHeight = 0.0;
     if (result->root_count()>1){
         // select 2 nodes to coalesce
-        Population* pop = nullptr;
-        Population* chosenPop = nullptr;
-        Population* inmigrantPop = nullptr;
-        Population* nextInmigrandPop = nullptr;
-        long double minTimeNextCoalEvent = DOUBLE_INF ;
+        Population *leftNodePop, *rightNodePop;
+        int  idxleftNodePop = 0;
+        int  idxRightNodePop = 0;
+        double timeNextCoalEvent = 0.0;
+        timeNextCoalEvent = result->getNextCoalTime(random, idxleftNodePop, idxRightNodePop, logLikNewHeight, params.getProgramOptions().K);
         
-        long double timeNextCoalEvent;
-        bool isThereInmigration = false;
-        
-        for(size_t i=0; i <  result->getNumberPopulations(); i++){
-            
-            pop= result->getPopulationByIndex( i);
-            
-            //std::cout << "num active gametes pop " << pop->numActiveGametes<< std::endl;
-           // pop->printCoalEventTimes(std::cout);
-           // pop->printInmigrationEventTimes(std::cout);
-            if ( params.doFixedEventimes){
-                timeNextCoalEvent = params.getPopulationEvent(i, result->getIdNextCoalEventForPopulation(i));
-            }
-            else{
-                timeNextCoalEvent = pop->nextCoalEventTime(result->getIdNextCoalEventForPopulation(i), result->getIdNextInmigrationEventForPopulation(i),   result->getHeightModelTime() ,isThereInmigration,  inmigrantPop );
-            }
-            
-            
-            if (timeNextCoalEvent < minTimeNextCoalEvent){
-                minTimeNextCoalEvent=timeNextCoalEvent;
-                chosenPop=pop;
-                isThereInmigrationBeforeNextCoalEvent = isThereInmigration;
-                if (isThereInmigrationBeforeNextCoalEvent)
-                    nextInmigrandPop = inmigrantPop;
-                
-            }
-        }
         assert(timeNextCoalEvent > 0);
-        assert(minTimeNextCoalEvent* result->getTheta()>0);
-       // std::cout<< "current height scaled by theta " << (minTimeNextCoalEvent* result->getTheta()) << std::endl;
-        result->setHeightScaledByTheta(minTimeNextCoalEvent* result->getTheta());
+        newHeight = timeNextCoalEvent* result->getTheta();
+        std::cout << " new height " << newHeight << std::endl;
+        std::cout << " loglik new height " << logLikNewHeight << std::endl;
     
-        
-        result->moveNextIdEventForPopulation(chosenPop->index, isThereInmigrationBeforeNextCoalEvent);
-        if (!isThereInmigrationBeforeNextCoalEvent && chosenPop->numActiveGametes >1){
-            //next event a coalescence
-            //choose 2 active lineages to coalesce inside population chosenPop
+        result->insertNewCoalTime( newHeight);
+       // result->setHeightScaledByTheta(timeNextCoalEvent* result->getTheta());
+         
+        leftNodePop = result->getPopulationByIndex(idxleftNodePop);
+        rightNodePop = result->getPopulationByIndex(idxRightNodePop);
+       
+        if (params.doPriorPost){
             
-            idxFirst = 0;
-            idxSecond = 0;
-            idxFirstRoot = 0;
-            idxSecondRoot = 0;
-            int choosePairIndividuals = YES;
-            unsigned int chosep_pop_idx = chosenPop->index;
-            //std::cout << "num active gametes chosenPop " << chosenPop->numActiveGametes<< std::endl;
-            
-            
-            if (params.doPriorPost){
-                
-                std::vector<std::pair<int, int>> allCoalPairs = Utils::allCombinations(chosenPop->numActiveGametes, 2);
-                int numberProposals = allCoalPairs.size();
-                
-                std::vector<double> logWeights(numberProposals, 0.0);
-                std::vector<double> normWeights(numberProposals, 0.0);
-                
-                std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
-                
-                double maxlogWeight = DOUBLE_NEG_INF;
-                size_t posMax;
-                for(size_t i=0; i <  allCoalPairs.size(); i++){
-                    idxFirst = allCoalPairs[i]. first;
-                    idxSecond = allCoalPairs[i]. second;
-                    
-                    idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
-                    idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
-                    
-                    // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
-                    assert(idxFirstRoot != idxSecondRoot);
-                    nodeProposals[i] = result->proposeNewNode( idxFirstRoot,  idxSecondRoot, chosep_pop_idx );
-                    
-                    logWeights[i] = nodeProposals[i]->ln_likelihood;
-                    if (logWeights[i]>maxlogWeight)
-                    {
-                        maxlogWeight = logWeights[i];
-                        posMax = i;
-                    }
-                }
-                unsigned int pos;
-                weight = Utils::normalize(logWeights, normWeights);
-                pos = Random::randomDiscreteFromProbabilityVector(random, &normWeights[0], normWeights.size());
-                
-                
-                idxFirst = allCoalPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
-                idxSecond = allCoalPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
-                
-                 std::cout<< "first " << idxFirst << " second " << idxSecond << " weight " << weight << " norm weight " << normWeights[pos] << std::endl;
-                
-                // std::cout<< "Max weight: first " << allCoalPairs[posMax]. first << "second " << allCoalPairs[posMax]. second << " weight " << weight << " max weight " << logWeights[posMax] << std::endl;
-                
-                idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
-                idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
-                
-                assert(idxFirstRoot != idxSecondRoot);
-                
-                int posFirstRoot= result->getNodeIdxById(idxFirstRoot);
-                int posSecondRoot = result->getNodeIdxById(idxSecondRoot);
-                
-                result->remove_roots(posFirstRoot, posSecondRoot);
-                result->addRoot(nodeProposals[pos]);
-                
-                result->increaseNextAvailable();
-                result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
-                
-                chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
+               logWeight = result->proposalPriorPost( random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
             }
             else{//PriorPrior
-                
-                if (result->getNumberPopulations()==1)
-                    assert(chosenPop->numActiveGametes == result->root_count());
-                
-                chosenPop->ChooseRandomIndividual(&idxFirst, numClones,   &idxSecond, random, choosePairIndividuals);
-                
-                idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
-                idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
-                
-                assert(idxFirstRoot != idxSecondRoot);
-                
-                std::shared_ptr<PartialTreeNode> node = result->connect(idxFirstRoot, idxSecondRoot, chosep_pop_idx);
-                
-                result->updateIndexesActiveGametes( idxFirst, idxSecond,  chosep_pop_idx, chosep_pop_idx,  node->index, node->index_population);
-                
-                chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
-                
-                weight = result->likelihood_factor(node);
-                assert(!isnan(weight) && !isinf(weight));
+                logWeight =  result->proposalPriorPrior(random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
             }
-            log_w += weight;
-        }
-        else{//next event is inmigration or the origin
-            
-            if (nextInmigrandPop!= chosenPop)//inmigration
-            {
-                assert(nextInmigrandPop);
-                assert(nextInmigrandPop->numActiveGametes==1);
-                assert(nextInmigrandPop->idsActiveGametes.size()==1);
-                int numberProposals= chosenPop->idsActiveGametes.size();
-                std::vector<double> logWeights(numberProposals, 0.0);
-                std::vector<double> normWeights(numberProposals, 0.0);
-                
-                std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
-                
-                double maxlogWeight = DOUBLE_NEG_INF;
-                size_t posMax;
-                
-                for(size_t i=0; i <  chosenPop->idsActiveGametes.size(); i++){
-                    
-                    idxFirstRoot = nextInmigrandPop->idsActiveGametes[0];
-                    idxSecondRoot = chosenPop->idsActiveGametes[i];
-                    
-                    // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
-                    assert(idxFirstRoot != idxSecondRoot);
-                    nodeProposals[i] = result->proposeNewNode( idxFirstRoot,  idxSecondRoot, chosenPop->index );
-                    logWeights[i] = nodeProposals[i]->ln_likelihood;
-                    if (logWeights[i]>maxlogWeight)
-                    {
-                        maxlogWeight = logWeights[i];
-                        posMax = i;
-                    }
-                }
-                unsigned int pos;
-                weight = Utils::normalize(logWeights, normWeights);
-                pos = Random::randomDiscreteFromProbabilityVector(random, &normWeights[0], normWeights.size());
-                
-                idxFirst =nextInmigrandPop->idsActiveGametes[0];//first idx is the inmigrant root
-                idxSecond = chosenPop->idsActiveGametes[pos];//second idx inside the list of active gametes of the chosen pop
-                
-                int posFirstRoot= result->getNodeIdxById(idxFirstRoot);
-                int posSecondRoot = result->getNodeIdxById(idxSecondRoot);
-                
-                
-                result->remove_roots(posFirstRoot, posSecondRoot);
-                result->addRoot(nodeProposals[pos]);
-                
-                
-                result->increaseNextAvailable();
-                result->updateIndexesActiveGametes( idxFirst, idxSecond,  nextInmigrandPop->index, chosenPop->index,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
-                
-                chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
-                 log_w += weight;
-                
-            }
-            else{//origin
-                result->setHeightScaledByTheta(minTimeNextCoalEvent* result->getTheta());
-            }
-            
-        }
-    }
+            log_w += logWeight ;
+        std::cout << " loglik new particle " << log_w << std::endl;
+     }
+       
     return result;
 }
 unsigned long PosetSMC::num_iterations(){
@@ -244,7 +74,6 @@ unsigned long PosetSMC::num_iterations(){
 double PosetSMC::log_weight(unsigned int t, const shared_ptr<ParticleGenealogy<State> > &genealogy, const PosetSMCParams &p){
     
     double result=0.0;
-    
     return result;
     
 }

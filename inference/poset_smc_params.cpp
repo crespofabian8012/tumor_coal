@@ -33,6 +33,7 @@ pll_buffer_manager(pll_buffer_manager), gtErrorModel(gtErrorModel), sampleSizes(
     this->populationToriginSTDs = populationToriginSTDs;
     this->proportions= proportions;
     this->theta = std::make_shared<double>(theta);
+    this->verbose = 1;
 }
 ProgramOptions& PosetSMCParams::getProgramOptions(){
     
@@ -124,7 +125,7 @@ void PosetSMCParams::buildListEventTimesPerPopulation(){
 //
 //        long double logLikNextCoal = 0.0;
 //
-//        logLikNextCoal = chosenPop->logLikelihoodNextCoalescent(minTimeNextEvent, result->getHeightModelTime(), chosenPop->numActiveGametes, params.getProgramOptions().K);
+//        logLikNextCoal = chosenPop->logConditionalLikelihoodNextCoalescentTime(minTimeNextEvent, result->getHeightModelTime(), chosenPop->numActiveGametes, params.getProgramOptions().K);
 //        log_w = log_w +logLikNextCoal;
 //        long double logLikNoCoal;
 //        long double logDensityTorigin;

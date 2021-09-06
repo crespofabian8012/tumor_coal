@@ -514,7 +514,7 @@ long double Population::LogCalculateH (long double t, long double TOrigin, long 
     
     a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     firstTerm = 2.0 * log(a);
-    secondTerm = -1.0 * delta * t;
+    secondTerm =  - delta * t;
     thirdTerm = exp(delta * t);
     AboveTerm = firstTerm + secondTerm;
     
@@ -532,13 +532,18 @@ long double Population::LogCalculateH (long double t, long double TOrigin, long 
         logH = AboveTerm - BelowTerm;
     }
     else {
-        logH = -log(2.0) + AboveTerm - BelowTerm + extraTerm;
+        logH =  AboveTerm - BelowTerm + extraTerm;
     }
     
     
     return logH;
 }
-
+long double Population::LogLambda (long double t, long double TOrigin, long double delta, long double K)
+{
+    long double loglambda;
+    loglambda = log(2.0)-Population::LogCalculateH ( t,  TOrigin,  delta, K);
+    return loglambda;
+}
 long double Population::FmodelTstandard (long double t, long double TOrigin, long double delta,   long double K)
 {
     long double ModelTimeF, firstTerm, secondTerm, thirdTerm;
@@ -1118,7 +1123,7 @@ long double Population::proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double
     return ThisTimeCA_W;
     
 }
-long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,  double K){
+long double Population::logConditionalLikelihoodNextCoalescentTime(long double timeNextEvent,  double K){
     
     long double result=0.0;
     long double temp, termOnlyAfterFirstCoalEvent;
@@ -1126,7 +1131,7 @@ long double Population::logLikelihoodNextCoalescent(long double timeNextEvent,  
     {
         temp=log(numActiveGametes * (numActiveGametes-1.0)/2.0);
         result= result + temp;
-        temp = log(2)-1.0 * Population::LogCalculateH(timeNextEvent,timeOriginSTD, delta, K);
+        temp =  Population::LogLambda(timeNextEvent,timeOriginSTD, delta, K);
         result= result + temp;
 //        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
         termOnlyAfterFirstCoalEvent =(currentModelTime>0)? Population::FmodelTstandard(currentModelTime, timeOriginSTD, delta, K):0.0;//if no coalescent
@@ -1448,11 +1453,14 @@ double PopulationSet::proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNod
         if ( timeNextCoalEvent < timeNextMigration)
         {
             
-         pop->CoalescentEventTimes[pop->numCompletedCoalescences]=  pop->getCurrentModelTime() *pop->x;
+         pop->CoalescentEventTimes[pop->numCompletedCoalescences]=  pop->getCurrentModelTime();
             pop->numCompletedCoalescences= pop->numCompletedCoalescences+1;
             idxLeftNodePop = pop->index;
             idxRightNodePop = pop->index;
-            logLik += pop->logLikelihoodNextCoalescent(timeNextCoalEvent, K);
+            logLik += pop->logConditionalLikelihoodNextCoalescentTime(timeNextCoalEvent, K);
+           
+            double waitingTimeKingman = Population::FmodelTstandard (timeNextCoalEvent-pop->getCurrentModelTime() , pop->timeOriginSTD, pop->delta,   K);
+            assert(waitingTimeKingman- waitingTime < 1e-6);
             pop->setCurrentModelTime( timeNextCoalEvent);
             return(pop->getCurrentModelTime() *pop->x);
             
@@ -2260,7 +2268,7 @@ long double  StructuredCoalescentTree::LogDensityCoalescentTimesForPopulation(lo
                 {
                     temp=log(numberAliveCells * (numberAliveCells-1.0)/2.0);
                     result= result + temp;
-                    temp = -1.0 * Population::LogCalculateH(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K);
+                    temp =  Population::LogLambda(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K);
                     result= result + temp;
                     termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(lastEventTimeBeforeMigration, popI->timeOriginSTD, popI->delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], popI->timeOriginSTD, popI->delta, K);//if no coalescent
                     temp =  (numberAliveCells / 2.0)* (numberAliveCells - 1.0)*(Population::FmodelTstandard(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K)-termOnlyAfterFirstCoalEvent);
@@ -2340,7 +2348,7 @@ long double  StructuredCoalescentTree::LogDensityCoalescentTimesForPopulation(st
                 {
                     temp=log(numberAliveCells * (numberAliveCells-1.0)/2.0);
                     result= result + temp;
-                    temp = -1.0 * Population::LogCalculateH(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K);
+                    temp =  Population::LogLambda(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K);
                     result= result + temp;
                     termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(lastEventTimeBeforeMigration, popI->timeOriginSTD, popI->delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], popI->timeOriginSTD, popI->delta, K);//if no coalescent
                     temp =  (numberAliveCells / 2.0)* (numberAliveCells - 1.0)*(Population::FmodelTstandard(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K)-termOnlyAfterFirstCoalEvent);

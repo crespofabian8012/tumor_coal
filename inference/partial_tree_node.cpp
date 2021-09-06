@@ -148,7 +148,7 @@ height(height), index(index), clv_size(clv_elements)
                   number_nodes_cluster += edge_r->child->number_nodes_cluster;
                   number_leaves_cluster += edge_r->child->number_leaves_cluster;
                }
-        std::cout<< " number leaves cluster " << number_leaves_cluster << std::endl;
+     //   std::cout<< " number leaves cluster " << number_leaves_cluster << std::endl;
     }
     else{
       number_leaves_cluster = 1;

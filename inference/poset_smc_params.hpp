@@ -37,6 +37,7 @@ public:
     std::vector<int> sampleSizes;
     bool doPriorPost;
     bool doFixedEventimes;
+    int verbose;
     
     std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
     

@@ -38,7 +38,7 @@ class State{
     std::vector<double> coalEventTimesScaledByTheta;
     GenotypeErrorModel *gtError;
     long double theta;
-    double initialLogWeight;
+    double logWeight;
 public:
     //constructors
     State( PosetSMCParams &params, gsl_rng *random);
@@ -64,7 +64,7 @@ public:
     
     std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
     
-    double getInitialLogWeight() const {return initialLogWeight;}
+    double getInitialLogWeight() const {return logWeight;}
     
     std::vector<double> getCoalEventTimesScaledBytheta() const{return coalEventTimesScaledByTheta;}
     

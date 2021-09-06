@@ -160,6 +160,7 @@ public:
     void multiplyMigrationsTimesByFactor(long double factor);
     long double LogDensityTime(long double u);
     static long double LogCalculateH (long double t, long double TOrigin, long double delta, long double K);
+   static  long double LogLambda (long double t, long double TOrigin, long double delta, long double K);
     long double LogDensityTime2(long double u);
     long double DensityTimeSTD(long double u, long double from);
     long double LogDensityTimeSTDFrom(long double u, long double from);
@@ -184,7 +185,7 @@ public:
     void setPopulationToriginConditionalDelta( const gsl_rng *rngGsl );
     long double proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K);
     long double proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double K   );
-    long double logLikelihoodNextCoalescent(long double timeNextEvent,  double K);
+    long double logConditionalLikelihoodNextCoalescentTime(long double timeNextEvent,  double K);
     
     void sampleEventTimesScaledByProportion(gsl_rng *random, double K);
     double  nextCoalEventTime(int idxNextCoal, int indexNextMigration,  double currentTime, bool& isThereInmigration, Population* inmigrantPop );

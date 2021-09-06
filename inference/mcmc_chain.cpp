@@ -2021,7 +2021,7 @@ long double  Chain::LogDensityCoalescentTimesForPopulation(long double K)
                     fprintf (stderr, "\n isNan product\n");
                 result= result + temp;
                 
-                temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta, K);
+                temp =  Population::LogLambda(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta, K);
                 if (isnan(temp) || isinf(temp) )
                     fprintf (stderr, "\n isNan product\n");
                 result= result + temp;
@@ -2061,12 +2061,12 @@ long double  Chain::LogDensityCoalescentTimesForPopulation(long double K)
             if (isnan(temp) || isinf(temp) )
                 fprintf (stderr, "\n isNan temp\n");
             result= result + temp;
-            temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta, K);
+            temp =  Population::LogLambda(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta, K);
             
             if (isnan(temp) || isinf(temp) )
                 fprintf (stderr, "\n isNan temp\n");
             
-            temp = -1.0 * Population::LogCalculateH(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta, K);
+            temp =  Population::LogLambda(popI->CoalescentEventTimes[currentCoalescentEvent],popI->timeOriginSTD, popI->delta, K);
             result= result + temp;
             
             termOnlyAfterFirstCoalEvent =(currentCoalescentEvent == 0)?0:Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEvent-1], popI->timeOriginSTD, popI->delta, K);
@@ -2140,7 +2140,7 @@ long double  Chain::LogDensityCoalescentTimesForPopulation2(long double K){
                 {
                     temp=log(numberAliveCells * (numberAliveCells-1.0)/2.0);
                     result= result + temp;
-                    temp = -1.0 * Population::LogCalculateH(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K);
+                    temp =  Population::LogLambda(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K);
                     result= result + temp;
                     termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(lastEventTimeBeforeMigration, popI->timeOriginSTD, popI->delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], popI->timeOriginSTD, popI->delta, K);//if no coalescent
                     temp =  (numberAliveCells / 2.0)* (numberAliveCells - 1.0)*(Population::FmodelTstandard(timeCurrentEvent,popI->timeOriginSTD, popI->delta, K)-termOnlyAfterFirstCoalEvent);
@@ -2194,7 +2194,7 @@ long double Chain::LogDensityCoalTimes(std::vector<long double> allEventsSorted,
                 temp=log(numberAliveCells * (numberAliveCells-1.0)/2.0);
                 result= result + temp;
                 
-                temp = -1.0 * Population::LogCalculateH(timeCurrentEvent,timeOriginSTD, delta, K);
+                temp =  Population::LogLambda(timeCurrentEvent,timeOriginSTD, delta, K);
                 result= result + temp;
                 termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(lastEventTimeBeforeMigration, timeOriginSTD, delta, K):Population::FmodelTstandard(coalEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
                 temp =  (numberAliveCells / 2.0)* (numberAliveCells - 1.0)*(Population::FmodelTstandard(timeCurrentEvent,timeOriginSTD, delta, K)-termOnlyAfterFirstCoalEvent);

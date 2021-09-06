@@ -78,7 +78,7 @@ void test_smc_1pop_4tips( )
     fileNameFasta = filePaths.inputGenotypeFileFasta;
     
     
-    std::string inputGenotypeFilePhylip ="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0010_0001.phylip";
+    std::string inputGenotypeFilePhylip ="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0009_0001_n4.phylip";
     
     strcpy(filePaths.inputGenotypeFilePhylip, inputGenotypeFilePhylip.c_str());
     
@@ -105,7 +105,7 @@ void test_smc_1pop_4tips( )
         sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
     
     
-    std::string inputTreePath = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Model_time_0002_0010.tre";
+    std::string inputTreePath = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0009_n4.tre";
     strcpy(filePaths.inputTreeFile, inputTreePath.c_str());
     treefileName = filePaths.inputTreeFile;
     
@@ -163,7 +163,7 @@ void test_smc_1pop_4tips( )
                                           0, //int statesPadded
                                           true,//PLL_ATTRIB_ARCH_SSE
                                           false, false, false, false, false);
-    double theta = 2.5;//0.019;
+    double theta =  1;//0.019;
     double TscaledByTheta = coalTimes[coalTimes.size()-1];
     std::vector<double> deltas  = {100};//{21.519};
     std::vector<double> timeOriginSTDs = { TscaledByTheta/theta };
@@ -193,15 +193,15 @@ void test_smc_1pop_4tips( )
     smcOptions.num_particles = 1000;
     smcOptions.resample_last_round = false;
     
-    smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
+    smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
     
     smcOptions.track_population = false;
     smcOptions.init();
     smcOptions.debug = true;
     
     SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
-    
-    std::cout<< "\n\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles....\n" << std::endl;
+    std::string method =psParams.doPriorPost? " PriorPost ":" PriorPrior ";
+    std::cout<< "\n\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles and "<< method << "....\n" << std::endl;
     smc.run_smc(psParams);
     
     ParticlePopulation<State> *currenPop = smc.get_curr_population();
@@ -461,7 +461,7 @@ void test_smc_1pop_15tips( )
     smcOptions.num_particles = 1000;
     smcOptions.resample_last_round = false;
     
-    smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
+    smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
     
     smcOptions.track_population = false;
     smcOptions.init();
@@ -469,7 +469,8 @@ void test_smc_1pop_15tips( )
     
     SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
     
-    std::cout<< "\n\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles....\n" << std::endl;
+    std::string method =psParams.doPriorPost? " PriorPost ":" PriorPrior ";
+     std::cout<< "\n\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles and "<< method << "....\n" << std::endl;
     smc.run_smc(psParams);
     
     ParticlePopulation<State> *currenPop = smc.get_curr_population();
@@ -730,7 +731,7 @@ void test_smc_1pop_25tips( )
     smcOptions.num_particles = 1000;
     smcOptions.resample_last_round = false;
     
-    smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
+    smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
     
     smcOptions.track_population = false;
     smcOptions.init();
@@ -738,7 +739,8 @@ void test_smc_1pop_25tips( )
     
     SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
     
-    std::cout<< "\n\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles....\n" << std::endl;
+       std::string method =psParams.doPriorPost? " PriorPost ":" PriorPrior ";
+     std::cout<< "\n\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles and "<< method << "....\n" << std::endl;
     smc.run_smc(psParams);
     
     ParticlePopulation<State> *currenPop = smc.get_curr_population();

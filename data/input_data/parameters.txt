@@ -4,7 +4,7 @@
 
 [*** GLOBAL SETTINGS ***]
 [parameter values from priors (mandatory): 1:Yes, 0: NO]  q0
-[number of replicates per parameter values(mandatory)]	n1000
+[number of replicates per parameter values(mandatory)]	n10
 [number of sites] s1000
 
 [*** POPULATION GENETICS SETTINGS ***]
@@ -51,7 +51,7 @@ c1
 [MUTATION MODEL]
 
 [alphabet 0:binary 1:DNA] b1
-[scaled substitution rate (mandatory)] u2.5
+[scaled substitution rate (mandatory)] u1
 [deletion rate] [d1e-6]
 [CN_LOH rate] [h1e-5]
 [fixed number of true SNVs - ISM] [j100]

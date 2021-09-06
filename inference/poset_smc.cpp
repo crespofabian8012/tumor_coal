@@ -44,9 +44,10 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
         
         assert(timeNextCoalEvent > 0);
         newHeight = timeNextCoalEvent* result->getTheta();
+        if (params.verbose>1){
         std::cout << " new height " << newHeight << std::endl;
         std::cout << " loglik new height " << logLikNewHeight << std::endl;
-    
+        }
         result->insertNewCoalTime( newHeight);
        // result->setHeightScaledByTheta(timeNextCoalEvent* result->getTheta());
          
@@ -60,10 +61,13 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             else{//PriorPrior
                 logWeight =  result->proposalPriorPrior(random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
             }
-            log_w += logWeight ;
-        std::cout << " loglik new particle " << log_w << std::endl;
+           unsigned int numNonTrivialTrees = result->numberNonTrivialTrees();
+            assert(numNonTrivialTrees>0);
+            log_w += logWeight - log(numNonTrivialTrees) ;
+        if (params.verbose>1)
+           std::cout << " loglik new particle " << log_w << std::endl;
      }
-       
+
     return result;
 }
 unsigned long PosetSMC::num_iterations(){

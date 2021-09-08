@@ -54,16 +54,25 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
         leftNodePop = result->getPopulationByIndex(idxleftNodePop);
         rightNodePop = result->getPopulationByIndex(idxRightNodePop);
        
-        if (params.doPriorPost){
+        if (kernelType == PRIORPOST){
             
                logWeight = result->proposalPriorPost( random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
+              
+               
             }
-            else{//PriorPrior
+        else if(kernelType == PRIORPRIOR) {//PriorPrior
                 logWeight =  result->proposalPriorPrior(random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
             }
+        else{//POSTPOST
+            
+            
+            
+            
+        }
            unsigned int numNonTrivialTrees = result->numberNonTrivialTrees();
             assert(numNonTrivialTrees>0);
-            log_w += logWeight - log(numNonTrivialTrees) ;
+            //log_w += logWeight -logLikNewHeight-log(result->getTheta())- log(numNonTrivialTrees) ;
+        log_w += logWeight -logLikNewHeight- log(numNonTrivialTrees) ;
         if (params.verbose>1)
            std::cout << " loglik new particle " << log_w << std::endl;
      }

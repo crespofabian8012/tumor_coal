@@ -104,6 +104,7 @@ PartialTreeNode::PartialTreeNode(PLLBufferManager *manager,
 height(height), index(index), clv_size(clv_elements)
 //, clv(clv_elements,0.0), scale_buffer(clv_elements,0.0)
 {
+    
     if (manager->clv_buffer.empty()) {
         // pclv = std::make_unique<double[]>(clv_elements);
         

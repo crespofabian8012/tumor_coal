@@ -51,7 +51,7 @@ void test_smc_1pop_4tips( )
 {
     std::cout << "\nSMC tests with 4 tips\n" << std::endl;
     const char* input_path;
-    std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";
+    const std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";
     
     input_path = config_file.c_str();
     
@@ -78,7 +78,7 @@ void test_smc_1pop_4tips( )
     fileNameFasta = filePaths.inputGenotypeFileFasta;
     
     
-    std::string inputGenotypeFilePhylip ="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0009_0001_n4.phylip";
+   const std::string inputGenotypeFilePhylip ="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0009_0001_n4.phylip";
     
     strcpy(filePaths.inputGenotypeFilePhylip, inputGenotypeFilePhylip.c_str());
     
@@ -105,7 +105,7 @@ void test_smc_1pop_4tips( )
         sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
     
     
-    std::string inputTreePath = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0009_n4.tre";
+    const std::string inputTreePath = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0009_n4.tre";
     strcpy(filePaths.inputTreeFile, inputTreePath.c_str());
     treefileName = filePaths.inputTreeFile;
     
@@ -190,7 +190,7 @@ void test_smc_1pop_4tips( )
     smcOptions.num_threads = 5;
     smcOptions.use_SPF = false;
     smcOptions.ess_threshold = 1;
-    smcOptions.num_particles = 1000;
+    smcOptions.num_particles = 100;
     smcOptions.resample_last_round = false;
     
     smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
@@ -319,7 +319,7 @@ void test_smc_1pop_15tips( )
     
     std::cout << "\nSMC tests with 15 tips\n" << std::endl;
     const char* input_path;
-    std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";
+    const std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";
     
     input_path = config_file.c_str();
     
@@ -346,7 +346,7 @@ void test_smc_1pop_15tips( )
     fileNameFasta = filePaths.inputGenotypeFileFasta;
     
     
-    std::string inputGenotypeFilePhylip ="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0010_0001_n15.phylip";
+   const std::string inputGenotypeFilePhylip ="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0010_0001_n15.phylip";
     
     strcpy(filePaths.inputGenotypeFilePhylip, inputGenotypeFilePhylip.c_str());
     
@@ -373,7 +373,7 @@ void test_smc_1pop_15tips( )
         sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
     
     
-    std::string inputTreePath = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0010_n15.tre";
+    const std::string inputTreePath = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0010_n15.tre";
     strcpy(filePaths.inputTreeFile, inputTreePath.c_str());
     treefileName = filePaths.inputTreeFile;
     
@@ -458,7 +458,7 @@ void test_smc_1pop_15tips( )
     smcOptions.num_threads = 5;
     smcOptions.use_SPF = false;
     smcOptions.ess_threshold = 1;
-    smcOptions.num_particles = 1000;
+    smcOptions.num_particles = 500;
     smcOptions.resample_last_round = false;
     
     smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
@@ -589,7 +589,7 @@ void test_smc_1pop_25tips( )
     
     std::cout << "\nSMC tests with 25 tips\n" << std::endl;
     const char* input_path;
-    std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";
+    const std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";
     
     input_path = config_file.c_str();
     
@@ -616,7 +616,7 @@ void test_smc_1pop_25tips( )
     fileNameFasta = filePaths.inputGenotypeFileFasta;
     
     
-    std::string inputGenotypeFilePhylip ="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0001_0001.phylip";
+    const std::string inputGenotypeFilePhylip ="/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0001_0001.phylip";
     
     strcpy(filePaths.inputGenotypeFilePhylip, inputGenotypeFilePhylip.c_str());
     
@@ -643,7 +643,7 @@ void test_smc_1pop_25tips( )
         sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
     
     
-    std::string inputTreePath = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Model_time_0002_0001.tre";
+    const std::string inputTreePath = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Model_time_0002_0001.tre";
     strcpy(filePaths.inputTreeFile, inputTreePath.c_str());
     treefileName = filePaths.inputTreeFile;
     
@@ -728,7 +728,7 @@ void test_smc_1pop_25tips( )
     smcOptions.num_threads = 5;
     smcOptions.use_SPF = false;
     smcOptions.ess_threshold = 1;
-    smcOptions.num_particles = 1000;
+    smcOptions.num_particles = 100;
     smcOptions.resample_last_round = false;
     
     smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;

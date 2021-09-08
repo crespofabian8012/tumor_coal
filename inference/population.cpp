@@ -509,7 +509,9 @@ long double Population::LogCalculateH (long double t, long double TOrigin, long 
     long double a, b;
     long double extraTerm;
     assert(delta> 0.0);
-    assert(TOrigin>t);
+    assert(TOrigin>=t);
+    if (t ==TOrigin)
+        return DOUBLE_NEG_INF;
     
     
     a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
@@ -1141,6 +1143,27 @@ long double Population::logConditionalLikelihoodNextCoalescentTime(long double t
     }
     return result;
 }
+long double Population::logConditionalDensityWaitingTimeScaledByTheta(long double waitingTimeScaledbyTheta,  double K){
+    
+    long double result=0.0;
+    long double temp, termOnlyAfterFirstCoalEvent;
+    
+    assert(theta >0);
+    temp = -log(theta);
+    if (numActiveGametes > 1)
+    {
+        temp=log(numActiveGametes * (numActiveGametes-1.0)/2.0);
+        result= result + temp;
+        temp =  Population::LogLambda(currentModelTime +waitingTimeScaledbyTheta/theta,timeOriginSTD, delta, K);
+        result= result + temp;
+//        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
+        termOnlyAfterFirstCoalEvent =(currentModelTime>0)? Population::FmodelTstandard(currentModelTime, timeOriginSTD, delta, K):0.0;//if no coalescent
+        temp =  ((numActiveGametes )* (numActiveGametes - 1.0)/2.0)*(Population::FmodelTstandard(currentModelTime +waitingTimeScaledbyTheta/theta, timeOriginSTD, delta, K)-Population::FmodelTstandard(currentModelTime, timeOriginSTD, delta, K));
+        result= result - temp;
+        
+    }
+    return result;
+}
 void Population::sampleEventTimesScaledByProportion(gsl_rng *random, double K){
     
     int numMigrations = numIncomingMigrations;
@@ -1453,16 +1476,19 @@ double PopulationSet::proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNod
         if ( timeNextCoalEvent < timeNextMigration)
         {
             
-         pop->CoalescentEventTimes[pop->numCompletedCoalescences]=  pop->getCurrentModelTime();
-            pop->numCompletedCoalescences= pop->numCompletedCoalescences+1;
+         
             idxLeftNodePop = pop->index;
             idxRightNodePop = pop->index;
-            logLik += pop->logConditionalLikelihoodNextCoalescentTime(timeNextCoalEvent, K);
+            //logLik += pop->logConditionalLikelihoodNextCoalescentTime(timeNextCoalEvent, K);
+            double waitingTimeScaledBtTheta= (timeNextCoalEvent- pop->getCurrentModelTime()) *pop->x*pop->theta;
+            logLik += pop->logConditionalDensityWaitingTimeScaledByTheta(waitingTimeScaledBtTheta,   K);
            
-            double waitingTimeKingman = Population::FmodelTstandard (timeNextCoalEvent-pop->getCurrentModelTime() , pop->timeOriginSTD, pop->delta,   K);
-            assert(waitingTimeKingman- waitingTime < 1e-6);
+           
             pop->setCurrentModelTime( timeNextCoalEvent);
+            pop->CoalescentEventTimes[pop->numCompletedCoalescences]=  pop->getCurrentModelTime();
+            pop->numCompletedCoalescences= pop->numCompletedCoalescences+1;
             return(pop->getCurrentModelTime() *pop->x);
+            
             
         }
         else{

@@ -23,8 +23,8 @@ extern "C"
 class PosetSMCParams;
 class State{
     
-    long double heightScaledByTheta;
-    long double heightModelTime;
+    long double topHeightScaledByTheta;
+    long double topHeightModelTime;
     //std::shared_ptr<PopulationSet> populationSet;
     PopulationSet * populationSet;
     unsigned int nextAvailable;
@@ -56,8 +56,8 @@ public:
     
     int getNumberPopulations() const {return populationSet->numClones;};
     
-    long double getHeightScaledByTheta()const{return heightScaledByTheta;}
-    long double getHeightModelTime()const{return heightModelTime;}
+    long double getTopHeightScaledByTheta()const{return topHeightScaledByTheta;}
+    long double getTopHeightModelTime()const{return topHeightModelTime;}
     long double getTheta()const{return theta;}
     
     std::shared_ptr<PartialTreeNode> getRootAt(int i) const {return roots[i];};
@@ -110,11 +110,11 @@ public:
     
     void addRoot(std::shared_ptr<PartialTreeNode> node);
     
-    void setHeightScaledByTheta(long double  newHeight)
+    void setTopHeightScaledByTheta(long double  newHeight)
     {
-        assert(newHeight>=heightScaledByTheta);
-        heightScaledByTheta= newHeight;
-        heightModelTime = heightScaledByTheta/theta;
+        assert(newHeight>=topHeightScaledByTheta);
+        topHeightScaledByTheta= newHeight;
+        topHeightModelTime = topHeightScaledByTheta/theta;
         coalEventTimesScaledByTheta.push_back(newHeight);
     }
     void insertNewCoalTime(double newHeight){

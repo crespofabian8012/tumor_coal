@@ -22,6 +22,7 @@ class PosetSMC : public ProblemSpecification<State, PosetSMCParams>
 {
     size_t numClones;
     size_t num_iter;
+   
 public:
     PosetSMC(size_t numClones, size_t num_iter);
     unsigned long num_iterations() override;
@@ -33,7 +34,12 @@ public:
     double log_weight(unsigned int t, const shared_ptr<ParticleGenealogy<State> > &genealogy, const PosetSMCParams &p) override;
     
     //void set_particle_population(const vector<shared_ptr<State> > &particles) override;
-    
+    enum PosetSMCKernel {
+             PRIORPRIOR = 0,
+             PRIORPOST = 1,
+             POSTPOST = 2
+         };
+    PosetSMCKernel kernelType = PRIORPOST ;
     ~PosetSMC(){};
 };
 

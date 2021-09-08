@@ -18,8 +18,8 @@
 State::State(PosetSMCParams &smcParams, gsl_rng *random):
 pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition), num_sites(smcParams.num_sites)
 {
-    heightModelTime =0.0;
-    heightScaledByTheta = 0.0;
+    topHeightModelTime =0.0;
+    topHeightScaledByTheta = 0.0;
     logWeight = 0.0;
     theta = *smcParams.theta;
     initIdsNextCoalEvents(smcParams.getProgramOptions().numClones);
@@ -57,8 +57,8 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
 }
 State::State(const State &original):pll_buffer_manager(original.pll_buffer_manager){
     
-    heightModelTime = original.heightModelTime;
-    heightScaledByTheta = original.heightScaledByTheta;
+    topHeightModelTime = original.topHeightModelTime;
+    topHeightScaledByTheta = original.topHeightScaledByTheta;
     num_sites=original.num_sites;
     
     populationSet=new PopulationSet(*(original.populationSet));
@@ -113,7 +113,7 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         ? sites_alloc * reference_partition->numberRateCats
         : sites_alloc;
         
-        p=std::make_shared<PartialTreeNode>(pll_buffer_manager, nullptr, nullptr, msa->label[i], heightScaledByTheta, clv_num_elements,
+        p=std::make_shared<PartialTreeNode>(pll_buffer_manager, nullptr, nullptr, msa->label[i], 0.0, clv_num_elements,
                                             scaler_size, reference_partition->alignment(), i);
         
         //delete (p->pclv);
@@ -170,8 +170,8 @@ State &State::operator=(const State &original){
         return *this;
     
     partition = original.partition;
-    heightScaledByTheta = original.heightScaledByTheta;
-    heightModelTime = original.heightModelTime;
+    topHeightScaledByTheta = original.topHeightScaledByTheta;
+    topHeightModelTime = original.topHeightModelTime;
     theta = original.theta;
     num_sites=original.num_sites;
     roots = original.roots;
@@ -241,7 +241,7 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     
     
     std::shared_ptr<PartialTreeNode> parent = std::make_shared<PartialTreeNode>(
-                                                                                pll_buffer_manager, edge_left, edge_right, "", heightScaledByTheta, clv_elements,
+                                                                                pll_buffer_manager, edge_left, edge_right, "", newNodeHeight, clv_elements,
                                                                                 scaler_size, partition->alignment(), nextAvailable);
     
     parent->index_population=index_pop_new_node;
@@ -879,8 +879,10 @@ double  State::proposalCoalNodePriorPrior(gsl_rng * random, Population *chosenPo
     idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
     idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
     
+
     assert(idxFirstRoot != idxSecondRoot);
     
+    setTopHeightScaledByTheta(newNodeHeight);
      
     std::shared_ptr<PartialTreeNode> node = connect(idxFirstRoot, idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight );
     
@@ -906,6 +908,7 @@ double  State::proposalCoalMRCANodePriorPrior(gsl_rng * random, Population *inmi
     idxFirstRoot = receiverPop->idsActiveGametes[idxFirst];
     idxSecondRoot = inmigrantPop->idsActiveGametes[0];
     
+    setTopHeightScaledByTheta(newNodeHeight);
     assert(idxFirstRoot != idxSecondRoot);
     
     std::shared_ptr<PartialTreeNode> node = connect(idxFirstRoot, idxSecondRoot, receiverPop->index, newNodeHeight, logLikNewHeight );

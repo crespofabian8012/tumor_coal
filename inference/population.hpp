@@ -186,7 +186,7 @@ public:
     long double proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K);
     long double proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double K   );
     long double logConditionalLikelihoodNextCoalescentTime(long double timeNextEvent,  double K);
-    
+    long double logConditionalDensityWaitingTimeScaledByTheta(long double waitingTimeScaledByTheta,  double K);
     void sampleEventTimesScaledByProportion(gsl_rng *random, double K);
     double  nextCoalEventTime(int idxNextCoal, int indexNextMigration,  double currentTime, bool& isThereInmigration, Population* inmigrantPop );
     void printCoalEventTimes(std::ostream &stream);

@@ -15,12 +15,13 @@
 #include <omp.h>
 #include <stdio.h>
 using namespace std;
-
-int main()
+#include "gtest/gtest.h"
+int main(int argc, char **argv)
 {
-    std::cout << "\n\nRunning tests...!\n" << std::endl;
+
+    ::testing::InitGoogleTest(&argc, argv);
+    int res = RUN_ALL_TESTS();
     //test_hmc();
     test_smc();
-    std::cout << "\n\nAll tests passed!\n" << std::endl;
-    return 0;
+   return res;
 }

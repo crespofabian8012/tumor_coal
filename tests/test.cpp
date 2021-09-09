@@ -22,6 +22,6 @@ int main(int argc, char **argv)
     ::testing::InitGoogleTest(&argc, argv);
     int res = RUN_ALL_TESTS();
     //test_hmc();
-    test_smc();
+    //test_smc();
    return res;
 }

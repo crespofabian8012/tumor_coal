@@ -40,43 +40,54 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
         int  idxleftNodePop = 0;
         int  idxRightNodePop = 0;
         double timeNextCoalEvent = 0.0;
-        timeNextCoalEvent = result->getNextCoalTime(random, idxleftNodePop, idxRightNodePop, logLikNewHeight, params.getProgramOptions().K);
+
         
+        
+        if (kernelType == PRIORPOST){//PriorPrior: samples increment from the posterior and pair from the prior
+            timeNextCoalEvent = result->getNextCoalTime(random, idxleftNodePop, idxRightNodePop, logLikNewHeight, params.getProgramOptions().K);
+            
+            assert(timeNextCoalEvent > 0);
+            newHeight = timeNextCoalEvent* result->getTheta();
+            result->insertNewCoalTime( newHeight);
+            leftNodePop = result->getPopulationByIndex(idxleftNodePop);
+            rightNodePop = result->getPopulationByIndex(idxRightNodePop);
+            logWeight = result->proposalPriorPost( random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
+            
+            
+        }
+        else if(kernelType == PRIORPRIOR) {//PriorPrior: samples increment from the prior and pair from the prior
+            timeNextCoalEvent = result->getNextCoalTime(random, idxleftNodePop, idxRightNodePop, logLikNewHeight, params.getProgramOptions().K);
+            
+            assert(timeNextCoalEvent > 0);
+            newHeight = timeNextCoalEvent* result->getTheta();
+            result->insertNewCoalTime( newHeight);
+            leftNodePop = result->getPopulationByIndex(idxleftNodePop);
+            rightNodePop = result->getPopulationByIndex(idxRightNodePop);
+            logWeight =  result->proposalPriorPrior(random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
+        }
+        else{//POSTPOST: samples increment from the posterior and pair from the posterior
+            
+            
+               logWeight =  result->proposalPostPost(random, newHeight, logLikNewHeight, params.getProgramOptions().K);
+            
+        }
         assert(timeNextCoalEvent > 0);
         newHeight = timeNextCoalEvent* result->getTheta();
         if (params.verbose>1){
-        std::cout << " new height " << newHeight << std::endl;
-        std::cout << " loglik new height " << logLikNewHeight << std::endl;
+            std::cout << " new height " << newHeight << std::endl;
+            std::cout << " loglik new height " << logLikNewHeight << std::endl;
         }
-        result->insertNewCoalTime( newHeight);
-       // result->setHeightScaledByTheta(timeNextCoalEvent* result->getTheta());
-         
-        leftNodePop = result->getPopulationByIndex(idxleftNodePop);
-        rightNodePop = result->getPopulationByIndex(idxRightNodePop);
-       
-        if (kernelType == PRIORPOST){
-            
-               logWeight = result->proposalPriorPost( random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
-              
-               
-            }
-        else if(kernelType == PRIORPRIOR) {//PriorPrior
-                logWeight =  result->proposalPriorPrior(random, leftNodePop,rightNodePop, newHeight, logLikNewHeight);
-            }
-        else{//POSTPOST
-            
-            
-            
-            
-        }
-           unsigned int numNonTrivialTrees = result->numberNonTrivialTrees();
-            assert(numNonTrivialTrees>0);
-            //log_w += logWeight -logLikNewHeight-log(result->getTheta())- log(numNonTrivialTrees) ;
-        log_w += logWeight -logLikNewHeight- log(numNonTrivialTrees) ;
+        unsigned int numNonTrivialTrees = result->numberNonTrivialTrees();
+        assert(numNonTrivialTrees>0);
+        //log_w += logWeight -logLikNewHeight-log(result->getTheta())- log(numNonTrivialTrees) ;
+       if (result->getNumberPopulations() > 1.0)//nonClockTrees
+            log_w += logWeight- log(numNonTrivialTrees) ;
+        else
+            log_w += logWeight;
         if (params.verbose>1)
-           std::cout << " loglik new particle " << log_w << std::endl;
-     }
-
+            std::cout << " loglik new particle " << log_w << std::endl;
+    }
+    
     return result;
 }
 unsigned long PosetSMC::num_iterations(){

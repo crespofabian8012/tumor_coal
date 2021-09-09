@@ -780,7 +780,7 @@ double   State::proposalCoalMRCANodePriorPost(gsl_rng * random, Population *inmi
     updateIndexesActiveGametes( idxFirst, idxSecond,  inmigrantPop->index, receiverPop->index,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
     
      receiverPop->numActiveGametes= receiverPop->numActiveGametes-1;
-   
+    setTopHeightScaledByTheta(newNodeHeight);
     return logWeight;
 }
 double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPop, double newNodeHeight, double logLikNewHeight){
@@ -790,13 +790,16 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
     std::vector<std::pair<int, int>> allCoalPairs = Utils::allCombinations(chosenPop->numActiveGametes, 2);
     int numberProposals = allCoalPairs.size();
     
-    std::vector<double> logWeights(numberProposals, 0.0);
-    std::vector<double> normWeights(numberProposals, 0.0);
+    std::vector<double> logLik(numberProposals, 0.0);
+    std::vector<double> normlogLik(numberProposals, 0.0);
+    std::vector<double> logRatio(numberProposals, 0.0);
+      std::vector<double> normlogRatio(numberProposals, 0.0);
     
     std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
     
-    double maxlogWeight = DOUBLE_NEG_INF;
-    size_t posMax;
+    double maxlogLik = DOUBLE_NEG_INF;
+    double maxlogRatio = DOUBLE_NEG_INF;
+    size_t posMaxLik = 0, posMaxRatio = 0;
     for(size_t i=0; i <  allCoalPairs.size(); i++){
         idxFirst = allCoalPairs[i]. first;
         idxSecond = allCoalPairs[i]. second;
@@ -808,28 +811,51 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
         assert(idxFirstRoot != idxSecondRoot);
         nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight );
         
-        logWeights[i] = nodeProposals[i]->ln_likelihood;
-        if (logWeights[i]>maxlogWeight)
-        {
-            maxlogWeight = logWeights[i];
-            posMax = i;
-        }
-    }
-    unsigned int pos;
-    Utils::normalize(logWeights, normWeights);
-    pos = Random::randomDiscreteFromProbabilityVector(random, &normWeights[0], normWeights.size());
+        logLik[i] = nodeProposals[i]->ln_likelihood;
+        logRatio[i] = likelihood_factor(nodeProposals[i]);
     
-   logWeightDiff = likelihood_factor(nodeProposals[pos]);
+        if (logLik[i]>maxlogLik)
+        {
+            maxlogLik = logLik[i];
+            posMaxLik = i;
+        }
+        if (logRatio[i]>maxlogRatio)
+               {
+                   maxlogRatio = logRatio[i];
+                   posMaxRatio = i;
+               }
+    }
+    unsigned int posRatios, posLik, pos;
+    double logSumNormLik = Utils::normalize(logLik, normlogLik);
+    double logSumNormRatios = Utils::normalize(logRatio, normlogRatio);
+    posLik = Random::randomDiscreteFromProbabilityVector(random, &normlogLik[0], normlogLik.size());
+    posRatios = Random::randomDiscreteFromProbabilityVector(random, &normlogRatio[0], normlogRatio.size());
+    
+    if (posLik != posRatios){
+  
+        std::cout<< "posLik " << posLik<< " norm logLik " << normlogLik[posLik] << std::endl;
+         std::cout<<"parent "<< nodeProposals[posLik]->index<<  " left " << nodeProposals[posLik]->getIndexLeftChild() << " right " << nodeProposals[posLik]->getIndexRightChild() <<std::endl;
+        std::cout<< "max loglik pair " <<  nodeProposals[posMaxLik]->getIndexLeftChild() << " second " << nodeProposals[posMaxLik]->getIndexRightChild() <<std::endl;
+        
+    
+        std::cout<< "posRatios " << posRatios<< " norm logRatio " <<normlogRatio[posRatios] << std::endl;
+        std::cout<<"parent "<< nodeProposals[posRatios]->index<< " left " << nodeProposals[posRatios]->getIndexLeftChild() << " right " << nodeProposals[posRatios]->getIndexRightChild() <<std::endl;
+               std::cout<< "max logRatio pair " << nodeProposals[posMaxRatio]->getIndexLeftChild() << " second " << nodeProposals[posMaxRatio]->getIndexRightChild() <<std::endl;
+        std::cout<< "\n";
+    }
+        
+    pos = posRatios;
+    logWeightDiff = likelihood_factor(nodeProposals[pos]);
+    logWeightDiff = logSumNormRatios;
     assert(!isnan(logWeightDiff) && !isinf(logWeightDiff));
     logWeight = logWeight+ logWeightDiff;
     
-    
-    
-    
+
     idxFirst = allCoalPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
     idxSecond = allCoalPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
-    if (0){
-    std::cout<< "first " << idxFirst << " second " << idxSecond << " time "<< newNodeHeight<< " weight " << logWeight << " norm weight " << normWeights[pos] << std::endl;
+    if (true){
+         std::cout<<"parent "<< nodeProposals[pos]->index<< " left " << nodeProposals[pos]->getIndexLeftChild() << " right " << nodeProposals[pos]->getIndexRightChild() <<std::endl;
+
     }
     
     // std::cout<< "Max weight: first " << allCoalPairs[posMax]. first << "second " << allCoalPairs[posMax]. second << " weight " << weight << " max weight " << logWeights[posMax] << std::endl;
@@ -849,7 +875,7 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
     updateIndexesActiveGametes( idxFirst, idxSecond,  chosenPop->index, chosenPop->index,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
     
     chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
-
+    setTopHeightScaledByTheta(newNodeHeight);
     return logWeight;
 }
 double  State::proposalPriorPrior(gsl_rng * random, Population *leftNodePop,Population *rightNodePop, double newNodeHeight, double logLikNewHeight){
@@ -867,6 +893,92 @@ double  State::proposalPriorPrior(gsl_rng * random, Population *leftNodePop,Popu
     
     
 }
+double  State::proposalPostPost(gsl_rng * random,  double &newHeight , double& logLikNewHeight, int K){
+    
+    double result = 0.0;
+    
+    
+    
+    
+    return result;
+}
+double State::proposalCoalNodePostPost(gsl_rng * random, Population *chosenPop, double newNodeHeight, double logLikNewHeight){
+    
+     
+       int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+       double logWeightDiff = 0.0;
+       std::vector<std::pair<int, int>> allCoalPairs = Utils::allCombinations(chosenPop->numActiveGametes, 2);
+       int numberProposals = allCoalPairs.size();
+       
+       std::vector<double> logWeights(numberProposals, 0.0);
+       std::vector<double> normWeights(numberProposals, 0.0);
+       
+       std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
+       
+       double maxlogWeight = DOUBLE_NEG_INF;
+       size_t posMax;
+       for(size_t i=0; i <  allCoalPairs.size(); i++){
+           idxFirst = allCoalPairs[i]. first;
+           idxSecond = allCoalPairs[i]. second;
+           
+           idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
+           idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
+           
+           // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
+           assert(idxFirstRoot != idxSecondRoot);
+           nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight );
+           
+           logWeights[i] = nodeProposals[i]->ln_likelihood;
+       
+           if (logWeights[i]>maxlogWeight)
+           {
+               maxlogWeight = logWeights[i];
+               posMax = i;
+           }
+       }
+       unsigned int pos;
+       Utils::normalize(logWeights, normWeights);
+       pos = Random::randomDiscreteFromProbabilityVector(random, &normWeights[0], normWeights.size());
+       
+      logWeightDiff = likelihood_factor(nodeProposals[pos]);
+       assert(!isnan(logWeightDiff) && !isinf(logWeightDiff));
+       logWeight = logWeight+ logWeightDiff;
+       
+    
+       
+       idxFirst = allCoalPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
+       idxSecond = allCoalPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
+       if (0){
+       std::cout<< "first " << idxFirst << " second " << idxSecond << " time "<< newNodeHeight<< " weight " << logWeight << " norm weight " << normWeights[pos] << std::endl;
+       }
+       
+       // std::cout<< "Max weight: first " << allCoalPairs[posMax]. first << "second " << allCoalPairs[posMax]. second << " weight " << weight << " max weight " << logWeights[posMax] << std::endl;
+       idxFirstRoot = chosenPop->idsActiveGametes[idxFirst];
+       idxSecondRoot = chosenPop->idsActiveGametes[idxSecond];
+       
+       assert(idxFirstRoot != idxSecondRoot);
+       
+       int posFirstRoot= getNodeIdxById(idxFirstRoot);
+       int posSecondRoot = getNodeIdxById(idxSecondRoot);
+       
+       remove_roots(posFirstRoot, posSecondRoot);
+       assert(nodeProposals[pos]->number_leaves_cluster>1);
+       addRoot(nodeProposals[pos]);
+       
+       increaseNextAvailable();
+       updateIndexesActiveGametes( idxFirst, idxSecond,  chosenPop->index, chosenPop->index,  nodeProposals[pos]->index, nodeProposals[pos]->index_population);
+       
+       chosenPop->numActiveGametes= chosenPop->numActiveGametes-1;
+       setTopHeightScaledByTheta(newNodeHeight);
+       return logWeight;
+}
+  double   proposalCoalMRCANodePostPost(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight){
+      
+      double result = 0.0;
+      
+      
+      return result;
+  }
 double  State::proposalCoalNodePriorPrior(gsl_rng * random, Population *chosenPop, double newNodeHeight,  double logLikNewHeight){
     int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
     double logWeightDiff;

@@ -60,12 +60,12 @@ TEST_F(PopulationTest, logFModelInverseOfG) {
     double currentTimeKingman = Population::FmodelTstandard (currentModelTimePop , pop->timeOriginSTD, pop->delta,   K);//this is current time in Kingman coal time
     double currentModelTimePopFromG =   Population::GstandardTmodel(currentTimeKingman, pop->timeOriginSTD, pop->delta, K);
      EXPECT_EQ(currentModelTimePopFromG,currentModelTimePop);
-   double waitingTime= pop->proposeWaitingTimeNextCoalEvent(random, K);
-   currentTimeKingman = currentTimeKingman+waitingTime;
+   double waitingTimeKingman= pop->proposeWaitingTimeNextCoalEvent(random, K);
+   currentTimeKingman = currentTimeKingman+waitingTimeKingman;
 
     double timeNextCoalEvent =   Population::GstandardTmodel(currentTimeKingman, pop->timeOriginSTD, pop->delta, K);
     
-    double waitingTimeKingman = Population::FmodelTstandard (timeNextCoalEvent-pop->getCurrentModelTime() , pop->timeOriginSTD, pop->delta,   K);
-    EXPECT_EQ(waitingTimeKingman,waitingTime);
+    double waitingTimeKingmanFromInverse = Population::FmodelTstandard (timeNextCoalEvent-pop->getCurrentModelTime() , pop->timeOriginSTD, pop->delta,   K);
+    EXPECT_EQ(waitingTimeKingman,waitingTimeKingmanFromInverse);
 
 }

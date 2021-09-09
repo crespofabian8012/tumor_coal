@@ -112,6 +112,15 @@ public:
     double *pclv;
     unsigned int *pscale_buffer;
     
+    int getIndexLeftChild() const{
+         if (edge_l) return edge_l->child->index;
+         else return -1;
+    };
+    int getIndexRightChild() const{
+        if (edge_r) return edge_r->child->index;
+        else return -1;
+        
+    };
     // std::unique_ptr<unsigned int[]> pscale_buffer;
     // std::unique_ptr<double[]> pclv;
     // std::unique_ptr<double> pclv;

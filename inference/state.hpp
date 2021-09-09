@@ -135,13 +135,19 @@ public:
     
     double getNextCoalTime(gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop,double &logLik, double K);
     
-    double proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
+    //PriorPrior
     double  proposalCoalNodePriorPrior(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
-    
     double  proposalPriorPrior(gsl_rng * random, Population *leftNodePop,Population *rightNodePop, double newNodeHeight, double logLikNewHeight);
+    double  proposalCoalMRCANodePriorPrior(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
+    //PriorPost
+    double proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
     double   proposalPriorPost(gsl_rng * random, Population *leftNodePop,Population *rightNodePop,  double newNodeHeight, double logLikNewHeight);
     double   proposalCoalMRCANodePriorPost(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
-    double  proposalCoalMRCANodePriorPrior(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
+    
+    //PostPost
+    double  proposalPostPost(gsl_rng * random,  double &newHeight , double& logLikNewHeight, int K);
+     double proposalCoalNodePostPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
+    double   proposalCoalMRCANodePostPost(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
     unsigned int numberNonTrivialTrees();
     ~State();
 };

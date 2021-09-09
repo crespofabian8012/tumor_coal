@@ -12,7 +12,7 @@
 
 [number of clones; clone number, sample size, population size ratio (not effective), birth rate, death rate, time to origin (days, months, years; All clones with 0 = sampled from conditional distribution) (mandatory)]
 c1
-	1 4 1000 1 0.9 0.0
+	1 15 1000 1 0.9 0.0
 [c1
 	1 20  1000  1  0.99   0.0]
 [c2

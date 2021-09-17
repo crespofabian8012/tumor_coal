@@ -14,7 +14,7 @@ extern "C"
     }
 
 PartialTreeEdge::PartialTreeEdge(PLLBufferManager *manager,
-                                 std::shared_ptr<PartialTreeNode> child,
+                                 std::shared_ptr<PartialTreeNode> const& child,
                                  double length, unsigned int pmatrix_elements, size_t alignment)
 : manager(manager),  length(length),  matrix_size(pmatrix_elements), child(child) {
     if (manager->pmatrix_buffer.empty()) {
@@ -30,15 +30,25 @@ PartialTreeEdge::PartialTreeEdge(PLLBufferManager *manager,
     }
 }
 PartialTreeEdge::PartialTreeEdge(PLLBufferManager *manager,
-                                 std::shared_ptr<PartialTreeNode> child,
-                                 double length, unsigned int pmatrix_elements, double * pmatrix, size_t alignment)
-: manager(manager), length(length),  pmatrix(pmatrix), matrix_size(pmatrix_elements), child(child) {
+                                 std::shared_ptr<PartialTreeNode> const& child,
+                                 double length, unsigned int pmatrix_elements, double * pmatrixP, size_t alignment)
+: manager(manager), length(length), matrix_size(pmatrix_elements), child(child) {
     
+    if (manager->pmatrix_buffer.empty()) {
+        pmatrix = (double *)std::malloc(pmatrix_elements*sizeof(double));
+        //pmatrix =  (double*)pll_aligned_alloc(pmatrix_size, PLL_ALIGNMENT_SSE);
+    } else {
+        
+        //std::cout<< "reusing pmatrix from PLLBufferManager"<< std::endl;
+        pmatrix = manager->pmatrix_buffer.top();
+        manager->pmatrix_buffer.pop();
+    }
+    memcpy(pmatrix, pmatrixP, pmatrix_elements * sizeof(double));
 }
 
 PartialTreeEdge::PartialTreeEdge(const PartialTreeEdge& original)
 {
-    
+    manager = original.manager;
     length = original.length;
     matrix_size = original.matrix_size;
     manager            = original.manager;
@@ -52,6 +62,8 @@ PartialTreeEdge& PartialTreeEdge::operator= (PartialTreeEdge rhs) {
     return *this;
 }
 PartialTreeEdge::PartialTreeEdge(PartialTreeEdge&& rhs) : child(std::move(rhs.child)) {
+    
+    manager = rhs.manager;
     length = rhs.length;
     matrix_size = rhs.matrix_size;
     manager            = rhs.manager;
@@ -62,6 +74,15 @@ std::shared_ptr<PartialTreeEdge> PartialTreeEdge::Clone(){
     std::shared_ptr<PartialTreeEdge> result;
     
     result = std::make_shared<PartialTreeEdge>(
+                                               manager, child->Clone(), length,matrix_size , pmatrix,  0);
+    
+    return result;
+}
+std::unique_ptr<PartialTreeEdge> PartialTreeEdge::CloneUnique(){
+    
+    std::unique_ptr<PartialTreeEdge> result;
+    
+    result = std::make_unique<PartialTreeEdge>(
                                                manager, child->Clone(), length,matrix_size , pmatrix,  0);
     
     return result;
@@ -94,16 +115,25 @@ PartialTreeEdge::~PartialTreeEdge() {
 }
 
 PartialTreeNode::PartialTreeNode(PLLBufferManager *manager,
-                                 std::shared_ptr<PartialTreeEdge> edge_l,
-                                 std::shared_ptr<PartialTreeEdge> edge_r,
-                                 std::string label, double height,
+                                 std::shared_ptr<PartialTreeNode> const& leftChild,
+                                 std::shared_ptr<PartialTreeNode> const& rightChild,
+                                 double leftLength,
+                                 double rightLength,
+                                 unsigned int pmatrix_elements,
+                                 std::string label,
+                                 double height,
                                  unsigned int clv_elements,
-                                 unsigned int scale_buffer_elements
-                                 , size_t alignment, unsigned int index)
-: manager(manager), edge_l(edge_l), edge_r(edge_r), label(label),
-height(height), index(index), clv_size(clv_elements)
+                                 unsigned int scale_buffer_elements,
+                                 size_t alignment,
+                                 unsigned  int index,
+                                 unsigned  int index_population,
+                                 double *left_pmatrix,
+                                 double *right_pmatrix)
+: manager(manager), label(label),
+height(height),   index_population(index_population),index(index), clv_size(clv_elements)
 //, clv(clv_elements,0.0), scale_buffer(clv_elements,0.0)
 {
+    
     
     if (manager->clv_buffer.empty()) {
         // pclv = std::make_unique<double[]>(clv_elements);
@@ -131,51 +161,74 @@ height(height), index(index), clv_size(clv_elements)
         pscale_buffer = manager->scale_buffer_buffer.top();
         manager->scale_buffer_buffer.pop();
         
-       
         std::memset(pscale_buffer, 0, scale_buffer_elements*sizeof(unsigned int));
     }
-    // init(clv_elements);
+   
+    if (leftChild!= nullptr && leftLength >0){
+        if (left_pmatrix!=nullptr){
+           edge_l = std::make_unique<PartialTreeEdge>(manager, leftChild, leftLength, pmatrix_elements,left_pmatrix,  alignment);
+            
+        }
+        else
+          edge_l = std::make_unique<PartialTreeEdge>(
+                                                manager, leftChild, leftLength, pmatrix_elements, alignment);
+        
+        
+    }
+    else
+        edge_l = nullptr;
+    if (rightChild!= nullptr && rightLength >0){
+      if (right_pmatrix!=nullptr){
+                edge_r = std::make_unique<PartialTreeEdge>(manager, rightChild, rightLength, pmatrix_elements,  right_pmatrix,  alignment);
+                 
+             }
+    else
+      edge_r = std::make_unique<PartialTreeEdge>(manager, rightChild, rightLength, pmatrix_elements, alignment);
+    }
+    else{
+        edge_r = nullptr;
+        
+    }
     ln_likelihood=0.0;
     ln_coal_likelihood = 0.0;
     number_leaves_cluster = 0;
     number_nodes_cluster = 0;
-   
+    
     if (edge_l!=nullptr && edge_r!=nullptr){
         if(edge_l->child!=nullptr){
-           number_nodes_cluster += edge_l->child->number_nodes_cluster + 1;
-           number_leaves_cluster += edge_l->child->number_leaves_cluster ;
+            number_nodes_cluster += edge_l->child->number_nodes_cluster + 1;
+            number_leaves_cluster += edge_l->child->number_leaves_cluster ;
         }
         if(edge_r->child!=nullptr){
-                  number_nodes_cluster += edge_r->child->number_nodes_cluster;
-                  number_leaves_cluster += edge_r->child->number_leaves_cluster;
-               }
-     //   std::cout<< " number leaves cluster " << number_leaves_cluster << std::endl;
+            number_nodes_cluster += edge_r->child->number_nodes_cluster;
+            number_leaves_cluster += edge_r->child->number_leaves_cluster;
+        }
+        //   std::cout<< " number leaves cluster " << number_leaves_cluster << std::endl;
     }
     else{
-      number_leaves_cluster = 1;
-      number_nodes_cluster = 1;
+        number_leaves_cluster = 1;
+        number_nodes_cluster = 1;
     }
     
 }
-PartialTreeNode::PartialTreeNode(PLLBufferManager *manager,
-                                 std::shared_ptr<PartialTreeEdge> edge_l,
-                                 std::shared_ptr<PartialTreeEdge> edge_r,
-                                 std::string label,
-                                 double height, unsigned int clv_size,
-                                 unsigned int scale_buffer_size, size_t alignment,
-                                 double *pclv,
-                                 unsigned int *pscale_buffer,
-                                 unsigned  int index,
-                                 unsigned  int index_population,
-                                 double             ln_likelihood):
-manager(manager), edge_l(edge_l), edge_r(edge_r), label(label),
-height(height),   ln_likelihood(ln_likelihood),  index_population(index_population), index(index),  clv_size(clv_size),  pclv(pclv), pscale_buffer(pscale_buffer) {
-    
-    
-    
-    
-}
-PartialTreeNode::PartialTreeNode(const PartialTreeNode& original){
+//PartialTreeNode::PartialTreeNode(PLLBufferManager *manager,
+//                                 std::unique_ptr<PartialTreeEdge> edge_l,
+//                                 std::unique_ptr<PartialTreeEdge> edge_r,
+//                                 std::string label,
+//                                 double height, unsigned int clv_size,
+//                                 unsigned int scale_buffer_size, size_t alignment,
+//                                 double *pclv,
+//                                 unsigned int *pscale_buffer,
+//                                 unsigned  int index,
+//                                 unsigned  int index_population,
+//                                 double             ln_likelihood):
+//manager(manager), edge_l(std::move(edge_l)), edge_r(std::move(edge_r)), label(label),
+//height(height),   ln_likelihood(ln_likelihood),  index_population(index_population), index(index),  clv_size(clv_size),  pclv(pclv), pscale_buffer(pscale_buffer) {
+//
+//}
+PartialTreeNode::PartialTreeNode( PartialTreeNode& original): edge_l( new PartialTreeEdge( *original.edge_l ) ),  edge_r( new PartialTreeEdge( *original.edge_r ) )
+{
+    manager = original.manager;
     height =  original.height;
     clv_size =  original.clv_size;
     index =  original.index;
@@ -185,6 +238,8 @@ PartialTreeNode::PartialTreeNode(const PartialTreeNode& original){
     number_nodes_cluster = original.number_nodes_cluster;
     number_leaves_cluster = original.number_leaves_cluster;
     
+    
+    //edge_l = std::move(original.edge_l);
     //pclv(std::make_unique<double[]>(*original.pclv))
     // pclv(std::move(original.pclv));
     // pclv = std::move( original.pclv );
@@ -195,8 +250,9 @@ PartialTreeNode::PartialTreeNode(const PartialTreeNode& original){
     //pscale_buffer( original.pscale_buffer );
     
 }
-PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode& rhs ){
-    
+PartialTreeNode& PartialTreeNode::operator=( const PartialTreeNode& rhs )
+{
+    manager = rhs.manager;
     height =  rhs.height;
     clv_size =  rhs.clv_size;
     index =  rhs.index;
@@ -207,6 +263,9 @@ PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode& rhs ){
     number_nodes_cluster = rhs.number_nodes_cluster;
     number_leaves_cluster = rhs.number_leaves_cluster;
     
+    edge_l.reset( new PartialTreeEdge( *rhs.edge_l ) );
+    edge_r.reset( new PartialTreeEdge( *rhs.edge_r ) );
+    
     pclv = rhs.pclv;
     pscale_buffer = rhs.pscale_buffer;
     //pclv( new double[](original.pclv.get()));
@@ -216,6 +275,7 @@ PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode& rhs ){
 }
 PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode&& rhs )
 {
+    manager = rhs.manager;
     pclv = std::move( rhs.pclv );
     pscale_buffer = std::move( rhs.pscale_buffer );
     height =  rhs.height;
@@ -227,6 +287,9 @@ PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode&& rhs )
     ln_coal_likelihood = rhs.ln_coal_likelihood;
     number_nodes_cluster = rhs.number_nodes_cluster;
     number_leaves_cluster = rhs.number_leaves_cluster;
+    
+    edge_l = std::move( rhs.edge_l );
+    edge_r = std::move( rhs.edge_r );
     return *this;
 }
 //PartialTreeNode& PartialTreeNode::operator= (PartialTreeNode& rhs) {
@@ -235,6 +298,7 @@ PartialTreeNode& PartialTreeNode::operator=( PartialTreeNode&& rhs )
 //}
 PartialTreeNode::PartialTreeNode(PartialTreeNode&& rhs){
     
+    manager = rhs.manager;
     height =  rhs.height;
     clv_size =  rhs.clv_size;
     index =  rhs.index;
@@ -316,7 +380,7 @@ void PartialTreeNode::showpClV(unsigned int states, unsigned int rate_cats, unsi
     unsigned int i,j,k;
     double prob;
     
-    const double * pclv2 = pclv;
+    double * pclv2 = pclv;
     printf ("[ ");
     for (i = 0; i < sites; ++i)
     {
@@ -405,24 +469,45 @@ std::shared_ptr<PartialTreeNode> PartialTreeNode::Clone(){
     
     if (edge_l==nullptr && edge_r==nullptr){
         
-        result=std::make_shared<PartialTreeNode>(manager, nullptr, nullptr, label, height,                                        clv_size,clv_size, 0, pclv, pscale_buffer,                                          index, index_population, ln_likelihood);
-
-      
+        result=std::make_shared<PartialTreeNode>(*this);
+        
         
         return result;
     }
     else{
-        std::shared_ptr<PartialTreeEdge> leftEdge = edge_l->Clone();
-        std::shared_ptr<PartialTreeEdge> rightEdge = edge_r->Clone();
+        std::unique_ptr<PartialTreeEdge> leftEdge = edge_l->CloneUnique();
+        std::unique_ptr<PartialTreeEdge> rightEdge = edge_r->CloneUnique();
         
-        result=std::make_shared<PartialTreeNode>(manager, leftEdge, rightEdge, label, height,                                        clv_size,clv_size, 0, pclv, pscale_buffer,                                          index, index_population, ln_likelihood);
-      
+        //        result=std::make_shared<PartialTreeNode>(manager, leftEdge, rightEdge, label, height,                                        clv_size,clv_size, 0, pclv, pscale_buffer,                                          index, index_population, ln_likelihood);
+        result=std::make_shared<PartialTreeNode>(*this);
+        
         return result;
     }
     return result;
 }
-
+double PartialTreeNode::likelihood_factor()const{
+    
+    double result=0.0;
+    assert(edge_l && edge_r && "Root cannot be a leaf");
+    
+    std::shared_ptr<PartialTreeNode> left = edge_l->child;
+    std::shared_ptr<PartialTreeNode> right = edge_r->child;
+    
+    double ln_m = ln_likelihood;
+    double ln_l = left->ln_likelihood;
+    double ln_r = right->ln_likelihood;
+    
+    
+    assert(ln_m <= 0 && ln_l <= 0 && ln_r <= 0 &&
+           "Likelihood can't be more than 100%");
+    
+    result= ln_m - (ln_l + ln_r);
+    
+    return result;
+    
+}
 PartialTreeNode::~PartialTreeNode() {
+    
     manager->clv_buffer.push(pclv);
     manager->scale_buffer_buffer.push(pscale_buffer);
     
@@ -435,5 +520,6 @@ PartialTreeNode::~PartialTreeNode() {
     pscale_buffer = nullptr;
     // delete clv ;
     // delete[] scale_buffer ;
+   
     
 }

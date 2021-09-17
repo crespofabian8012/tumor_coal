@@ -40,9 +40,9 @@ endif()
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 #find_package(Boost 1.67 COMPONENTS regex system filesystem unit_test_framework program_options REQUIRED)
-find_package(Boost 1.67 COMPONENTS  system filesystem unit_test_framework program_options REQUIRED)
+find_package(Boost 1.67 COMPONENTS  system filesystem unit_test_framework program_options date_time filesystem iostreams REQUIRED)
 if(Boost_FOUND)
-    include_directories( PRIVATE ${Boost_INCLUDE_DIRS})
+    include_directories( PRIVATE ${Boost_INCLUDE_DIRS} ${Boost_LIBRARIES})
 endif()
 
 
@@ -51,6 +51,6 @@ include_directories(simul /usr/local/include/ ${CMAKE_SOURCE_DIR}/inference/ ${C
 add_executable(tests ${TESTS})
 
 
-target_link_libraries(tests gtest gtest_main  libTumorCoal)
+target_link_libraries(tests gtest gtest_main  libTumorCoal )
 
 add_test(SMCTests tests)

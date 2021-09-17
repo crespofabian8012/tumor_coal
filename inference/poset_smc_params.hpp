@@ -38,7 +38,8 @@ public:
     bool doPriorPost;
     bool doFixedEventimes;
     int verbose;
-    
+      
+    std::vector<double> trueCoalTimes;
     std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
     
     std::shared_ptr<double> theta;

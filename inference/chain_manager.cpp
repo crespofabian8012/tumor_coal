@@ -57,22 +57,22 @@ void ChainManager::initializeChains(std::vector< gsl_rng * > &randomGenerators, 
     for(size_t chainNumber=0; chainNumber< numberChains;++chainNumber)
     {
         int idx = chainNumber / mcmcOptions.numberChainsPerTree;
-        currenStructuredCoalTreeToInfer =structuredCoalTrees.at(idx);
-        chains.at(chainNumber) = Chain::initializeChain( chainNumber, programOptions, mcmcOptions, sampleSizes, randomGenerators.at(chainNumber), ObservedData,ObservedCellNames,                                              msa,  initialRootedTree,currenStructuredCoalTreeToInfer, healthyTipLabel, filePaths, partitions[chainNumber]);
+        currenStructuredCoalTreeToInfer =structuredCoalTrees[idx];
+        chains[chainNumber] = Chain::initializeChain( chainNumber, programOptions, mcmcOptions, sampleSizes, randomGenerators[chainNumber], ObservedData,ObservedCellNames,                                              msa,  initialRootedTree,currenStructuredCoalTreeToInfer, healthyTipLabel, filePaths, partitions[chainNumber]);
         setWarmup(chainNumber, mcmcOptions.burnInIterations);
         if (chainNumber==0)
         {
-            numMCMCParametersChain =  chains.at(chainNumber)->numParams();
+            numMCMCParametersChain =  chains[chainNumber]->numParams();
         }
         else
         {
-            assert(numMCMCParametersChain ==  chains.at(chainNumber)->numParams());
+            assert(numMCMCParametersChain ==  chains[chainNumber]->numParams());
         }
-        chains.at(chainNumber)->writeHeaderOutputChain(filePaths, programOptions,
-                                                       chains.at(chainNumber)->files,trueTrees.at(idx) ,
-                                                       trueThetas.at(idx), trueDeltaTs.at(idx),
-                                                       trueTs.at(idx), sampleSizes, currenStructuredCoalTreeToInfer );
-        chains.at(chainNumber)->initListMoves(programOptions, mcmcOptions);
+        chains[chainNumber]->writeHeaderOutputChain(filePaths, programOptions,
+                                                    chains[chainNumber]->files,trueTrees[idx] ,
+                                                       trueThetas[idx], trueDeltaTs[idx],
+                                                       trueTs[idx], sampleSizes, currenStructuredCoalTreeToInfer );
+        chains[chainNumber]->initListMoves(programOptions, mcmcOptions);
     }
 }
 void ChainManager::stepAllChains(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators  )
@@ -119,10 +119,10 @@ void ChainManager::monitorChains(int currentIteration, ProgramOptions &programOp
     {
         if (mcmcOptions.doThinning)
         {
-            chains.at(chainNumber)->computeThinnig( mcmcOptions);
-            chains.at(chainNumber)->resetPosteriorValues();
-            std::cout << "\n Chain "<< chains.at(chainNumber)->chainNumber << " thinning: "<< chains.at(chainNumber)->thinning;
-            chains.at(chainNumber)->printMovesSummary(programOptions, mcmcOptions);
+            chains[chainNumber]->computeThinnig( mcmcOptions);
+            chains[chainNumber]->resetPosteriorValues();
+            std::cout << "\n Chain "<< chains[chainNumber]->chainNumber << " thinning: "<< chains[chainNumber]->thinning;
+            chains[chainNumber]->printMovesSummary(programOptions, mcmcOptions);
         }
     }
 }

@@ -31,7 +31,7 @@ extern "C"
     {
 #include <gsl/gsl_rng.h>
     }
-#include <vector>
+//#include <vector>
 
 #include <boost/random.hpp>
 namespace Random

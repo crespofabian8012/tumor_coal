@@ -456,14 +456,22 @@ int pll_core_update_pmatrix_16x16_jc69(double ** pmatrix,
             
             if (t < 1e-100)
             {
-                for(unsigned int i=0; i< states*states;i++)
-                {
-                    if (i %states ==0)
-                        pmat[i] = 1;
-                    else
-                        pmat[i] = 0;
-                    
-                }
+//                for(unsigned int i=0; i< states*states;i++)
+//                {
+//                    if (i %states ==0)
+//                        pmat[i] = 1;
+//                    else
+//                        pmat[i] = 0;
+//
+//                }
+                  size_t size = states*states;
+                                for (size_t i = 0; i < size; ++i)
+                                               {
+                                         if (i/states ==i % states)
+                                                pmat[i] = 1 ;
+                                        else
+                                                pmat[i] = 0 ;
+                                            }
                 
             }
             else
@@ -486,14 +494,36 @@ int pll_core_update_pmatrix_16x16_jc69(double ** pmatrix,
                 double a = 1 + 15.0/16.0 * exptm1;
                 double b = -exptm1/16.0;
                 
-                for(unsigned int i=0; i< states*states;i++)
-                {
-                    if (i %states ==0)
-                        pmat[i] = a;
-                    else
-                        pmat[i] = b;
-                    
-                }
+//                for(unsigned int i=0; i< states*states;i++)
+//                {
+//                    if (i %states ==0)
+//                        pmat[i] = a;
+//                    else
+//                        pmat[i] = b;
+//
+//                }
+                size_t size = states*states;
+                for (size_t i = 0; i < size; ++i)
+                               {
+                         if (i/states ==i % states)
+                                pmat[i] = a ;
+                        else
+                                pmat[i] = b ;
+                            }
+                                      
+                        
+                
+//                for (size_t i = 0; i < states; ++i)
+//                {
+//                    for (size_t j = 0; j < states; ++j){
+//                        if (i==j)
+//                           pmat[i*states_padded+j] = a ;
+//                        else
+//                          pmat[i*states_padded+j] = b ;
+//                    }
+//
+//                }
+   
             }
             
         }
@@ -501,6 +531,7 @@ int pll_core_update_pmatrix_16x16_jc69(double ** pmatrix,
     
     return PLL_SUCCESS;
 }
+
 
 void pll_core_update_partial_ii2(unsigned int states,
                                  unsigned int sites,
@@ -646,6 +677,7 @@ void pll_core_update_partial_ii2(unsigned int states,
                  * the threshold then scale (all) entries by PLL_SCALE_FACTOR */
                 if (rate_scale)
                 {
+                    std::cout<< "scaling per rate" << std::endl;
                     for (i = 0; i < states; ++i)
                         parent_clv[i] *= PLL_SCALE_FACTOR;
                     parent_scaler[n*rate_cats + k] += 1;
@@ -662,6 +694,7 @@ void pll_core_update_partial_ii2(unsigned int states,
          * the threshold then scale (all) entries by PLL_SCALE_FACTOR */
         if (site_scale)
         {
+            std::cout<< "scaling per site" << std::endl;
             parent_clv -= span;
             for (i = 0; i < span; ++i)
                 parent_clv[i] *= PLL_SCALE_FACTOR;

@@ -30,6 +30,7 @@ extern "C"
 class Partition{
 private:
     pll_partition_t * partition;
+    pllmod_subst_model_t * model;
     Partition(){};
     //    Partition(int numberTips,
     //               int clvBuffers,
@@ -212,6 +213,10 @@ public:
     int initTipCLV(unsigned int tipClvIndex, double * clv)const;
     
     void showEigenDecomp(unsigned int float_precision) const;
+    
+    std::string getModelName() const {std::string str(model->name);
+                                      return str;
+                                      };
     
     ~Partition()
     {

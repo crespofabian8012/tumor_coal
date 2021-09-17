@@ -33,7 +33,8 @@
 #include <gsl/gsl_randist.h>
 #include <Eigen/Eigen>
 #include <boost/program_options.hpp>
-
+#include <chrono>
+#include <sys/time.h>
 
 #include "smc.hpp"
 #include "state.hpp"
@@ -55,7 +56,7 @@ extern "C"
 #include "gtest/gtest.h"
 
 using SMC_State_PosetSMCParams = SMC<State, PosetSMCParams>;
-class PosetSMCOnePopulationTest : public ::testing::TestWithParam<std::tuple<std::string, std::string, size_t,SMCOptions::ResamplingScheme, PosetSMC::PosetSMCKernel, double, double  >> {
+class PosetSMCOnePopulationTest : public ::testing::TestWithParam<std::tuple<std::string, std::string, size_t,SMCOptions::ResamplingScheme, PosetSMC::PosetSMCKernel, double, double, bool  >> {
 protected:
     
 public:
@@ -64,6 +65,7 @@ public:
     {
         inputGenotypeFilePhylipPath = std::get<0>(GetParam());
         inputTreePath = std::get<1>(GetParam());
+        bool doPlots = std::get<7>(GetParam());
         
         smcOptions.num_threads = 5;
         smcOptions.use_SPF = false;
@@ -72,6 +74,15 @@ public:
         smcOptions.resample_last_round = false;
         smcOptions.resampling_scheme =  std::get<3>(GetParam());
         smcOptions.track_population = false;
+        using namespace std::chrono;
+        milliseconds ms = duration_cast< milliseconds >(
+                                                        system_clock::now().time_since_epoch());
+        long seed = ms.count();;
+        random = Random::generateRandomObject( seed);
+        struct timeval tv;
+        gettimeofday(&tv,0);
+        seed = tv.tv_sec + tv.tv_usec;
+        smcOptions.main_seed = seed;
         
         const char* input_path;
         const std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";
@@ -80,8 +91,7 @@ public:
         
         setDefaultOptions(programOptions, mcmcOptions);
         InitFilesPathsOptions(filePaths, programOptions);
-        long seed = 14263784;
-        random = Random::generateRandomObject( seed);
+        
         
         char *fileNameFasta ;//= argv[2];
         char *fileNamePhylip;
@@ -193,13 +203,13 @@ public:
         
         
         num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
-        PosetSMC posetSMC(programOptions.numClones,  num_iter);
+        posetSMC = new PosetSMC(programOptions.numClones,  num_iter, doPlots);
         
-        posetSMC.kernelType = std::get<4>(GetParam());
+        posetSMC->kernelType = std::get<4>(GetParam());
         smcOptions.init();
         smcOptions.debug = true;
         
-        smc = new SMC<State, PosetSMCParams>(posetSMC, smcOptions);
+        smc = new SMC<State, PosetSMCParams>(*posetSMC, smcOptions);
     }
     
     ~PosetSMCOnePopulationTest() override {
@@ -236,7 +246,7 @@ public:
     size_t  num_iter;
     SMCOptions smcOptions;
     PosetSMCParams *psParams;
-    
+    PosetSMC *posetSMC;
     //MSA *msa;
     RootedTree *rootedTree;
     double true_theta;

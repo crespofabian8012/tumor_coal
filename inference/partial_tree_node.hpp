@@ -28,11 +28,11 @@ public:
     //constructors
     
     PartialTreeEdge(PLLBufferManager *manager,
-                    std::shared_ptr<PartialTreeNode> child,
+                    std::shared_ptr<PartialTreeNode> const& child,
                     double length, unsigned int pmatrix_elements, size_t alignment);
     
     PartialTreeEdge(PLLBufferManager *manager,
-                    std::shared_ptr<PartialTreeNode> child,
+                    std::shared_ptr<PartialTreeNode> const& child,
                     double length, unsigned int pmatrix_elements, double * pmatrix, size_t alignment);
     
     PartialTreeEdge(const PartialTreeEdge& original);
@@ -40,6 +40,7 @@ public:
     PartialTreeEdge(PartialTreeEdge&& rhs);
     
     std::shared_ptr<PartialTreeEdge> Clone();
+    std::unique_ptr<PartialTreeEdge> CloneUnique();
     void showPMatrix( unsigned int states, unsigned int rate_cats, unsigned int states_padded,  unsigned int float_precision);
     void freeMatrix();
     ~PartialTreeEdge();
@@ -53,27 +54,36 @@ class PartialTreeNode {
 public:
     
     PartialTreeNode(PLLBufferManager *manager,
-                    std::shared_ptr<PartialTreeEdge> edge_l,
-                    std::shared_ptr<PartialTreeEdge> edge_r, std::string label,
-                    double height, unsigned int clv_size,
-                    unsigned int scale_buffer_size, size_t alignment,
-                    unsigned  int index);
-    
-    PartialTreeNode(PLLBufferManager *manager,
-                    std::shared_ptr<PartialTreeEdge> edge_l,
-                    std::shared_ptr<PartialTreeEdge> edge_r,
+                    std::shared_ptr<PartialTreeNode> const& leftChild,
+                    std::shared_ptr<PartialTreeNode> const& rightChild,
+                    double leftLength,
+                    double rightLength,
+                    unsigned int pmatrix_elements,
                     std::string label,
-                    double height, unsigned int clv_size,
-                    unsigned int scale_buffer_size, size_t alignment,
-                    double *pclv,
-                    unsigned int *pscale_buffer,
+                    double height,
+                    unsigned int clv_size,
+                    unsigned int scale_buffer_size,
+                    size_t alignment,
                     unsigned  int index,
                     unsigned  int index_population,
-                    double             ln_likelihood);
+                    double *left_pmatrix,
+                    double *right_pmatrix);
     
-    PartialTreeNode(const PartialTreeNode& original);
+//    PartialTreeNode(PLLBufferManager *manager,
+//                    std::unique_ptr<PartialTreeEdge> edge_l,
+//                    std::unique_ptr<PartialTreeEdge> edge_r,
+//                    std::string label,
+//                    double height, unsigned int clv_size,
+//                    unsigned int scale_buffer_size, size_t alignment,
+//                    double *pclv,
+//                    unsigned int *pscale_buffer,
+//                    unsigned  int index,
+//                    unsigned  int index_population,
+//                    double             ln_likelihood);
+    
+    PartialTreeNode( PartialTreeNode& original);
     PartialTreeNode& operator= (PartialTreeNode rhs) ;
-    PartialTreeNode& operator=( PartialTreeNode& rhs );
+    PartialTreeNode& operator=( const PartialTreeNode& rhs );
     PartialTreeNode(PartialTreeNode&& rhs);
     PartialTreeNode& operator=( PartialTreeNode&& rhs );
     
@@ -86,8 +96,8 @@ public:
     void init(int clv_elements);
     std::shared_ptr<PartialTreeNode> Clone();
     
-    std::shared_ptr<PartialTreeEdge> edge_l;
-    std::shared_ptr<PartialTreeEdge> edge_r;
+    std::unique_ptr<PartialTreeEdge> edge_l;
+    std::unique_ptr<PartialTreeEdge> edge_r;
     
     //std::vector<double>& getCLV(){return clv;};
     void buildCLV(int tip_id,int numberStates, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel,  bool normalize);
@@ -121,6 +131,7 @@ public:
         else return -1;
         
     };
+    double likelihood_factor()const;
     // std::unique_ptr<unsigned int[]> pscale_buffer;
     // std::unique_ptr<double[]> pclv;
     // std::unique_ptr<double> pclv;
@@ -128,11 +139,9 @@ public:
     //std::vector<unsigned int> scale_buffer;
     
     ~PartialTreeNode();
-    
-    
+
     };
-    
-    
+
 #endif /* partial_tree_node_hpp */
     
     

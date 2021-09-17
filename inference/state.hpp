@@ -15,12 +15,15 @@
 #include "genotype_error_model.hpp"
 #include "partition.hpp"
 
+#include <Eigen/Core>
 #include  <vector>
 extern "C"
     {
 #include "libpll/pll.h"
     }
 class PosetSMCParams;
+using ListListDouble = std::vector<std::vector<double>>;
+using PairListListDouble = std::pair<ListListDouble,ListListDouble>  ;
 class State{
     
     long double topHeightScaledByTheta;
@@ -64,8 +67,8 @@ public:
     
     std::vector<std::shared_ptr<PartialTreeNode>> getRoots() const{ return roots;};
     
-    double getInitialLogWeight() const {return logWeight;}
-    
+    double getLogWeight() const {return logWeight;}
+    void  setLogWeight(double newLogWeight){ logWeight = newLogWeight;}
     std::vector<double> getCoalEventTimesScaledBytheta() const{return coalEventTimesScaledByTheta;}
     
     int getNodeIdxById(size_t id);
@@ -83,7 +86,9 @@ public:
     
     void remove_roots(int i, int j);
     
-    std::shared_ptr<PartialTreeNode> proposeNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight , double logLikNewNode);
+    std::shared_ptr<PartialTreeNode> proposeNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight , double logLikNewNode, double* left_pmatrix, double* right_pmatrix);
+    
+    std::unique_ptr<PartialTreeNode> uniquePtrNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight, double logLikNewNode);
     
     int root_count() const{return roots.size();};
     
@@ -140,15 +145,29 @@ public:
     double  proposalPriorPrior(gsl_rng * random, Population *leftNodePop,Population *rightNodePop, double newNodeHeight, double logLikNewHeight);
     double  proposalCoalMRCANodePriorPrior(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
     //PriorPost
-    double proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
-    double   proposalPriorPost(gsl_rng * random, Population *leftNodePop,Population *rightNodePop,  double newNodeHeight, double logLikNewHeight);
+    double proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight, size_t iteration, double** pmatrices);
+    double   proposalPriorPost(gsl_rng * random, Population *leftNodePop,Population *rightNodePop,  double newNodeHeight, double logLikNewHeight, size_t iteration);
     double   proposalCoalMRCANodePriorPost(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
     
     //PostPost
-    double  proposalPostPost(gsl_rng * random,  double &newHeight , double& logLikNewHeight, int K);
+    double  proposalPostPost(gsl_rng * random,  double &newHeight , double& logLikNewHeight, size_t numIncrementsPOSTPOST, double K);
      double proposalCoalNodePostPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
     double   proposalCoalMRCANodePostPost(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
     unsigned int numberNonTrivialTrees();
+    Population* getCurrentPopulation();
+    
+    void acceptNextCoalTimeProposal(double nextCoaTimeScaledByProportion, gsl_rng *random, int idxReceiverPop, int idxIncomingPop,  double K);
+    
+    double  proposalPostPost1(gsl_rng * random,  double &newHeight , double& logLikNewHeight,size_t numIncrementsPOSTPOST, double K);
+    
+    Eigen::ArrayXXd getLogLikelihoodGrid( double from, double to, size_t n);
+    
+    PairListListDouble evalLogLikRatioGrid( double from, double to, size_t n, std::vector<std::string> &labels);
+    
+    std::vector<double> evalLogLikRatioGridPerIncrement( double from, double to, size_t n, std::vector<std::string> &labels);
+    
+    double likelihood_factor(std::unique_ptr<PartialTreeNode> root)const;
+    
     ~State();
 };
 #endif /* state_hpp */

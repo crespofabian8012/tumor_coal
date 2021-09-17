@@ -952,6 +952,13 @@ long double   Utils::tune(long double scale, const long double acceptanceRate){
     }
     return result;
 }
+double Utils::norm(const std::vector<double> &log_weights)
+{
+    // compute the lognorm
+    double log_norm = log_add(log_weights);
+    return log_norm;
+}
+
 double Utils::normalize(const std::vector<double> &log_weights, std::vector<double> &weights)
 {
     // compute the lognorm
@@ -1145,6 +1152,17 @@ double Utils::getClosest(double val1, double val2,
 double Utils::logSumExp(double a, double b){
     
     return(log(exp(a)+exp(b)));
+    
+}
+double Utils::logSumExp(std::vector<double> &logValues){
+    
+    double result = 0.0;
+    size_t size = logValues.size();
+    for(size_t i =0; i < size; ++i ){
+        result+=exp(logValues[i]);
+        
+    }
+    return(log(result));
     
 }
 //void Utils::autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft)

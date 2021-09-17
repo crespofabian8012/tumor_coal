@@ -858,9 +858,9 @@ void Population::ChooseRandomIndividual(int *firstInd,   int numClones,   int *s
     
     if (choosePairIndividuals== YES && numActiveGametes > 1){
         *firstInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
-               do {
-                   *secondInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
-               } while (*firstInd == *secondInd);
+        do {
+            *secondInd = gsl_rng_uniform_int(randomGenerator, numActiveGametes);
+        } while (*firstInd == *secondInd);
         
         
     }
@@ -1116,7 +1116,7 @@ long double Population::proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveL
     return ThisTimeCA_W;
     
 }
-long double Population::proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double K   ){
+long double Population::proposeWaitingKingmanTimeNextCoalEvent(gsl_rng* rngGsl   ){
     assert(numActiveGametes>1);
     
     long double  RateCA = (long double)  numActiveGametes * ((long double) numActiveGametes - 1) / 2.0;
@@ -1125,7 +1125,16 @@ long double Population::proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double
     return ThisTimeCA_W;
     
 }
-long double Population::logConditionalLikelihoodNextCoalescentTime(long double timeNextEvent,  double K){
+long double Population::proposeWaitingKingmanTimeNextCoalEvent(gsl_rng* rngGsl, size_t numActiveGametesPar   ){
+    assert(numActiveGametesPar>1);
+    
+    long double  RateCA = (long double)  numActiveGametesPar * ((long double) numActiveGametesPar - 1) / 2.0;
+    long double  ThisTimeCA_W = Random::RandomExponential(RateCA,0,  true, rngGsl,NULL ) ;
+    
+    return ThisTimeCA_W;
+    
+}
+long double Population::logConditionalLikelihoodNextCoalescentTime(long double timeNextEvent,   double K){
     
     long double result=0.0;
     long double temp, termOnlyAfterFirstCoalEvent;
@@ -1135,7 +1144,7 @@ long double Population::logConditionalLikelihoodNextCoalescentTime(long double t
         result= result + temp;
         temp =  Population::LogLambda(timeNextEvent,timeOriginSTD, delta, K);
         result= result + temp;
-//        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
+        //        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
         termOnlyAfterFirstCoalEvent =(currentModelTime>0)? Population::FmodelTstandard(currentModelTime, timeOriginSTD, delta, K):0.0;//if no coalescent
         temp =  (numActiveGametes / 2.0)* (numActiveGametes - 1.0)*(Population::FmodelTstandard(timeNextEvent, timeOriginSTD, delta, K)-termOnlyAfterFirstCoalEvent);
         result= result - temp;
@@ -1146,7 +1155,7 @@ long double Population::logConditionalLikelihoodNextCoalescentTime(long double t
 long double Population::logConditionalDensityWaitingTimeScaledByTheta(long double waitingTimeScaledbyTheta,  double K){
     
     long double result=0.0;
-    long double temp, termOnlyAfterFirstCoalEvent;
+    long double temp;
     
     assert(theta >0);
     temp = -log(theta);
@@ -1156,9 +1165,28 @@ long double Population::logConditionalDensityWaitingTimeScaledByTheta(long doubl
         result= result + temp;
         temp =  Population::LogLambda(currentModelTime +waitingTimeScaledbyTheta/theta,timeOriginSTD, delta, K);
         result= result + temp;
-//        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
-        termOnlyAfterFirstCoalEvent =(currentModelTime>0)? Population::FmodelTstandard(currentModelTime, timeOriginSTD, delta, K):0.0;//if no coalescent
+        //        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
         temp =  ((numActiveGametes )* (numActiveGametes - 1.0)/2.0)*(Population::FmodelTstandard(currentModelTime +waitingTimeScaledbyTheta/theta, timeOriginSTD, delta, K)-Population::FmodelTstandard(currentModelTime, timeOriginSTD, delta, K));
+        result= result - temp;
+        
+    }
+    return result;
+}
+long double Population::logConditionalDensityWaitingTimeScaledByTheta(long double waitingTimeScaledbyTheta, size_t numActiveGametesP, double currentModelTimeP,  double K){
+    
+    long double result=0.0;
+    long double temp;
+    
+    assert(theta >0);
+    temp = -log(theta);
+    if (numActiveGametesP > 1)
+    {
+        temp=log(numActiveGametesP * (numActiveGametesP-1.0)/2.0);
+        result= result + temp;
+        temp =  Population::LogLambda(currentModelTimeP +waitingTimeScaledbyTheta/theta,timeOriginSTD, delta, K);
+        result= result + temp;
+        //        termOnlyAfterFirstCoalEvent =(currentCoalescentEventInThisEpoch == 0)?Population::FmodelTstandard(currentTime, timeOriginSTD, delta, K):Population::FmodelTstandard(popI->CoalescentEventTimes[currentCoalescentEventInThisEpoch-1], timeOriginSTD, delta, K);//if no coalescent
+        temp =  ((numActiveGametesP )* (numActiveGametesP - 1.0)/2.0)*(Population::FmodelTstandard(currentModelTimeP +waitingTimeScaledbyTheta/theta, timeOriginSTD, delta, K)-Population::FmodelTstandard(currentModelTimeP, timeOriginSTD, delta, K));
         result= result - temp;
         
     }
@@ -1183,7 +1211,7 @@ void Population::sampleEventTimesScaledByProportion(gsl_rng *random, double K){
             currentModelTime = Population::GstandardTmodel(currentTimeKingman, timeOriginSTD, delta,  K);//this is current time in Kingman coal time
             
             assert(abs(currentTime-currentModelTime)<0.0000001);
-            waitingTimeKingman=proposeWaitingTimeNextCoalEvent(random, K) ;
+            waitingTimeKingman=proposeWaitingKingmanTimeNextCoalEvent(random) ;
             currentTimeKingman = currentTimeKingman + waitingTimeKingman;
             //now from Kingman coal to  current population model time
             timeNextEvent =   Population::GstandardTmodel(currentTimeKingman, timeOriginSTD, delta, K);
@@ -1361,7 +1389,7 @@ void  PopulationSet::setPopulationsBirthRate( long double  lambda )
 }
 void PopulationSet::initPopulationSampleSizes(std::vector<int> &sampleSizes)
 {
-    for (unsigned int i = 0; i <numClones; ++i)
+    for (size_t i = 0; i <numClones; ++i)
     {
         auto popI =  populations[i];
         popI->sampleSize = sampleSizes.at(i);
@@ -1370,7 +1398,7 @@ void PopulationSet::initPopulationSampleSizes(std::vector<int> &sampleSizes)
 Population * PopulationSet::getPopulationbyIndex(int indexPopulation)
 {
     Population *pop;
-    for (unsigned int i = 0; i < numClones; ++i){
+    for (size_t i = 0; i < numClones; ++i){
         pop = populations[i];
         if (pop->index ==indexPopulation)
             return pop;
@@ -1379,7 +1407,7 @@ Population * PopulationSet::getPopulationbyIndex(int indexPopulation)
 }
 void PopulationSet::initPopulationGametes()
 {
-    for (unsigned int i = 0; i < numClones; ++i)
+    for (size_t i = 0; i < numClones; ++i)
     {
         auto popI =  populations[i];
         
@@ -1390,7 +1418,7 @@ void PopulationSet::initPopulationGametes()
 }
 void PopulationSet::initPopulationRTips()
 {
-    for (unsigned int i = 0; i < numClones; ++i)
+    for (size_t i = 0; i < numClones; ++i)
     {
         auto popI =  populations[i];
         
@@ -1422,7 +1450,7 @@ void PopulationSet::initProportionsVectorFromSampleSizes(std::vector<int> &sampl
 }
 void PopulationSet::initPopulationsThetaDelta(long double theta)
 {
-    for (unsigned int i = 0; i < numClones; ++i)
+    for (size_t i = 0; i < numClones; ++i)
     {
         auto popI =  populations[i];
         popI->x = proportionsVector[i];
@@ -1436,37 +1464,38 @@ void PopulationSet::initPopulationsThetaDelta(long double theta)
     }
 }
 // this method assumes that populations are sorted in ascending order  by time of origin
-double PopulationSet::proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop, double &logLik, double K){
-    Population * pop, *incomingPop, *fatherPop;
-    double currentModelTimePop = 0.;
+double PopulationSet::proposeNextCoalEventTime( gsl_rng *random, int& idxReceiverPop, int& idxIncomingPop, int& idxIncomingNode, double &logLik, double K){
+    Population  *incomingPop;
     double currentTimeKingman = 0.;
     double timeNextCoalEvent = 0.;
-    double waitingTime = 0.;
+    double waitingTimeKingman = 0.;
     double timeNextMigration = 0.;
     bool isCoalescentEvent;
+    int numberActiveGametesCurrentPop = 0;
+    double modelTimeCurrentPop = 0.0;
+    double nextEventTimeScaledByProportion = 0.0;
     logLik = 0.0;
-    int idxIncomingNode;
-    for(size_t i=0; i <  populations.size(); i++){
-        pop= populations[i];
+    idxIncomingNode = -1;
+    
+    Population*  currentPop = getCurrentPopulation();
+    int currentIdxNextInmigrant = currentPop->indexNextInmigrant;
+    numberActiveGametesCurrentPop = currentPop->numActiveGametes;
+    modelTimeCurrentPop = currentPop->getCurrentModelTime() ;
+    bool nextCoalEventFound= false;
+    while(!nextCoalEventFound){
         
-        if(pop->indexNextInmigrant == pop->numIncomingMigrations)
-            continue;
         
-        if (pop->getCurrentModelTime() == pop->timeOriginSTD)
-            continue;
+        timeNextMigration = currentPop->immigrantsPopOrderedByModelTime[currentIdxNextInmigrant].first;
         
-        timeNextMigration = pop->immigrantsPopOrderedByModelTime[pop->indexNextInmigrant].first;
-        
-        if (pop->numActiveGametes >=2){
+        if (numberActiveGametesCurrentPop >=2){
             
-            currentModelTimePop = pop->getCurrentModelTime() ;
-            currentTimeKingman = Population::FmodelTstandard (currentModelTimePop , pop->timeOriginSTD, pop->delta,   K);//this is current time in Kingman coal time
+            currentTimeKingman = Population::FmodelTstandard (modelTimeCurrentPop , currentPop->timeOriginSTD, currentPop->delta,   K);//this is current time in Kingman coal time
             
-            waitingTime= pop->proposeWaitingTimeNextCoalEvent(random, K);
+            waitingTimeKingman= currentPop->proposeWaitingKingmanTimeNextCoalEvent(random,numberActiveGametesCurrentPop );
             
-            currentTimeKingman = currentTimeKingman+waitingTime;
+            currentTimeKingman = currentTimeKingman+waitingTimeKingman;
             
-            timeNextCoalEvent =   Population::GstandardTmodel(currentTimeKingman, pop->timeOriginSTD, pop->delta, K);;
+            timeNextCoalEvent =   Population::GstandardTmodel(currentTimeKingman, currentPop->timeOriginSTD, currentPop->delta, K);;
             isCoalescentEvent=true;
             
         }
@@ -1476,56 +1505,66 @@ double PopulationSet::proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNod
         if ( timeNextCoalEvent < timeNextMigration)
         {
             
-         
-            idxLeftNodePop = pop->index;
-            idxRightNodePop = pop->index;
-            //logLik += pop->logConditionalLikelihoodNextCoalescentTime(timeNextCoalEvent, K);
-            double waitingTimeScaledBtTheta= (timeNextCoalEvent- pop->getCurrentModelTime()) *pop->x*pop->theta;
-            logLik += pop->logConditionalDensityWaitingTimeScaledByTheta(waitingTimeScaledBtTheta,   K);
-           
-           
-            pop->setCurrentModelTime( timeNextCoalEvent);
-            pop->CoalescentEventTimes[pop->numCompletedCoalescences]=  pop->getCurrentModelTime();
-            pop->numCompletedCoalescences= pop->numCompletedCoalescences+1;
-            return(pop->getCurrentModelTime() *pop->x);
+            
+            idxReceiverPop = currentPop->index;
+            idxIncomingPop = currentPop->index;
+            
+            double waitingTimeScaledByTheta= (timeNextCoalEvent- modelTimeCurrentPop) *currentPop->x*currentPop->theta;
+            
+            logLik += currentPop->logConditionalDensityWaitingTimeScaledByTheta(waitingTimeScaledByTheta,  numberActiveGametesCurrentPop, modelTimeCurrentPop,   K);
+            //            pop->setCurrentModelTime( timeNextCoalEvent);
+            //            pop->CoalescentEventTimes[pop->numCompletedCoalescences]=  pop->getCurrentModelTime();
+            //            pop->numCompletedCoalescences= pop->numCompletedCoalescences+1;
+            nextCoalEventFound = true;
+            nextEventTimeScaledByProportion += timeNextCoalEvent *currentPop->x;
+            return(nextEventTimeScaledByProportion);
             
             
         }
         else{
-             // logLik += probab no colaescent before the migration
-            logLik += pop->LogProbNoCoalescentEventBetweenTimes(pop->currentModelTime,timeNextMigration, pop->numActiveGametes, K );
+            // logLik += probab no coalescent before the migration
             
-            if (pop->indexNextInmigrant < pop->numIncomingMigrations - 1) //indexNextMigration corresponds to one of the true migrations
+            if (currentIdxNextInmigrant < currentPop->numIncomingMigrations - 1) //indexNextMigration corresponds to one of the true migrations
             {
                 
-                pop->setCurrentModelTime( timeNextMigration);
+                logLik += currentPop->LogProbNoCoalescentEventBetweenTimes(modelTimeCurrentPop, timeNextMigration, numberActiveGametesCurrentPop, K );
+                // pop->setCurrentModelTime( timeNextMigration);
                 
-                incomingPop = pop->immigrantsPopOrderedByModelTime[pop->indexNextInmigrant].second;
-                pop->indexNextInmigrant = pop->indexNextInmigrant + 1;
+                modelTimeCurrentPop = timeNextMigration;
                 
-                assert(incomingPop->numActiveGametes==0);
+                incomingPop = currentPop->immigrantsPopOrderedByModelTime[currentPop->indexNextInmigrant].second;
+                //  pop->indexNextInmigrant = pop->indexNextInmigrant + 1;
+                
+                currentIdxNextInmigrant = currentIdxNextInmigrant +1;
+                assert(incomingPop->numActiveGametes<=1);
                 idxIncomingNode = incomingPop->idsActiveGametes[incomingPop->numActiveGametes];
-               incomingPop->numActiveGametes = incomingPop->numActiveGametes - 1; /* now the other clone has 1 less node */
+                //incomingPop->numActiveGametes = incomingPop->numActiveGametes - 1; /* now the other clone has 1 less node */
                 
-                idxLeftNodePop = incomingPop->index;
-                idxRightNodePop = pop->index;
-               
-                pop->idsActiveGametes[pop->numActiveGametes] = idxIncomingNode;
-                pop->numActiveGametes = pop->numActiveGametes + 1; /* now this clone has 1 more node */
+                idxIncomingPop = incomingPop->index;
+                idxReceiverPop = currentPop->index;
                 
+                nextEventTimeScaledByProportion += timeNextMigration *currentPop->x;
+                //  pop->idsActiveGametes[pop->numActiveGametes] = idxIncomingNode;
+                //   pop->numActiveGametes = pop->numActiveGametes + 1; /* now this clone has 1 more node */
+                numberActiveGametesCurrentPop = numberActiveGametesCurrentPop+1;
+                /* now this clone has 1 more node */
             }
             else {
                 //origin reached
-                pop->setCurrentModelTime( timeNextMigration);
-                pop->indexNextInmigrant = pop->indexNextInmigrant + 1;
-                if (i< numClones-1)   //if it is not the last one
-                {
-                    //choose the father population from which the population i came
-                    fatherPop= ChooseFatherPopulation(  pop, random,  0, K);
-                    pop->FatherPop = fatherPop;
-                    //update list of migrant times
-                    Population::UpdateListMigrants( numClones, pop, fatherPop);
-                }
+                modelTimeCurrentPop = timeNextMigration;
+                //pop->setCurrentModelTime( timeNextMigration);
+                //  pop->indexNextInmigrant = pop->indexNextInmigrant + 1;
+                currentIdxNextInmigrant = currentIdxNextInmigrant +1;
+                //                if (i< numClones-1)   //if it is not the last one
+                //                {
+                //                    //choose the father population from which the population i came
+                //                    fatherPop= ChooseFatherPopulation(  pop, random,  0, K);
+                //                    pop->FatherPop = fatherPop;
+                //                    //update list of migrant times
+                //                    Population::UpdateListMigrants( numClones, pop, fatherPop);
+                //                }
+                std::cout << "weird"<< std::endl;
+                return (timeNextMigration*currentPop->x);
             }
         }
         
@@ -1537,7 +1576,38 @@ double PopulationSet::proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNod
     ////                timeNextCoalEvent = pop->nextCoalEventTime(result->getIdNextCoalEventForPopulation(i), result->getIdNextInmigrationEventForPopulation(i),   result->getHeightModelTime() ,isThereInmigration,  inmigrantPop );
     //            }
     //this line would never be reached
+    std::cout << "super weird"<< std::endl;
     return -1.0;
+}
+void  PopulationSet::acceptNextCoalEventTime(gsl_rng *random, double receiverModelTime, int idxReceiverPop, int idxIncomingPop,  double K){
+    
+    Population *receiverPop = getPopulationbyIndex( idxReceiverPop);
+    
+    
+    receiverPop->setCurrentModelTime(receiverModelTime);
+    if (idxReceiverPop == idxIncomingPop ){//coalescent
+        
+       
+        receiverPop->CoalescentEventTimes[receiverPop->numCompletedCoalescences]=  receiverPop->getCurrentModelTime();
+        receiverPop->numCompletedCoalescences= receiverPop->numCompletedCoalescences +1;
+        
+        if ( receiverPop->numActiveGametes <= 1 && idxReceiverPop< numClones-1)   //if it is not the last one
+        {
+            Population *fatherPop;
+            //choose the father population from which the population i came
+            fatherPop= ChooseFatherPopulation(  receiverPop, random,  0, K);
+            receiverPop->FatherPop = fatherPop;
+            //update list of migrant times
+            Population::UpdateListMigrants( numClones, receiverPop, fatherPop);
+        }
+    }
+    else{
+        Population *incomingPop = getPopulationbyIndex( idxIncomingPop);
+      
+        receiverPop->indexNextInmigrant = receiverPop->indexNextInmigrant+1;
+        incomingPop->numActiveGametes =  incomingPop->numActiveGametes-1;
+    }
+    
 }
 
 void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double &theta){
@@ -1776,7 +1846,7 @@ std::vector <long double> PopulationSet::getSampleSizes()
     int i;
     for (i = 0; i < numClones; i++) {
         p = populations[i];
-        result.at(i)=p->sampleSize;
+        result[i] = p->sampleSize;
     }
     return result;
     
@@ -1827,6 +1897,19 @@ void PopulationSet::sampleEventTimesScaledByProportion(gsl_rng * random, double 
         }
         i = i + 1;
     }
+}
+Population* PopulationSet::getCurrentPopulation(){
+    Population * popI;
+    for(size_t i = 0; i != numClones; ++i)
+    {
+        popI = populations[i];
+        if ( popI->currentModelTime < popI->timeOriginSTD)
+        {
+            return populations[i];
+            
+        }
+    }
+    return popI;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////
 StructuredCoalescentTree::StructuredCoalescentTree(int numClones, std::vector<int> &sampleSizes, long double theta,

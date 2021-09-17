@@ -27,7 +27,7 @@
 
 
 #include "tree_node.hpp"
-#include <vector>
+//#include <vector>
 
 #include <boost/random.hpp>
 
@@ -184,9 +184,12 @@ public:
     void setDelta(long double parDelta);
     void setPopulationToriginConditionalDelta( const gsl_rng *rngGsl );
     long double proposeTimeNextCoalEvent(gsl_rng* rngGsl, int numActiveLineages,  double K);
-    long double proposeWaitingTimeNextCoalEvent(gsl_rng* rngGsl,  double K   );
+    long double proposeWaitingKingmanTimeNextCoalEvent(gsl_rng* rngGsl );
+    long double proposeWaitingKingmanTimeNextCoalEvent(gsl_rng* rngGsl, size_t numActiveGametesPar   );
     long double logConditionalLikelihoodNextCoalescentTime(long double timeNextEvent,  double K);
     long double logConditionalDensityWaitingTimeScaledByTheta(long double waitingTimeScaledByTheta,  double K);
+  
+    long double logConditionalDensityWaitingTimeScaledByTheta(long double waitingTimeScaledbyTheta, size_t numActiveGametesP, double currentModelTimeP,  double K);
     void sampleEventTimesScaledByProportion(gsl_rng *random, double K);
     double  nextCoalEventTime(int idxNextCoal, int indexNextMigration,  double currentTime, bool& isThereInmigration, Population* inmigrantPop );
     void printCoalEventTimes(std::ostream &stream);
@@ -198,6 +201,7 @@ private:
 class PopulationSet{
 public:
     int numClones;
+
     std::vector<Population *> populations;
     std::vector<long double  > proportionsVector;
     std::vector<long double  > oldproportionsVector;
@@ -240,7 +244,10 @@ public:
     void sortPopulationsByTorigin();
     void sampleEventTimesScaledByProportion(gsl_rng * random, double K, int noisy);
     void resetNumActiveGametesCounter();
-    double proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop, double &logLik, double K);
+    double proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop, int& idxIncomingNode, double &logLik, double K);
+    void  acceptNextCoalEventTime(gsl_rng *random, double receiverModelTime, int idxReceiverPop, int idxIncomingPop, double K);
+    Population* getCurrentPopulation();
+
 };
 class StructuredCoalescentTree{
 public:

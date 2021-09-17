@@ -307,7 +307,7 @@ int main(int argc, char* argv[] )
     psParams.doFixedEventimes= false;
     
     size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
-    PosetSMC posetSMC(programOptions.numClones,  num_iter);
+    PosetSMC posetSMC(programOptions.numClones,  num_iter, false);
     SMCOptions smcOptions;
     
     smcOptions.num_threads = 5;

@@ -55,6 +55,10 @@ long double ParticleSMC<S>::getLogWeight()
 {
     return logWeight;
 }
+long double ParticleSMC<S>::setLogWeight(double newlogWeight)
+{
+    logWeight =newlogWeight;
+}
 
 #endif /* particle_smc_hpp */
 

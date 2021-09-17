@@ -237,10 +237,10 @@ struct Utils
         for(size_t j=0; j <inner_size;++j)
         {
             std::transform( means.begin(), means.end(), elements.begin(), [&](std::vector<T> &vec){
-                return vec.at(j);
+                return vec[j];
             });
             std::transform( variances.begin(), variances.end(), varianceElements.begin(), [&](std::vector<T> &vec){
-                return vec.at(j);
+                return vec[j];
             });
             
             meanOfMeans = Utils::mean( elements);
@@ -301,7 +301,8 @@ struct Utils
                       double target);
     static double logSumExp(double a, double b);
     // void autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft);
-    
+    static double norm(const std::vector<double> &log_weights);
+    static double logSumExp(std::vector<double> &logValues);
 };
 
 

@@ -77,7 +77,7 @@ void TreeNode::initNumberTipsVector(int numberClones)
 void TreeNode::resetNumberTipsVector(int numberClones)
 {
     for (size_t i = 0; i < numberClones; i++) {
-        numberTipsByPopulation.at(i)=0;
+        numberTipsByPopulation[i]=0;
     }
 }
 void TreeNode::initSequenceVectors(int size){

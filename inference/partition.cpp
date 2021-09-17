@@ -76,7 +76,7 @@ tipPatternCompression(tipPatternCompression)
         exit(pll_errno);
         
     }
-    
+    model = pllmod_util_model_info_genotype("GT16JC");
     sumtable = (double *)pll_aligned_alloc(partition->sites * partition->rate_cats * partition->states_padded * sizeof(double), partition->alignment);
     
     if (!sumtable)
@@ -148,7 +148,8 @@ tipPatternCompression(tipPatternCompression)
     // double rate_categories[4] = {0, 0, 0, 0};
     double rate_categories[1] = {0};
     
-    //pllmod_subst_model_t * model = pllmod_util_model_info_genotype("GT16JC");
+    model = pllmod_util_model_info_genotype("GT16JC");
+ 
     //assert(model->states ==numberStates);
     
     // double  rate_categories[number_states];
@@ -177,6 +178,7 @@ tipPatternCompression(tipPatternCompression)
         exit(pll_errno);
         
     }
+    
     
     double subst_params[ numberStates*(numberStates-1) /2] ;
     std::fill_n (subst_params,numberStates*(numberStates-1) /2, 1);

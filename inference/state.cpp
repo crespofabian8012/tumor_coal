@@ -45,10 +45,11 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     populationSet->initListPossibleMigrations();
     populationSet->initPopulationsCoalescentEvents();
     
-    
-    
+
     initForest(smcParams.sampleSize, smcParams.msa, smcParams.positions,  smcParams.getProgramOptions());
     nextAvailable = smcParams.sampleSize-1;
+    
+    pairMinModelTime = populationSet->initPairProposalsNextEventTimePerPopulation(random, smcParams.getProgramOptions().K);
     
     //    double K= smcParams.getProgramOptions().K;
     //       populationSet->sampleEventTimesScaledByProportion( random, K,smcParams.getProgramOptions().noisy);
@@ -61,16 +62,27 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     
     topHeightModelTime = original.topHeightModelTime;
     topHeightScaledByTheta = original.topHeightScaledByTheta;
-    num_sites=original.num_sites;
+    num_sites= original.num_sites;
     
     populationSet=new PopulationSet(*(original.populationSet));
     gtError = new GenotypeErrorModel(*(original.gtError));
     
-    idsNextCoalEvents = original.idsNextCoalEvents;
-    idsNextInmigrationEvents = original.idsNextInmigrationEvents;
+    //populationSet= std::move(original.populationSet);
+   // gtError = std::move(original.gtError);
+    
+//    idsNextCoalEvents = original.idsNextCoalEvents;
+//    idsNextInmigrationEvents = original.idsNextInmigrationEvents;
+    
+    //idsNextCoalEvents = std::move(original.idsNextCoalEvents);
+    //idsNextInmigrationEvents = std::move( original.idsNextInmigrationEvents);
+    
     roots = original.roots;
-    postorder  = original.postorder;
+   postorder  = original.postorder;
     coalEventTimesScaledByTheta = original.coalEventTimesScaledByTheta;
+    
+    //roots = std::move(original.roots);
+    //postorder  = std::move(original.postorder);
+    coalEventTimesScaledByTheta = std::move(original.coalEventTimesScaledByTheta);
     //    roots.reserve(original.root_count());
     //    for (auto const& fptr : original.getRoots())
     //         roots.emplace_back(fptr->Clone());
@@ -80,6 +92,31 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     nextAvailable = original.nextAvailable;
     theta = original.theta;
     logWeight = original.logWeight;
+    pairMinModelTime =  original.pairMinModelTime;
+    
+}
+State::State(State &&rhs):
+pll_buffer_manager(rhs.pll_buffer_manager){
+    
+    topHeightModelTime = std::move(rhs.topHeightModelTime);
+    topHeightScaledByTheta = std::move(rhs.topHeightScaledByTheta);
+    num_sites= std::move(rhs.num_sites);
+    
+    populationSet= std::move(rhs.populationSet);
+    gtError = std::move(rhs.gtError);
+    
+    //idsNextCoalEvents = std::move(rhs.idsNextCoalEvents);
+    //idsNextInmigrationEvents = std::move(rhs.idsNextInmigrationEvents);
+    roots = std::move(rhs.roots);
+    postorder  = std::move(rhs.postorder);
+    coalEventTimesScaledByTheta =std::move( rhs.coalEventTimesScaledByTheta);
+    
+    
+    partition = std::move(rhs.partition);
+    nextAvailable = std::move(rhs.nextAvailable);
+    theta = std::move(rhs.theta);
+    logWeight = std::move(rhs.logWeight);
+    pairMinModelTime =  std::move(rhs.pairMinModelTime);
     
 }
 void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positions, ProgramOptions &programOptions){
@@ -88,7 +125,7 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
     //PartialTreeNode instead of 0
     const Partition *reference_partition = partition;
     
-    std::shared_ptr<PartialTreeNode>  p;
+    // std::shared_ptr<PartialTreeNode>  p;
     std::vector<int> CumSumNodes(programOptions.numClones+1);
     CumSumNodes[0] = 0;
     Population *pop;
@@ -102,7 +139,21 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         CumSumNodes[i] = CumSumNodes[i - 1] + pop->sampleSize;
     }
     
-    for(size_t i=0; i< positions.size();++i){
+     auto delLeavePartialTreeNode = [](PartialTreeNode* pTreeNode)
+           {
+               PLLBufferManager *manager = pTreeNode->getManager();
+               manager->clv_buffer.push(pTreeNode->pclv);
+               manager->scale_buffer_buffer.push(pTreeNode->pscale_buffer);
+               
+               pTreeNode->pclv = nullptr;
+               pTreeNode->pscale_buffer = nullptr;
+            
+               delete pTreeNode;
+           };
+        
+ 
+    for(size_t i=0; i< positions.size();++i)
+    {
         
         cumIndivid++;
         
@@ -115,16 +166,14 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         unsigned int scaler_size = (reference_partition->attributes & PLL_ATTRIB_RATE_SCALERS)
         ? sites_alloc * reference_partition->numberRateCats
         : sites_alloc;
-        
-        p=std::make_shared<PartialTreeNode>(pll_buffer_manager, nullptr, nullptr,0.0, 0.0, 0, msa->label[i], 0.0, clv_num_elements,
-                                            scaler_size, reference_partition->alignment(), i, 0, nullptr, nullptr);
-        
-        
+        std::shared_ptr<PartialTreeNode> p( new PartialTreeNode(pll_buffer_manager,
+                                                                            nullptr, nullptr,0.0, 0.0, 0, msa->label[i], 0.0, clv_num_elements,
+                                                                            scaler_size, reference_partition->alignment(), i, 0, nullptr, nullptr), delLeavePartialTreeNode);
+      
         //delete (p->pclv);
         //delete (p->pscale_buffer);
         // auto clv_elem = reference_partition->numberSites * reference_partition->numberStates;
-        
-        p->buildCLV(i,reference_partition->numberStates,  msa, gtError,  false);
+        p->buildCLV(i,reference_partition->numberStates,  msa, gtError,  programOptions.normalizeLeavesClv);
         
         std::vector<unsigned  int> invSites(reference_partition->numberStates, 0);
         
@@ -154,8 +203,7 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
                 break;
             }
         }
-        
-        roots.push_back(p);
+        roots.push_back(std::move(p));
     }
     if (programOptions.numClones==1)
         assert(populationSet->getPopulationbyIndex(0)->numActiveGametes == positions.size());
@@ -184,8 +232,8 @@ State &State::operator=(const State &original){
     gtError=original.gtError;
     populationSet = original.populationSet;
     nextAvailable = original.nextAvailable;
-    idsNextCoalEvents = original.idsNextCoalEvents;
-    idsNextInmigrationEvents = original.idsNextInmigrationEvents;
+    //idsNextCoalEvents = original.idsNextCoalEvents;
+    //idsNextInmigrationEvents = original.idsNextInmigrationEvents;
     return *this;
     
 }
@@ -338,7 +386,7 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
     
     return parent;
 }
-std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight, double logLikNewNode, double* left_pmatrix, double *right_pmatrix){
+std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight, double logLikNewNode, double* left_pmatrix, double *right_pmatrix, bool normalize){
     
     assert(roots.size() > 1 && "Expected more than one root");
     
@@ -381,17 +429,43 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     : sites_alloc;
     // unsigned int scale_buffer_size = scaler_size * sizeof(double);
     
+    auto delPartialTreeNode = [](PartialTreeNode* pTreeNode)
+       {
+           PLLBufferManager *manager = pTreeNode->getManager();
+           manager->clv_buffer.push(pTreeNode->pclv);
+           manager->scale_buffer_buffer.push(pTreeNode->pscale_buffer);
+           
+           pTreeNode->pclv = nullptr;
+           pTreeNode->pscale_buffer = nullptr;
+           
+           manager->pmatrix_buffer.push(pTreeNode->edge_l->pmatrix);
+           manager->pmatrix_buffer.push(pTreeNode->edge_r->pmatrix);
+           
+           // pll_aligned_free(pmatrix);
+           pTreeNode->edge_l->pmatrix = nullptr;
+           pTreeNode->edge_r->pmatrix = nullptr;
+           delete pTreeNode;
+       };
     
+//    std::shared_ptr<PartialTreeNode> parent = std::make_shared<PartialTreeNode>(
+//                                                                                pll_buffer_manager, child_left, child_right,
+//                                                                                left_length, right_length,
+//                                                                                pmatrix_elements,
+//                                                                                "", newNodeHeight, clv_elements,
+//                                                                                scaler_size, partition->alignment(), nextAvailable,
+//                                                                                index_pop_new_node,
+//                                                                                left_pmatrix,
+//                                                                                right_pmatrix);
     
-    std::shared_ptr<PartialTreeNode> parent = std::make_shared<PartialTreeNode>(
-                                                                                pll_buffer_manager, child_left, child_right,
-                                                                                left_length, right_length,
-                                                                                pmatrix_elements,
-                                                                                "", newNodeHeight, clv_elements,
-                                                                                scaler_size, partition->alignment(), nextAvailable,
-                                                                                index_pop_new_node,
-                                                                                left_pmatrix,
-                                                                                right_pmatrix);
+    std::shared_ptr<PartialTreeNode> parent( new PartialTreeNode(
+                                                                 pll_buffer_manager, child_left, child_right,
+                                                                 left_length, right_length,
+                                                                 pmatrix_elements,
+                                                                 "", newNodeHeight, clv_elements,
+                                                                 scaler_size, partition->alignment(), nextAvailable,
+                                                                 index_pop_new_node,
+                                                                 left_pmatrix,
+                                                                 right_pmatrix), delPartialTreeNode);
     
     const unsigned int matrix_indices[1] = {0};
     //Array params_indices holds the indices of rate matrices that will be used for each rate category. This array must be of size rate_cats
@@ -413,9 +487,16 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     //          // memcpy(parent->edge_r->pmatrix, pmatrix, pmatrix_elements * sizeof(double));
     //    }
     if (left_pmatrix == nullptr){
+     if (normalize)
+         left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69_matrix_second_form( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+         1,
+         p->attributes);
+    
+    else{
         left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
                                                                      1,
                                                                      p->attributes);
+         }
         
         //parent->edge_l->showPMatrix( p->numberStates, p->numberRateCats, p->statesPadded,  3);
         
@@ -440,10 +521,18 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
         //  parent->edge_l->showPMatrix( p->numberStates, p->numberRateCats, p->statesPadded,  3);
     }
     if (right_pmatrix == nullptr){
-        int right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
+        int right_edge_pmatrix_result;
+        if (normalize)
+             right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69_matrix_second_form( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+             1,
+             p->attributes);
+        
+        else{
+         right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
                                                                           1,
                                                                           p->attributes);
-        assert(left_edge_pmatrix_result == PLL_SUCCESS);
+        }
+        assert(right_edge_pmatrix_result == PLL_SUCCESS);
         // parent->edge_r->showPMatrix( p->numberStates, p->numberRateCats, p->statesPadded,  3);
     }
     //     right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
@@ -483,15 +572,18 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
                                 parent->edge_r->pmatrix,
                                 child_left->pscale_buffer,
                                 child_right->pscale_buffer,
-                                p->attributes);
+                                p->attributes,
+                                normalize);
     
     if (0)
         parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
     
-    parent->ln_likelihood =
-    compute_ln_likelihood(parent->pclv,
+
+       parent->ln_likelihood =
+        compute_ln_likelihood(parent->pclv,
                           parent->pscale_buffer,
                           p->getPartition());
+    
     if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
         
         std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
@@ -507,133 +599,157 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     
     return parent;
 }
-std::unique_ptr<PartialTreeNode> State::uniquePtrNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight, double logLikNewNode){
-    
-    assert(roots.size() > 1 && "Expected more than one root");
-    
-    const Partition *p =partition;
-    
-    //heightScaledByTheta = heightScaledByTheta+ height_delta;
-    int idxFirstID = getNodeIdxById(firstId);
-    int idxSecondId = getNodeIdxById(secondId);
-    
-    assert(idxFirstID>=0 &&  idxSecondId >=0 && "Indexes must be positive");
-    // assert(height_delta >= 0.0 && "Height change can't be negative");
-    assert(idxFirstID != idxSecondId && "Cannot connect, this would make a loop");
-    // assert(height_delta >= 0.0 && "Height change can't be negative");
-    assert(idxFirstID >= 0 && idxFirstID < roots.size() && idxSecondId >= 0 && idxSecondId < roots.size() &&
-           "Index out of bounds");
-    
-    std::shared_ptr<PartialTreeNode> child_left = roots[idxFirstID];
-    std::shared_ptr<PartialTreeNode> child_right = roots[idxSecondId];
-    
-    //  std::cout<< "roots first idx "<< idxFirstID <<  " idxSecondId " << idxSecondId<< std::endl;
-    
-    //  if (!(child_left->label.empty()) && !(child_right->label.empty()))
-    //      std::cout<< "child_left->label "<< child_left->label <<  " child_right->label " << child_right->label<< std::endl;
-    
-    double left_length = newNodeHeight - child_left->height;
-    double right_length = newNodeHeight - child_right->height;
-    
-    unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
-    
-    
-    unsigned int sites_alloc =
-    p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites;
-    
-    unsigned int clv_elements = sites_alloc  * p->numberStates *  p->numberRateCats;
-    
-    // unsigned int clv_size = clv_elements * sizeof(double);
-    //sites_alloc * p->getStatesPadded() * p->numberRateCats * sizeof(double);
-    
-    unsigned int scaler_size = (p->attributes & PLL_ATTRIB_RATE_SCALERS)
-    ? sites_alloc * p->numberRateCats
-    : sites_alloc;
-    // unsigned int scale_buffer_size = scaler_size * sizeof(double);
-    std::unique_ptr<PartialTreeNode> parent = std::make_unique<PartialTreeNode>(
-                                                                                pll_buffer_manager, child_left, child_right,
-                                                                                left_length, right_length,
-                                                                                pmatrix_elements,
-                                                                                "", newNodeHeight, clv_elements,
-                                                                                scaler_size, partition->alignment(), nextAvailable,
-                                                                                index_pop_new_node, nullptr, nullptr);
-    
-    
-    
-    
-    const unsigned int matrix_indices[1] = {0};
-    //Array params_indices holds the indices of rate matrices that will be used for each rate category. This array must be of size rate_cats
-    
-    const unsigned int param_indices[1] = {0};
-    
-    
-    //    int left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
-    //                                                                     1,
-    //                                                                    p->attributes);
-    
-    
-    int left_edge_pmatrix_result = pll_core_update_pmatrix(
-                                                           &parent->edge_l->pmatrix,//double **pmatrix,
-                                                           p->numberStates,// unsigned int states
-                                                           p->numberRateCats,//unsigned int rate_cats
-                                                           p->rates(),//const double *rates
-                                                           &parent->edge_l->length,//const double *branch_lengths
-                                                           matrix_indices,//const unsigned int *matrix_indices
-                                                           param_indices,//const unsigned int *param_indices
-                                                           p->propInvar(),//const double *prop_invar
-                                                           p->eigenVals(),//double *const *eigenvals
-                                                           p->eigenVecs(),//double *const *eigenvecs
-                                                           p->invEigenVecs(),//double *const *inv_eigenvecs
-                                                           1,//unsigned int count
-                                                           p->attributes);
-    
-    assert(left_edge_pmatrix_result == PLL_SUCCESS);
-    
-    //    int right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
-    //                                                                      1,
-    //                                                                      p->attributes);
-    
-    int right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
-                                                            &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
-                                                            p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
-    assert(right_edge_pmatrix_result == PLL_SUCCESS);
-    
-    
-    unsigned int sites= (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites);
-    
-    
-    pll_core_update_partial_ii(p->numberStates, sites,
-                               p->numberRateCats, parent->pclv,
-                               parent->pscale_buffer,
-                               child_left->pclv,
-                               child_right->pclv,
-                               parent->edge_l->pmatrix,
-                               parent->edge_r->pmatrix,
-                               child_left->pscale_buffer,
-                               child_right->pscale_buffer,
-                               p->attributes);
-    //    if (1)
-    //        parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
-    
-    parent->ln_likelihood =
-    compute_ln_likelihood(parent->pclv,
-                          parent->pscale_buffer,
-                          p->getPartition());
-    if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
-        
-        std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
-    }
-    parent->ln_coal_likelihood = (child_left->height >  child_right->height)? child_left->ln_coal_likelihood: child_right->ln_coal_likelihood;
-    
-    parent->ln_coal_likelihood+= logLikNewNode;
-    
-    
-    assert(!isnan(parent->ln_likelihood) && !isinf(parent->ln_likelihood));
-    
-    //assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
-    
-    return parent;
-}
+//template<typename... Ts>
+//auto State::uniquePtrNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight, double logLikNewNode){
+//    
+//    assert(roots.size() > 1 && "Expected more than one root");
+//    
+//    const Partition *p =partition;
+//    
+//    //heightScaledByTheta = heightScaledByTheta+ height_delta;
+//    int idxFirstID = getNodeIdxById(firstId);
+//    int idxSecondId = getNodeIdxById(secondId);
+//    
+//    assert(idxFirstID>=0 &&  idxSecondId >=0 && "Indexes must be positive");
+//    // assert(height_delta >= 0.0 && "Height change can't be negative");
+//    assert(idxFirstID != idxSecondId && "Cannot connect, this would make a loop");
+//    // assert(height_delta >= 0.0 && "Height change can't be negative");
+//    assert(idxFirstID >= 0 && idxFirstID < roots.size() && idxSecondId >= 0 && idxSecondId < roots.size() &&
+//           "Index out of bounds");
+//    
+//    std::shared_ptr<PartialTreeNode> child_left = roots[idxFirstID];
+//    std::shared_ptr<PartialTreeNode> child_right = roots[idxSecondId];
+//    
+//    //  std::cout<< "roots first idx "<< idxFirstID <<  " idxSecondId " << idxSecondId<< std::endl;
+//    
+//    //  if (!(child_left->label.empty()) && !(child_right->label.empty()))
+//    //      std::cout<< "child_left->label "<< child_left->label <<  " child_right->label " << child_right->label<< std::endl;
+//    
+//    double left_length = newNodeHeight - child_left->height;
+//    double right_length = newNodeHeight - child_right->height;
+//    
+//    unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
+//    
+//    
+//    unsigned int sites_alloc =
+//    p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites;
+//    
+//    unsigned int clv_elements = sites_alloc  * p->numberStates *  p->numberRateCats;
+//    
+//    // unsigned int clv_size = clv_elements * sizeof(double);
+//    //sites_alloc * p->getStatesPadded() * p->numberRateCats * sizeof(double);
+//    
+//    unsigned int scaler_size = (p->attributes & PLL_ATTRIB_RATE_SCALERS)
+//    ? sites_alloc * p->numberRateCats
+//    : sites_alloc;
+//    // unsigned int scale_buffer_size = scaler_size * sizeof(double);
+//    auto delPartialTreeNode = [](PartialTreeNode* pTreeNode)
+//    {
+//        PLLBufferManager *manager = pTreeNode->getManager();
+//        manager->clv_buffer.push(pTreeNode->pclv);
+//        manager->scale_buffer_buffer.push(pTreeNode->pscale_buffer);
+//        
+//        pTreeNode->pclv = nullptr;
+//        pTreeNode->pscale_buffer = nullptr;
+//        
+//        manager->pmatrix_buffer.push(pTreeNode->edge_l->pmatrix);
+//        manager->pmatrix_buffer.push(pTreeNode->edge_r->pmatrix);
+//        // pll_aligned_free(pmatrix);
+//        pTreeNode->edge_l->pmatrix = nullptr;
+//        pTreeNode->edge_r->pmatrix = nullptr;
+//        delete pTreeNode;
+//    };
+//    
+//    std::unique_ptr<PartialTreeNode, decltype(delPartialTreeNode)> parent(nullptr, delPartialTreeNode);
+////    parent.reset(new PartialTreeNode(std::forward<Ts>(
+////                                                      pll_buffer_manager, child_left, child_right,
+////                                                      left_length, right_length,
+////                                                      pmatrix_elements,
+////                                                      "", newNodeHeight, clv_elements,
+////                                                      scaler_size, partition->alignment(), nextAvailable,
+////                                                      index_pop_new_node, nullptr, nullptr)...)) ;
+//    
+//    
+//    parent.reset(new PartialTreeNode(
+//                                                      pll_buffer_manager, child_left, child_right,
+//                                                      left_length, right_length,
+//                                                      pmatrix_elements,
+//                                                      "", newNodeHeight, clv_elements,
+//                                                      scaler_size, partition->alignment(), nextAvailable,
+//                                                      index_pop_new_node, nullptr, nullptr)) ;
+//    const unsigned int matrix_indices[1] = {0};
+//    //Array params_indices holds the indices of rate matrices that will be used for each rate category. This array must be of size rate_cats
+//    
+//    const unsigned int param_indices[1] = {0};
+//    
+//    
+//    //    int left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+//    //                                                                     1,
+//    //                                                                    p->attributes);
+//    
+//    
+//    int left_edge_pmatrix_result = pll_core_update_pmatrix(
+//                                                           &parent->edge_l->pmatrix,//double **pmatrix,
+//                                                           p->numberStates,// unsigned int states
+//                                                           p->numberRateCats,//unsigned int rate_cats
+//                                                           p->rates(),//const double *rates
+//                                                           &parent->edge_l->length,//const double *branch_lengths
+//                                                           matrix_indices,//const unsigned int *matrix_indices
+//                                                           param_indices,//const unsigned int *param_indices
+//                                                           p->propInvar(),//const double *prop_invar
+//                                                           p->eigenVals(),//double *const *eigenvals
+//                                                           p->eigenVecs(),//double *const *eigenvecs
+//                                                           p->invEigenVecs(),//double *const *inv_eigenvecs
+//                                                           1,//unsigned int count
+//                                                           p->attributes);
+//    
+//    assert(left_edge_pmatrix_result == PLL_SUCCESS);
+//    
+//    //    int right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
+//    //                                                                      1,
+//    //                                                                      p->attributes);
+//    
+//    int right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
+//                                                            &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
+//                                                            p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
+//    assert(right_edge_pmatrix_result == PLL_SUCCESS);
+//    
+//    
+//    unsigned int sites= (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites);
+//    
+//    
+//    pll_core_update_partial_ii(p->numberStates, sites,
+//                               p->numberRateCats, parent->pclv,
+//                               parent->pscale_buffer,
+//                               child_left->pclv,
+//                               child_right->pclv,
+//                               parent->edge_l->pmatrix,
+//                               parent->edge_r->pmatrix,
+//                               child_left->pscale_buffer,
+//                               child_right->pscale_buffer,
+//                               p->attributes);
+//    //    if (1)
+//    //        parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
+//    
+//    parent->ln_likelihood =
+//    compute_ln_likelihood(parent->pclv,
+//                          parent->pscale_buffer,
+//                          p->getPartition());
+//    if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
+//        
+//        std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
+//    }
+//    parent->ln_coal_likelihood = (child_left->height >  child_right->height)? child_left->ln_coal_likelihood: child_right->ln_coal_likelihood;
+//    
+//    parent->ln_coal_likelihood+= logLikNewNode;
+//    
+//    
+//    assert(!isnan(parent->ln_likelihood) && !isinf(parent->ln_likelihood));
+//    
+//    //assert(parent->ln_likelihood <= 0 && "Likelihood can't be more than 100%");
+//    
+//    return parent;
+//}
 double State::likelihood_factor(std::shared_ptr<PartialTreeNode> root)const{
     
     double result=0.0;
@@ -930,12 +1046,12 @@ double   State::proposalPriorPost(gsl_rng * random, Population *leftNodePop,Popu
     
     
     if (leftNodePop->index == rightNodePop->index){
-        const Partition *p =partition;
-        unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
-        const unsigned int matrix_indices[2] = {0,1};
-        const unsigned int param_indices[2] = {0,1};
-        double * left_pmatrix;
-        double * right_pmatrix;
+        //const Partition *p =partition;
+//        unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
+//        const unsigned int matrix_indices[2] = {0,1};
+//        const unsigned int param_indices[2] = {0,1};
+//        double * left_pmatrix;
+//        double * right_pmatrix;
         if (iteration ==1){//the same pmatrix for every pair
             
             // left_pmatrix = (double *)pll_aligned_alloc(pmatrix_elements * sizeof(double), p->alignment()); //(double *)std::malloc(pmatrix_elements*sizeof(double));
@@ -990,7 +1106,7 @@ double   State::proposalCoalMRCANodePriorPost(gsl_rng * random, Population *inmi
         
         // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
         assert(idxFirstRoot != idxSecondRoot);
-        nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, receiverPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr );
+        nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, receiverPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr, false);
         logWeights[i] = nodeProposals[i]->ln_likelihood;
         
         if (logWeights[i]>maxlogWeight)
@@ -1032,7 +1148,7 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
     int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
     double logWeightDiff = 0.0;
     
-    std::set<std::pair<int, int>> allCoalPairs = PosetSMC::getCombinations(chosenPop->numActiveGametes);
+    std::vector<std::pair<int, int>> allCoalPairs = PosetSMC::getCombinationsRandomOrder(chosenPop->numActiveGametes);
     int numberProposals = allCoalPairs.size();
     
     std::vector<double> logLik(numberProposals, 0.0);
@@ -1048,7 +1164,7 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
     //for(size_t i=0; i <  allCoalPairs.size(); i++){
     size_t i = 0;
     std::vector<pairs> allPairs(allCoalPairs.size());
-    for (auto coalPair : allCoalPairs)
+    for (auto &coalPair : allCoalPairs)
     {
         idxFirst = coalPair. first;
         idxSecond = coalPair. second;
@@ -1060,9 +1176,9 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
         // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
         assert(idxFirstRoot != idxSecondRoot);
         if (pmatrices!=nullptr)
-            nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight, pmatrices[0], pmatrices[1]  );
+            nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight, pmatrices[0], pmatrices[1] , false );
         else
-            nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr );
+            nodeProposals[i] = proposeNewNode( idxFirstRoot,  idxSecondRoot, chosenPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr, false );
         logLik[i] = nodeProposals[i]->ln_likelihood;
         logRatio[i] = nodeProposals[i]->likelihood_factor();
         
@@ -1079,7 +1195,7 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
         i++;
     }
     unsigned int posRatios, posLik, pos;
-    double logSumNormLik = Utils::normalize(logLik, normlogLik);
+    //double logSumNormLik = Utils::normalize(logLik, normlogLik);
     double logSumNormRatios = Utils::normalize(logRatio, normlogRatio);
     posLik = Random::randomDiscreteFromProbabilityVector(random, &normlogLik[0], normlogLik.size());
     posRatios = Random::randomDiscreteFromProbabilityVector(random, &normlogRatio[0], normlogRatio.size());
@@ -1196,7 +1312,7 @@ double   State::proposalPostPost1(gsl_rng * random,  double &newHeight , double&
             
             assert(idxFirstRoot != idxSecondRoot);
             size_t posProposal = j*numIncrementsPOSTPOST+i;
-            nodeProposals[posProposal] = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logPrior, nullptr, nullptr );
+            nodeProposals[posProposal] = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logPrior, nullptr, nullptr, false );
             
             
             logLik[posProposal] =nodeProposals[posProposal] ->ln_likelihood;
@@ -1224,7 +1340,7 @@ double   State::proposalPostPost1(gsl_rng * random,  double &newHeight , double&
     std::vector<double> logRatioChosenIncrement(from, to);
     
     
-    double logSumNormRatios = Utils::normalize(logRatioChosenIncrement, normlogRatio);
+    //double logSumNormRatios = Utils::normalize(logRatioChosenIncrement, normlogRatio);
     //assert(logSumNormRatios== logWeightIncrements[posIncrement] );
     //posLik = Random::randomDiscreteFromProbabilityVector(random, &normlogLik[0], normlogLik.size());
     posPair = Random::randomDiscreteFromProbabilityVector(random, &normlogRatio[0], normlogRatio.size());
@@ -1268,6 +1384,85 @@ double   State::proposalPostPost1(gsl_rng * random,  double &newHeight , double&
     
     currPop->numActiveGametes= currPop->numActiveGametes-1;
     setTopHeightScaledByTheta(newHeight);
+    return logWeightDiff;
+}
+double   State::proposalTSMC1(gsl_rng * random,  double &newHeight , double& logLikNewHeight, double K, bool normalize){
+    
+    int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    double logWeightDiff = 0.0;
+    double pairModelTimeEntry, pairLifeModelTime;
+    double  newNodeHeight = 0.0, newNodeHeightModelTime= 0.0;
+    double logPrior = 0.0;
+    
+   // int idxReceiverPop,  idxIncomingPop, idxIncomingNode;
+    
+    Population * currPop = populationSet->getCurrentPopulation();
+    //std::set<std::pair<int, int>> allCoalPairs = PosetSMC::getCombinations(currPop->numActiveGametes);
+   // int numberPairs = allCoalPairs.size();
+    
+    idxFirst = pairMinModelTime.first.first;
+    idxSecond = pairMinModelTime.first.second;
+    
+    idxFirstRoot = currPop->idsActiveGametes[idxFirst];
+    idxSecondRoot = currPop->idsActiveGametes[idxSecond];
+    
+    assert(idxFirstRoot != idxSecondRoot);
+    
+    std::pair<double, double> pairModelTimes = pairMinModelTime.second;
+    newNodeHeightModelTime  = pairModelTimes.second * currPop->x ;
+    newNodeHeight = newNodeHeightModelTime * currPop->theta;
+    
+    pairModelTimeEntry = pairModelTimes.first* currPop->x;
+    pairLifeModelTime = newNodeHeightModelTime- pairModelTimeEntry;
+    std::shared_ptr<PartialTreeNode> newNode = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logPrior, nullptr, nullptr, normalize );
+    
+    double logLikFactor = newNode->likelihood_factor();
+    logWeightDiff+= logLikFactor;
+    
+    //logWeightDiff-= logLikFactor;
+
+    double diffPreviousCoalModelTime= newNodeHeightModelTime - currPop->currentModelTime*currPop->x  ;
+    diffPreviousCoalModelTime= newNodeHeightModelTime - pairModelTimeEntry  ;
+    //denominator
+    logWeightDiff-= -Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)+ Population::FmodelTstandard(pairModelTimeEntry, currPop->timeOriginSTD, currPop->delta,K);
+    
+    //numerator
+    size_t numActiveGametes = currPop->numActiveGametes;
+    logWeightDiff+=  -log(currPop->theta)+log(numActiveGametes*(numActiveGametes-1)/ 2.0) +
+                     Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
+                      (numActiveGametes*(numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
+    
+    std::pair<Pair,std::pair<double, double>>  copyPairMinModelTime = std::make_pair(pairMinModelTime.first, pairMinModelTime.second);
+   
+    currPop->pairCurrentProposals.erase(pairMinModelTime.first);
+
+    //update pairs with their proposals
+     pairMinModelTime = currPop->updatePairCurrentProposalsMap(idxFirst, newNodeHeightModelTime, K, logWeightDiff,  copyPairMinModelTime, this, random,  normalize);
+    
+    increaseNextAvailable();
+    updateIndexesActiveGametes( idxFirst, idxSecond,  currPop->index, currPop->index,  newNode->index, newNode->index_population);
+    
+    int posFirstRoot= getNodeIdxById(idxFirstRoot);
+    int posSecondRoot = getNodeIdxById(idxSecondRoot);
+    
+    remove_roots(posFirstRoot, posSecondRoot);
+    
+    assert(newNode->number_leaves_cluster>1);
+    addRoot(newNode);
+        
+    currPop->numActiveGametes= currPop->numActiveGametes-1;
+    newHeight = newNodeHeight;
+    setTopHeightScaledByTheta(newHeight);
+    
+    if (0){
+    
+        std::cout << "pair left " << newNode->getIndexLeftChild()<< " right " << newNode->getIndexRightChild() << std::endl;
+        std::cout << "new node scaled height " << newHeight<< std::endl;
+        std::cout << "log weight diff " << logWeightDiff<< std::endl;
+
+    }
+    
+
     return logWeightDiff;
 }
 double  State::proposalPriorPrior(gsl_rng * random, Population *leftNodePop,Population *rightNodePop, double newNodeHeight, double logLikNewHeight){
@@ -1333,7 +1528,7 @@ double  State::proposalPostPost(gsl_rng * random,  double &newHeight , double& l
             
             double  newNodeHeight = proposalCoalTimeScaledByProportion* theta;
             heightProposals[i*numIncrementsPOSTPOST+j] =proposalCoalTimeScaledByProportion;
-            nodeProposals[i*numIncrementsPOSTPOST+j] = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewCoalTime, nullptr, nullptr );
+            nodeProposals[i*numIncrementsPOSTPOST+j] = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewCoalTime, nullptr, nullptr, false );
             
             
             logLik[i*numIncrementsPOSTPOST+j] = nodeProposals[i*numIncrementsPOSTPOST+j]->ln_likelihood;
@@ -1574,7 +1769,7 @@ Eigen::ArrayXXd State::getLogLikelihoodGrid( double from, double to, size_t n){
             
             newNodeHeight = from + j*(to-from)/(1.0*n);
             
-            nodeProposals[i*(n+1)+j] = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr );
+            nodeProposals[i*(n+1)+j] = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr, false );
             
             logLikWeightsPerPair(j, i) = likelihood_factor(nodeProposals[i*(n+1)+j]);
         }
@@ -1582,7 +1777,7 @@ Eigen::ArrayXXd State::getLogLikelihoodGrid( double from, double to, size_t n){
     }
     return logLikWeightsPerPair;
 }
-
+using ListDouble = std::vector<double>;
 using ListListDouble = std::vector<std::vector<double>>;
 using PairListListDouble = std::pair<ListListDouble,ListListDouble>;
 PairListListDouble State::evalLogLikRatioGrid( double from, double to, size_t n, std::vector<std::string> &labels){
@@ -1606,7 +1801,7 @@ PairListListDouble State::evalLogLikRatioGrid( double from, double to, size_t n,
     std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
     
     
-  
+    
     double maxHeightPair = 0;
     size_t i = 0;
     std::vector<pairs> allPairs(allCoalPairs.size());
@@ -1632,7 +1827,7 @@ PairListListDouble State::evalLogLikRatioGrid( double from, double to, size_t n,
             maxHeightPair = max(roots[idxFirstID]->height,roots[idxSecondId]->height);
             if (newNodeHeight >maxHeightPair){
                 
-                nodeProposals[i*(n+1)+j] = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr );
+                nodeProposals[i*(n+1)+j] = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr, false );
                 
                 lab = "(" + std::to_string(nodeProposals[i*(n+1)+j]->getIndexLeftChild())+", "+ std::to_string(nodeProposals[i*(n+1)+j]->getIndexRightChild())+")";
                 logLikWeightsPerPair[i].push_back(likelihood_factor(nodeProposals[i*(n+1)+j]));
@@ -1644,14 +1839,16 @@ PairListListDouble State::evalLogLikRatioGrid( double from, double to, size_t n,
     }
     return std::make_pair(incrementsByPair,logLikWeightsPerPair) ;
 }
-std::vector<double> State::evalLogLikRatioGridPerIncrement( double from, double to, size_t n, std::vector<std::string> &labels){
+using PairListDouble = std::pair<ListDouble,ListDouble>;
+PairListDouble State::evalLogLikRatioGridPerIncrement( double from, double to, size_t n, std::vector<std::string> &labels){
     
     int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
     double logLikFactor;
     double normIncrement;
     Population *currPop = getCurrentPopulation();
-    double newNodeHeight;
+    double newIncrement;
     double logLikNewHeight = 0.0;
+    double newNodeHeight, maxHeightPair;
     std::set<std::pair<int, int>> allCoalPairs = PosetSMC::getCombinations(currPop->numActiveGametes);
     size_t numPairs = allCoalPairs.size();
     int numberProposals  = numPairs*(n+1);
@@ -1659,6 +1856,7 @@ std::vector<double> State::evalLogLikRatioGridPerIncrement( double from, double 
     std::vector<double> logRatioForCurrentIncrement(numPairs);
     
     std::vector<double> logLikWeightIncrements;
+    std::vector<double> increments;
     
     std::vector<double> logLikRatioGrid(numberProposals);
     std::vector<double> logLik(numberProposals, 0.0);
@@ -1666,15 +1864,15 @@ std::vector<double> State::evalLogLikRatioGridPerIncrement( double from, double 
     std::vector<double> logRatio(numberProposals, 0.0);
     std::vector<double> normlogRatio(numberProposals, 0.0);
     
-    std::vector<std::shared_ptr<PartialTreeNode>> nodeProposals(numberProposals);
-    
+  
     size_t i = 0;
-    std::vector<pairs> allPairs(numberProposals);
+    //std::vector<pairs> allPairs(numberProposals);
     std::string lab;
     i=0;
     for( size_t j = 0; j<= n; ++j){
         
-        newNodeHeight = from + j*(to-from)/(1.0*n);
+        newIncrement = from + j*(to-from)/(1.0*n);
+        increments.push_back(newIncrement);
         i=0;
         for (auto coalPair : allCoalPairs)
         {
@@ -1684,13 +1882,17 @@ std::vector<double> State::evalLogLikRatioGridPerIncrement( double from, double 
             idxFirstRoot = currPop->idsActiveGametes[idxFirst];
             idxSecondRoot = currPop->idsActiveGametes[idxSecond];
             
-            allPairs[j*(n+1)+i] = coalPair;
+            //allPairs[j*(n+1)+i] = coalPair;
+            int idxFirstID = getNodeIdxById(idxFirstRoot);
+            int idxSecondId = getNodeIdxById(idxSecondRoot);
             // std::cout << "idx first" << idxFirst << " idx second "<<idxSecond << std::endl;
             assert(idxFirstRoot != idxSecondRoot);
             
-            //nodeProposals[j*numPairs+i] = uniquePtrNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewHeight );
-            nodeProposals[j*numPairs+i] = proposeNewNode(idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr );
-            logLikFactor = nodeProposals[j*numPairs+i]->likelihood_factor();
+            maxHeightPair = max(roots[idxFirstID]->height,roots[idxSecondId]->height);
+            newNodeHeight = currPop->getCurrentModelTime()*currPop->x* theta +newIncrement;
+            auto newNode =  uniquePtrNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewHeight, false );
+            //nodeProposals[j*numPairs+i] = proposeNewNode(idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logLikNewHeight, nullptr, nullptr );
+            logLikFactor = newNode->likelihood_factor();
             logRatioForCurrentIncrement[i]= logLikFactor;
             
             i++;
@@ -1701,8 +1903,8 @@ std::vector<double> State::evalLogLikRatioGridPerIncrement( double from, double 
         lab =  std::to_string(newNodeHeight);
         labels.push_back(lab);
     }
-
-    return logLikWeightIncrements;
+    
+    return std::make_pair(increments,logLikWeightIncrements);
 }
 
 State::~State(){

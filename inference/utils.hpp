@@ -36,14 +36,17 @@
 
 #include <algorithm>
 
-const double DOUBLE_INF = std::numeric_limits<double>::infinity();
-const double DOUBLE_NEG_INF = -std::numeric_limits<double>::infinity();
+//const double DOUBLE_INF = std::numeric_limits<double>::infinity();
+//const double DOUBLE_NEG_INF = -std::numeric_limits<double>::infinity();
 //const double NaN = std::numeric_limits<double>::quiet_NaN();
 struct Utils
 {
     
 #define REAL(z,i) ((z)[2*(i)])
 #define IMAG(z,i) ((z)[2*(i)+1])
+    
+    static constexpr const double DOUBLE_INF = std::numeric_limits<double>::infinity();
+    static  constexpr const double DOUBLE_NEG_INF = -std::numeric_limits<double>::infinity();
     
     static void ReadParametersFromFastaFile(char *fileName, int &numCells, int &TotalNumSequences, int &numSites);
     static void ReadFastaFile(char *fileName, std::vector<std::vector<int> > &ObservedData,  char **ObservedCellNames, ProgramOptions &programOptions);
@@ -303,6 +306,7 @@ struct Utils
     // void autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft);
     static double norm(const std::vector<double> &log_weights);
     static double logSumExp(std::vector<double> &logValues);
+    static double pairsIntersected(Pair x, Pair y);
 };
 
 

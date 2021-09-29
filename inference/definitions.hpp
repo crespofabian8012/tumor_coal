@@ -308,6 +308,33 @@ static int gt16_sym_rate_dna4[] =  {      0, 0, 0, 1, 2, 3, 0, 0, 0, 1, 2, 3, 0,
 //   0,  0,   0,   0,  0,  0,  0,    0,    0,   0,  0,   0,  0,    0,    0,    0
 // };
 
+enum class DataType
+{
+  autodetect = 0,
+  dna,
+  protein,
+  binary,
+  multistate,
+  genotype10
+};
+
+enum class ParamValue
+{
+  undefined = 0,
+  equal = 1,
+  user = 2,
+  model = 3,
+  empirical = 4,
+  ML = 5
+};
+
+enum class AscBiasCorrection
+{
+  none = 0,
+  lewis = PLL_ATTRIB_AB_LEWIS,
+  felsenstein = PLL_ATTRIB_AB_FELSENSTEIN,
+  stamatakis = PLL_ATTRIB_AB_STAMATAKIS,
+};
 
 
 #endif /* definitions_h */

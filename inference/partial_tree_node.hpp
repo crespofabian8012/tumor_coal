@@ -43,7 +43,7 @@ public:
     std::unique_ptr<PartialTreeEdge> CloneUnique();
     void showPMatrix( unsigned int states, unsigned int rate_cats, unsigned int states_padded,  unsigned int float_precision);
     void freeMatrix();
-    ~PartialTreeEdge();
+    virtual ~PartialTreeEdge(){};
     
 };
 
@@ -132,15 +132,35 @@ public:
         
     };
     double likelihood_factor()const;
+    
+    PLLBufferManager* getManager()const{return manager;};
     // std::unique_ptr<unsigned int[]> pscale_buffer;
     // std::unique_ptr<double[]> pclv;
     // std::unique_ptr<double> pclv;
     //std::vector<double> clv;
     //std::vector<unsigned int> scale_buffer;
     
-    ~PartialTreeNode();
+    virtual ~PartialTreeNode(){};
 
     };
+template<typename... Ts>
+auto delPartialTreeNode = [](PartialTreeNode* pTreeNode)
+{
+    PLLBufferManager *manager = pTreeNode->getManager();
+    manager->clv_buffer.push(pTreeNode->pclv);
+    manager->scale_buffer_buffer.push(pTreeNode->pscale_buffer);
+    
+    pTreeNode->pclv = nullptr;
+    pTreeNode->pscale_buffer = nullptr;
+    
+    manager->pmatrix_buffer.push(pTreeNode->edge_l->pmatrix);
+    manager->pmatrix_buffer.push(pTreeNode->edge_r->pmatrix);
+    // pll_aligned_free(pmatrix);
+    pTreeNode->edge_l->pmatrix = nullptr;
+    pTreeNode->edge_r->pmatrix = nullptr;
+    delete pTreeNode;
+};
+
 
 #endif /* partial_tree_node_hpp */
     

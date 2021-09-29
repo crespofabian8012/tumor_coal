@@ -52,13 +52,13 @@ public:
     double computeRootLogLikelihood();
     int setPartitionTips(bool doUseGenotypes);
     int initOperations();
-    void fillTipClv(unsigned int tip_id, std::vector<double> &clv) const;
+    void fillTipClv(unsigned int tip_id, std::vector<double> &clv, bool normalize) const;
     void recomputeTipClvs();
     void createHashTable();
     void destroyHashTable();
     void changeGenotypeErrorModel(GenotypeErrorModel *gtErrorModel);
    
-    static void fillTipClv(unsigned int tip_id, std::vector<double> &clv, MSA &msaP, GenotypeErrorModel &gtError,unsigned int number_statesP);
+    static void fillTipClv(unsigned int tip_id, std::vector<double> &clv, MSA &msaP, GenotypeErrorModel &gtError,unsigned int number_statesP, bool normalize);
     ~TreeLikelihood()
     {
         //pll_msa_destroy(msa);

@@ -177,7 +177,165 @@ double pll_core_root_loglikelihood2(unsigned int states,
     }
     return logl;
 }
-
+double pll_core_root_loglikelihood_second_form(unsigned int states,
+                                    unsigned int sites,
+                                    unsigned int rate_cats,
+                                    const double * clv,
+                                    const unsigned int * scaler,
+                                    double * const * frequencies,
+                                    const double * rate_weights,
+                                    const unsigned int * pattern_weights,
+                                    const unsigned int * freqs_indices,
+                                    double * persite_lnl,
+                                    unsigned int attrib)
+{
+    unsigned int i,j,k;
+    double logl = 0;
+    const double * freqs = NULL;
+    
+    double term, term_r;
+    double site_lk;
+    
+    unsigned int states_padded = states;
+    
+#ifdef HAVE_SSE3
+    if (attrib & PLL_ATTRIB_ARCH_SSE)
+    {
+        if (states == 4)
+        {
+            return pll_core_root_loglikelihood_4x4_sse(sites,
+                                                       rate_cats,
+                                                       clv,
+                                                       scaler,
+                                                       frequencies,
+                                                       rate_weights,
+                                                       pattern_weights,
+                                                       freqs_indices,
+                                                       persite_lnl);
+        }
+        else
+        {
+            return pll_core_root_loglikelihood_sse(states,
+                                                   sites,
+                                                   rate_cats,
+                                                   clv,
+                                                   scaler,
+                                                   frequencies,
+                                                   rate_weights,
+                                                   pattern_weights,
+                                                   freqs_indices,
+                                                   persite_lnl);
+        }
+        /* this line is never called, but should we disable the else case above,
+         then states_padded must be set to this value */
+        states_padded = (states+1) & 0xFFFFFFFE;
+    }
+#endif
+#ifdef HAVE_AVX
+    if (attrib & PLL_ATTRIB_ARCH_AVX)
+    {
+        if (states == 4)
+        {
+            return pll_core_root_loglikelihood_4x4_avx(sites,
+                                                       rate_cats,
+                                                       clv,
+                                                       scaler,
+                                                       frequencies,
+                                                       rate_weights,
+                                                       pattern_weights,
+                                                       freqs_indices,
+                                                       persite_lnl);
+        }
+        else
+        {
+            return pll_core_root_loglikelihood_avx(states,
+                                                   sites,
+                                                   rate_cats,
+                                                   clv,
+                                                   scaler,
+                                                   frequencies,
+                                                   rate_weights,
+                                                   pattern_weights,
+                                                   freqs_indices,
+                                                   persite_lnl);
+        }
+        /* this line is never called, but should we disable the else case above,
+         then states_padded must be set to this value */
+        states_padded = (states+3) & 0xFFFFFFFC;
+    }
+#endif
+#ifdef HAVE_AVX2
+    if (attrib & PLL_ATTRIB_ARCH_AVX2)
+    {
+        if (states == 4)
+        {
+            return pll_core_root_loglikelihood_4x4_avx(sites,
+                                                       rate_cats,
+                                                       clv,
+                                                       scaler,
+                                                       frequencies,
+                                                       rate_weights,
+                                                       pattern_weights,
+                                                       freqs_indices,
+                                                       persite_lnl);
+        }
+        else
+        {
+            return pll_core_root_loglikelihood_avx2(states,
+                                                    sites,
+                                                    rate_cats,
+                                                    clv,
+                                                    scaler,
+                                                    frequencies,
+                                                    rate_weights,
+                                                    pattern_weights,
+                                                    freqs_indices,
+                                                    persite_lnl);
+        }
+        /* this line is never called, but should we disable the else case above,
+         then states_padded must be set to this value */
+        states_padded = (states+3) & 0xFFFFFFFC;
+    }
+#endif
+    
+    /* iterate through sites */
+    for (i = 0; i < sites; ++i)
+    {
+        term = 0;
+        for (j = 0; j < rate_cats; ++j)
+        {
+            freqs = frequencies[freqs_indices[j]];
+            term_r = 0;
+            for (k = 0; k < states; ++k)
+            {
+                term_r += clv[k] * freqs[k];
+            }
+            
+            term += term_r * rate_weights[j];
+            
+            clv += states_padded;
+        }
+        
+        site_lk = term;
+        
+        assert(site_lk>0);
+        /* compute site log-likelihood and scale if necessary */
+        site_lk = log(site_lk);
+        if (scaler && scaler[i]){
+            site_lk += scaler[i] * log(PLL_SCALE_THRESHOLD);
+           // std::cout<< "scaling" << std::endl;
+        }
+        
+        site_lk *= pattern_weights[i];
+        
+        /* store per-site log-likelihood */
+        if (persite_lnl)
+            persite_lnl[i] = site_lk;
+        
+        logl += site_lk;
+    }
+    return logl;
+}
 void pll_core_root_likelihood_vector2(unsigned int states,
                                       unsigned int sites,
                                       unsigned int rate_cats,
@@ -456,14 +614,7 @@ int pll_core_update_pmatrix_16x16_jc69(double ** pmatrix,
             
             if (t < 1e-100)
             {
-//                for(unsigned int i=0; i< states*states;i++)
-//                {
-//                    if (i %states ==0)
-//                        pmat[i] = 1;
-//                    else
-//                        pmat[i] = 0;
-//
-//                }
+
                   size_t size = states*states;
                                 for (size_t i = 0; i < size; ++i)
                                                {
@@ -485,23 +636,16 @@ int pll_core_update_pmatrix_16x16_jc69(double ** pmatrix,
                 //        double a = 1 + 3/4. * exptm1;
                 //        double b = -exptm1/4;
                 
-#if 0
-                double a =  (1 + 15*exp(-5*t/3) ) / 16;
-                double b = (1 - a) / 15;
-#endif
-                
-                double exptm1 = expm1(-5*t/3.0);
+//#if 0
+//                double a =  (1 + 15*exp(-5*t/3) ) / 16;
+//                double b = (1 - a) / 15;
+//#endif
+//
+                double exptm1 = expm1(-16*t/15.0);
                 double a = 1 + 15.0/16.0 * exptm1;
                 double b = -exptm1/16.0;
                 
-//                for(unsigned int i=0; i< states*states;i++)
-//                {
-//                    if (i %states ==0)
-//                        pmat[i] = a;
-//                    else
-//                        pmat[i] = b;
-//
-//                }
+
                 size_t size = states*states;
                 for (size_t i = 0; i < size; ++i)
                                {
@@ -511,18 +655,87 @@ int pll_core_update_pmatrix_16x16_jc69(double ** pmatrix,
                                 pmat[i] = b ;
                             }
                                       
-                        
+
+   
+            }
+            
+        }
+    }
+    
+    return PLL_SUCCESS;
+}
+
+int pll_core_update_pmatrix_16x16_jc69_matrix_second_form(double ** pmatrix,
+                                       unsigned int states,
+                                       unsigned int rate_cats,
+                                       const double * rates,
+                                       const double * branch_lengths,
+                                       const unsigned int * matrix_indices,
+                                       const unsigned int * param_indices,
+                                       unsigned int count,
+                                       unsigned int attrib)
+{
+    unsigned int i,n;
+    unsigned int states_padded = states;
+    
+    double * pmat;
+    
+    
+    for (i = 0; i < count; ++i)
+    {
+        assert(branch_lengths[i] >= 0);
+        
+        /* compute effective pmatrix location */
+        for (n = 0; n < rate_cats; ++n)
+        {
+            pmat = pmatrix[matrix_indices[i]] + n*states*states_padded;
+            
+            double t = branch_lengths[i] * rates[n];
+            
+            if (t < 1e-100)
+            {
+
+                  size_t size = states*states;
+                                for (size_t i = 0; i < size; ++i)
+                                               {
+                                         if (i/states ==i % states)
+                                                pmat[i] = 1 ;
+                                        else
+                                                pmat[i] = 0 ;
+                                            }
                 
-//                for (size_t i = 0; i < states; ++i)
-//                {
-//                    for (size_t j = 0; j < states; ++j){
-//                        if (i==j)
-//                           pmat[i*states_padded+j] = a ;
-//                        else
-//                          pmat[i*states_padded+j] = b ;
-//                    }
+            }
+            else
+            {
+                //        #if 0
+                //        double a =  (1 + 3*exp(-4*t/3) ) / 4;
+                //        double b = (1 - a) / 3;
+                //        #endif
+                //
+                //        double exptm1 = expm1(-4*t/3);
+                //        double a = 1 + 3/4. * exptm1;
+                //        double b = -exptm1/4;
+                
+//#if 0
+//                double a =  (1 + 15*exp(-5*t/3) ) / 16;
+//                double b = (1 - a) / 15;
+//#endif
 //
-//                }
+                double exptm1 = expm1(t);
+                double a = 1 + 15.0/16.0 * exptm1;
+                double b = -exptm1/16.0;
+                
+
+                size_t size = states*states;
+                for (size_t i = 0; i < size; ++i)
+                               {
+                         if (i/states ==i % states)
+                                pmat[i] = a ;
+                        else
+                                pmat[i] = b ;
+                            }
+                                      
+
    
             }
             
@@ -544,7 +757,8 @@ void pll_core_update_partial_ii2(unsigned int states,
                                  const double * right_matrix,
                                  const unsigned int * left_scaler,
                                  const unsigned int * right_scaler,
-                                 unsigned int attrib)
+                                 unsigned int attrib,
+                                 bool normalize)
 {
     unsigned int i,j,k,n;
     
@@ -631,6 +845,7 @@ void pll_core_update_partial_ii2(unsigned int states,
     }
     
     /* compute CLV */
+    double sum_lh = 0.0;
     for (n = 0; n < sites; ++n)
     {
         lmat = left_matrix;
@@ -640,6 +855,7 @@ void pll_core_update_partial_ii2(unsigned int states,
         for (k = 0; k < rate_cats; ++k)
         {
             unsigned int rate_scale = 1;
+            sum_lh = 0.0;
             for (i = 0; i < states; ++i)
             {
                 double terma = 0;
@@ -650,6 +866,7 @@ void pll_core_update_partial_ii2(unsigned int states,
                     termb += rmat[j] * right_clv[j];
                 }
                 parent_clv[i] = terma*termb;
+                sum_lh +=parent_clv[i];
                 
                 if (parent_clv[i]==0){
                     printf("Ooops");
@@ -669,6 +886,13 @@ void pll_core_update_partial_ii2(unsigned int states,
                 lmat += states;
                 rmat += states;
             }
+            if (normalize)
+            {
+                for (i = 0; i < states; ++i){
+                    parent_clv[i] *= 1.0 * states /sum_lh;
+                    
+                }
+            }
             
             /* check if scaling is needed for the current rate category */
             if (scale_mode == 2)
@@ -686,6 +910,140 @@ void pll_core_update_partial_ii2(unsigned int states,
             else
                 site_scale = site_scale && rate_scale;
             
+            parent_clv += states;
+            left_clv   += states;
+            right_clv  += states;
+        }
+        /* PER-SITE SCALING: if *all* entries of the *site* CLV were below
+         * the threshold then scale (all) entries by PLL_SCALE_FACTOR */
+        if (site_scale)
+        {
+            std::cout<< "scaling per site" << std::endl;
+            parent_clv -= span;
+            for (i = 0; i < span; ++i)
+                parent_clv[i] *= PLL_SCALE_FACTOR;
+            parent_clv += span;
+            parent_scaler[n] += 1;
+        }
+    }
+}
+void pll_core_update_parent_clv(unsigned int states,
+                                 unsigned int sites,
+                                 unsigned int rate_cats,
+                                 double * parent_clv,
+                                 unsigned int * parent_scaler,
+                                 const double * left_clv,
+                                 const double * right_clv,
+                                const double * branch_lengths,
+                                 const double * left_matrix,
+                                 const double * right_matrix,
+                                 const unsigned int * left_scaler,
+                                 const unsigned int * right_scaler,
+                                 unsigned int attrib,
+                                 bool normalize)
+{
+    unsigned int i,j,k,n;
+
+    unsigned int scale_mode;  /* 0 = none, 1 = per-site, 2 = per-rate */
+    unsigned int site_scale;
+    unsigned int init_mask;
+
+    const double * lmat;
+    const double * rmat;
+
+    unsigned int span = states * rate_cats;
+
+
+    /* init scaling-related stuff */
+    if (parent_scaler)
+    {
+        /* determine the scaling mode and init the vars accordingly */
+        scale_mode = (attrib & PLL_ATTRIB_RATE_SCALERS) ? 2 : 1;
+        init_mask = (scale_mode == 1) ? 1 : 0;
+        const size_t scaler_size = (scale_mode == 2) ? sites * rate_cats : sites;
+
+        assert(scaler_size == sites );
+        /* add up the scale vectors of the two children if available */
+        fill_parent_scaler2(scaler_size, parent_scaler, left_scaler, right_scaler);
+    }
+    else
+    {
+        /* scaling disabled / not required */
+        scale_mode = init_mask = 0;
+    }
+
+    /* compute CLV */
+    double sum_lh = 0.0;
+    double left_brlen = branch_lengths[0];
+    double right_brlen = branch_lengths[1];
+    double exp_left = exp(left_brlen);
+    double exp_right =  exp(right_brlen);
+    for (n = 0; n < sites; ++n)
+    {
+        lmat = left_matrix;
+        rmat = right_matrix;
+        site_scale = init_mask;
+
+        for (k = 0; k < rate_cats; ++k)
+        {
+            unsigned int rate_scale = 1;
+            sum_lh = 0.0;
+            for (i = 0; i < states; ++i)
+            {
+                double terma = 0;
+                double termb = 0;
+                for (j = 0; j < states; ++j)
+                {
+                    //terma += lmat[j] * left_clv[j];
+                    //termb += rmat[j] * right_clv[j];
+                    terma += 1- exp_left*left_clv[j];
+                    termb += 1- exp_right*right_clv[j];
+                }
+                parent_clv[i] = terma*termb;
+                sum_lh +=parent_clv[i];
+
+                if (parent_clv[i]==0){
+                    printf("Ooops");
+                    for (unsigned int k =0; k < states; k++){
+
+                        std::cout<< "lmat:" << lmat[k] << std::endl;
+                        std::cout<< "left_clv:" << left_clv[k] << std::endl;
+                        std::cout<< "right_clv:" << right_clv[k] << std::endl;
+                        std::cout<< lmat[k] * left_clv[k]<< std::endl;
+                        std::cout<< rmat[k] * right_clv[k]<< std::endl;
+                    }
+                }
+
+
+                rate_scale &= (parent_clv[i] < PLL_SCALE_THRESHOLD);
+
+                lmat += states;
+                rmat += states;
+            }
+            if (normalize)
+            {
+                for (i = 0; i < states; ++i){
+                    parent_clv[i] *= 1.0 * states /sum_lh;
+
+                }
+            }
+
+            /* check if scaling is needed for the current rate category */
+            if (scale_mode == 2)
+            {
+                /* PER-RATE SCALING: if *all* entries of the *rate* CLV were below
+                 * the threshold then scale (all) entries by PLL_SCALE_FACTOR */
+                if (rate_scale)
+                {
+                    std::cout<< "scaling per rate" << std::endl;
+                    for (i = 0; i < states; ++i)
+                        parent_clv[i] *= PLL_SCALE_FACTOR;
+                    parent_scaler[n*rate_cats + k] += 1;
+                }
+            }
+            else
+                site_scale = site_scale && rate_scale;
+
             parent_clv += states;
             left_clv   += states;
             right_clv  += states;

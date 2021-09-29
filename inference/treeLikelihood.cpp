@@ -322,7 +322,7 @@ int TreeLikelihood::initOperations(){
     
     return PLL_SUCCESS;
 }
-void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) const
+void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, bool normalize) const
 {
     
     auto clv_size = msa->getLength() * number_states;
@@ -339,8 +339,17 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) c
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
+        auto pclvForNormalize = clvp;
+        double sum_lh = gtErrorModel->computeStateErrorProbPT20(state, clvp);
         
-        gtErrorModel->computeStateErrorProbPT20(state, clvp);
+        
+        if (normalize){
+                 
+                 for (size_t k = 0; k < number_states; ++k)
+                           pclvForNormalize[k] *= 1.0* number_states /sum_lh;
+                 //with this , \sum_{i=1}^{numberStates} stat_prob * clv[i] = 1
+                 
+             }
         
         //if (j == 0 && 0)
         //{
@@ -355,7 +364,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv) c
     
     assert(clvp == clv.end());
 }
-void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, MSA &msaP, GenotypeErrorModel &gtError,unsigned int number_statesP)
+void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, MSA &msaP, GenotypeErrorModel &gtError,unsigned int number_statesP, bool normalize)
 {
     
     
@@ -364,6 +373,7 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, M
         clv.resize(clv_size);
     
     auto clvp = clv.begin();
+    
     //auto seq = msa->at(tip_id);
     auto seq = msaP.at(tip_id);
     //auto charmap = _model.charmap();
@@ -374,8 +384,16 @@ void TreeLikelihood::fillTipClv(unsigned int tip_id, std::vector<double> &clv, M
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
+        auto pclvForNormalize = clvp;
+        double sum_lh = gtError.computeStateErrorProbPT20(state, clvp);
         
-        gtError.computeStateErrorProbPT20(state, clvp);
+        if (normalize){
+            
+            for (size_t k = 0; k < number_statesP; ++k)
+                      pclvForNormalize[k] *= 1.0* number_statesP /sum_lh;
+            //with this , \sum_{i=1}^{numberStates} stat_prob * clv[i] = 1
+            
+        }
         
         //if (j == 0 && 0)
         //{
@@ -397,7 +415,7 @@ void TreeLikelihood::recomputeTipClvs()
     std::vector<double> tmp_clv;
     for (size_t i = 0; i < msa->getSize(); ++i)
     {
-        fillTipClv(i, tmp_clv);
+        fillTipClv(i, tmp_clv, false);
         reference_partition->setTipCLV(i, tmp_clv.data());
     }
 }

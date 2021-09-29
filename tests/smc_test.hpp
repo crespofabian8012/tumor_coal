@@ -82,7 +82,7 @@ public:
         struct timeval tv;
         gettimeofday(&tv,0);
         seed = tv.tv_sec + tv.tv_usec;
-        smcOptions.main_seed = seed;
+       // smcOptions.main_seed = seed;
         
         const char* input_path;
         const std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";

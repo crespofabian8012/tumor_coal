@@ -43,13 +43,13 @@ PopulationTest::~PopulationTest(){
 TEST_F(PopulationTest, logRelativePopulationSizeAtTOriginWithK0) {
   //relativePopulationSize at Torigin
   double logRelativePopulationSize = pop->LogCalculateH(pop->timeOriginSTD, pop->timeOriginSTD,pop->delta, 0.0);
-  EXPECT_EQ(logRelativePopulationSize,DOUBLE_NEG_INF);
+  EXPECT_EQ(logRelativePopulationSize,Utils::DOUBLE_NEG_INF);
 }
 
 TEST_F(PopulationTest, logRelativePopulationSizeAtTOrigin) {
   //relativePopulationSize at Torigin
   double logRelativePopulationSize = pop->LogCalculateH(pop->timeOriginSTD, pop->timeOriginSTD,pop->delta, K);
-  EXPECT_EQ(logRelativePopulationSize,DOUBLE_NEG_INF);
+  EXPECT_EQ(logRelativePopulationSize,Utils::DOUBLE_NEG_INF);
 }
 TEST_F(PopulationTest, logRelativePopulationSizeAtModelTimeK0) {
   //relativePopulationSize at 0<t<Torigin

@@ -35,7 +35,7 @@ public:
     
     void computeStateErrorProbPT17(pll_state_t state,
                                    std::vector<double>::iterator &clv) const;
-    void computeStateErrorProbPT20(pll_state_t state,
+    double computeStateErrorProbPT20(pll_state_t state,
                                    std::vector<double>::iterator &clv) const;
     
     
@@ -44,7 +44,7 @@ public:
      
      void computeStateErrorProbPT17(pll_state_t state,
                                    double *clvp) const;
-     void computeStateErrorProbPT20(pll_state_t state,
+     double computeStateErrorProbPT20(pll_state_t state,
                                     double *clvp) const;
      
 };

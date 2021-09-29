@@ -25,6 +25,9 @@
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #include "population.hpp"
 #include "definitions.hpp"
+#include "poset_smc.hpp"
+#include "partial_tree_node.hpp"
+#include "state.hpp"
 #include <algorithm>
 #include <vector>
 #include <iterator>
@@ -33,6 +36,7 @@
 #include "mcmc_parameter.hpp"
 #include "utils.hpp"
 #include <gsl/gsl_randist.h>
+#include <random>
 
 extern "C"
     {
@@ -432,6 +436,7 @@ Population::Population(const Population &original){
     CoalescentEventTimes = original.CoalescentEventTimes;
     immigrantsPopOrderedByModelTime = original.immigrantsPopOrderedByModelTime;
     idsActiveGametes = original.idsActiveGametes;
+    pairCurrentProposals = original.pairCurrentProposals;
     
 }
 long double Population::ProbabilityComeFromPopulation(Population *PopJ, std::vector<Population*> &populations, int numClones, long double K)
@@ -1041,6 +1046,131 @@ void Population::savePosteriorValues(){
     X->saveCurrentValue();
     
 }
+std::pair<Pair, std::pair<double, double>> Population::initPairProposalsNextEventTime(gsl_rng *rngGsl, double K){
+    
+    assert(numActiveGametes > 1);
+
+    std::vector<Pair > pairs= PosetSMC::getCombinationsRandomOrder(numActiveGametes);
+    
+    auto rd = std::random_device {};
+    auto rng = std::default_random_engine { rd() };
+ 
+    std::shuffle(std::begin(pairs), std::end(pairs), rng);
+    
+    double minModeltime = DOUBLE_INF;
+    double minKingmanTime = DOUBLE_INF;
+    double proposalKingmanTime, proposalModelTime;
+    Pair currPair;
+    std::pair<Pair, std::pair<double, double>> currEntry;
+    std::pair<Pair, std::pair<double, double>> winnerModelTime;
+    std::pair<Pair, std::pair<double, double>> winnerKingmanTime;
+    for(std::vector<Pair>::iterator it = pairs.begin(), end = pairs.end(); it != end; ++it)
+    {
+        currPair = *it;
+        proposalKingmanTime =  Random::RandomExponential(1.0,0,  true, rngGsl,NULL );
+        proposalModelTime = Population::GstandardTmodel(proposalKingmanTime, timeOriginSTD, delta, K);
+        currEntry = std::make_pair(currPair,std::make_pair(0.0, proposalModelTime));
+        if (proposalModelTime<minModeltime){
+            
+            winnerModelTime = currEntry;
+            minModeltime =proposalModelTime;
+        }
+        if (proposalKingmanTime<minKingmanTime){
+                   
+                   winnerKingmanTime = currEntry;
+            minKingmanTime = proposalKingmanTime;
+               }
+        
+        pairCurrentProposals.insert(currEntry);
+    }
+    
+   // std::cout <<" pair min Kingman time " << winnerKingmanTime.first.first << " , "<< winnerKingmanTime.first.second  << std::endl;
+   // std::cout <<" pair min Model time " << winnerModelTime.first.first << " , "<< winnerModelTime.first.second << std::endl;
+   // std::cout <<" min Model time " << winnerModelTime.second.second << std::endl;
+    return winnerModelTime;
+
+}
+std::pair<Pair, std::pair<double, double>> Population::updatePairCurrentProposalsMap(int posNewNodeIdsGametes, double modelTimeNewNode,double K, double &logWeightDiff, std::pair<Pair, std::pair<double, double>> copyPairMinModelTime, State *currState,  gsl_rng *rngGsl, bool normalizeClv){
+    
+    double waitingTimeKingman, proposalKingmanTime, proposalModelTime;
+    double minModeltime = DOUBLE_INF;
+    double currKingmanCoalTime = Population::FmodelTstandard(modelTimeNewNode, timeOriginSTD, delta, K);
+    std::pair<Pair, std::pair<double, double>>  pairMinModelTime;
+    int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    double logLikNewHeight = 0.0;
+    
+    assert(pairCurrentProposals.size()== (numActiveGametes)*(numActiveGametes-1)/ 2.0 -1);
+    PairDoubleMap::iterator it = pairCurrentProposals.begin();
+    double lik_factor_newNode;
+    while ( it != pairCurrentProposals.end()) {
+        
+        auto currPair = it->first;
+        //assert(it.second.second >modelTimeNewNode);
+        
+        if (Utils::pairsIntersected(currPair, copyPairMinModelTime.first)){
+            
+            double dropoutNodeProposalModelTime =   it->second.second;
+            double dropoutNodeModelTimeEntry =   it->second.first;
+            //numerator
+            logWeightDiff +=   -log(theta)+log(numActiveGametes*(numActiveGametes-1)/ 2.0) +
+                                Population::LogLambda(dropoutNodeProposalModelTime, timeOriginSTD, delta,K)-
+                                 (numActiveGametes*(numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(dropoutNodeProposalModelTime, timeOriginSTD, delta,K) ;
+        
+            //denominator
+             logWeightDiff -= -Population::FmodelTstandard(dropoutNodeProposalModelTime, timeOriginSTD, delta,K)+ Population::FmodelTstandard(dropoutNodeModelTimeEntry, timeOriginSTD, delta,K);
+            
+            idxFirst = currPair.first;
+            idxSecond = currPair.second;
+            
+            idxFirstRoot = idsActiveGametes[idxFirst];
+            idxSecondRoot = idsActiveGametes[idxSecond];
+            
+            assert(idxFirstRoot != idxSecondRoot);
+            
+            logLikNewHeight = 0.0;
+            //std::unique_ptr<PartialTreeNode>
+             auto newNode =  currState->uniquePtrNewNode( idxFirstRoot,  idxSecondRoot, index, dropoutNodeProposalModelTime, logLikNewHeight, normalizeClv );
+           
+            lik_factor_newNode = newNode->likelihood_factor();
+            
+            if (lik_factor_newNode > -1e10){
+              //logWeightDiff -= lik_factor_newNode;
+            }
+            else
+                std::cout << "log lik factor -inf for pair "<< currPair.first << " , " << currPair.second << std::endl;
+            //only erase the pairs related with the last position of idsActiveGametes(the other ones will be updated)
+            if (currPair.first == copyPairMinModelTime.first.second  || currPair.second ==copyPairMinModelTime.first.second)
+                 it = pairCurrentProposals.erase(it);
+            else{
+                waitingTimeKingman =  Random::RandomExponential(1.0,0,  true, rngGsl,NULL );
+                      
+                proposalKingmanTime = waitingTimeKingman + currKingmanCoalTime;
+                
+                proposalModelTime = Population::GstandardTmodel(proposalKingmanTime, timeOriginSTD, delta, K);
+                it->second.first = modelTimeNewNode;//creation time
+                it->second.second  = proposalModelTime;//new proposal time
+                if (proposalModelTime<minModeltime){
+                                    
+                                    pairMinModelTime = *it;
+                                    minModeltime = proposalModelTime;
+                                }
+                it++;
+            }
+        }
+        else{
+            //find the minimum proposal model time in the pairs that didnt dropout
+            if (it->second.second < minModeltime){
+                
+                minModeltime = it->second.second;
+                pairMinModelTime = *it;
+            }
+             it++;
+        }
+    }
+
+     assert(pairCurrentProposals.size()== (numActiveGametes-1)*(numActiveGametes-2)/ 2.0);
+     return pairMinModelTime;
+}
 void Population::resetPosteriorValues(){
     
     posteriorDeltaT.clear();
@@ -1609,7 +1739,31 @@ void  PopulationSet::acceptNextCoalEventTime(gsl_rng *random, double receiverMod
     }
     
 }
+std::pair<Pair, std::pair<double, double>> PopulationSet::initPairProposalsNextEventTimePerPopulation(gsl_rng *rngGsl, double K){
+    
+    Pair pairMinModelTime;
+    Population *popI = getCurrentPopulation();
+    
+    std::pair<Pair, std::pair<double, double>> pairMinModelTimeCurrPop;
+    
+    if (popI->numActiveGametes > 1)
+        pairMinModelTimeCurrPop = popI->initPairProposalsNextEventTime(rngGsl, K);
+    
+    
+//    for (unsigned int i = 0; i < numClones; ++i){
+//        auto popI =  populations[i];
+//        if (popI->numActiveGametes > 1){
+//
+//            Pair pairMinModelTimeCurrPop = popI->initPairProposalsNextEventTime(rngGsl, K);
+//            if (pairMinModelTimeCurrPop
+//
+//        }
+//
+//
+//    }
 
+    return pairMinModelTimeCurrPop;
+}
 void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double &theta){
     long double delta;
     

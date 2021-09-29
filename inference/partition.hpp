@@ -9,6 +9,7 @@
 #define partition_hpp
 
 #include "genotype_error_model.hpp"
+#include "model.hpp"
 
 #include <stdio.h>
 #include <string>
@@ -30,7 +31,7 @@ extern "C"
 class Partition{
 private:
     pll_partition_t * partition;
-    pllmod_subst_model_t * model;
+    pllmod_subst_model_t* model;
     Partition(){};
     //    Partition(int numberTips,
     //               int clvBuffers,

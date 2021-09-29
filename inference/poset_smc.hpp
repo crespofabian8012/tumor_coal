@@ -13,21 +13,27 @@
 
 #include "spf.hpp"
 #include "poset_smc_params.hpp"
+#include "utils.hpp"
 
 
 #include <map>
 #include <unordered_map>
 #include <iterator>
 #include <set>
+#include <random>
+#include <boost/thread/mutex.hpp>
 
 class State;
 class PosetSMCParams;
 typedef std::pair<int, int> pairs;
 
 using namespace std;
+
 class PosetSMC : public ProblemSpecification<State, PosetSMCParams>
 {
-    static std::unordered_map<size_t , std::set<pairs > > sizeCombinationMap;
+    static  std::unordered_map<size_t , std::set<pairs > > sizeCombinationMap;
+    static boost::mutex mx;
+    //mutable std::mutex m;
     size_t numClones;
     size_t numIter;
     std::vector<bool> doPlotPerIteration;
@@ -79,7 +85,10 @@ public:
     }
     
    static  std::set<std::pair<int, int> > getCombinations(size_t size){
+       
+        boost::mutex::scoped_lock scoped_lock(mx);
         if (sizeCombinationMap.find(size) != sizeCombinationMap.end())
+            
             return sizeCombinationMap[size];
         else
         {
@@ -90,6 +99,13 @@ public:
         return sizeCombinationMap[size];
     }
 
+    static  std::vector<std::pair<int, int> > getCombinationsRandomOrder(size_t size){
+       
+       
+        std::set<Pair> pairSet = getCombinations(size);
+        std::vector<Pair> pairs(pairSet.begin(), pairSet.end());
+        return pairs;
+    }
    
     ~PosetSMC(){};
 };

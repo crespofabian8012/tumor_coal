@@ -30,11 +30,24 @@
 
 #include <iostream>
 #include <unordered_map>
-#include <unordered_set>
-
+#include <set>
+#include <boost/functional/hash.hpp>
 //#include "definitions.hpp"
 
-
+using Pair = std::pair<int, int>;
+template <typename Pair>
+struct MyHash {
+    std::size_t operator()(const Pair& key) const {
+        return std::hash<int>()(key.first) ^ std::hash<int>()(key.second);
+    }
+};
+template <typename Pair>
+struct MyEqual {
+    bool operator() (const Pair& lhs, const Pair& rhs) const {
+        return (lhs.first == rhs.first)&&(lhs.second == rhs.second);
+    }
+};
+using PairDoubleMap = std::unordered_map<Pair , std::pair<double, double>, boost::hash<Pair>, MyEqual<Pair> > ;
 // SiteStr: information about a site
 typedef struct
 {
@@ -200,6 +213,8 @@ public:
     int maxSampleSize;
     double meanGenotypingError= 0;
     double varGenotypingError=0;
+    bool normalizeClv=false;
+    bool normalizeLeavesClv=false;
     //gsl_rng * r;
 };
 
@@ -338,6 +353,15 @@ typedef struct {
     FilePath *fpTreeOutput;
     FilePath *fpLikelihood;
 }Files;
+
+struct EnumClassHash
+{
+  template <typename T>
+  std::size_t operator()(T t) const
+  {
+      return static_cast<std::size_t>(t);
+  }
+};
 
 typedef std::unordered_map<std::string,size_t> NameIdMap;
 

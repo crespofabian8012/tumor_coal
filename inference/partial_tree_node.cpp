@@ -107,12 +107,12 @@ void PartialTreeEdge::freeMatrix(){
     delete []pmatrix;
     
 }
-PartialTreeEdge::~PartialTreeEdge() {
-    manager->pmatrix_buffer.push(pmatrix);
-    
-    // pll_aligned_free(pmatrix);
-    pmatrix = nullptr;
-}
+//PartialTreeEdge::~PartialTreeEdge() {
+//    manager->pmatrix_buffer.push(pmatrix);
+//    
+//    // pll_aligned_free(pmatrix);
+//    pmatrix = nullptr;
+//}
 
 PartialTreeNode::PartialTreeNode(PLLBufferManager *manager,
                                  std::shared_ptr<PartialTreeNode> const& leftChild,
@@ -411,6 +411,7 @@ void PartialTreeNode::buildCLV(int tip_id,int numberStates, pll_msa_t *msa, Geno
     //auto clv_size = msa->length * numberStates*numberRateCats;
     //here we assume numberRateCats=1
     double * pclv2 = pclv;
+  
     
     auto seq = msa->sequence[tip_id];
     //auto charmap = _model.charmap();
@@ -421,7 +422,18 @@ void PartialTreeNode::buildCLV(int tip_id,int numberStates, pll_msa_t *msa, Geno
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
-        gtErrorModel->computeStateErrorProbPT20(state, pclv2);
+        double sum_lh = gtErrorModel->computeStateErrorProbPT20(state, pclv2);
+        
+        assert(sum_lh >0);
+        if (normalize){
+            
+          
+            for (size_t k = 0; k < numberStates; ++k)
+                      pclv2[k] *= 1.0* numberStates /sum_lh;
+            //with this , \sum_{i=1}^{numberStates} stat_prob * clv[i] = 1
+         
+            
+        }
         
         //        if (true)
         //        {
@@ -498,28 +510,28 @@ double PartialTreeNode::likelihood_factor()const{
     double ln_r = right->ln_likelihood;
     
     
-    assert(ln_m <= 0 && ln_l <= 0 && ln_r <= 0 &&
-           "Likelihood can't be more than 100%");
+   // assert(ln_m <= 0 && ln_l <= 0 && ln_r <= 0 &&
+   //       "Likelihood can't be more than 100%");
     
     result= ln_m - (ln_l + ln_r);
     
     return result;
     
 }
-PartialTreeNode::~PartialTreeNode() {
-    
-    manager->clv_buffer.push(pclv);
-    manager->scale_buffer_buffer.push(pscale_buffer);
-    
-    //pll_aligned_free(clv);
-    //pll_aligned_free(scale_buffer);
-    
-    //if (pclv!=0) delete []pclv;
-    //if (pscale_buffer!=0) delete []pscale_buffer;
-    pclv = nullptr;
-    pscale_buffer = nullptr;
-    // delete clv ;
-    // delete[] scale_buffer ;
-   
-    
-}
+//PartialTreeNode::~PartialTreeNode() {
+//    
+//    manager->clv_buffer.push(pclv);
+//    manager->scale_buffer_buffer.push(pscale_buffer);
+//    
+//    //pll_aligned_free(clv);
+//    //pll_aligned_free(scale_buffer);
+//    
+//    //if (pclv!=0) delete []pclv;
+//    //if (pscale_buffer!=0) delete []pscale_buffer;
+//    pclv = nullptr;
+//    pscale_buffer = nullptr;
+//    // delete clv ;
+//    // delete[] scale_buffer ;
+//   
+//    
+//}

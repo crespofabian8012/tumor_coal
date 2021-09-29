@@ -1165,6 +1165,19 @@ double Utils::logSumExp(std::vector<double> &logValues){
     return(log(result));
     
 }
+double Utils::pairsIntersected(Pair x, Pair y){
+    
+    if (x.first == y.first)
+        return true;
+    else if (x.first == y.second)
+        return true;
+    else if (x.second == y.first)
+        return true;
+    else if (x.second == y.second)
+       return true;
+    else
+        return false;
+}
 //void Utils::autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft)
 //{
 //    int no2,i;

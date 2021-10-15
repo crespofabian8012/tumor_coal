@@ -55,6 +55,7 @@ public:
     const std::string& label(size_t index) const { return labels.at(index); }
     
     const pll_msa_t * getRawPtr() const{return pll_msa;};
+    pll_msa_t * getNonConstRawPtr() const{return pll_msa;};
     const std::vector<std::string>& getLabels() const { return
         labels; };
     const std::string& at(const std::string& label) const

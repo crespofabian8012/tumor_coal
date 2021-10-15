@@ -307,6 +307,7 @@ struct Utils
     static double norm(const std::vector<double> &log_weights);
     static double logSumExp(std::vector<double> &logValues);
     static double pairsIntersected(Pair x, Pair y);
+    static  double computeGorurTehLogLik(int numSites, int numStates, double rate, double left_length, double right_length,  double *left_pclv,  double *right_pclv, std::vector<double> &result );
 };
 
 

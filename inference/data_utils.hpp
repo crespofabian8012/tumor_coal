@@ -28,7 +28,6 @@
 
 
 #include "data_types.hpp"
-//#include "definitions.hpp"
 #include "eigen.hpp"
 #include "population.hpp"
 #include "tree_node.hpp"
@@ -190,22 +189,22 @@ TreeNode *getHealthyTip(TreeNode *treeRootInit);
 int openFile(FILE **file, char path[MAX_NAME] );
 
 
-void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCoptions &mcmcOptions);
+void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCOptions &mcmcOptions);
 void computeUnfoldedISMSFS(int numSites,std::vector<SiteStr> &allSites,int numSNVs, std::vector<int> &SNVsites, std::vector<int> &SFS, std::vector<int> &numberDifferences);
 int countTrueVariants (std::vector<TreeNode *> &nodes,  int numSites, int numCells, TreeNode *HEALTHY_ROOT, std::vector<SiteStr> &allSites, std::vector<int> &variantSites, std::vector<int> &SNVsites );
 
 
 long double computeParamPowerDistribQuantileUntil(long double areaUntilb, long double b, long double from);
-void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions );
+void setDefaultOptions(ProgramOptions &programOptions, MCMCOptions &mcmcOptions );
 void printProgramHeader();
 void printSimulatorProgramHeader();
 
-long double  initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, const gsl_rng * randomGenerator);
-long double  sampleMutationRateSimulation( MCMCoptions &mcmcOptions, ProgramOptions &programOptions,const gsl_rng *randomGsl, boost::mt19937* rngBoost) ;
+long double  initMutationRate( MCMCOptions &mcmcOptions, ProgramOptions &programOptions, const gsl_rng * randomGenerator);
+long double  sampleMutationRateSimulation( MCMCOptions &mcmcOptions, ProgramOptions &programOptions,const gsl_rng *randomGsl, boost::mt19937* rngBoost) ;
 void simulateTrees(int numberTrees,std::vector<StructuredCoalescentTree *> &structuredCoalTrees,  std::vector<pll_rtree_t *> &trees,          std::vector<long double> &realThetas,
                    std::vector<std::vector<long double>> &realDeltaTs,
                    std::vector<std::vector<long double>> &realTs,
-                   std::vector<int> & sampleSizes, ProgramOptions &programOptions, MCMCoptions & mcmcOptions, std::vector<gsl_rng * > rngGsl,std::vector<boost::mt19937* > rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel,
+                   std::vector<int> & sampleSizes, ProgramOptions &programOptions, MCMCOptions & mcmcOptions, std::vector<gsl_rng * > rngGsl,std::vector<boost::mt19937* > rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel,
                    long double seqErrorRate,
                    long double dropoutRate );
 void InitFiles(Files &files);

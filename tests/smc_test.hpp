@@ -192,7 +192,7 @@ public:
         coalTimesModelTimePerPopulation.push_back(coalTimes);
         
         
-        psParams = new  PosetSMCParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
+        psParams = new  PosetSMCParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, &msaWrapper, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
                                 true_theta,
                                 deltas,
                                 timeOriginSTDs,
@@ -238,7 +238,7 @@ public:
     gsl_rng * random;
     ProgramOptions programOptions;
     FilePaths filePaths;
-    MCMCoptions mcmcOptions;
+    MCMCOptions mcmcOptions;
     pll_msa_t *msa;
     pll_rtree_t *initialRootedTree;
     SMC_State_PosetSMCParams *smc;
@@ -252,6 +252,5 @@ public:
     double true_theta;
 };
 
-//void  test_smc();
-//void test_smc_1pop_4tips();
+
 #endif /* smc_test_hpp */

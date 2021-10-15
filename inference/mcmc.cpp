@@ -14,7 +14,7 @@ MCMC::MCMC(int  numChains){
     
 }
 void MCMC::initialize(std::vector< gsl_rng * > &randomGenerators,                   ProgramOptions &programOptions,
-                      MCMCoptions   &mcmcOptions,
+                      MCMCOptions   &mcmcOptions,
                       FilePaths &filePaths,
                       std::vector<int> &sampleSizes,
                       std::vector<std::vector<int> > &ObservedData,
@@ -33,7 +33,7 @@ void MCMC::initialize(std::vector< gsl_rng * > &randomGenerators,               
                                    structuredCoalTrees, healthyTipLabel, trueTrees, trueThetas, trueDeltaTs, trueTs, partitions );
     
 }
-void MCMC::runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths){
+void MCMC::runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, FilePaths &filePaths){
     
     bool converged =false;
     std::cout << "\n Tuning MCMC parameters... \n"<<std::endl;

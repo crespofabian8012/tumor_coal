@@ -58,7 +58,7 @@ extern "C"
 //Parametrized Constructor
 Population::Population(int ind, int ord, long double timeOriginInput,
                        int sampleSize,  int popSize, long double birthRate,
-                       long  double deathRate, bool estimateTOR, MCMCoptions &mcmcOptions)
+                       long  double deathRate, bool estimateTOR, MCMCOptions &mcmcOptions)
 {
     if (ind >=0)
         index=ind;
@@ -1458,7 +1458,7 @@ void PopulationSet::initPopulation()
         populations.push_back(pop);
     }
 }
-std::vector<long double> PopulationSet::samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, const gsl_rng * randomGenerator )
+std::vector<long double> PopulationSet::samplePopulationGrowthRateFromPriors(MCMCOptions &mcmcOptions, const gsl_rng * randomGenerator )
 {
     int i;
     Population *popI;
@@ -1741,7 +1741,7 @@ void  PopulationSet::acceptNextCoalEventTime(gsl_rng *random, double receiverMod
 }
 std::pair<Pair, std::pair<double, double>> PopulationSet::initPairProposalsNextEventTimePerPopulation(gsl_rng *rngGsl, double K){
     
-    Pair pairMinModelTime;
+   
     Population *popI = getCurrentPopulation();
     
     std::pair<Pair, std::pair<double, double>> pairMinModelTimeCurrPop;
@@ -1749,19 +1749,6 @@ std::pair<Pair, std::pair<double, double>> PopulationSet::initPairProposalsNextE
     if (popI->numActiveGametes > 1)
         pairMinModelTimeCurrPop = popI->initPairProposalsNextEventTime(rngGsl, K);
     
-    
-//    for (unsigned int i = 0; i < numClones; ++i){
-//        auto popI =  populations[i];
-//        if (popI->numActiveGametes > 1){
-//
-//            Pair pairMinModelTimeCurrPop = popI->initPairProposalsNextEventTime(rngGsl, K);
-//            if (pairMinModelTimeCurrPop
-//
-//        }
-//
-//
-//    }
-
     return pairMinModelTimeCurrPop;
 }
 void PopulationSet::initDeltaThetaFromPriors( const gsl_rng *rngGsl, long double &theta){
@@ -2067,7 +2054,7 @@ Population* PopulationSet::getCurrentPopulation(){
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////
 StructuredCoalescentTree::StructuredCoalescentTree(int numClones, std::vector<int> &sampleSizes, long double theta,
-                                                   MCMCoptions &mcmcOptions,ProgramOptions &programOptions, const gsl_rng *  rngGsl, boost::mt19937 *rngBoost,
+                                                   MCMCOptions &mcmcOptions,ProgramOptions &programOptions, const gsl_rng *  rngGsl, boost::mt19937 *rngBoost,
                                                    std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel, long double seqErrorRate,
                                                    long double dropoutRate){
     if (seqErrorRate >=0)
@@ -2136,7 +2123,7 @@ StructuredCoalescentTree::StructuredCoalescentTree(int numClones, std::vector<in
     
 }
 StructuredCoalescentTree::StructuredCoalescentTree(PopulationSet *populationSet, std::vector<int> &sampleSizes,
-                                                   long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions,const  gsl_rng *rngGsl,
+                                                   long double theta, MCMCOptions &mcmcOptions,ProgramOptions &programOptions,const  gsl_rng *rngGsl,
                                                    boost::mt19937 *rngBoost,
                                                    std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel, long double seqErrorRate,
                                                    long double dropoutRate )

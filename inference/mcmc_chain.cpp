@@ -107,7 +107,7 @@ Chain::Chain( int chainNumber,
              long double  mutationRate,
              long double  seqErrorRate,
              long double  dropoutRate,
-             MCMCoptions &mcmcOptions
+             MCMCOptions &mcmcOptions
              )
 
 {
@@ -1307,7 +1307,7 @@ void Chain::copyProportionsVector(long double  alpha[]){
     }
     
 }
-void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, const gsl_rng* randomGenerator, long double K)
+void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCMCOptions &mcmcOptions, vector<int> &sampleSizes, const gsl_rng* randomGenerator, long double K)
 {
     Population* popI;
     int i;
@@ -1359,7 +1359,7 @@ void Chain::FillChainPopulationsFromPriors( ProgramOptions &programOptions,  MCM
     
 }
 
-void Chain::initTimeOriginSTDYoungerPopulations(MCMCoptions &mcmcOptions){
+void Chain::initTimeOriginSTDYoungerPopulations(MCMCOptions &mcmcOptions){
     int i;
     Population *popI;
     Population* oldestPop=getPopulationbyIndex(numClones -1);
@@ -1491,7 +1491,7 @@ void Chain::GenerateTimesFromPriorsOriginal(int noisy, const gsl_rng* randomGene
         printf("\n\nDONE! ranHere = %Lf / TotalProbability = %Lf [total attempts = %d]\n", ranHere, TotalProbability, AttemptsAcceptation);
     }
 }
-void Chain::InitChainPopulations( int noisy,  int TotalNumSequences , MCMCoptions &mcmcOptions ) {
+void Chain::InitChainPopulations( int noisy,  int TotalNumSequences , MCMCOptions &mcmcOptions ) {
     int z;
     //struct Population* pops = malloc(numClones * (sizeof(struct Population)+TotalNumSequences * sizeof( int) + numClones * sizeof(double) ));
     //    population* pops =(population*) malloc(numClones * (sizeof( population) ));
@@ -1523,7 +1523,7 @@ void Chain::InitChainPopulations( int noisy,  int TotalNumSequences , MCMCoption
         resizeStoredMCMCparameters( mcmcOptions.numberWarmUpIterations,currentIdxMCMCParameters);
     }
 }
-void Chain::resizeStoredMCMCparametersAfterWarmUp(MCMCoptions &mcmcOptions){
+void Chain::resizeStoredMCMCparametersAfterWarmUp(MCMCOptions &mcmcOptions){
     
     
     resizeStoredMCMCparameters( mcmcOptions.Niterations+mcmcOptions.numberWarmUpIterations,currentIdxMCMCParameters);
@@ -1963,7 +1963,7 @@ long double Chain::SumLogProbFatherPopulations(long double K) {
 
 /************************ LogConditionalLikelihoodTree ***********************/
 /*  LogConditionalLikelihoodTree */
-long double  Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions, MCMCoptions &mcmcOptions  )
+long double  Chain::LogConditionalLikelihoodTree( ProgramOptions &programOptions, MCMCOptions &mcmcOptions  )
 {
     
     long double result;
@@ -2664,7 +2664,7 @@ void Chain::dealloc_data_costum(pll_unode_t * node, void (*cb_destroy)(void *))
     }
 }
 
-void Chain::initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, const gsl_rng * randomGenerator) {
+void Chain::initMutationRate( MCMCOptions &mcmcOptions, ProgramOptions &programOptions, const gsl_rng * randomGenerator) {
     
     long double logPriorDensity;
     long double from =0.0;
@@ -2700,7 +2700,7 @@ void Chain::initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programO
     
 }
 
-void Chain::initLogLikelihoods(MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions, Partition *partition) {
+void Chain::initLogLikelihoods(MCMCOptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions, Partition *partition) {
     
     //if (!mcmcOptions.noData)
     // {
@@ -2797,7 +2797,7 @@ void Chain::InitPopulationRTips()
     }
 }
 
-void Chain::initChainTree( std::string &healthyTipLabel, MCMCoptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions ) {
+void Chain::initChainTree( std::string &healthyTipLabel, MCMCOptions &mcmcOptions, pll_msa_t *msa, ProgramOptions &programOptions ) {
     
     // assert(initialRootedTree !=NULL);
     //  if (initialRootedTree!=NULL)
@@ -2822,7 +2822,7 @@ void Chain::initTreeBranchLengths(std::string &healthyTipLabel)
     
     initBranches(healthyTipLabel, edgeLengths, edges);
 }
-void Chain::initTreeTips(std::string &healthyTipLabel, MCMCoptions &mcmcOptions,ProgramOptions &programOptions ){
+void Chain::initTreeTips(std::string &healthyTipLabel, MCMCOptions &mcmcOptions,ProgramOptions &programOptions ){
     
     //initPopulationsTipsFromTree(initialUnrootedTree, NO, programOptions.healthyTipLabel);
     initPopulationsTipsFromRootedTree(initialRootedTree, NO, programOptions.healthyTipLabel);
@@ -2831,7 +2831,7 @@ void Chain::initTreeTips(std::string &healthyTipLabel, MCMCoptions &mcmcOptions,
     
     
 }
-vector<long double> Chain::initVectorSampleSizes(std::string &healthyTipLabel, MCMCoptions &mcmcOptions, ProgramOptions &programOptions){
+vector<long double> Chain::initVectorSampleSizes(std::string &healthyTipLabel, MCMCOptions &mcmcOptions, ProgramOptions &programOptions){
     
     bool existsZeroSampleSizePop=false;
     vector<long double> alpha(numClones);
@@ -2876,7 +2876,7 @@ void Chain::initMRCAOldestPopulation(string& healthyTipLabel)
     }
 }
 
-Chain *Chain::initializeChain( int chainNumber,   ProgramOptions &programOptions,  MCMCoptions &mcmcOptions, vector<int> &sampleSizes, const gsl_rng * randomGenerator, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * inputRootedTree, StructuredCoalescentTree *structCoalTree,  string& healthyTipLabel, FilePaths &filePaths, Partition *partition)
+Chain *Chain::initializeChain( int chainNumber,   ProgramOptions &programOptions,  MCMCOptions &mcmcOptions, vector<int> &sampleSizes, const gsl_rng * randomGenerator, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * inputRootedTree, StructuredCoalescentTree *structCoalTree,  string& healthyTipLabel, FilePaths &filePaths, Partition *partition)
 {
     
     
@@ -3044,7 +3044,7 @@ void  Chain::initNumberTipsSubTree(pll_rnode_t *node)
         treeNode->numberOfTipsSubTree = treeNodeLeft->numberOfTipsSubTree + treeNodeRight->numberOfTipsSubTree;
     }
 }
-void  Chain::initListMoves(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void  Chain::initListMoves(ProgramOptions &programOptions, MCMCOptions &mcmcOptions)
 {
     moves.clear();
     Population *popI;
@@ -3136,7 +3136,7 @@ void  Chain::initListMoves(ProgramOptions &programOptions, MCMCoptions &mcmcOpti
     }
 }
 
-void Chain::stepAllMoves(   MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,    ProgramOptions &programOptions){
+void Chain::stepAllMoves(   MCMCOptions &mcmcOptions, const gsl_rng *rngGsl,    ProgramOptions &programOptions){
     
     std::random_device rng;
     std::mt19937 urng(rng());
@@ -3151,7 +3151,6 @@ void Chain::stepAllMoves(   MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,    
         // fprintf (stderr, "\n>> finished  move %s \n", currentMove->name().c_str());
     }
     //moves.clear();
-    //   }
 }
 
 int Chain::getPopulationIndex(char * label)
@@ -3705,7 +3704,7 @@ void Chain::initBranches(string& healthyCellLabel,vector<pair<double, pll_tree_e
         visitedNodes.insert(node);
     }
 }
-std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTree( vector<pair<double, pll_tree_edge_t *> > &edgeLengths, int numberPoints, string &healthyCellLabel, MCMCoptions &mcmcOptions, const gsl_rng * randomGenerator)
+std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTree( vector<pair<double, pll_tree_edge_t *> > &edgeLengths, int numberPoints, string &healthyCellLabel, MCMCOptions &mcmcOptions, const gsl_rng * randomGenerator)
 {
     std::unordered_set<pll_rnode_t *>  ancestorsOfTimeOfOrigins(numberPoints);
     std::unordered_set<pll_rnode_t *>  MRCAs(numberPoints);
@@ -3803,7 +3802,7 @@ std::map<pll_rnode_t*, vector<Population*> >  Chain::initTimeOfOriginsOnRootedTr
     addOldestPopulation(mrcaOfPopulation,  healthyCellLabel, mcmcOptions);
     return(mrcaOfPopulation);
 }
-void Chain::addOldestPopulation(std::map<pll_rnode_t*, vector<Population*> > &mrcaOfPopulation, string &healthyCellLabel, MCMCoptions &mcmcOptions)
+void Chain::addOldestPopulation(std::map<pll_rnode_t*, vector<Population*> > &mrcaOfPopulation, string &healthyCellLabel, MCMCOptions &mcmcOptions)
 {
     TreeNode *u, *v;
     //long double  proposedTime;
@@ -3831,7 +3830,7 @@ void Chain::addOldestPopulation(std::map<pll_rnode_t*, vector<Population*> > &mr
         sort(mrcaOfPopulation[oldestPop->rMRCA].begin(), mrcaOfPopulation[oldestPop->rMRCA].end(), comparePopulationsByTimeOrigin);
     
 }
-void Chain::initOriginTimeOldestPopulation( string &healthyCellLabel, MCMCoptions &mcmcOptions){
+void Chain::initOriginTimeOldestPopulation( string &healthyCellLabel, MCMCOptions &mcmcOptions){
     TreeNode *u, *v;
     
     Population* oldestPop=getPopulationbyIndex(numClones -1);//for the oldest population
@@ -4121,7 +4120,7 @@ void Chain::filterSortPopulationsCoalescentEvents()
         pop->filterAndSortCoalescentEvents();
     }
 }
-void Chain::samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *seed ,const gsl_rng * rngGsl)
+void Chain::samplePopulationDeltaFromPriors(MCMCOptions &mcmcOptions, long int *seed ,const gsl_rng * rngGsl)
 {
     int i;
     Population *popI;
@@ -4136,7 +4135,7 @@ void Chain::samplePopulationDeltaFromPriors(MCMCoptions &mcmcOptions, long int *
         popI->deathRate= popI->birthRate - popI->growthRate;
     }
 }
-void Chain::samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, const gsl_rng * rngGsl )
+void Chain::samplePopulationGrowthRateFromPriors(MCMCOptions &mcmcOptions, const gsl_rng * rngGsl )
 {
     int i;
     Population *popI;
@@ -4487,7 +4486,7 @@ long double  Chain::sumAdjacentEdges(std::map<pll_rnode_t*, vector<Population*>>
     }
     return result;
 }
-std::map<pll_rnode_t*, vector<Population*>> Chain::chooseNewTimeofOriginOnEdge(Population *pop, MCMCoptions &mcmcOptions, const gsl_rng* rngGsl, boost::mt19937* rngBoost)
+std::map<pll_rnode_t*, vector<Population*>> Chain::chooseNewTimeofOriginOnEdge(Population *pop, MCMCOptions &mcmcOptions, const gsl_rng* rngGsl, boost::mt19937* rngBoost)
 {
     TreeNode * u, *v;
     double m;
@@ -4693,7 +4692,7 @@ void Chain::PrepareFiles(const FilePaths &filePaths, const ProgramOptions &progr
         exit(-1);
     }
 }
-void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files , MCMCoptions &mcmcOptions)
+void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files , MCMCOptions &mcmcOptions)
 {
     //    fprintf (files.fplog, "%d  %lf %lf %lf effect_pop_size(pop1) effect_pop_size(pop2) effect_pop_size(pop3) sample_size(pop1)  sample_size(pop2) sample_size(pop3) time_origin(pop1)  time_origin(pop2) time_origin(pop3) \n", pop);
     string paramName;
@@ -4730,7 +4729,7 @@ void Chain::writeMCMCState( int  currentIteration, const FilePaths &filePaths, c
     if (currentIteration <= mcmcOptions.Niterations -1)
         fprintf (files.fplog->f, "\n");
 }
-void Chain::saveMCMCState( int  currentIteration, ProgramOptions &programOptions,  MCMCoptions &mcmcOptions)
+void Chain::saveMCMCState( int  currentIteration, ProgramOptions &programOptions,  MCMCOptions &mcmcOptions)
 {
     //    fprintf (files.fplog, "%d  %lf %lf %lf effect_pop_size(pop1) effect_pop_size(pop2) effect_pop_size(pop3) sample_size(pop1)  sample_size(pop2) sample_size(pop3) time_origin(pop1)  time_origin(pop2) time_origin(pop3) \n", pop);
     string paramName;
@@ -5047,7 +5046,7 @@ void Chain::updateNodeInfoOldestPopulation(Population * oldestPop, double newMRC
     oldestPop->rMRCA->length =  v->timeInputTreeUnits - u->timeInputTreeUnits ;
     
 }
-void Chain::drawModelTimeOriginFromConditionalDensity(Population * oldestPop, MCMCoptions &mcmcOptions, const gsl_rng * randomGenerator){
+void Chain::drawModelTimeOriginFromConditionalDensity(Population * oldestPop, MCMCOptions &mcmcOptions, const gsl_rng * randomGenerator){
     
     long double modelTimeOriginOldestPop=Random::RandomDensityModelTimeOrigin(oldestPop->delta, mcmcOptions.useGSLRandomGenerator,  oldestPop->lowerBoundTimeOriginInput, randomGenerator, NULL );
     
@@ -5061,7 +5060,7 @@ void Chain::drawModelTimeOriginFromConditionalDensity(Population * oldestPop, MC
     updateNodeInfoOldestPopulation(oldestPop, oldestPop->timeOriginInput);
     
 }
-void Chain::printMovesSummary(ProgramOptions &programOptions, MCMCoptions &mcmcOptions){
+void Chain::printMovesSummary(ProgramOptions &programOptions, MCMCOptions &mcmcOptions){
     
     vector<MCMCmove*>::iterator it;
     MCMCmove* currentMove;
@@ -5240,7 +5239,7 @@ void Chain::closeTrueTreeFiles( ProgramOptions &programOptions)
         fclose(files.fpTimes2->f);
     }
 }
-void Chain::computeThinnig(MCMCoptions & mcmcOptions){
+void Chain::computeThinnig(MCMCOptions & mcmcOptions){
     
     long double autocorrPosteriorT=0.0;
     long double autocorrPosteriorDeltaT=0.0;

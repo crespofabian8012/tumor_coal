@@ -29,7 +29,7 @@ class MCMC {
 public:
     MCMC(int numChains);
     
-    void initialize(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions,               MCMCoptions &mcmcOptions, FilePaths &filePaths,
+    void initialize(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions,               MCMCOptions &mcmcOptions, FilePaths &filePaths,
                     std::vector<int> &sampleSizes,
                     std::vector<std::vector<int> > &ObservedData,
                     char* ObservedCellNames[],
@@ -41,7 +41,7 @@ public:
                     const std::vector<std::vector<long double>> &trueDeltaTs,
                     const  std::vector<std::vector<long double>> &trueTs, std::vector<Partition *> &partitions);
     
-    void runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths);
+    void runMCMC(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, FilePaths &filePaths);
     
     
     ~MCMC();

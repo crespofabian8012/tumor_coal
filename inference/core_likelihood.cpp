@@ -707,15 +707,7 @@ int pll_core_update_pmatrix_16x16_jc69_matrix_second_form(double ** pmatrix,
             }
             else
             {
-                //        #if 0
-                //        double a =  (1 + 3*exp(-4*t/3) ) / 4;
-                //        double b = (1 - a) / 3;
-                //        #endif
-                //
-                //        double exptm1 = expm1(-4*t/3);
-                //        double a = 1 + 3/4. * exptm1;
-                //        double b = -exptm1/4;
-                
+  
 //#if 0
 //                double a =  (1 + 15*exp(-5*t/3) ) / 16;
 //                double b = (1 - a) / 15;
@@ -734,11 +726,8 @@ int pll_core_update_pmatrix_16x16_jc69_matrix_second_form(double ** pmatrix,
                         else
                                 pmat[i] = b ;
                             }
-                                      
-
-   
+                    
             }
-            
         }
     }
     

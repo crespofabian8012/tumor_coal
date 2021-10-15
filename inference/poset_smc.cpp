@@ -22,6 +22,8 @@ using PairListDouble = std::pair<ListDouble,ListDouble>;
 using ListListDouble = std::vector<std::vector<double>>;
 using PairListListDouble = std::pair<ListListDouble,ListListDouble>;
 std::unordered_map<size_t , std::set<pairs > > PosetSMC::sizeCombinationMap = std::unordered_map<size_t , std::set<pairs > >() ;
+
+
 PosetSMC::PosetSMC(size_t numClones, size_t num_iter, bool doPlots)
 {
     this->numClones=numClones;
@@ -45,7 +47,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
     
     //make a  copy of curr
     //std::shared_ptr<State> result(make_shared<State>(curr));
-    std::shared_ptr<State> result(make_shared<State>(std::move(curr)));
+    std::shared_ptr<State> result(std::make_shared<State>(std::move(curr)));
     log_w=0;
     double logLikNewHeight = 0.0;
     double logWeightDiff = 0.0;
@@ -110,7 +112,25 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             if (kernelType == PRIORPOST){//PriorPrior: samples increment from the prior and pair from the posterior
                 
                 
-                timeNextCoalEvent = result->getNextCoalTime(random,  idxReceiverPop, idxIncomingPop, logLikNewHeight, K);
+                if (incrementProposalDist == UNIF){
+                    Population *currPop = result->getCurrentPopulation();
+                    timeNextCoalEvent = currPop->currentModelTime + Random::randomUniformFromGsl2(random)* (0.99999*currPop->timeOriginSTD - currPop->currentModelTime) ;
+                    logLikNewHeight  = -log(0.99999*currPop->timeOriginSTD - currPop->currentModelTime);
+                    
+                    logWeightDiff+=  -log(currPop->theta)+log(currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0) +
+                                Population::LogLambda(timeNextCoalEvent, currPop->timeOriginSTD, currPop->delta,0.8)-
+                                 (currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(currPop->currentModelTime, currPop->timeOriginSTD, currPop->delta,0.8)  ;
+                     
+                  
+                }
+                else if(incrementProposalDist == EXP){
+                    
+                    
+                }
+                else
+                {
+                   timeNextCoalEvent = result->getNextCoalTime(random,  idxReceiverPop, idxIncomingPop, logLikNewHeight, K);
+                }
                 assert(timeNextCoalEvent > 0);
                 
                 
@@ -119,8 +139,9 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                 result->insertNewCoalTime( newHeight);
                 receiverPop = result->getPopulationByIndex(idxReceiverPop);
                 incomingPop = result->getPopulationByIndex(idxIncomingPop);
-                logWeightDiff = result->proposalPriorPost( random, receiverPop,incomingPop, newHeight, logLikNewHeight, t);
+                logWeightDiff += result->proposalPriorPost( random, receiverPop,incomingPop, newHeight, logLikNewHeight, t);
                 
+                logWeightDiff-= logLikNewHeight;
                 result->acceptNextCoalTimeProposal(timeNextCoalEvent, random, idxReceiverPop, idxIncomingPop,K);
             }
             else if (kernelType == POSTPOST1){//POSTPOST: samples increment from the posterior and then samples pair from the posterior conditional on  increment

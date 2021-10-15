@@ -46,7 +46,7 @@ extern "C"
 //#include "tree_node.hpp"
 
 
-class MCMCoptions;
+class MCMCOptions;
 class ProgramOptions;
 class MCMCParameterWithKernel;
 template<typename T>
@@ -132,7 +132,7 @@ public:
                long double deathRate, bool estimateTOR);
     Population(int ind, int ord, long double timeOriginInput,
                int sampleSize, int popSize, long double birthRate,
-               long double deathRate, bool estimateTOR, MCMCoptions &mcmcOptions);
+               long double deathRate, bool estimateTOR, MCMCOptions &mcmcOptions);
     Population(int ind, int ord, int sampleSize, long double delta, long double theta,
                ProgramOptions &programOptions);
     
@@ -220,7 +220,7 @@ public:
     
     void initPopulation();
     
-    std::vector<long double> samplePopulationGrowthRateFromPriors(MCMCoptions &mcmcOptions, const gsl_rng * randomGenerator );
+    std::vector<long double> samplePopulationGrowthRateFromPriors(MCMCOptions &mcmcOptions, const gsl_rng * randomGenerator );
     void  setPopulationsBirthRate( long double  lambda);
     void  setPopulationsToriginConditionalDelta( const gsl_rng *rngGsl );
     void initPopulationSampleSizes(std::vector<int> &sampleSizes);
@@ -277,10 +277,10 @@ public:
     long double seqErrorRate;
     long double dropoutRate;
 public:
-    StructuredCoalescentTree(int numClones, std::vector<int> &sampleSizes, long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions,const gsl_rng *rngGsl,
+    StructuredCoalescentTree(int numClones, std::vector<int> &sampleSizes, long double theta, MCMCOptions &mcmcOptions,ProgramOptions &programOptions,const gsl_rng *rngGsl,
     boost::mt19937 *rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel,  long double seqErrorRate,
        long double dropoutRate);
-    StructuredCoalescentTree(PopulationSet *populationSet, std::vector<int> &sampleSizes, long double theta, MCMCoptions &mcmcOptions,ProgramOptions &programOptions, const gsl_rng *rngGsl,
+    StructuredCoalescentTree(PopulationSet *populationSet, std::vector<int> &sampleSizes, long double theta, MCMCOptions &mcmcOptions,ProgramOptions &programOptions, const gsl_rng *rngGsl,
        boost::mt19937 *rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel,  long double seqErrorRate,
        long double dropoutRate );
     PopulationSet& getPopulationSet();

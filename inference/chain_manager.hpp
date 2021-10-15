@@ -41,14 +41,14 @@ public:
     
 public:
     ChainManager(int numberChains);
-    void initializeChains(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths,
+    void initializeChains(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, FilePaths &filePaths,
                           std::vector<int> &sampleSizes,  std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, std::vector<StructuredCoalescentTree *> structuredCoalTrees,  std::string& healthyTipLabel,
                           const std::vector<pll_rtree_t *> &trueTrees,        const  std::vector<long double> &trueThetas,
                           const std::vector<std::vector<long double>> &trueDeltaTs,
                           const  std::vector<std::vector<long double>> &trueTs, std::vector<Partition *> &partitions
                           );
-    void stepAllChains(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators );
-    void monitorChains(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators, FilePaths &filePaths );
+    void stepAllChains(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators );
+    void monitorChains(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators, FilePaths &filePaths );
     std::vector<Chain *> getChainsWiththeSameTrueTreeThatAnotherChain(int chainNumber, int numberChainsPerTree);
     bool checkPSRFGroupChains(int chainNumber, int numberChainsPerTree, ProgramOptions &programOptions, long double threshold);
     std::vector<long double> listPotentialScaleReduction(int chainNumber, int numberChainsPerTree,ProgramOptions &programOptions);
@@ -56,13 +56,13 @@ public:
     void deleteGroupChains(int chainNumber, int numberChainsPerTree);
     bool checkGroupChainsHaveCompletedIndependentIterations(int numberIterations, int chainNumber, int numberChainsPerTree,ProgramOptions &programOptions);
     void closeFilesGroupChain(int chainNumber, int numberChainsPerTree,ProgramOptions &programOptions);
-    bool checkConvergence(int numberChainsPerTree,ProgramOptions &programOptions,MCMCoptions &mcmcOptions, long double threshold );
+    bool checkConvergence(int numberChainsPerTree,ProgramOptions &programOptions,MCMCOptions &mcmcOptions, long double threshold );
     //void checkConvergence(int numberChainsPerTree,ProgramOptions &programOptions,MCMCoptions &mcmcOptions, long double threshold);
-    void writeChainsOutput(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths);
-    void performWarmUp(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, std::vector<gsl_rng * > &randomGenerators,FilePaths &filePaths);
-    void resetChainValues(ProgramOptions &programOptions,MCMCoptions &mcmcOptions);
-    void stepAllChainsNoSave(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<gsl_rng * > &randomGenerators);
-    void saveChainState(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions );
+    void writeChainsOutput(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, FilePaths &filePaths);
+    void performWarmUp(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, std::vector<gsl_rng * > &randomGenerators,FilePaths &filePaths);
+    void resetChainValues(ProgramOptions &programOptions,MCMCOptions &mcmcOptions);
+    void stepAllChainsNoSave(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, std::vector<gsl_rng * > &randomGenerators);
+    void saveChainState(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions );
     void addSample(const int chain, const Eigen::MatrixXd& sample) ;
     void addSample(const Eigen::MatrixXd& sample);
     void addSample(const std::vector<std::vector<double> >& sample);
@@ -104,11 +104,12 @@ public:
 //        std::cout << "\n Chain " << chain <<  " numberSamplesAfterWarmup samples " << numberSamples << "  numberWarmup "<< numberWarmupSamples << " result "<< result << std::endl;
         return result;
     }
-    void resizeStoredMCMCparametersAfterWarmUp(MCMCoptions &mcmcOptions);
+    void resizeStoredMCMCparametersAfterWarmUp(MCMCOptions &mcmcOptions);
     double* getLastChainSamples(const int chainId, const int idxMCMCParameter, int numberSamples) const;
-    void  finish(int numberChainsPerTree, ProgramOptions &programOptions, MCMCoptions &mcmcOptions);
+    void  finish(int numberChainsPerTree, ProgramOptions &programOptions, MCMCOptions &mcmcOptions);
     void setConvergedGroupChains(int chainNumber, int numberChainsPerTree,ProgramOptions &programOptions);
     bool groupChainsFinished(std::vector<Chain *> groupChains);
     bool checksplitPSRFGroupChains(int chainNumber, int numberChainsPerTree,ProgramOptions &programOptions, long double threshold);
+    
 };
 #endif /* chain_manager_hpp */

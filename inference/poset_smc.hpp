@@ -56,6 +56,12 @@ public:
         POSTPOST2 = 3,
         TSMC1     = 4
     };
+    
+    enum PosetSMCIncrementProposal {
+          UNIF = 0,
+          EXP = 1
+      };
+    PosetSMCIncrementProposal incrementProposalDist = UNIF;
      PosetSMCKernel kernelType = PRIORPOST ;
     size_t numIncrementsPOSTPOST = 10;
     

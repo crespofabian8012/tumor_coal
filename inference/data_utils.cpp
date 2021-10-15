@@ -3346,7 +3346,7 @@ void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptio
 /***************************** ReadMCMCParametersFromFile *******************************/
 /* Reads parameter values from the parameter file */
 
-void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCoptions &mcmcOptions)
+void ReadMCMCParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths, MCMCOptions &mcmcOptions)
 
 {
     int   j;
@@ -3590,7 +3590,7 @@ long double computeParamPowerDistribQuantileUntil(long double areaUntilb, long d
     else
         return 0;
 }
-void setDefaultOptions(ProgramOptions &programOptions, MCMCoptions &mcmcOptions ){
+void setDefaultOptions(ProgramOptions &programOptions, MCMCOptions &mcmcOptions ){
     //programOptions
     //programOptions.K=0.8;
     programOptions.K=0.0;
@@ -3724,7 +3724,7 @@ void printSimulatorProgramHeader()
 void simulateTrees(int numberTrees,std::vector<StructuredCoalescentTree *> &structuredCoalTrees,  std::vector<pll_rtree_t *> &trees,          std::vector<long double> &realThetas,
                    std::vector<std::vector<long double>> &realDeltaTs,
                    std::vector<std::vector<long double>> &realTs,
-                   std::vector<int> & sampleSizes, ProgramOptions &programOptions, MCMCoptions & mcmcOptions, std::vector<gsl_rng * > rngGsl, std::vector<boost::mt19937* > rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel, long double seqErrorRate,
+                   std::vector<int> & sampleSizes, ProgramOptions &programOptions, MCMCOptions & mcmcOptions, std::vector<gsl_rng * > rngGsl, std::vector<boost::mt19937* > rngBoost, std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, std::string& healthyTipLabel, long double seqErrorRate,
                    long double dropoutRate  )
 {
     
@@ -3752,7 +3752,7 @@ void simulateTrees(int numberTrees,std::vector<StructuredCoalescentTree *> &stru
         structuredCoalTrees.push_back(structuredCoalTree);
     }
 }
-long double  initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &programOptions, const gsl_rng * randomGsl, boost::mt19937* rngBoost) {
+long double  initMutationRate( MCMCOptions &mcmcOptions, ProgramOptions &programOptions, const gsl_rng * randomGsl, boost::mt19937* rngBoost) {
     long double theta=0.0;
     if (programOptions.doUsefixedMutationRate)
         theta = programOptions.mutationRate;
@@ -3778,7 +3778,7 @@ long double  initMutationRate( MCMCoptions &mcmcOptions, ProgramOptions &program
     }
     return theta;
 }
-long double  sampleMutationRateSimulation( MCMCoptions &mcmcOptions, ProgramOptions &programOptions,const gsl_rng *randomGsl, boost::mt19937* rngBoost) {
+long double  sampleMutationRateSimulation( MCMCOptions &mcmcOptions, ProgramOptions &programOptions,const gsl_rng *randomGsl, boost::mt19937* rngBoost) {
     long double theta=0.0;
     if (programOptions.doUsefixedMutationRate)
         theta = programOptions.mutationRate;

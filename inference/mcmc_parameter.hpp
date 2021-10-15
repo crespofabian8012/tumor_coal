@@ -25,6 +25,7 @@ public:
     virtual  long double logKernel(T& currentValue, T& proposedValue)=0;
     virtual void setParameter(T& newParameter)=0;
     virtual T getParameter()=0;
+    virtual ~IMCMCKernel()  = default;
     
 };
 template <typename T>
@@ -156,6 +157,8 @@ public:
     virtual T getCurrentMean()=0;
     virtual T getCurrentVariance()=0;
     virtual std::string getName()=0;
+    virtual ~IMCMCParameter()=default;
+   
 };
 //template <typename T>
 // T operator+(const T& a, const T& b)
@@ -312,7 +315,11 @@ public:
         currentVariance = variance;
     }
     std::string getName()override{return name;}
-    ~MCMCParameter();
+//    double energy(T &value) {
+//             double value = -ncts.logLikelihood() - getLogPriorCurrentValue(value);
+//             return value;
+//           }
+    ~MCMCParameter(){};
 };
 template<typename T>
 class IMCMCParameterWithKernel{
@@ -365,6 +372,7 @@ public:
     std::vector<long double> autoCorrelation();
     std::vector<long double> autoCovariance();
     long double ESS();
+    ~MCMCParameterWithKernel(){};
 };
 typedef MCMCParameter<std::vector< long double>>  MCMCVector;
 typedef MCMCKernel<std::vector< long double>> VectorKernel;
@@ -392,6 +400,6 @@ public:
     std::vector<std::vector<long double>> autoCorrelation();
     std::vector<std::vector<long double>> autoCovariance();
     long double ESS();
-  
+    ~MCMCVectorParameterWithKernel(){};
 };
 #endif /* mcmc_parameter_hpp */

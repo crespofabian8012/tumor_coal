@@ -218,7 +218,7 @@ public:
     //gsl_rng * r;
 };
 
-class MCMCoptions {
+class MCMCOptions {
 public:
      double numChains;
      double Niterations;
@@ -362,7 +362,18 @@ struct EnumClassHash
       return static_cast<std::size_t>(t);
   }
 };
+class CCLogDensity {
 
+public:
+  virtual std::vector<double> h_concave(std::vector<double> x) = 0;
+  virtual std::vector<double> h_convex(std::vector<double> x) = 0;
+  virtual std::vector<double> h_prime_concave(std::vector<double> x) = 0;
+  virtual std::vector<double> h_prime_convex(std::vector<double> x) = 0;
+  virtual double h_concave(double x) = 0;
+  virtual double h_convex(double x) = 0;
+  virtual double h_prime_concave(double x) = 0;
+  virtual double h_prime_convex(double x) = 0;
+};
 typedef std::unordered_map<std::string,size_t> NameIdMap;
 
 #endif /* data_types_h */

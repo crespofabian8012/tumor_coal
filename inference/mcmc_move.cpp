@@ -93,7 +93,7 @@ long double currentlogConditionalLikelihoodSequences ):MCMCmove(chainId, nameMov
 {
     
 }
-void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const   gsl_rng *randomGsl, boost::mt19937* rngBoost, Chain* chain)
+void MCMCmove::move(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const   gsl_rng *randomGsl, boost::mt19937* rngBoost, Chain* chain)
 {
     saveCurrentValue(programOptions,mcmcOptions, chain );
     numberAttemps=0;
@@ -150,7 +150,7 @@ void MCMCmove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, co
     }
 }
 //////////////////////////////////////////////
-void NewProportionsVectorMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewProportionsVectorMove::saveCurrentValue(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
     //Chain *chain=getChain();
     int i=0;
@@ -170,7 +170,7 @@ void NewProportionsVectorMove::saveCurrentValue(ProgramOptions &programOptions,M
         popI->immigrantsPopOrderedByModelTime.clear();
     }
 }
-void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,const  gsl_rng *randomGenerator,Chain* chain)
+void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMCOptions &mcmcOptions,const  gsl_rng *randomGenerator,Chain* chain)
 {
    // Chain *chain=getChain();
     int i=0;
@@ -224,7 +224,7 @@ void NewProportionsVectorMove::makeProposal(ProgramOptions &programOptions, MCMC
         //         fprintf (stderr, "\n new proportions vector at %d: %lf \n",i,chain->proportionsVector.at(i) );
     }
 }
-void NewProportionsVectorMove::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewProportionsVectorMove::rollbackMove(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
     chain->proportionsVector= chain->oldproportionsVector ;
     int i=0;
@@ -244,7 +244,7 @@ void NewProportionsVectorMove::rollbackMove(ProgramOptions &programOptions,MCMCo
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
-long double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)
+long double NewProportionsVectorMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, Chain* chain)
 {
     // ListClonesAccordingTimeToOrigin(chain->populations);
    
@@ -280,7 +280,7 @@ long double currentlogConditionalLikelihoodSequences):MCMCmove(chainId, nameMove
 {
     this->pop = pop;
 }
-void NewGrowthRateMoveForPopulation::saveCurrentValue(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)
+void NewGrowthRateMoveForPopulation::saveCurrentValue(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, Chain* chain)
 {
    pop->olddelta= pop->delta;
 
@@ -296,7 +296,7 @@ void NewGrowthRateMoveForPopulation::saveCurrentValue(ProgramOptions &programOpt
         popI->immigrantsPopOrderedByModelTime.clear();
     }
 }
-void NewGrowthRateMoveForPopulation::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator, Chain* chain)
+void NewGrowthRateMoveForPopulation::makeProposal(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const gsl_rng *randomGenerator, Chain* chain)
 {
     //Chain *chain=getChain();
     
@@ -310,7 +310,7 @@ void NewGrowthRateMoveForPopulation::makeProposal(ProgramOptions &programOptions
     chain->initPopulationsCoalescentAndMigrationEventsFromRootedTree(chain->rMRCAPopulation, programOptions.healthyTipLabel);
     chain->filterSortPopulationsCoalescentEvents();
 }
-void NewGrowthRateMoveForPopulation::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewGrowthRateMoveForPopulation::rollbackMove(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
     //Chain *chain=getChain();
     Population *popI;
@@ -327,7 +327,7 @@ void NewGrowthRateMoveForPopulation::rollbackMove(ProgramOptions &programOptions
         popI->oldimmigrantsPopOrderedByModelTime.clear();
     }
 }
-long double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)
+long double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, Chain* chain)
 {
     //Chain *chain=getChain();
     newLogConditionalLikelihoodTree= chain->LogConditionalLikelihoodTree(programOptions, mcmcOptions);
@@ -350,24 +350,24 @@ long double NewGrowthRateMoveForPopulation::computeLogAcceptanceProb(ProgramOpti
 }
 
 
-void NewProportionsVectorMove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,const  gsl_rng *rngGsl,boost::mt19937* rngBoost,Chain* chain)
+void NewProportionsVectorMove::move(ProgramOptions &programOptions, MCMCOptions &mcmcOptions,const  gsl_rng *rngGsl,boost::mt19937* rngBoost,Chain* chain)
 {
     MCMCmove::move(programOptions,mcmcOptions, rngGsl, rngBoost, chain);
 }
-void NewGrowthRateMoveForPopulation::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain)
+void NewGrowthRateMoveForPopulation::move(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain)
 {
     MCMCmove::move(programOptions,mcmcOptions, rngGsl, rngBoost, chain);
 }
 
-void NewTimeOriginOnTreeforPopulationMove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,const  gsl_rng *rngGsl,boost::mt19937* rngBoost,Chain* chain)
+void NewTimeOriginOnTreeforPopulationMove::move(ProgramOptions &programOptions, MCMCOptions &mcmcOptions,const  gsl_rng *rngGsl,boost::mt19937* rngBoost,Chain* chain)
 {
     MCMCmove::move(programOptions,mcmcOptions, rngGsl, rngBoost, chain);
 }
-void NewTimeOriginOnEdgeforPopulationMove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain)
+void NewTimeOriginOnEdgeforPopulationMove::move(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain)
 {
     MCMCmove::move(programOptions,mcmcOptions, rngGsl, rngBoost, chain);
 }
-void NewGlobalScaledGrowthRateForPopulationMove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const  gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain)
+void NewGlobalScaledGrowthRateForPopulationMove::move(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const  gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain)
 {
     MCMCmove::move(programOptions,mcmcOptions, rngGsl, rngBoost, chain);
 }
@@ -389,7 +389,7 @@ long double currentlogConditionalLikelihoodSequences):MCMCmove(chainId, nameMove
 {
     this->pop =pop;
 }
-void NewTimeOriginOnTreeforPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions,Chain* chain)
+void NewTimeOriginOnTreeforPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCOptions &mcmcOptions,Chain* chain)
 {
     //Chain *chain=getChain();
     //save information for the population
@@ -425,7 +425,7 @@ void NewTimeOriginOnTreeforPopulationMove::saveCurrentValue(ProgramOptions &prog
         
         }
 }
-void NewTimeOriginOnTreeforPopulationMove::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewTimeOriginOnTreeforPopulationMove::rollbackMove(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
     //Chain *chain=getChain();
     int i=0;
@@ -468,7 +468,7 @@ void NewTimeOriginOnTreeforPopulationMove::rollbackMove(ProgramOptions &programO
       }
     }
 }
-void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator,Chain* chain)
+void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const gsl_rng *randomGenerator,Chain* chain)
 {
     //Chain *chain=getChain();
     //first compute the list of 3 adjacent edges
@@ -553,7 +553,7 @@ void NewTimeOriginOnTreeforPopulationMove::makeProposal(ProgramOptions &programO
     }
 
 }
-long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)
+long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, Chain* chain)
 {
     //Chain *chain=getChain();
    
@@ -664,7 +664,7 @@ long double  NewTimeOriginOnTreeforPopulationMove::computeLogAcceptanceProb(Prog
     }
     return LogAcceptanceRate;
 }
-void NewTimeOriginOnEdgeforPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewTimeOriginOnEdgeforPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
     //Chain *chain=getChain();
   
@@ -703,7 +703,7 @@ void NewTimeOriginOnEdgeforPopulationMove::saveCurrentValue(ProgramOptions &prog
     //        popI->numIncomingMigrations=0;
     //    }
 }
-void NewTimeOriginOnEdgeforPopulationMove::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewTimeOriginOnEdgeforPopulationMove::rollbackMove(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
     pop->FatherPop->immigrantsPopOrderedByModelTime = pop->FatherPop->oldimmigrantsPopOrderedByModelTime;
     
@@ -727,7 +727,7 @@ void NewTimeOriginOnEdgeforPopulationMove::rollbackMove(ProgramOptions &programO
     //        pop->oldimmigrantsPopOrderedByModelTime.clear();
     //    }
 }
-void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator, Chain* chain)
+void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const gsl_rng *randomGenerator, Chain* chain)
 {
    // Chain *chain=getChain();
     
@@ -746,7 +746,7 @@ void NewTimeOriginOnEdgeforPopulationMove::makeProposal(ProgramOptions &programO
     //    for (int i = 0; i < pop->FatherPop->immigrantsPopOrderedByModelTime.size(); ++i)
     //        printf("\n ordered migrations: time(father pop units) : %lf, pop order: %d, time of origin input%lf \n", pop->FatherPop->immigrantsPopOrderedByModelTime[i].first,  pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->order , pop->FatherPop->immigrantsPopOrderedByModelTime[i].second->timeOriginInput);
 }
-long double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)
+long double  NewTimeOriginOnEdgeforPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, Chain* chain)
 {
    // Chain *chain=getChain();
     
@@ -777,11 +777,11 @@ currentlogConditionalLikelihoodSequences)
     
     this->pop =pop;
 }
-void NewGlobalScaledMutationRateMove::move(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain)
+void NewGlobalScaledMutationRateMove::move(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const gsl_rng *rngGsl,boost::mt19937* rngBoost, Chain* chain)
 {
     MCMCmove::move(programOptions,mcmcOptions, rngGsl,rngBoost, chain);
 }
-void NewGlobalScaledMutationRateMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewGlobalScaledMutationRateMove::saveCurrentValue(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
    // Chain *chain=getChain();
    
@@ -823,7 +823,7 @@ void NewGlobalScaledMutationRateMove::saveCurrentValue(ProgramOptions &programOp
         
     }
 }
-void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions,const  gsl_rng *randomGenerator, Chain* chain)
+void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOptions, MCMCOptions &mcmcOptions,const  gsl_rng *randomGenerator, Chain* chain)
 {
     long double kernelPar= chain->thetaPar->getKernelParameter();
     
@@ -898,7 +898,7 @@ void NewGlobalScaledMutationRateMove::makeProposal(ProgramOptions &programOption
             fprintf (stderr, "\n The immigrants order is incorrect"  );
     }
 }
-void NewGlobalScaledMutationRateMove::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewGlobalScaledMutationRateMove::rollbackMove(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
     //Chain *chain=getChain();
     assert(chain->oldtheta>0);
@@ -938,7 +938,7 @@ void NewGlobalScaledMutationRateMove::rollbackMove(ProgramOptions &programOption
         }
     }
 }
-long double NewGlobalScaledMutationRateMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)
+long double NewGlobalScaledMutationRateMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, Chain* chain)
 {
     //Chain *chain=getChain();
     long double temp;
@@ -1074,7 +1074,7 @@ long double NewGlobalScaledMutationRateMove::computeLogAcceptanceProb(ProgramOpt
 }
 
 
-long double NewGlobalScaledGrowthRateForPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, Chain* chain)
+long double NewGlobalScaledGrowthRateForPopulationMove::computeLogAcceptanceProb(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, Chain* chain)
 {
   //  Chain *chain=getChain();
     
@@ -1143,7 +1143,7 @@ long double NewGlobalScaledGrowthRateForPopulationMove::computeLogAcceptanceProb
     }
     return LogAcceptanceRate;
 }
-void NewGlobalScaledGrowthRateForPopulationMove::rollbackMove(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewGlobalScaledGrowthRateForPopulationMove::rollbackMove(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
    
         pop->deltaT= pop->olddeltaT;
@@ -1164,7 +1164,7 @@ void NewGlobalScaledGrowthRateForPopulationMove::rollbackMove(ProgramOptions &pr
         }
   
 }
-void NewGlobalScaledGrowthRateForPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCoptions &mcmcOptions, const gsl_rng *randomGenerator, Chain* chain)
+void NewGlobalScaledGrowthRateForPopulationMove::makeProposal(ProgramOptions &programOptions, MCMCOptions &mcmcOptions, const gsl_rng *randomGenerator, Chain* chain)
 {
 
        pop->DeltaT->stepKernel(randomGenerator);
@@ -1181,7 +1181,7 @@ void NewGlobalScaledGrowthRateForPopulationMove::makeProposal(ProgramOptions &pr
             fprintf (stderr, "\n proposed delta %.10Lf, old %.10Lf \n", pop->delta, pop->olddelta );
       //}
 }
-void NewGlobalScaledGrowthRateForPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, Chain* chain)
+void NewGlobalScaledGrowthRateForPopulationMove::saveCurrentValue(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, Chain* chain)
 {
   
     //for (unsigned int i = 0; i < chain->numClones; ++i)
@@ -1210,14 +1210,14 @@ void NewGlobalScaledGrowthRateForPopulationMove::saveCurrentValue(ProgramOptions
         }
     //}
 }
-void NewTimeOriginOnTreeforPopulationMove::increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewTimeOriginOnTreeforPopulationMove::increaseParameter(ProgramOptions &programOptions, MCMCOptions &mcmcOptions)
 {
     //Chain *chain=getChain();check if it is the oldest pop
     //mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop += mcmcOptions.updateLengthMultiplierMCMCMove;
     long double newKernelParameter=this->mcmcParamKernels[0]->getKernelParameter() +mcmcOptions.updateLengthMultiplierMCMCMove;
     this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
 }
-void NewTimeOriginOnTreeforPopulationMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions )
+void NewTimeOriginOnTreeforPopulationMove::decreaseParameter(ProgramOptions &programOptions, MCMCOptions &mcmcOptions )
 {
     //Chain *chain=getChain();check if it is the oldest pop
     //mcmcOptions.lengthIntervalMultiplierTimeOriginOldestPop -= mcmcOptions.updateLengthMultiplierMCMCMove;
@@ -1235,7 +1235,7 @@ void NewTimeOriginOnTreeforPopulationMove::decreaseParameter(ProgramOptions &pro
     //long double newKernelParameter= newParameterValue <=0 ? 0.1 :  newParameterValue;
     this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
 }
-void NewGlobalScaledMutationRateMove::increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewGlobalScaledMutationRateMove::increaseParameter(ProgramOptions &programOptions, MCMCOptions &mcmcOptions)
 {
     //mcmcOptions.lengthIntervalMultiplierTheta += mcmcOptions.updateLengthMultiplierMCMCMove;
     
@@ -1248,7 +1248,7 @@ void NewGlobalScaledMutationRateMove::increaseParameter(ProgramOptions &programO
       //mcmcOptions.lengthIntervalMultiplierDeltaT += mcmcOptions.updateLengthMultiplierMCMCMove;
     }
 }
-void NewGlobalScaledMutationRateMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewGlobalScaledMutationRateMove::decreaseParameter(ProgramOptions &programOptions, MCMCOptions &mcmcOptions)
 {
     //mcmcOptions.lengthIntervalMultiplierTheta -= mcmcOptions.updateLengthMultiplierMCMCMove;
     long double newKernelParameter;
@@ -1275,7 +1275,7 @@ void NewGlobalScaledMutationRateMove::decreaseParameter(ProgramOptions &programO
        //mcmcOptions.lengthIntervalMultiplierDeltaT -= mcmcOptions.updateLengthMultiplierMCMCMove;
     }
 }
-void NewGlobalScaledGrowthRateForPopulationMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewGlobalScaledGrowthRateForPopulationMove::decreaseParameter(ProgramOptions &programOptions, MCMCOptions &mcmcOptions)
 {
 
     long double newKernelParameter;
@@ -1290,17 +1290,17 @@ void NewGlobalScaledGrowthRateForPopulationMove::decreaseParameter(ProgramOption
        }
     this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
 }
-void NewGlobalScaledGrowthRateForPopulationMove::increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewGlobalScaledGrowthRateForPopulationMove::increaseParameter(ProgramOptions &programOptions, MCMCOptions &mcmcOptions)
 {
    // mcmcOptions.lengthIntervalMultiplierTheta += mcmcOptions.updateLengthMultiplierMCMCMove;
     long double newKernelParameter=this->mcmcParamKernels[0]->getKernelParameter() +mcmcOptions.updateLengthMultiplierMCMCMove;
     this->mcmcParamKernels[0]->modifyKernelParameter( newKernelParameter);
 }
-void NewProportionsVectorMove::decreaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewProportionsVectorMove::decreaseParameter(ProgramOptions &programOptions, MCMCOptions &mcmcOptions)
 {
     //mcmcOptions.lengthIntervalMultiplierTheta -= mcmcOptions.updateLengthMultiplierMCMCMove;
 }
-void NewProportionsVectorMove::increaseParameter(ProgramOptions &programOptions, MCMCoptions &mcmcOptions)
+void NewProportionsVectorMove::increaseParameter(ProgramOptions &programOptions, MCMCOptions &mcmcOptions)
 {
     //mcmcOptions.lengthIntervalMultiplierTheta += mcmcOptions.updateLengthMultiplierMCMCMove;
 }

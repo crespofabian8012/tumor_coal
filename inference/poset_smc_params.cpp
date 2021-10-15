@@ -12,7 +12,8 @@ PosetSMCParams::PosetSMCParams(int numberClones,
                                int sampleSize,
                                std::vector<int> &sampleSizes,
                                unsigned int num_sites,
-                               pll_msa_t *msa,
+                               MSA *msa,
+                               //pll_msa_t *msa,
                                const Partition *partition,
                                PLLBufferManager *const pll_buffer_manager,
                                std::vector<int> &positions,
@@ -32,9 +33,24 @@ pll_buffer_manager(pll_buffer_manager), gtErrorModel(gtErrorModel), sampleSizes(
     this->populationDeltaTs = populationDeltaTs;
     this->populationToriginSTDs = populationToriginSTDs;
     this->proportions= proportions;
-    this->theta = std::make_shared<double>(theta);
+    this->theta = theta;
     this->verbose = 1;
 }
+
+//PosetSMCParams::PosetSMCParams(const PosetSMCParams &original ):
+//numberClones(original.numberClones),sampleSize(original.sampleSize), msa(original.msa), partition(original.partition),
+//pll_buffer_manager(original.pll_buffer_manager), gtErrorModel(original.gtErrorModel), sampleSizes(original.sampleSizes)
+//{
+//    
+//    this->positions= original.positions;
+//    this->programOptions = original.programOptions;
+//    this->coalTimesModelTimePerPopulation = original.coalTimesModelTimePerPopulation;
+//    this->populationDeltaTs = original.populationDeltaTs;
+//    this->populationToriginSTDs = original.populationToriginSTDs;
+//    this->proportions= original.proportions;
+//    this->theta = original.theta;
+//    this->verbose = original.verbose;
+//}
 ProgramOptions& PosetSMCParams::getProgramOptions(){
     
     return *programOptions;

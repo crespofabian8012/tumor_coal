@@ -45,7 +45,7 @@ ChainManager::ChainManager(int numberChains){
     numberFinishedChains = 0;
     warmup_.resize(numberChains);
 }
-void ChainManager::initializeChains(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions,          MCMCoptions &mcmcOptions, FilePaths &filePaths,
+void ChainManager::initializeChains(std::vector< gsl_rng * > &randomGenerators, ProgramOptions &programOptions,          MCMCOptions &mcmcOptions, FilePaths &filePaths,
                                     std::vector<int> &sampleSizes,  std::vector<std::vector<int> > &ObservedData,char* ObservedCellNames[], pll_msa_t *msa, pll_rtree_t * initialRootedTree, std::vector<StructuredCoalescentTree *> structuredCoalTrees,  std::string& healthyTipLabel,
                                     const std::vector<pll_rtree_t *> &trueTrees,        const  std::vector<long double> &trueThetas,
                                     const std::vector<std::vector<long double>> &trueDeltaTs,
@@ -75,7 +75,7 @@ void ChainManager::initializeChains(std::vector< gsl_rng * > &randomGenerators, 
         chains[chainNumber]->initListMoves(programOptions, mcmcOptions);
     }
 }
-void ChainManager::stepAllChains(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators  )
+void ChainManager::stepAllChains(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators  )
 {
     for(size_t chainNumber=0; chainNumber< numberChains;++chainNumber)
     {
@@ -87,7 +87,7 @@ void ChainManager::stepAllChains(int currentIteration, ProgramOptions &programOp
         //addSample(chainNumber, chains.at(chainNumber)->getStoredSamples());
     }
 }
-void ChainManager::stepAllChainsNoSave(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<gsl_rng * > &randomGenerators  )
+void ChainManager::stepAllChainsNoSave(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, std::vector<gsl_rng * > &randomGenerators  )
 {
     string state;
     for(size_t chainNumber=0; chainNumber< numberChains;++chainNumber)
@@ -102,7 +102,7 @@ void ChainManager::stepAllChainsNoSave(int currentIteration, ProgramOptions &pro
         }
     }
 }
-void ChainManager::saveChainState(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions )
+void ChainManager::saveChainState(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions )
 {
     for(size_t chainNumber=0; chainNumber< numberChains;++chainNumber)
     {
@@ -113,7 +113,7 @@ void ChainManager::saveChainState(int currentIteration, ProgramOptions &programO
         //addSample(chainNumber, chains.at(chainNumber)->getStoredSamples());
     }
 }
-void ChainManager::monitorChains(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators, FilePaths &filePaths )
+void ChainManager::monitorChains(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, std::vector<const gsl_rng * > &randomGenerators, FilePaths &filePaths )
 {
     for(size_t chainNumber=0; chainNumber <numberChains;++chainNumber)
     {
@@ -126,7 +126,7 @@ void ChainManager::monitorChains(int currentIteration, ProgramOptions &programOp
         }
     }
 }
-void ChainManager::writeChainsOutput(int currentIteration, ProgramOptions &programOptions, MCMCoptions &mcmcOptions, FilePaths &filePaths)
+void ChainManager::writeChainsOutput(int currentIteration, ProgramOptions &programOptions, MCMCOptions &mcmcOptions, FilePaths &filePaths)
 {
     for(size_t chainNumber=0; chainNumber <numberChains;++chainNumber)
     {
@@ -433,7 +433,7 @@ void ChainManager::closeFilesGroupChain(int chainNumber, int numberChainsPerTree
         chain->closeFiles(programOptions);
     }
 }
-bool ChainManager::checkConvergence(int numberChainsPerTree,ProgramOptions &programOptions,MCMCoptions &mcmcOptions, long double threshold )
+bool ChainManager::checkConvergence(int numberChainsPerTree,ProgramOptions &programOptions,MCMCOptions &mcmcOptions, long double threshold )
 {
     bool checkPSRF=false;
     bool checkESS=false;
@@ -525,7 +525,7 @@ bool ChainManager::groupChainsFinished(std::vector<Chain *> groupChains){
 //        sizes[chain] = samples_(chain).size();
 //      }
 //}
-void ChainManager::performWarmUp(ProgramOptions &programOptions,MCMCoptions &mcmcOptions, std::vector<gsl_rng * > &randomGenerators,FilePaths &filePaths)
+void ChainManager::performWarmUp(ProgramOptions &programOptions,MCMCOptions &mcmcOptions, std::vector<gsl_rng * > &randomGenerators,FilePaths &filePaths)
 {
     //gsl_rng * currentRandomGenerator;
 #pragma omp parallel   shared(programOptions,mcmcOptions,filePaths,   randomGenerators )
@@ -559,7 +559,7 @@ void ChainManager::performWarmUp(ProgramOptions &programOptions,MCMCoptions &mcm
         }
     }
 }
-void ChainManager::resetChainValues(ProgramOptions &programOptions,MCMCoptions &mcmcOptions){
+void ChainManager::resetChainValues(ProgramOptions &programOptions,MCMCOptions &mcmcOptions){
     
     for(int chainNumber=0; chainNumber< numberChains;++chainNumber)
     {
@@ -732,7 +732,7 @@ std::vector<long double> ChainManager::listEffectiveSampleSizes(int chainNumber,
     return listPotentialScaleReductions;
     
 }
-void ChainManager::resizeStoredMCMCparametersAfterWarmUp(MCMCoptions &mcmcOptions){
+void ChainManager::resizeStoredMCMCparametersAfterWarmUp(MCMCOptions &mcmcOptions){
     
     for(int chainNumber=0; chainNumber< numberChains;++chainNumber){
         chains.at(chainNumber)->resizeStoredMCMCparametersAfterWarmUp(mcmcOptions);
@@ -747,7 +747,7 @@ double* ChainManager::getLastChainSamples(const int chainId, const int idxMCMCPa
     return &result[0];
     
 }
-void  ChainManager::finish(int numberChainsPerTree, ProgramOptions &programOptions, MCMCoptions &mcmcOptions){
+void  ChainManager::finish(int numberChainsPerTree, ProgramOptions &programOptions, MCMCOptions &mcmcOptions){
     
     for(size_t chainNumber=0; chainNumber< numberChains; chainNumber += numberChainsPerTree){
         //closeFilesGroupChain(chainNumber, mcmcOptions.numberChainsPerTree, programOptions);

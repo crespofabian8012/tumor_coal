@@ -45,6 +45,7 @@
 #include "mcmc.hpp"
 #include "msa.hpp"
 #include "tree.hpp"
+#include "pmmh.hpp"
 #include "RF_distance_calculator.hpp"
 
 #include <gsl/gsl_randist.h>
@@ -53,6 +54,10 @@
 #include "smc.hpp"
 #include "state.hpp"
 #include "poset_smc.hpp"
+#include "bd_coal_proposal.hpp"
+#include "ipmcmc.hpp"
+#include "pg.hpp"
+#include "pmmh.hpp"
 
 extern "C"
     {
@@ -67,6 +72,12 @@ extern "C"
 #include <search.h>
 #include <time.h>
 
+enum InferenceMethod {
+    PARTICLEGIBBS = 0,
+    IPMCMC = 1,
+    PMMH = 2,
+    PHMC = 3
+};
 namespace po = boost::program_options;
 bool process_command_line(int argc, char** argv,
                           std::string& config_file)
@@ -126,8 +137,8 @@ int main(int argc, char* argv[] )
     
     ProgramOptions programOptions;
     FilePaths filePaths;
-    MCMCoptions mcmcOptions;
-  
+    MCMCOptions mcmcOptions;
+    
     if (config_file.empty())
     {
         std::cout << "\nERROR: No parameters specified (use command  parameter file)"<< std::endl;
@@ -153,6 +164,10 @@ int main(int argc, char* argv[] )
     printProgramHeader();
     setDefaultOptions(programOptions, mcmcOptions);
     
+   // inputGenotypeFilePhylipPath = "";
+
+    bool doPlots = false;
+    
     std::vector<StructuredCoalescentTree *> structuredCoalTrees;
     std::vector<pll_rtree_t *> trueTrees;
     std::vector<long double> trueThetas;
@@ -168,17 +183,15 @@ int main(int argc, char* argv[] )
     //2. initialize data structures
     //    /* set file dirs and names */
     InitFilesPathsOptions(filePaths, programOptions);
-    //
-    //    //3. do inference
+    
     
     pll_msa_t *msa;
     
-    //    if (mcmcOptions.useSequencesLikelihood ==1)
-    //   {
     fileNameFasta = filePaths.inputGenotypeFileFasta;
     Utils::ReadParametersFromFastaFile(fileNameFasta,  programOptions.numCells, programOptions.TotalNumSequences, programOptions.numSites);
     std::vector<std::vector<int> > ObservedData;
     
+    //fasta input
     //  char *ObservedCellNames[programOptions.numCells];
     //    Utils::ReadFastaFile(fileNameFasta, ObservedData,  ObservedCellNames, programOptions);
     //    programOptions.numNodes = 2 * programOptions.TotalNumSequences + programOptions.numClones+ 10;
@@ -204,7 +217,6 @@ int main(int argc, char* argv[] )
     programOptions.numCells = programOptions.TotalNumSequences;
     
     programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
-    
     
     if (programOptions.numClones==1)
         sampleSizes.push_back(programOptions.numCells-1); //minus the healthycell
@@ -256,8 +268,6 @@ int main(int argc, char* argv[] )
     programOptions.doUsefixedMutationRate = false;
     programOptions.K=0.8;
     
-    
-    /* SMC */
     programOptions.meanADOsite = 0.1;
     programOptions.varADOsite=0.01;
     programOptions.meanADOcell = 0.1;
@@ -287,17 +297,21 @@ int main(int argc, char* argv[] )
                                           0, //int statesPadded
                                           true,//PLL_ATTRIB_ARCH_SSE
                                           false, false, false, false, false);
-    double theta = 2.5;//0.019;
+    double theta = 1;
+    
+    double TscaledByTheta = coalTimes[coalTimes.size()-1];
+    
+    std::vector<double> timeOriginSTDs = { TscaledByTheta/theta };
+    
     std::vector<double> deltas  = {100};//{21.519};
-    std::vector<double> timeOriginSTDs = { 0.131686/theta };
+    
     std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
     
     transform(coalTimes.begin(), coalTimes.end(), coalTimes.begin(), [theta](double &c){ return c/theta; });
-    
     coalTimesModelTimePerPopulation.push_back(coalTimes);
     
     
-    PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msa, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
+    PosetSMCParams psParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, &msaWrapper, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
                             theta,
                             deltas,
                             timeOriginSTDs,
@@ -308,14 +322,16 @@ int main(int argc, char* argv[] )
     
     size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
     PosetSMC posetSMC(programOptions.numClones,  num_iter, false);
-    SMCOptions smcOptions;
     
+    posetSMC.kernelType = PosetSMC::PosetSMCKernel::TSMC1;
+    
+    //  smc options
+    SMCOptions smcOptions;
     smcOptions.num_threads = 5;
     smcOptions.use_SPF = false;
     smcOptions.ess_threshold = 1;
     smcOptions.num_particles = 1000;
     smcOptions.resample_last_round = false;
-    
     smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
     //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
     //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::SYSTEMATIC;
@@ -325,95 +341,93 @@ int main(int argc, char* argv[] )
     smcOptions.init();
     smcOptions.debug = true;
     
-    SMC<State, PosetSMCParams>  smc(posetSMC, smcOptions);
+    PMCMCOptions pmcmc_options(22441453521, 10000);
+    pmcmc_options.burn_in = 1000;
     
-    std::cout<< "\n\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles....\n" << std::endl;
-    smc.run_smc(psParams);
+    BDCoalPriorParams priorParams(10, 1, programOptions.meanGenotypingError,
+                                  programOptions.varGenotypingError,
+                                  programOptions.meanAmplificationError,
+                                  programOptions.varAmplificationError,
+                                  0.7, 0.7);
     
-    ParticlePopulation<State> *currenPop = smc.get_curr_population();
-    vector<shared_ptr<State>> *particles = currenPop->get_particles();
-    double   log_marginal = smc.get_log_marginal_likelihood();
-    //ParticlePopulation<State> *pop0 = smc.get_population(0);
+    //3. do inference
+    InferenceMethod method = PMMH;
     
-    int num_particles = currenPop->get_num_particles();
-    
-    std::vector<long double> deltas0;
-    std::vector<long double> Ts0;
-    std::vector<long double> Thetas;
-    std::vector<long double> SeqError;
-    std::vector<long double> ADOError;
-    
-    std::vector<long double> currentDeltas;
-    std::vector<long double> currentTs;
-    std::vector<long double> currentThetas;
-    std::vector<long double> currentSeqError;
-    std::vector<long double> currentADOError;
-    std::vector<long double> weights;
-    std::vector<long double> rootLogLiks;
-    
-    std::vector<double> *normalized_weights = currenPop->get_normalized_weights();
-    double max = -DOUBLE_INF;
-    shared_ptr<State> best_particle;
-    
-    std::vector<RootedTree> lastPopulationTrees;
-    for (size_t i=0; i<num_particles; i++){
+    if (method == IPMCMC){
+        //Interactive PMCMC
+        //TODO
         
-        shared_ptr<State> currents = particles->at(i);
-        currentDeltas.push_back(currents->getPopulationByIndex(0)->delta);
-        currentTs.push_back(currents->getPopulationByIndex(0)->timeOriginSTD);
-        currentThetas.push_back(currents->getTheta());
-        currentSeqError.push_back(currents->getErrorModel().getADOErrorRate());
-        currentADOError.push_back(currents->getErrorModel().getSeqErrorRate());
-        std::cout<<std::endl;
-        currents->printTree(currents->getRoots()[0], std::cerr);
-        std::cout<<std::endl;
-        std::cout << " weight "<< i << " " <<(*normalized_weights)[i] <<std::endl;
-        assert(currents->getRoots().size() == 1);
-        weights.push_back((*normalized_weights)[i]);
-        rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
-        std::cout << " loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
-        //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
-        std::cout<<std::endl;
-        if ((*normalized_weights)[i] > max) {
-            
-            max = (*normalized_weights)[i]  ;
-            best_particle = currents;
-        }
-        std::string newick = currents->getNewick(currents->getRootAt(0));
-        lastPopulationTrees.emplace_back(RootedTree(newick, false));
+        
+    
     }
-    lastPopulationTrees.emplace_back(rootedTree);
-    
-    std::unique_ptr<RFDistanceCalculator> rfCalculator;
-    rfCalculator.reset(new RFDistanceCalculator(lastPopulationTrees, true));
-    
-    std::cout<< "Posterior distribution" << std::endl;
-    std::cout<< "Delta, mean: " << Utils::mean(currentDeltas) <<" var: " <<Utils::variance(currentDeltas) << std::endl;
-    std::cout<< "T, mean: " << Utils::mean(currentTs) <<" var: " <<Utils::variance(currentTs) <<std::endl;
-    std::cout<< "Theta, mean: " << Utils::mean(currentThetas) <<" var: " <<Utils::variance(currentThetas) <<std::endl;
-    std::cout<< "SeqError, mean: " << Utils::mean(currentSeqError) <<" var: " <<Utils::variance(currentSeqError) <<std::endl;
-    std::cout<< "ADOError, mean: " << Utils::mean(currentADOError) <<" var: " <<Utils::variance(currentADOError) <<std::endl;
-    std::cout<< "Normalized weight " << Utils::mean(weights) <<" var: " <<Utils::variance(weights) <<std::endl;
-    std::cout<< "Root log liks " << Utils::mean(rootLogLiks) <<" var: " <<Utils::variance(rootLogLiks) <<std::endl;
-    
-    
-    double avgRF = rfCalculator->avgRF();
-    
-    size_t numUniqueTrees = rfCalculator->numUniqueTrees();
-    
-    std::cout << "Avg RF " << avgRF  << endl;
-    std::cout << "Number unique topologies " << numUniqueTrees  << endl;
-    
-    double log_marginal_lik = smc.get_log_marginal_likelihood();
-    std::cout << "Estimate log marginal " << log_marginal  << endl;
-    std::cout << "Estimate log P(y)= " << log_marginal_lik  << endl;
-    
-    assert(best_particle->getRoots().size() == 1);
-    best_particle->printTree(best_particle->getRoots()[0], std::cerr);
-    
+    else if(method == PARTICLEGIBBS){
+        //Particle Gibbs
+        ConditionalSMC<State, PosetSMCParams> csmc(posetSMC, smcOptions);
+        
+        BDCoalModelPGProposal param_proposal(priorParams, programOptions.numClones, programOptions.TotalNumSequences,
+                                             msaWrapper.getLength(),
+                                             &msaWrapper,
+                                             partition,
+                                             pll_buffer_manager,
+                                             programOptions);
+        
+
+        ParticleGibbs<State, PosetSMCParams> pg(pmcmc_options, csmc, param_proposal);
+        
+        pg.run();
+        vector<shared_ptr<PosetSMCParams> > &samples = pg.get_parameters();
+        //   compute the posterior mean for the first scaled hrowth rate
+        double mean = 0.0;
+        size_t count = 0;
+        for (size_t i = pmcmc_options.burn_in; i < samples.size(); i+=10) {
+            mean += samples[i]->populationDeltaTs[0];
+            count++;
+        }
+        mean /= count;
+        cout << mean << ", " << psParams.populationDeltaTs[0] << endl;
+    }
+    else if(method == PMMH){
+        //Particle Marginal Metropolis-Hastings
+        smcOptions.num_particles = 500;
+        ConditionalSMC<State, PosetSMCParams> csmc(posetSMC, smcOptions);
+         BDCoalModelRandomWalkProposal rw_param_proposal(priorParams, programOptions.numClones, programOptions.TotalNumSequences,
+                                                    msaWrapper.getLength(),
+                                                    &msaWrapper,
+                                                    partition,
+                                                    pll_buffer_manager,
+                                                    programOptions);
+        
+          csmc.initialize(psParams);
+          double logZ = csmc.get_log_marginal_likelihood();
+          std::cout << logZ << std::endl; // logZ at true params
+
+          PMCMCOptions pmcmc_options(346575392, 10000);
+          pmcmc_options.burn_in = 1000;
+         
+          ParticleMMH<State, PosetSMCParams> pmmh(pmcmc_options, csmc, rw_param_proposal);
+          pmmh.run();
+          vector<PosetSMCParams *> *samples = pmmh.get_parameters();
+          // compute the posterior mean for beta
+          double mean = 0.0;
+          size_t count = 0;
+          for (size_t i = pmcmc_options.burn_in; i < samples->size(); i+=10) {
+              mean += (*samples)[i]->populationDeltaTs[0];
+              count++;
+          }
+          mean /= count;
+        cout << mean << ", " << psParams.populationDeltaTs[0] << endl;
+        
+        
+    }
+    else{
+        //Particle Hamiltonian Monte Carlo
+        //TODO
+        
+        
+    }
     /* clean memory*/
     
-    Random::freeListRandomNumbersGenerators(randomGenerators);
+   Random::freeListRandomNumbersGenerators(randomGenerators);
     trueTrees.clear();
     structuredCoalTrees.clear();
     trueThetas.clear();
@@ -425,7 +439,7 @@ int main(int argc, char* argv[] )
     pll_rtree_destroy(initialRootedTree,NULL);
     std::cout << "\nIf you need help type '-?' in the command line of the program\n"<<std::endl;
     
-    
+
     return 0;
     
 }

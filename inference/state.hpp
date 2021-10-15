@@ -27,12 +27,11 @@ extern "C"
 class PosetSMCParams;
 
 using Pair = std::pair<int, int>;
-//using PairDoubleMap = std::unordered_map<std::set<Pair >, double > ;
+
 using ListDouble = std::vector<double>;
 using PairListDouble = std::pair<ListDouble,ListDouble>;
 using ListListDouble = std::vector<std::vector<double>>;
 using PairListListDouble = std::pair<ListListDouble,ListListDouble>;
-
 
 
 class State{
@@ -48,7 +47,7 @@ class State{
     std::vector<std::shared_ptr<PartialTreeNode>> roots;
     std::vector<std::shared_ptr<PartialTreeNode>> postorder;
     std::vector<int> idsNextCoalEvents;
-   std::vector<int> idsNextInmigrationEvents;
+    std::vector<int> idsNextInmigrationEvents;
     std::vector<double> coalEventTimesScaledByTheta;
     GenotypeErrorModel *gtError;
     long double theta;
@@ -195,25 +194,26 @@ public:
                                                                                        p->attributes);
             
         }
-        else
-            left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
-                                                                            1,
-                                                                            p->attributes);
-//
-//        int left_edge_pmatrix_result = pll_core_update_pmatrix(
-//                                                               &parent->edge_l->pmatrix,//double **pmatrix,
-//                                                               p->numberStates,// unsigned int states
-//                                                               p->numberRateCats,//unsigned int rate_cats
-//                                                               p->rates(),//const double *rates
-//                                                               &parent->edge_l->length,//const double *branch_lengths
-//                                                               matrix_indices,//const unsigned int *matrix_indices
-//                                                               param_indices,//const unsigned int *param_indices
-//                                                               p->propInvar(),//const double *prop_invar
-//                                                               p->eigenVals(),//double *const *eigenvals
-//                                                               p->eigenVecs(),//double *const *eigenvecs
-//                                                               p->invEigenVecs(),//double *const *inv_eigenvecs
-//                                                               1,//unsigned int count
-//                                                               p->attributes);
+        else{
+//            left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+//                                                                            1,
+//                                                                            p->attributes);
+
+         left_edge_pmatrix_result = pll_core_update_pmatrix(
+                                                               &parent->edge_l->pmatrix,//double **pmatrix,
+                                                               p->numberStates,// unsigned int states
+                                                               p->numberRateCats,//unsigned int rate_cats
+                                                               p->rates(),//const double *rates
+                                                               &parent->edge_l->length,//const double *branch_lengths
+                                                               matrix_indices,//const unsigned int *matrix_indices
+                                                               param_indices,//const unsigned int *param_indices
+                                                               p->propInvar(),//const double *prop_invar
+                                                               p->eigenVals(),//double *const *eigenvals
+                                                               p->eigenVecs(),//double *const *eigenvecs
+                                                               p->invEigenVecs(),//double *const *inv_eigenvecs
+                                                               1,//unsigned int count
+                                                               p->attributes);
+        }
         
         assert(left_edge_pmatrix_result == PLL_SUCCESS);
         int right_edge_pmatrix_result;
@@ -224,21 +224,22 @@ public:
                    p->attributes);
                    
                }
-               else
-                   right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
-                                                                              1,
-                                                                              p->attributes);
+        else{
+//                   right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
+//                                                                              1,
+//                                                                              p->attributes);
         
-//        int right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
-//                                                                &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
-//                                                                p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
+                   right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
+                                                                &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
+                                                                p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
+        }
         assert(right_edge_pmatrix_result == PLL_SUCCESS);
         
         
         unsigned int sites= (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites);
         
         
-        pll_core_update_partial_ii2(p->numberStates, sites,
+        pll_core_update_partial_ii(p->numberStates, sites,
                                    p->numberRateCats, parent->pclv,
                                    parent->pscale_buffer,
                                    child_left->pclv,
@@ -247,8 +248,8 @@ public:
                                    parent->edge_r->pmatrix,
                                    child_left->pscale_buffer,
                                    child_right->pscale_buffer,
-                                   p->attributes,
-                                    normalizeClv);
+                                   p->attributes//,normalizeClv
+                                   );
         //    if (1)
         //        parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
         

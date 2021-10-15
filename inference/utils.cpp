@@ -1178,68 +1178,76 @@ double Utils::pairsIntersected(Pair x, Pair y){
     else
         return false;
 }
-//void Utils::autocorrelationReal(const Eigen::MatrixBase<long double>& data, long double mean, Eigen::MatrixBase<long double>& ac, Eigen::FFT<long double>& fft)
-//{
-//    int no2,i;
-//    long double  tmp;
+double Utils::computeGorurTehLogLik(int numSites, int numStates, double rate, double left_length, double right_length, double *left_pclv,  double *right_pclv, std::vector<double> &result ){
+    
+    double logh = 0.0;
+    double expTerm = exp(rate*(left_length+right_length));
+    double stat_prob = 1.0 /numStates;
+    
+    size_t span =numSites *numStates;
+    
+    //std::vector<double> result(numSites);
+    
+    double *copy_left_clv = left_pclv;
+    double *copy_right_clv = right_pclv;
+    
+      for(size_t i= 0; i< numSites; ++i){
+          double sum_left = 0.0;
+          double sum_right = 0.0;
+          
+         for(size_t j= 0; j< numStates; ++j){
+                  sum_left+= copy_left_clv[j];
+                  sum_right+= copy_right_clv[j];
+                  }
+          assert(sum_left>0);
+           assert(sum_right>0);
+        for (size_t k = 0; k < numStates; ++k){
+                copy_left_clv[k] *= 1.0 * numStates /sum_left;
+                copy_right_clv[k] *= 1.0 * numStates /sum_right;
+         }
+          copy_left_clv+=numStates;
+          copy_right_clv+=numStates;
+      }
+    copy_left_clv -= span;
+    copy_right_clv -= span;
+    
+    for(size_t i= 0; i< numSites; ++i){
+        
+        double sum_for_site = 0.0;
+        for(size_t j= 0; j< numStates; ++j){
+              sum_for_site+= stat_prob * copy_left_clv[j]* copy_right_clv[j];
+              std::cout << " left_pclv " << copy_left_clv[j] << std::endl;
+              std::cout << " right_pclv " << copy_right_clv[j] << std::endl;
+          }
+        result[i] = 1-sum_for_site;
+        logh+= log(1.0 - expTerm*(1-sum_for_site));
+        std::cout << " sum_for_site " << logh << std::endl;
+        std::cout << " logh " << logh << std::endl;
+        copy_left_clv+=numStates;
+        copy_right_clv+=numStates;
+    }
+    copy_left_clv -= span;
+    copy_right_clv -= span;
+    
+    return logh;
+}
+//double Utils::concaveConvexARS(double a, double b, LogDensity* const log_density, int numSamples, double rn[numSamples], bool isLogConcave ){
 //    
-//    size_t N = data.size();
-//    size_t M = Utils::next2Power( N);
-//     
+//    double result = 0;
 //    
-//    Eigen::Matrix<long double, Eigen::Dynamic, 1> centered(2*M);
-//    centered.setZero();
-//    centered.head(N) =  data.array() - data.mean();
-//   
-//    Eigen::Matrix<std::complex<long double>, Eigen::Dynamic, 1> freqvec(2*M);
+//    if (a> b)
+//        return result;
 //    
-//    fft.fwd(freqvec, centered);
-//    
-//    
-//    freqvec = freqvec.cwiseAbs2();
-//  
-//    Eigen::Matrix<std::complex<long double>, Eigen::Dynamic, 1> ac_tmp(2*M);
-//    fft.inv(ac_tmp, freqvec);
-//
-//    ac = ac_tmp.head(N).real().array() / (N * N * 2);
-//    ac /= ac(0);
-//}
-
-
-//void Utils::multiply (vector<int> & a, vector<int> & b, vector<int> & res)
-//{
-//  
-//  vector<complex> fa;
-//  vector<complex> fb;
-//
-//complex temp = complex(0);
-// for (size_t i=0; i<a.size(); ++i){
-//     temp= complex(a[i]);
-//     fa.push_back(temp);
+//    size_t num_accepted_samples = 0;
+//    while(num_accepted_samples<numSamples){
+//        
+//        
+//        
+//        
 //    }
-//      
 //    
-//  for (size_t i=0; i<b.size(); ++i){
-//   temp= complex(b[i]);
-//   fb.push_back(temp);
-//  }
 //    
-//  size_t n = 1;
-//  int M = max(a.size(),  b.size());
-//  
-//  while (n < M)  n <<= 1;
-//  n <<= 1;
-//  fa.resize (n);
-//  fb.resize (n);
-// 
-//  fft (fa, false);
-//  fft (fb, false);
-//  for (size_t i=0; i<n; ++i)
-//    fa[i] *= fb[i];
-//  fft (fa, true);
-// 
-//  res.resize (n);
-//  for (size_t i=0; i<n; ++i)
-//    res[i] = (int)round(fa[i].re);
+//    
+//    
+//    return result;
 //}
-

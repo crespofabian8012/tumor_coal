@@ -483,7 +483,7 @@ long double Population::ProbabilityComeFromPopulation(Population *PopJ, std::vec
 
 long double Population::CalculateH (long double t, long double TOrigin, long double delta, long double K)
 {
-    long double H, AboveTerm, BelowTerm, firstTerm, secondTerm;
+    long double H, AboveTerm, BelowTerm, firstTerm, secondTerm, thirdTerm;
     long double a, b;
     long double extraTerm;
     assert(delta>0.0);
@@ -494,6 +494,7 @@ long double Population::CalculateH (long double t, long double TOrigin, long dou
     a = 1.0 - exp(-1.0 * delta * (TOrigin - t));
     firstTerm = a * a;
     secondTerm = exp(-1.0 * delta * t);
+    thirdTerm = exp(1.0 * delta * t);
     AboveTerm = firstTerm * secondTerm;
     b = 1.0 - exp(-1.0 * delta * TOrigin);
     BelowTerm = b * b;
@@ -502,7 +503,7 @@ long double Population::CalculateH (long double t, long double TOrigin, long dou
     if (a == 0.0)
         printf ("\n Error!: a = 0.0 \n");
     
-    extraTerm = 1+ (K /delta)*b*(secondTerm -1.0) / a ;
+    extraTerm = 1+ (K /delta)*b*(thirdTerm -1.0) / a ;
     
     H = (AboveTerm / BelowTerm)*extraTerm;
     
@@ -1064,6 +1065,8 @@ std::pair<Pair, std::pair<double, double>> Population::initPairProposalsNextEven
     std::pair<Pair, std::pair<double, double>> currEntry;
     std::pair<Pair, std::pair<double, double>> winnerModelTime;
     std::pair<Pair, std::pair<double, double>> winnerKingmanTime;
+    
+   
     for(std::vector<Pair>::iterator it = pairs.begin(), end = pairs.end(); it != end; ++it)
     {
         currPair = *it;

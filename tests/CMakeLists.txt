@@ -37,7 +37,7 @@ if (OPENMP_FOUND)
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+find_package (Eigen3 3.4 REQUIRED NO_MODULE)
 
 #find_package(Boost 1.67 COMPONENTS regex system filesystem unit_test_framework program_options REQUIRED)
 find_package(Boost 1.67 COMPONENTS  system filesystem unit_test_framework program_options date_time filesystem iostreams REQUIRED)

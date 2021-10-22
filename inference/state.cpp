@@ -16,10 +16,13 @@
 
 #include "poset_smc_params.hpp"
 #include "poset_smc.hpp"
+#include "ccars.hpp"
 
 State::State(PosetSMCParams &smcParams, gsl_rng *random):
 pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition), num_sites(smcParams.num_sites)
 {
+    
+    bool usePriorInSMC1 = false;
     topHeightModelTime =0.0;
     topHeightScaledByTheta = 0.0;
     logWeight = 0.0;
@@ -49,8 +52,14 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     initForest(smcParams.sampleSize, smcParams.msa->getNonConstRawPtr(), smcParams.positions,  smcParams.getProgramOptions());
     nextAvailable = smcParams.sampleSize-1;
     
-    pairMinModelTime = populationSet->initPairProposalsNextEventTimePerPopulation(random, smcParams.getProgramOptions().K);
+    if (usePriorInSMC1){
+       pairMinModelTime = populationSet->initPairProposalsNextEventTimePerPopulation(random, smcParams.getProgramOptions().K);
+    }
+    else{
+    pairMinModelTime = initPairProposalsNextEventTime(random, smcParams.getProgramOptions().K);
+    }
     
+
     //    double K= smcParams.getProgramOptions().K;
     //       populationSet->sampleEventTimesScaledByProportion( random, K,smcParams.getProgramOptions().noisy);
     //      populationSet->resetNumActiveGametesCounter();
@@ -1743,6 +1752,86 @@ PairListDouble State::evalLogLikRatioGridPerIncrement( double from, double to, s
     
     return std::make_pair(increments,logLikWeightIncrements);
 }
+std::pair<Pair, std::pair<double, double>> State::initPairProposalsNextEventTime(gsl_rng *rngGsl, double K){
+    
+     int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    Population *popI = populationSet->getCurrentPopulation();
+     
+     std::pair<Pair, std::pair<double, double>> pairMinModelTimeCurrPop;
+    
+    assert(popI->numActiveGametes > 1);
 
+    std::vector<Pair > pairs= PosetSMC::getCombinationsRandomOrder(popI->numActiveGametes);
+    
+    auto rd = std::random_device {};
+    auto rng = std::default_random_engine { rd() };
+ 
+    std::shuffle(std::begin(pairs), std::end(pairs), rng);
+    
+    double minModeltime = DOUBLE_INF;
+    double minKingmanTime = DOUBLE_INF;
+    double proposalKingmanTime, proposalModelTime;
+    Pair currPair;
+    std::pair<Pair, std::pair<double, double>> currEntry;
+    std::pair<Pair, std::pair<double, double>> winnerModelTime;
+    std::pair<Pair, std::pair<double, double>> winnerKingmanTime;
+    
+    int max_points = 5;
+   
+    double currModeltime = popI->currentModelTime;
+    double torigin = 0.999*popI->timeOriginSTD;
+    double interPoint1 = currModeltime+ Random::randomUniformFromGsl2(rngGsl)*(torigin-currModeltime);
+    interPoint1 = 0.0120;
+    double interPoint2 =currModeltime+ Random::randomUniformFromGsl2(rngGsl)*(torigin-currModeltime);
+    interPoint2 = 0.0256;
+    std::vector<double>  x = {currModeltime, interPoint1,interPoint2, torigin};
+    
+
+    Eigen::VectorXd xEigen = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(x.data(), x.size());
+    //std::sort(xEigen.data(),xEigen.data()+xEigen.size());
+
+    for(std::vector<Pair>::iterator it = pairs.begin(), end = pairs.end(); it != end; ++it)
+    {
+        currPair = *it;
+        idxFirst = currPair. first;
+        idxSecond = currPair. second;
+                   
+        idxFirstRoot = popI->idsActiveGametes[idxFirst];
+        idxSecondRoot = popI->idsActiveGametes[idxSecond];
+                   
+        int idxFirstID = getNodeIdxById(idxFirstRoot);
+        int idxSecondId = getNodeIdxById(idxSecondRoot);
+       
+        CCLogDensity *log_density =
+           new GenotypeJCPairLogProposal(partition->numberSites, partition->numberStates, popI->timeOriginSTD, popI->delta, popI->theta, currModeltime,
+                                                                roots[idxFirstID]->height,
+                                         roots[idxSecondId]->height, roots[idxFirstID]->pclv, roots[idxSecondId]->pclv);
+        
+        CCARS *ccars = new CCARS(log_density, xEigen, currModeltime, torigin,  max_points);
+    
+        
+        proposalKingmanTime =  Random::RandomExponential(1.0,0,  true, rngGsl,NULL );
+        proposalModelTime = Population::GstandardTmodel(proposalKingmanTime, popI->timeOriginSTD, popI->delta, K);
+        currEntry = std::make_pair(currPair,std::make_pair(0.0, proposalModelTime));
+        if (proposalModelTime<minModeltime){
+            
+            winnerModelTime = currEntry;
+            minModeltime =proposalModelTime;
+        }
+        if (proposalKingmanTime<minKingmanTime){
+                   
+                   winnerKingmanTime = currEntry;
+            minKingmanTime = proposalKingmanTime;
+               }
+        
+        popI->pairCurrentProposals.insert(currEntry);
+    }
+    
+   // std::cout <<" pair min Kingman time " << winnerKingmanTime.first.first << " , "<< winnerKingmanTime.first.second  << std::endl;
+   // std::cout <<" pair min Model time " << winnerModelTime.first.first << " , "<< winnerModelTime.first.second << std::endl;
+   // std::cout <<" min Model time " << winnerModelTime.second.second << std::endl;
+    return winnerModelTime;
+
+}
 State::~State(){
 }

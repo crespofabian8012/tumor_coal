@@ -107,8 +107,9 @@ public:
         if (msa==NULL)
             std::cout << "Error reading phylip file \n"<< std::endl;
         // }
-        MSA msaWrapper(msa);
-        if (!MSA::checkMSA(msaWrapper)){
+        MSA *msaWrapper = new MSA(msa);
+        //MSA msaWrapper(msa);
+        if (!MSA::checkMSA(*msaWrapper)){
             
             std::cout << "Error cheking the sequences alignment \n"<< std::endl;
         }
@@ -158,6 +159,9 @@ public:
         programOptions.varGenotypingError=0.001;
         programOptions.fixedADOrate=0.1;
         
+        
+        
+        
         std::vector<int> positions(programOptions.TotalTumorSequences);
         std::iota( std::begin( positions ), std::end( positions ), 1 );
         
@@ -192,7 +196,7 @@ public:
         coalTimesModelTimePerPopulation.push_back(coalTimes);
         
         
-        psParams = new  PosetSMCParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, &msaWrapper, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
+        psParams = new  PosetSMCParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msaWrapper, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
                                 true_theta,
                                 deltas,
                                 timeOriginSTDs,
@@ -206,6 +210,13 @@ public:
         posetSMC = new PosetSMC(programOptions.numClones,  num_iter, doPlots);
         
         posetSMC->kernelType = std::get<4>(GetParam());
+        
+        if (posetSMC->kernelType== PosetSMC::PosetSMCKernel::TSMC1){
+            programOptions.normalizeLeavesClv =true;
+            programOptions.normalizeClv =true;
+        }
+            
+            
         smcOptions.init();
         smcOptions.debug = true;
         
@@ -216,18 +227,13 @@ public:
       //  pll_msa_destroy(msa);
       //  pll_rtree_destroy(initialRootedTree,NULL);
     }
-    //
-    // If the constructor and destructor are not enough for setting up
-    // and cleaning up each test, you can define the following methods:
-    
+  
     //    void SetUp() override {
     //
     //
     //    }
     
-    // void TearDown() override {
-    
-    // }
+   
     
     char *fileNameFasta ;//= argv[2];
     char *fileNamePhylip;

@@ -353,6 +353,8 @@ public:
     
     double likelihood_factor(std::unique_ptr<PartialTreeNode> root)const;
     
+    std::pair<Pair, std::pair<double, double>> initPairProposalsNextEventTime(gsl_rng *rngGsl, double K);
+    
     ~State();
 };
 #endif /* state_hpp */

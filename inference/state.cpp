@@ -17,12 +17,13 @@
 #include "poset_smc_params.hpp"
 #include "poset_smc.hpp"
 #include "ccars.hpp"
+#include "gnu_plotter.hpp"
 
 State::State(PosetSMCParams &smcParams, gsl_rng *random):
 pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition), num_sites(smcParams.num_sites)
 {
     
-    bool usePriorInSMC1 = false;
+   
     topHeightModelTime =0.0;
     topHeightScaledByTheta = 0.0;
     logWeight = 0.0;
@@ -52,11 +53,11 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     initForest(smcParams.sampleSize, smcParams.msa->getNonConstRawPtr(), smcParams.positions,  smcParams.getProgramOptions());
     nextAvailable = smcParams.sampleSize-1;
     
-    if (usePriorInSMC1){
+    if (smcParams.usePriorInSMC1){
        pairMinModelTime = populationSet->initPairProposalsNextEventTimePerPopulation(random, smcParams.getProgramOptions().K);
     }
     else{
-    pairMinModelTime = initPairProposalsNextEventTime(random, smcParams.getProgramOptions().K);
+      pairMinModelTime = initPairProposalsNextEventTime(random, smcParams.getProgramOptions().K);
     }
     
 
@@ -1253,13 +1254,15 @@ double   State::proposalTSMC1(gsl_rng * random,  double &newHeight , double& log
     
     assert(idxFirstRoot != idxSecondRoot);
     
-    std::pair<double, double> pairModelTimes = pairMinModelTime.second;
-    newNodeHeightModelTime  = pairModelTimes.second * currPop->x ;
+    ProposalDistribInfo pairModelTimes = pairMinModelTime.second;
+    newNodeHeightModelTime  = pairModelTimes.timeProposal  * currPop->x ;
     newNodeHeight = newNodeHeightModelTime * currPop->theta;
     
-    pairModelTimeEntry = pairModelTimes.first* currPop->x;
+    pairModelTimeEntry = pairModelTimes.creationTime * currPop->x;
     pairLifeModelTime = newNodeHeightModelTime- pairModelTimeEntry;
     std::shared_ptr<PartialTreeNode> newNode = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logPrior, nullptr, nullptr, normalize );
+    
+    
     
     double logLikFactor = newNode->likelihood_factor();
     logWeightDiff+= logLikFactor;
@@ -1278,7 +1281,7 @@ double   State::proposalTSMC1(gsl_rng * random,  double &newHeight , double& log
                      Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
                       (numActiveGametes*(numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
     
-    std::pair<Pair,std::pair<double, double>>  copyPairMinModelTime = std::make_pair(pairMinModelTime.first, pairMinModelTime.second);
+    std::pair<Pair,ProposalDistribInfo>  copyPairMinModelTime = std::make_pair(pairMinModelTime.first, pairMinModelTime.second);
    
     currPop->pairCurrentProposals.erase(pairMinModelTime.first);
 
@@ -1752,12 +1755,12 @@ PairListDouble State::evalLogLikRatioGridPerIncrement( double from, double to, s
     
     return std::make_pair(increments,logLikWeightIncrements);
 }
-std::pair<Pair, std::pair<double, double>> State::initPairProposalsNextEventTime(gsl_rng *rngGsl, double K){
+std::pair<Pair, ProposalDistribInfo> State::initPairProposalsNextEventTime(gsl_rng *rngGsl, double K){
     
      int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
     Population *popI = populationSet->getCurrentPopulation();
      
-     std::pair<Pair, std::pair<double, double>> pairMinModelTimeCurrPop;
+    //std::pair<Pair, std::pair<double, double>> pairMinModelTimeCurrPop;
     
     assert(popI->numActiveGametes > 1);
 
@@ -1769,16 +1772,19 @@ std::pair<Pair, std::pair<double, double>> State::initPairProposalsNextEventTime
     std::shuffle(std::begin(pairs), std::end(pairs), rng);
     
     double minModeltime = DOUBLE_INF;
-    double minKingmanTime = DOUBLE_INF;
-    double proposalKingmanTime, proposalModelTime;
+    //double minKingmanTime = DOUBLE_INF;
+    //double proposalKingmanTime;
+    double proposalModelTime;
     Pair currPair;
-    std::pair<Pair, std::pair<double, double>> currEntry;
-    std::pair<Pair, std::pair<double, double>> winnerModelTime;
-    std::pair<Pair, std::pair<double, double>> winnerKingmanTime;
+    std::pair<Pair, ProposalDistribInfo> currEntry;
+    std::pair<Pair, ProposalDistribInfo> winnerModelTime;
+   
     
-    int max_points = 5;
+    int max_internal_points = 20;
    
     double currModeltime = popI->currentModelTime;
+    if (currModeltime== 0.0)
+        currModeltime = 1e-10;
     double torigin = 0.999*popI->timeOriginSTD;
     double interPoint1 = currModeltime+ Random::randomUniformFromGsl2(rngGsl)*(torigin-currModeltime);
     interPoint1 = 0.0120;
@@ -1786,10 +1792,21 @@ std::pair<Pair, std::pair<double, double>> State::initPairProposalsNextEventTime
     interPoint2 = 0.0256;
     std::vector<double>  x = {currModeltime, interPoint1,interPoint2, torigin};
     
-
+    size_t numPoints= 50;
+    Eigen::VectorXd xserieEigen = Eigen::VectorXd::LinSpaced(numPoints,currModeltime,torigin);
+    
+    std::vector<double> xseries(xserieEigen.data(),xserieEigen.data()+ xserieEigen.size() );
+   
+    size_t pair_idx=0;
     Eigen::VectorXd xEigen = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(x.data(), x.size());
     //std::sort(xEigen.data(),xEigen.data()+xEigen.size());
-
+  
+    bool normalizedCLVs = true;
+    //GNUPlotter plotter;
+    std::vector<double> sampledIncrementsPerPair(pairs.size());
+    double lastSampledX = 0.0;
+    double lastSampledY = 0.0;
+    double cumArea = 0.0;
     for(std::vector<Pair>::iterator it = pairs.begin(), end = pairs.end(); it != end; ++it)
     {
         currPair = *it;
@@ -1805,28 +1822,57 @@ std::pair<Pair, std::pair<double, double>> State::initPairProposalsNextEventTime
         CCLogDensity *log_density =
            new GenotypeJCPairLogProposal(partition->numberSites, partition->numberStates, popI->timeOriginSTD, popI->delta, popI->theta, currModeltime,
                                                                 roots[idxFirstID]->height,
-                                         roots[idxSecondId]->height, roots[idxFirstID]->pclv, roots[idxSecondId]->pclv);
+                                         roots[idxSecondId]->height, roots[idxFirstID]->pclv, roots[idxSecondId]->pclv, normalizedCLVs);
         
-        CCARS *ccars = new CCARS(log_density, xEigen, currModeltime, torigin,  max_points);
-    
+//        Eigen::VectorXd yserieEigenConcave = log_density->h_concave(xserieEigen);
+//        Eigen::VectorXd yserieEigenConvex = log_density->h_convex(xserieEigen);
+//        Eigen::VectorXd yserieEigenFull= yserieEigenConcave+yserieEigenConvex;
+//
+//        Eigen::VectorXd derivativeEigenConcave = log_density->h_prime_concave(xserieEigen);
+//        Eigen::VectorXd derivativeEigenConvex = log_density->h_prime_convex(xserieEigen);
+//
+//        std::vector<double> yseriesConcave(yserieEigenConcave.data(),yserieEigenConcave.data()+ yserieEigenConcave.size());
+//        std::vector<double> yseriesConvex(yserieEigenConvex.data(),yserieEigenConvex.data()+ yserieEigenConvex.size());
+//        std::vector<double> yseriesFull(yserieEigenFull.data(),yserieEigenFull.data()+ yserieEigenFull.size());
+//
+//        std::vector<double> derivativeConcave(derivativeEigenConcave.data(),derivativeEigenConcave.data()+ derivativeEigenConcave.size());
+//        std::vector<double> derivativeConvex(derivativeEigenConvex.data(),derivativeEigenConvex.data()+ derivativeEigenConvex.size());
+//
+//        plotter.plot2dSerie(xseries,  yseriesConcave, true, "concave_part.png","concave part" );
+//        plotter.plot2dSerie(xseries,  yseriesConvex, true, "convex_part.png","convex part" );
+//        plotter.plot2dSerie(xseries,  yseriesFull, true, "log_lik.png","log lik" );
+//
+//        plotter.plot2dSerie(xseries,  derivativeConcave, true, "derivative_concave_part.png","derivative concave part" );
+//        plotter.plot2dSerie(xseries,  derivativeConvex, true, "derivative_convex_part.png","derivative convex part" );
+//
+        CCARS *ccars = new CCARS(log_density, xEigen, currModeltime, torigin,  max_internal_points);
+        lastSampledX = 0.0;
+        lastSampledY = 0.0;
+        double cumArea = 0.0;
+        double logAreaIntegral = ccars->approximateLogIntegral(rngGsl, max_internal_points);
+        lastSampledX = ccars->sample(rngGsl, lastSampledY, cumArea);
         
-        proposalKingmanTime =  Random::RandomExponential(1.0,0,  true, rngGsl,NULL );
-        proposalModelTime = Population::GstandardTmodel(proposalKingmanTime, popI->timeOriginSTD, popI->delta, K);
-        currEntry = std::make_pair(currPair,std::make_pair(0.0, proposalModelTime));
+        sampledIncrementsPerPair[pair_idx] =lastSampledX;
+        pair_idx++;
+
+        proposalModelTime = lastSampledX;
+        ProposalDistribInfo proposalInfo;
+        proposalInfo.creationTime  = currModeltime;
+        proposalInfo.logIntegral = logAreaIntegral;
+        proposalInfo.timeProposal = lastSampledX;
+        proposalInfo.cumlogIntegralUntilProposal = cumArea;
+        proposalInfo.logLikAtProposal = lastSampledY;
+        
+        currEntry = std::make_pair(currPair,proposalInfo);
         if (proposalModelTime<minModeltime){
             
             winnerModelTime = currEntry;
             minModeltime =proposalModelTime;
         }
-        if (proposalKingmanTime<minKingmanTime){
-                   
-                   winnerKingmanTime = currEntry;
-            minKingmanTime = proposalKingmanTime;
-               }
         
         popI->pairCurrentProposals.insert(currEntry);
     }
-    
+ 
    // std::cout <<" pair min Kingman time " << winnerKingmanTime.first.first << " , "<< winnerKingmanTime.first.second  << std::endl;
    // std::cout <<" pair min Model time " << winnerModelTime.first.first << " , "<< winnerModelTime.first.second << std::endl;
    // std::cout <<" min Model time " << winnerModelTime.second.second << std::endl;

@@ -39,6 +39,7 @@ public:
     std::vector<int> sampleSizes;
     bool doPriorPost;
     bool doFixedEventimes;
+    bool usePriorInSMC1 ;
     int verbose;
       
     std::vector<double> trueCoalTimes;

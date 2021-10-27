@@ -23,6 +23,8 @@ public:
     int plot2dSeveralSeries(std::vector<double> &x, std::vector<std::vector<double>> &yseries );
     int plot2dSeveralSeries(std::vector<std::vector<double>> &xseries, std::vector<std::vector<double>> &yseries,std::vector<std::string> &labels,  bool savePng, std::string filePath, double verticalLine1, double verticalLine2 );
     int plot2dSerie(std::vector<double> &xseries,  std::vector<double> &yseries, std::vector<std::string> &labels,bool doSavePng, std::string fileNameIncrements, double verticalLine1   );
+    
+    int plot2dSerie(std::vector<double> &xseries,  std::vector<double> &yseries,bool doSavePng, std::string fileName,std::string plotTitle );
 };
 
 #endif /* gnu_plotter_hpp */

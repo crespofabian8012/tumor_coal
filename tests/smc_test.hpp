@@ -202,9 +202,10 @@ public:
                                 timeOriginSTDs,
                                 {1.0},
                                 coalTimesModelTimePerPopulation);
-        psParams->doPriorPost= true;
-        psParams->doFixedEventimes= false;
-        
+        psParams->doPriorPost = true;
+        psParams->doFixedEventimes = false;
+        psParams->usePriorInSMC1 = false;
+        bool normalizedCLVs = true;
         
         num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
         posetSMC = new PosetSMC(programOptions.numClones,  num_iter, doPlots);
@@ -212,8 +213,21 @@ public:
         posetSMC->kernelType = std::get<4>(GetParam());
         
         if (posetSMC->kernelType== PosetSMC::PosetSMCKernel::TSMC1){
-            programOptions.normalizeLeavesClv =true;
-            programOptions.normalizeClv =true;
+            
+            if (!(psParams->usePriorInSMC1)){
+                
+                if (normalizedCLVs){
+                    programOptions.normalizeLeavesClv =true;
+                    programOptions.normalizeClv =true;
+                     
+                    
+                }
+                else{
+                    programOptions.normalizeLeavesClv =false;
+                    programOptions.normalizeClv =false;
+                    
+                }
+            }
         }
             
             

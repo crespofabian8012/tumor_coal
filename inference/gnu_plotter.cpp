@@ -203,3 +203,81 @@ int GNUPlotter::plot2dSerie(std::vector<double> &xseries,  std::vector<double> &
     
     return 0;
 }
+int GNUPlotter::plot2dSerie(std::vector<double> &xseries,  std::vector<double> &yseries,bool doSavePng, std::string fileName,std::string plotTitle ){
+    
+    int result = 0;
+    if (yseries.size()==0)
+        return result;
+    
+    if (doSavePng){
+        *gp << "set terminal png size 900,900\n";
+        *gp << "set output  '"<< fileName << "'\n";
+    }
+    else{
+        *gp << "set term qt persist size 900,900\n";
+        
+    }
+    
+    *gp << "set title  '"<< plotTitle <<"'\n";
+    *gp << "set xlabel 'time'"<<"\n";
+    *gp <<  "set ylabel ''"<<"\n";
+    
+    
+    //size_t nYSeries = yseries.size();
+    std::vector<std::pair<double, double>> xy_pts_A;
+    std::vector<std::pair<double, double>> temp;
+
+    
+    size_t nYSeries = yseries.size();
+    size_t nXSeries = xseries.size();
+    assert(nXSeries == nYSeries);
+    
+    double y;
+    double x;
+    
+    bool include = true;
+
+    double maxAxisValue = 10000;
+     double xmax = -maxAxisValue;
+     double xmin = maxAxisValue;
+     double ymax = -maxAxisValue;
+     double ymin = maxAxisValue;
+    auto plots = (*gp).plotGroup();
+    size_t size =nXSeries ;
+    
+    
+    for(size_t i=0 ; i< size; ++i) {
+        y= yseries.at(i);
+        x= xseries.at(i);
+        
+        if (y< -maxAxisValue){
+            include = false;
+            break;
+        }
+        if (y > ymax)
+            ymax= y;
+        if (y < ymin)
+            ymin= y;
+        if (x > xmax)
+            xmax= x;
+        if (x < xmin)
+            xmin= x;
+        
+        // std::cout << "x "<< x<< " y "<< y  << std::endl;
+        temp.push_back(std::make_pair(x, y));
+    }
+    if (include){
+        std::string cmd = "with points title ''";
+        plots.add_plot1d(temp, cmd);
+        
+       // xy_pts_A.push_back(temp);
+    }
+    
+    
+    *gp << "set xrange  [" << xmin<< ":" << xmax<<"]\n";
+    *gp << "set yrange  [" << ymin<< ":" << ymax<<"]\n";
+
+    *gp << plots;
+    
+    return 0;
+}

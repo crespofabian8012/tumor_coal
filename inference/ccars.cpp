@@ -109,6 +109,7 @@ void UpperHull::update_intercepts_from_pos(int pos) {
             next_segment = segments.at(i+1);
             double num = segment.hx - next_segment.hx + next_segment.hpx*(next_segment.x - segment.x);
             double denom = next_segment.hpx - segment.hpx;
+            assert(num*denom>=0);
             if (denom!=0)
                 segment.z_right = segment.x + (num/denom);
             else
@@ -256,37 +257,52 @@ void UpperHull::add_segment(double new_x, double new_hx, double new_hpx, int pos
     segment.hx = new_hx;
     segment.hpx = new_hpx;
     
+    int internal_position = pos;
+//    if (pos ==1){
+//         internal_position = 0;
+//
+//    }
+//     else
+//         internal_position = pos;
+    
+    assert(internal_position <= x.size());
+    assert(internal_position <= hx.size());
+    assert(internal_position <= tangents_slopes.size());
+    
     Eigen::VectorXd new_xs(x.size()+1);
     Eigen::VectorXd new_hxs(hx.size()+1);
     Eigen::VectorXd new_tangents_slopes(tangents_slopes.size()+1);
           
-    new_xs.head(pos)= x.head(pos);
-    new_hxs.head(pos)= hx.head(pos);
-    new_tangents_slopes.head(pos)= tangents_slopes.head(pos);
+ 
+    
+    new_xs.head(internal_position)= x.head(internal_position);
+    new_hxs.head(internal_position)= hx.head(internal_position);
+    new_tangents_slopes.head(internal_position)= tangents_slopes.head(internal_position);
           
-    new_xs(pos)= new_x;
-    new_hxs(pos)= new_hx;
-    new_tangents_slopes(pos) =new_hpx;
+    new_xs(internal_position)= new_x;
+    new_hxs(internal_position)= new_hx;
+    new_tangents_slopes(internal_position) =new_hpx;
           
-    new_xs.tail(x.size()-pos)= x.tail(x.size()-pos);
-    new_hxs.tail(x.size()-pos)= hx.tail(x.size()-pos);
-    new_tangents_slopes.tail(x.size()-pos)= tangents_slopes.tail(x.size()-pos);
+    new_xs.tail(x.size()-internal_position)= x.tail(x.size()-internal_position);
+    new_hxs.tail(x.size()-internal_position)= hx.tail(x.size()-internal_position);
+    new_tangents_slopes.tail(x.size()-internal_position)= tangents_slopes.tail(x.size()-internal_position);
     
    
     x= new_xs;
     hx = new_hxs;
     
     tangents_slopes =new_tangents_slopes;
-    assert(x(pos)==new_x);
-    assert(hx(pos)==new_hx);
-    assert(new_tangents_slopes(pos)==new_hpx);
+    assert(x(internal_position)==new_x);
+    assert(hx(internal_position)==new_hx);
+    assert(new_tangents_slopes(internal_position)==new_hpx);
     
     // Insert segment
-    segments.insert(segments.begin()+pos, segment);
+    segments.insert(segments.begin()+internal_position, segment);
     n_segments = segments.size();
     
     // Update z and scum
-    update_intercepts_from_pos(pos-1);
+    int idx_update_intercepts = (internal_position>0)?internal_position-1: 0;
+    update_intercepts_from_pos(idx_update_intercepts);
     update_cumulative_from_pos(0);
     
 };
@@ -313,6 +329,18 @@ double UpperHull::get_hu(double x) {
     
     return hu;
 };
+int UpperHull::get_point_position(double new_x){
+    
+    // Determine point position
+    int iter = 0;
+    while (iter < x.size()) {
+        if (new_x < x(iter)) {
+            break;
+        }
+        iter++;
+    }
+    return iter;
+}
 ///_____________________________________________________________________________________________
 LowerHull::LowerHull(const Eigen::VectorXd&  x,const  Eigen::VectorXd&  hx):x(x),hx(hx) {
     // x assumed sorted!
@@ -385,7 +413,7 @@ void LowerHull::add_segment(double new_x, double new_hx, double new_hpx, int pos
     double new_hpx_left = (new_hx-hx_left)/(new_x-x_left);
     double new_hpx_right = (hx_right-new_hx)/(x_right-new_x);
     
-    assert(position>1);
+    
     new_slopes(position-1)= new_hpx_left;
     new_slopes(position)= new_hpx_right;
     
@@ -500,14 +528,19 @@ void CCUpperHull::init(UpperHull &upper_hull_concave, LowerHull &upper_hull_conv
 void CCUpperHull::update_cumulative(){
     int num_points = x.size();
     cumulative.resize(num_points-1);
+    
+    size_t current_num_tangent_points = upper_hull_concave->x.size();
+    assert((num_points-1)==2*current_num_tangent_points);
     cumulative.setZero();
     for(size_t i = 0; i < num_points; ++i){
         if (hpx(i)==0){
+            assert(x(i+1) >x(i));
             cumulative(i) = hx(i) + log(x(i+1)-x(i));
         }
         else if(hpx(i)>0){//positive slope
-            //if (i> 1)
-            cumulative(i) = hx(i+1) - log(hpx(i))+log(1-exp(hpx(i)*(x(i)-x(i+1))));
+            if (i<num_points-1){
+                cumulative(i) = hx(i+1) - log(hpx(i))+log(1-exp(hpx(i)*(x(i)-x(i+1))));
+            }
             
             
         }
@@ -538,13 +571,18 @@ void CCUpperHull::add_segment(double x_new_point, double hx_concave, double hpx_
     add_segment(x_new_point,  hx_concave,  hpx_concave, hx_convex,  hpx_convex,  pos );
     
 }
-void CCUpperHull::add_segment(double x_new_point, double hx_concave, double hpx_concave,double hx_convex, double hpx_convex, int pos ) {
+void CCUpperHull::add_segment(double x_new_point, double hx_concave, double hpx_concave,double hx_convex, double hpx_convex, int pos_convex_hull ) {
     
-    int idx_new_segment_concave = pos/3 +1;
-    upper_hull_concave->add_segment(x_new_point, hx_concave,  hpx_concave, idx_new_segment_concave);
+    int idx_new_segment_concave ;//= pos/3 +1;
     
-     int idx_new_segment_convex = pos/2 +1;
-    upper_hull_convex->add_segment(x_new_point, hx_convex,  hpx_convex, idx_new_segment_convex);
+    idx_new_segment_concave = (pos_convex_hull+1)/2;// pos_convex_hull-1;
+    //upper_hull_concave->add_segment(x_new_point, hx_concave,  hpx_concave, idx_new_segment_concave);
+    upper_hull_concave->add_segment(x_new_point, hx_concave,  hpx_concave);
+    
+    int idx_new_segment_convex; //= pos/2 +1;
+    idx_new_segment_convex = (pos_convex_hull<=1)? 1:(pos_convex_hull+1)/2 +1; //pos_convex_hull;
+    //upper_hull_convex->add_segment(x_new_point, hx_convex,  hpx_convex, idx_new_segment_convex);
+    upper_hull_convex->add_segment(x_new_point, hx_convex,  hpx_convex);
     
     Eigen::VectorXd upper_hull_concave_x_intercepts(upper_hull_concave->n_segments+1);
     Eigen::VectorXd upper_hull_concave_hx_intercepts(upper_hull_concave->n_segments+1);
@@ -563,7 +601,7 @@ void CCUpperHull::add_segment(double x_new_point, double hx_concave, double hpx_
     x= new_x;
     hx = new_hx;
     hpx = new_hpx;
-    cc_upper_hull.update_cumulative_from_pos(0);
+    update_cumulative();
     
 }
 int CCUpperHull::get_point_position(double new_x){
@@ -593,78 +631,141 @@ xrb(xrb)
     hpx.resize(2*lower_hull_convex.n_segments+1);
     
     //upper_hull_concave.n_segments is the number of internal points
+    init(lower_hull_concave, lower_hull_convex,  x,hx, hpx);
     
-    
-    Eigen::VectorXd lower_hull_convex_x_intercepts(lower_hull_convex.n_segments+1);
-    Eigen::VectorXd lower_hull_convex_hx_intercepts(lower_hull_convex.n_segments+1);
-    
-    lower_hull_convex.get_intercepts(lower_hull_convex_x_intercepts, lower_hull_convex_hx_intercepts);
-    
-    x( Eigen::seqN(0,lower_hull_convex_x_intercepts.size(),2))  =  lower_hull_convex_x_intercepts;
-    
-    x(Eigen::seqN(1,lower_hull_concave.n_points-2,2))  =  lower_hull_concave.x(Eigen::seqN(1, Eigen::last-1));
-    
-    
-    hx(0) = lower_hull_convex.segments[0].hu_left + lower_hull_concave.hx(0);
-    hx(hx.size()-1) = lower_hull_convex.segments[lower_hull_convex.n_segments-1].hu_right + lower_hull_concave.hx(lower_hull_concave.hx.size()-1);
-    
-    hpx(0) =lower_hull_convex.tangents_slopes(0) + lower_hull_concave.slopes(0);
-    hpx(hpx.size()-1) = lower_hull_convex.tangents_slopes(lower_hull_convex.n_segments-1)  + lower_hull_concave.slopes(lower_hull_concave.slopes.size()-1);
-    
-    
-    //now  tangent points in concave upper bound(= internal points in convex upper bound)
-
-    hx(Eigen::seqN(1,lower_hull_concave.n_points-2,2))=lower_hull_convex.hx +
-    lower_hull_concave.hx(Eigen::seqN(1, lower_hull_concave.n_points-2));
-    
-    hpx(Eigen::seqN(1,lower_hull_concave.n_points-2,2))=lower_hull_convex.tangents_slopes +
-    lower_hull_concave.slopes(Eigen::seqN(1, lower_hull_concave.n_points-2));
-    
-    //now intercept points of tangents in concave upper bound
-    hx(Eigen::seqN(2,lower_hull_convex.n_segments-1,2))= lower_hull_convex_hx_intercepts(Eigen::seqN(1, lower_hull_convex.n_segments-1)) + lower_hull_concave.get_h_intercepts(lower_hull_convex_x_intercepts(Eigen::seqN(1, lower_hull_convex.n_segments-1))) ;
-    
-    hpx(Eigen::seqN(2,lower_hull_convex.n_segments-1,2))= lower_hull_convex.tangents_slopes(Eigen::seqN(1, lower_hull_convex.n_segments-1)) + lower_hull_concave.slopes(Eigen::seqN(1, lower_hull_convex.n_segments-1));
-    
+//    Eigen::VectorXd lower_hull_convex_x_intercepts(lower_hull_convex.n_segments+1);
+//    Eigen::VectorXd lower_hull_convex_hx_intercepts(lower_hull_convex.n_segments+1);
+//
+//    lower_hull_convex.get_intercepts(lower_hull_convex_x_intercepts, lower_hull_convex_hx_intercepts);
+//
+//    x( Eigen::seqN(0,lower_hull_convex_x_intercepts.size(),2))  =  lower_hull_convex_x_intercepts;
+//
+//    x(Eigen::seqN(1,lower_hull_concave.n_points-2,2))  =  lower_hull_concave.x(Eigen::seqN(1, Eigen::last-1));
+//
+//
+//    hx(0) = lower_hull_convex.segments[0].hu_left + lower_hull_concave.hx(0);
+//    hx(hx.size()-1) = lower_hull_convex.segments[lower_hull_convex.n_segments-1].hu_right + lower_hull_concave.hx(lower_hull_concave.hx.size()-1);
+//
+//    hpx(0) =lower_hull_convex.tangents_slopes(0) + lower_hull_concave.slopes(0);
+//    hpx(hpx.size()-1) = lower_hull_convex.tangents_slopes(lower_hull_convex.n_segments-1)  + lower_hull_concave.slopes(lower_hull_concave.slopes.size()-1);
+//
+//
+//    //now  tangent points in concave upper bound(= internal points in convex upper bound)
+//
+//    hx(Eigen::seqN(1,lower_hull_concave.n_points-2,2))=lower_hull_convex.hx +
+//    lower_hull_concave.hx(Eigen::seqN(1, lower_hull_concave.n_points-2));
+//
+//    hpx(Eigen::seqN(1,lower_hull_concave.n_points-2,2))=lower_hull_convex.tangents_slopes +
+//    lower_hull_concave.slopes(Eigen::seqN(1, lower_hull_concave.n_points-2));
+//
+//    //now intercept points of tangents in concave upper bound
+//    hx(Eigen::seqN(2,lower_hull_convex.n_segments-1,2))= lower_hull_convex_hx_intercepts(Eigen::seqN(1, lower_hull_convex.n_segments-1)) + lower_hull_concave.get_h_intercepts(lower_hull_convex_x_intercepts(Eigen::seqN(1, lower_hull_convex.n_segments-1))) ;
+//
+//    hpx(Eigen::seqN(2,lower_hull_convex.n_segments-1,2))= lower_hull_convex.tangents_slopes(Eigen::seqN(1, lower_hull_convex.n_segments-1)) + lower_hull_concave.slopes(Eigen::seqN(1, lower_hull_convex.n_segments-1));
+//
     update_cumulative();
+    
+    
+}
+void CCLowerHull::init(LowerHull &lower_hull_concave, UpperHull &lower_hull_convex,   Eigen::VectorXd& x_temp,Eigen::VectorXd& hx_temp,Eigen::VectorXd& hpx_temp){
+    
+    
+      Eigen::VectorXd lower_hull_convex_x_intercepts(lower_hull_convex.n_segments+1);
+      Eigen::VectorXd lower_hull_convex_hx_intercepts(lower_hull_convex.n_segments+1);
+      
+      lower_hull_convex.get_intercepts(lower_hull_convex_x_intercepts, lower_hull_convex_hx_intercepts);
+      
+      x_temp( Eigen::seqN(0,lower_hull_convex_x_intercepts.size(),2))  =  lower_hull_convex_x_intercepts;
+      
+      x_temp(Eigen::seqN(1,lower_hull_concave.n_points-2,2))  =  lower_hull_concave.x(Eigen::seqN(1, Eigen::last-1));
+      
+      
+      hx_temp(0) = lower_hull_convex.segments[0].hu_left + lower_hull_concave.hx(0);
+      hx_temp(hx_temp.size()-1) = lower_hull_convex.segments[lower_hull_convex.n_segments-1].hu_right + lower_hull_concave.hx(lower_hull_concave.hx.size()-1);
+      
+      hpx_temp(0) =lower_hull_convex.tangents_slopes(0) + lower_hull_concave.slopes(0);
+      hpx_temp(hpx_temp.size()-1) = lower_hull_convex.tangents_slopes(lower_hull_convex.n_segments-1)  + lower_hull_concave.slopes(lower_hull_concave.slopes.size()-1);
+      
+      
+      //now  tangent points in concave upper bound(= internal points in convex upper bound)
+
+      hx_temp(Eigen::seqN(1,lower_hull_concave.n_points-2,2))=lower_hull_convex.hx +
+      lower_hull_concave.hx(Eigen::seqN(1, lower_hull_concave.n_points-2));
+      
+      hpx_temp(Eigen::seqN(1,lower_hull_concave.n_points-2,2))=lower_hull_convex.tangents_slopes +
+      lower_hull_concave.slopes(Eigen::seqN(1, lower_hull_concave.n_points-2));
+      
+      //now intercept points of tangents in concave upper bound
+      hx_temp(Eigen::seqN(2,lower_hull_convex.n_segments-1,2))= lower_hull_convex_hx_intercepts(Eigen::seqN(1, lower_hull_convex.n_segments-1)) + lower_hull_concave.get_h_intercepts(lower_hull_convex_x_intercepts(Eigen::seqN(1, lower_hull_convex.n_segments-1))) ;
+      
+      hpx_temp(Eigen::seqN(2,lower_hull_convex.n_segments-1,2))= lower_hull_convex.tangents_slopes(Eigen::seqN(1, lower_hull_convex.n_segments-1)) + lower_hull_concave.slopes(Eigen::seqN(1, lower_hull_convex.n_segments-1));
+      
     
     
 }
 void CCLowerHull::update_cumulative(){
     int num_points = x.size();
     cumulative.resize(num_points-1);
+    size_t current_num_tangent_points = lower_hull_convex->x.size();
+    assert((num_points-1)==2*current_num_tangent_points);
     cumulative.setZero();
     for(size_t i = 0; i < num_points; ++i){
         if (hpx(i)==0){
+            assert(x(i+1)>x(i));
             cumulative(i) = hx(i) + log(x(i+1)-x(i));
         }
         else if(hpx(i)>0){//positive slope
             //if (i> 1)
-            cumulative(i) = hx(i+1) - log(hpx(i))+log(1-exp(hpx(i)*(x(i)-x(i+1))));
+             if (i<num_points-1)
+                cumulative(i) = hx(i+1) - log(hpx(i))+log(1-exp(hpx(i)*(x(i)-x(i+1))));
             
             
         }
         else{//negative slope
             if (i<num_points-1)
                 cumulative(i) = hx(i) - log(-hpx(i))+log(1-exp(hpx(i)*(x(i+1)-x(i))));
-            else{
+          //  else{
                 
-            }
+          //  }
             
         }
-        
+      
     }
     minCumulative = cumulative.minCoeff();
 }
-void CCLowerHull::add_segment(double x, double hx_concave, double hpx_concave,double hx_convex, double hpx_convex, int pos ) {
+void CCLowerHull::add_segment(double x_new_point, double hx_concave, double hpx_concave,double hx_convex, double hpx_convex, int pos ) {
     
     
-    lower_hull_concave->add_segment(x, hx_concave,  hpx_concave);
     
+    int idx_new_segment_convex =(pos+1)/2;//pos-1;// pos/3 +1;
+    int idx_new_segment_concave=(pos<=1)? 1:(pos+1)/2 +1; //pos;// pos/2 +1;
+   
  
-    lower_hull_convex->add_segment(x, hx_convex,  hpx_convex);
     
-    cc_lower_hull.add_segment(x,hx_concave+ hx_convex,  hpx_concave + lower_hull_concave->get_slope(pos) );
-    
+     // lower_hull_concave->add_segment(x_new_point, hx_concave,  hpx_concave, idx_new_segment_concave);
+      lower_hull_concave->add_segment(x_new_point, hx_concave,  hpx_concave);
+       
+     // lower_hull_convex->add_segment(x_new_point, hx_convex,  hpx_convex, idx_new_segment_convex);
+    lower_hull_convex->add_segment(x_new_point, hx_convex,  hpx_convex);
+      
+      Eigen::VectorXd upper_hull_concave_x_intercepts(lower_hull_convex->n_segments+1);
+      Eigen::VectorXd upper_hull_concave_hx_intercepts(lower_hull_convex->n_segments+1);
+         
+      lower_hull_convex->get_intercepts(upper_hull_concave_x_intercepts, upper_hull_concave_hx_intercepts);
+      
+      Eigen::VectorXd new_x(2*lower_hull_convex->n_segments+1);
+      Eigen::VectorXd new_hx(2*lower_hull_convex->n_segments+1);
+      Eigen::VectorXd new_hpx(2*lower_hull_convex->n_segments+1);
+      
+       init(*lower_hull_concave, *lower_hull_convex,
+            new_x, new_hx , new_hpx);
+      
+     
+      x= new_x;
+      hx = new_hx;
+      hpx = new_hpx;
+     update_cumulative();
+      //cc_lower_hull.update_cumulative_from_pos(0);
     //cc_lower_hull.update_scum();
     
 }
@@ -811,37 +912,48 @@ max_points(max_points)
     ratioAreas = exp(upper_hull.cumulative.array()-upper_hull.maxCumulative)-exp(lower_hull.cumulative.array()-upper_hull.maxCumulative);
 };
 
-double CCARS::approximateIntegral(gsl_rng *rng,  double  max_number_tangent_points) {
+double CCARS::approximateLogIntegral(gsl_rng *rng,  double  max_number_tangent_points) {
     
     double result;
 
     size_t current_num_tangent_points = upper_hull_concave.x.size();
     
-    Eigen::VectorXd boundedArea(ratioAreas.size()-1);
+    Eigen::VectorXd boundedArea(current_num_tangent_points+1);
     double tmp, u_bound, l_bound;
-    size_t i,j;
+    size_t i, j;
     double new_x;
     double hconcave, hconvex, h;
+     //std::cout<< ratioAreas << std::endl;
     while(current_num_tangent_points < max_number_tangent_points && exp(logSumExp(lower_hull.cumulative)-logSumExp(upper_hull.cumulative))< 0.999 )//exp(logSumExp(lower_hull.cumulative)-logSumExp(upper_hull.cumulative)) should be always be < 1
     {
         //choose a segment
+        current_num_tangent_points = upper_hull_concave.x.size();
+        boundedArea.resize(current_num_tangent_points+1);
         boundedArea(0) =ratioAreas(0);
         boundedArea(boundedArea.size()-1) = ratioAreas(ratioAreas.size()-1);
-        boundedArea(Eigen::seq(1,boundedArea.size()-2 ))=  ratioAreas(Eigen::seq(1,2*current_num_tangent_points-2, 2 ))+ratioAreas(Eigen::seq(2,2*current_num_tangent_points-1, 2 ));
+        boundedArea(Eigen::seqN(1,boundedArea.size()-2 ))=  ratioAreas(Eigen::seqN(1, current_num_tangent_points-1, 2 ))+ratioAreas(Eigen::seqN(2,current_num_tangent_points-1, 2 ));
         
         tmp = boundedArea.maxCoeff();
         
         if (boundedArea(0)==tmp){
+            //std::cout << " first segment " << std::endl;
             new_x = sampleNewX(rng, xlb, upper_hull.x(1), upper_hull.hx(0),upper_hull.hx(1), upper_hull.hpx(0) );
         }
-        else if (boundedArea(boundedArea.size()-1)==tmp){
-            
-            i= 2*current_num_tangent_points;
+        else if (boundedArea(boundedArea.size()-1)==tmp){//the max is in the last position
+            //std::cout << " last segment " << std::endl;
+            i= 2*current_num_tangent_points-1;
             new_x = sampleNewX(rng, upper_hull.x(i), xrb, upper_hull.hx(i),upper_hull.hx(i+1), upper_hull.hpx(i));
+           
             
         }
         else{
-            i= 2*current_num_tangent_points-1;
+            // std::cout << " intermediate segment " << std::endl;
+            j = 1;
+            while (boundedArea(j)!=tmp)
+                j++;
+         
+                
+            i= 2*j;
             j= (upper_hull.x(i)< lower_hull.x(i))?1:0;
             double term1 = upper_hull.hx(i) -lower_hull.hpx(i-j)*(upper_hull.x(i)-lower_hull.x(i-j))-lower_hull.hx(i-j);
             double term2 = upper_hull.hpx(i+j-1)*(lower_hull.x(i)-upper_hull.x(i+j-1))+upper_hull.hx(i+j-1)-lower_hull.hx(i);
@@ -869,19 +981,23 @@ double CCARS::approximateIntegral(gsl_rng *rng,  double  max_number_tangent_poin
             hconcave =log_density->h_concave(new_x);
             hconvex =log_density->h_convex(new_x);;
             h = hconcave +hconvex;
+            //std::cout << " New x "<< new_x <<" Position i "<< i << std::endl;
+            
             addPoint(new_x, hconcave, hconvex, i);
         }
         else{
             //dont include this point
             current_num_tangent_points++;
         }
-        lower_hull.update_cumulative();
         
-        ratioAreas = exp(upper_hull.cumulative.array()-upper_hull.maxCumulative)-exp(lower_hull.cumulative.array()-upper_hull.maxCumulative);
+        
+        //ratioAreas = exp(upper_hull.cumulative.array()-upper_hull.maxCumulative)-exp(lower_hull.cumulative.array()-upper_hull.maxCumulative);
+        //std::cout<< ratioAreas << std::endl;
         
     }
     
-    result = exp(logSumExp(lower_hull.cumulative));
+    result = logSumExp(upper_hull.cumulative);
+    // std::cout<< " integral "<< result << std::endl;
     return result;
 };
 
@@ -906,9 +1022,87 @@ double CCARS::sampleNewX(gsl_rng *rng,double x1, double x2, double y1, double y2
     }
     return new_x;
 }
+double CCARS::sample(gsl_rng *rng, double& y, double& cumArea){
+    double new_x;
+    bool accepted = false;
+    size_t i;
+    size_t maxCumulative;
+    
+    while (!accepted){
+    
+          maxCumulative = upper_hull.cumulative.maxCoeff();
+          size_t num_segments = upper_hull.cumulative.size();
+          Eigen::VectorXd result = exp(upper_hull.cumulative.array()-maxCumulative);
+          Eigen::VectorXd cumulativeSum(result.size());
+          partial_sum(upper_hull.cumulative.begin(), upper_hull.cumulative.end(), cumulativeSum.begin(), plus<float>());
+          size_t count = 0;
+          double term = Random::randomUniformFromGsl2(rng)*cumulativeSum(Eigen::last);
+          
+          for(size_t i = 0; i<num_segments ; ++i){
+              if (term >cumulativeSum(i))
+                  count++;
+          }
+         
+          i = 1 + count;
+          cumArea = cumulativeSum(i);
+          
+          new_x = sampleNewX(rng, upper_hull.x(i), upper_hull.x(i+1), upper_hull.hx(i),upper_hull.hx(i+1), upper_hull.hpx(i) );
+          
+          //check for acceptance
+          double yupperBoundValue = upper_hull.hpx(i)*(new_x-upper_hull.x(i)) + upper_hull.hx(i);
+          double ylowerBoundValue;
+          if (lower_hull.x(i) < new_x){
+              ylowerBoundValue = lower_hull.hpx(i)*(new_x-lower_hull.x(i)) + lower_hull.hx(i);
+          }
+          else{
+              ylowerBoundValue =  lower_hull.hpx(i-1)*(new_x-lower_hull.x(i-1)) + lower_hull.hx(i-1);
+          
+          }
+          double u = Random::randomUniformFromGsl2(rng);
+          if ( exp(ylowerBoundValue-yupperBoundValue)> u)//accept squeezing step
+          {
+              double hconcave =log_density->h_concave(new_x);
+              double hconvex =log_density->h_convex(new_x);;
+              y = hconcave +hconvex;
+              //cumArea+= ;
+              accepted = true;
+          
+          }
+          else{
+              double hconcave =log_density->h_concave(new_x);
+              double hconvex =log_density->h_convex(new_x);;
+              y = hconcave +hconvex;
+              if (exp(y> yupperBoundValue)>u){//accept sample at rejection step
+                  accepted = true;
+              }
+              else{//reject and update bounds
+                  double dconcave =log_density->h_prime_concave(new_x);
+                  double dconvex =log_density->h_prime_convex(new_x);;
+                  upper_hull.add_segment(new_x, hconcave,dconcave,  hconvex, dconvex, i);
+                  lower_hull.add_segment(new_x, hconcave,dconcave,  hconvex, dconvex, i);
+                  ratioAreas = exp(upper_hull.cumulative.array()-upper_hull.maxCumulative)-exp(lower_hull.cumulative.array()-upper_hull.maxCumulative);
+              }
+          }
+    }
+
+    if (upper_hull.hpx(i)==0){
+             assert(new_x >upper_hull.x(i));
+             cumArea+= upper_hull.hx(i) + log(new_x -upper_hull.x(i));
+         }
+         else if(upper_hull.hpx(i)>0){//positive slope
+          
+             cumArea+= upper_hull.hx(i+1) - log(upper_hull.hpx(i))+log(1-exp(upper_hull.hpx(i)*(upper_hull.x(i)-new_x)));
+         }
+         else{//negative slope
+                 cumArea+= upper_hull.hx(i) - log(-upper_hull.hpx(i))+log(1-exp(upper_hull.hpx(i)*(new_x-upper_hull.x(i))));
+        
+         }
+    return new_x;
+}
 void CCARS::addPoint(double new_x){
     
-    int pos_new_x = lower_hull.get_point_position(new_x);
+    
+    int pos_new_x = lower_hull.lower_hull_concave->get_point_position(new_x);
     double  hconcave_new_x =log_density->h_concave(new_x);
     double hconvex_new_x =log_density->h_convex(new_x);;
     addPoint(new_x,  hconcave_new_x,  hconvex_new_x,  pos_new_x);
@@ -916,7 +1110,7 @@ void CCARS::addPoint(double new_x){
 }
 void CCARS::addPoint(double new_x, double hconcave_new_x, double hconvex_new_x, int pos_new_x){
     size_t current_num_tangent_points = upper_hull_concave.x.size();
-    if (pos_new_x == 2*current_num_tangent_points){
+    if (pos_new_x == 2*current_num_tangent_points-1 ){//2*current_num_tangent_points //(current_num_tangent_points)+1
         //new point is at the left of last tangent point
         double dconcave = log_density->h_prime_concave(new_x);
         double dconvex = log_density->h_prime_convex(new_x);
@@ -924,21 +1118,39 @@ void CCARS::addPoint(double new_x, double hconcave_new_x, double hconvex_new_x, 
         if (xrb >new_x){
             current_num_tangent_points++;
             upper_hull.add_segment(new_x, hconcave_new_x,dconcave,  hconvex_new_x, dconvex, pos_new_x);
-            
-            //TODO:lower_hull.add_segment
+          
             lower_hull.add_segment(new_x, hconcave_new_x,dconcave,  hconvex_new_x, dconvex, pos_new_x);
-                
             
+             ratioAreas = exp(upper_hull.cumulative.array()-upper_hull.maxCumulative)-exp(lower_hull.cumulative.array()-upper_hull.maxCumulative);
         }
         
     }
-    else if(pos_new_x==0){
+    else if(pos_new_x==1){
         //new point is at the right of first tangent point
+        double dconcave = log_density->h_prime_concave(new_x);
+        double dconvex = log_density->h_prime_convex(new_x);
+        if (xlb <new_x){
+                  current_num_tangent_points++;
+                  upper_hull.add_segment(new_x, hconcave_new_x,dconcave,  hconvex_new_x, dconvex, pos_new_x);
+                
+                  lower_hull.add_segment(new_x, hconcave_new_x,dconcave,  hconvex_new_x, dconvex, pos_new_x);
+                  
+                   ratioAreas = exp(upper_hull.cumulative.array()-upper_hull.maxCumulative)-exp(lower_hull.cumulative.array()-upper_hull.maxCumulative);
+              }
         
     }
     else{
         
-        
+               double dconcave = log_density->h_prime_concave(new_x);
+               double dconvex = log_density->h_prime_convex(new_x);
+               if (xlb <new_x){
+                         current_num_tangent_points++;
+                         upper_hull.add_segment(new_x, hconcave_new_x,dconcave,  hconvex_new_x, dconvex, pos_new_x);
+                       
+                         lower_hull.add_segment(new_x, hconcave_new_x,dconcave,  hconvex_new_x, dconvex, pos_new_x);
+                         
+                          ratioAreas = exp(upper_hull.cumulative.array()-upper_hull.maxCumulative)-exp(lower_hull.cumulative.array()-upper_hull.maxCumulative);
+                     }
         
     }
         
@@ -948,9 +1160,10 @@ void CCARS::addPoint(double new_x, double hconcave_new_x, double hconvex_new_x, 
 GenotypeJCPairLogProposal::GenotypeJCPairLogProposal(int numSites,
                                                      int numStates, double Torigin, double delta, double theta, double pair_creation_time,
                                                      double time_left_child,
-                                                     double time_right_child, const double* left_clv, const double* right_clv):
+                                                     double time_right_child, const double* left_clv, const double* right_clv,
+                                                     bool normalizedCLVs):
 numSites(numSites),numStates(numStates), Torigin(Torigin),delta(delta),theta(theta),pair_creation_time(pair_creation_time),time_left_child(time_left_child),
-time_right_child(time_right_child)
+time_right_child(time_right_child), normalizedCLVs(normalizedCLVs)
 {
     double stat_prob = 1.0 / numStates;
     size_t span = numStates * numSites;
@@ -961,28 +1174,67 @@ time_right_child(time_right_child)
     int num_zero_sites = 0;
     oneMinusSumTermConcave.resize(numSites);
     oneMinusSumTermConvex.resize(numSites);
+    
+    firstTermConcave.resize(numSites);
+    firstTermConvex.resize(numSites);
     for(size_t i= 0; i< numSites; ++i){
         
         
         double sum_for_site = 0.0;
+        double sum_for_left_clv = 0.0;
+        double sum_for_right_clv = 0.0;
         for(size_t j= 0; j< numStates; ++j){
             sum_for_site+= stat_prob * left_clv[j]* right_clv[j];
+            sum_for_left_clv+= stat_prob*left_clv[j];
+            sum_for_right_clv+= stat_prob*right_clv[j];
             // std::cout << " left_pclv " << left_clv[j] << std::endl;
             // std::cout << " right_pclv " << right_clv[j] << std::endl;
         }
         //assert(1-sum_for_site >= -numStates);
         //assert(1-sum_for_site <= numStates );
-        if (1-sum_for_site > 0){
-            oneMinusSumTermConcave(num_concave_sites)= 1-sum_for_site;
-            num_concave_sites++;
-        }
-        else if(1-sum_for_site < 0) {
-            oneMinusSumTermConvex(num_convex_sites)=1-sum_for_site;
-            num_convex_sites++;
+        if (normalizedCLVs){
+            if (1-sum_for_site > 0){
+                       oneMinusSumTermConcave(num_concave_sites)= 1-sum_for_site;
+                       num_concave_sites++;
+                   }
+                   else if(1-sum_for_site < 0) {
+                       oneMinusSumTermConvex(num_convex_sites)=1-sum_for_site;
+                       num_convex_sites++;
+                   }
+                   else{
+                       
+                       num_zero_sites++;
+                   }
         }
         else{
+            std::cout << " sum_left*sum_right term site i "<< i <<" "<< sum_for_left_clv*sum_for_right_clv<< std::endl;
+            std::cout << " sum for site i " << i <<" "<<  sum_for_site<< std::endl;
+            std::cout << "one minus ratio for site i " << i <<" "<< 1- sum_for_site/(sum_for_left_clv*sum_for_right_clv) << std::endl;
+            std::cout << " coeff of exp site i " << i <<" "<<  sum_for_left_clv*sum_for_right_clv-sum_for_site<< std::endl;
             
-            num_zero_sites++;
+            if (sum_for_site < sum_for_left_clv*sum_for_right_clv){
+                
+                oneMinusSumTermConcave(num_concave_sites)= (sum_for_left_clv*sum_for_right_clv)-sum_for_site;
+                firstTermConcave(num_concave_sites) =sum_for_left_clv*sum_for_right_clv;
+                
+                assert( oneMinusSumTermConcave(num_concave_sites)>0);
+                assert( firstTermConcave(num_concave_sites)>0);
+                num_concave_sites++;
+                    }
+            else if(sum_for_site > (sum_for_left_clv*sum_for_right_clv)) {
+                oneMinusSumTermConvex(num_convex_sites)=(sum_for_left_clv*sum_for_right_clv)-sum_for_site;
+                  firstTermConvex(num_convex_sites) =sum_for_left_clv*sum_for_right_clv;
+                
+                assert( oneMinusSumTermConvex(num_convex_sites)<0);
+                assert( firstTermConvex(num_convex_sites)>0);
+                num_convex_sites++;
+            }
+            else{
+                                  
+                num_zero_sites++;
+            }
+            
+            
         }
         assert(num_zero_sites==0);
         // std::cout << "Number sites with zero term"<< num_zero_sites << std::endl;
@@ -1007,7 +1259,7 @@ time_right_child(time_right_child)
     
     num_concave_sites = 0;
     num_convex_sites = 0;
-    
+    normalizedCLVs = true;
     
     num_concave_sites= oneMinusSumTermConcaveVector.size();
     num_convex_sites= oneMinusSumTermConvexVector.size();
@@ -1079,14 +1331,35 @@ double GenotypeJCPairLogProposal::h_concave(double x) {
     double  result = 0.0;
     result+= -Population::FmodelTstandard(x, Torigin, delta, K)+ Population::FmodelTstandard(pair_creation_time, Torigin, delta,K);
     
-    Eigen::VectorXd transformed = oneMinusSumTermConcave.head(num_concave_sites).unaryExpr([this,x](const double&  d) {
-        double term =1.0-exp(-2*x+time_left_child+time_right_child)*d;
+    Eigen::VectorXd transformed;
+    if  (normalizedCLVs){
+       transformed = oneMinusSumTermConcave.head(num_concave_sites).unaryExpr([this,x](const double&  d) {
+        double term = 1.0-exp(-2*x+time_left_child+time_right_child)*d;
+            
         if (term < 1e-20){
             term = 1e-20;
             std::cout<<"term 0 in h_concave for x= " << x << std::endl;
         }
         return log(term);
-    });
+       });
+    }
+    else {
+        transformed = firstTermConcave.head(num_concave_sites) -exp(-2*x+time_left_child+time_right_child)*oneMinusSumTermConcave.head(num_concave_sites);
+        
+         transformed.unaryExpr([]( double d) {
+             
+             if (d < 1e-20){
+                 
+                 std::cout<<"term 0 in h_convex for x= " <<  std::endl;
+                 return log(1e-20);
+             }
+             else{
+                return log(d);
+                 
+             }
+         });
+    
+    }
     assert(transformed.size()==num_concave_sites);
     result+= transformed.sum();
 
@@ -1098,7 +1371,9 @@ double GenotypeJCPairLogProposal::h_convex(double x) {
     double  result = 0.0;
     //    result+= -Population::FmodelTstandard(x, Torigin, delta, K)+ Population::FmodelTstandard(pair_creation_time, Torigin, delta,K);
     
-    Eigen::VectorXd transformed = oneMinusSumTermConvex.head(num_convex_sites).unaryExpr([this,x](const double&  d) {
+    Eigen::VectorXd transformed;
+    if  (normalizedCLVs){
+      transformed= oneMinusSumTermConvex.head(num_convex_sites).unaryExpr([this,x](const double&  d) {
         double term =1.0-exp(-2*x+time_left_child+time_right_child)*d;
         if (term < 1e-20){
             term = 1e-20;
@@ -1106,6 +1381,24 @@ double GenotypeJCPairLogProposal::h_convex(double x) {
         }
         return log(term);
     });
+    }
+    else{
+         transformed = firstTermConvex.head(num_convex_sites) -exp(-2*x+time_left_child+time_right_child)*oneMinusSumTermConvex.head(num_convex_sites);
+        
+       transformed.unaryExpr([]( double d) {
+            
+            if (d < 1e-20){
+                
+                std::cout<<"term 0 in h_convex for x= " <<  std::endl;
+                return log(1e-20);
+            }
+            else{
+               return log(d);
+                
+            }
+        });
+        
+    }
     assert(transformed.size()==num_convex_sites);
     result+= transformed.sum();
 
@@ -1117,11 +1410,22 @@ double GenotypeJCPairLogProposal::h_prime_concave(double x) {
     double  result = 0.0;
     result+= -2.0/Population::CalculateH(x, Torigin, delta,K);// this part has second derivative >0 then it  is convex
     
-    Eigen::VectorXd transformed = oneMinusSumTermConcave.head(num_concave_sites).unaryExpr([this,x](const double&  d) {
-        double term= exp(-2*x+time_left_child+time_right_child)*d;
-        return (2.0* term  / (1-term));
-    });
-    
+    Eigen::VectorXd transformed;
+    if  (normalizedCLVs){
+        
+        transformed = oneMinusSumTermConcave.head(num_concave_sites).unaryExpr([this,x](const double&  d) {
+            double term= exp(-2*x+time_left_child+time_right_child)*d;
+            return (2.0* term  / (1-term));
+        });
+        
+    }
+    else{
+        
+        transformed = 2.0*exp(-2.0*x+time_left_child+time_right_child)*oneMinusSumTermConcave.head(num_concave_sites).array()
+        /(firstTermConcave.head(num_concave_sites).array() -exp(-2*x+time_left_child+time_right_child)*oneMinusSumTermConcave.head(num_concave_sites).array());
+            
+    }
+
     assert(transformed.size()==num_concave_sites);
     result+= transformed.sum();
     
@@ -1133,11 +1437,19 @@ double GenotypeJCPairLogProposal::h_prime_convex(double x) {
     double  result = 0.0;
     // result+= -2.0/Population::CalculateH(x, Torigin, delta,K)  ;
     
-    Eigen::VectorXd transformed = oneMinusSumTermConvex.head(num_convex_sites).unaryExpr([this,x](const double& d) {
+    Eigen::VectorXd transformed;
+    if  (normalizedCLVs){
+      transformed= oneMinusSumTermConvex.head(num_convex_sites).unaryExpr([this,x](const double& d) {
         double term= exp(-2*x+time_left_child+time_right_child)*d;
         return (2.0* term  / (1-term));
     });
-    
+     }
+     else{
+         transformed = 2.0*exp(-2.0*x+time_left_child+time_right_child)*oneMinusSumTermConvex.head(num_convex_sites).array()
+              /(firstTermConvex.head(num_convex_sites).array() -exp(-2*x+time_left_child+time_right_child)*oneMinusSumTermConvex.head(num_convex_sites).array());
+         
+         
+     }
     assert(transformed.size()==num_convex_sites);
     result+= transformed.sum();
     

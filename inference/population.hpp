@@ -124,7 +124,7 @@ public:
     std::vector<long double> CoalescentEventTimes;
     std::vector<long double> oldCoalescentEventTimes;
     
-    PairDoubleMap pairCurrentProposals;
+    PairInfoMap pairCurrentProposals;
     
 public:
     Population(int ind, int ord, long double timeOriginInput,
@@ -199,8 +199,8 @@ public:
     double  nextCoalEventTime(int idxNextCoal, int indexNextMigration,  double currentTime, bool& isThereInmigration, Population* inmigrantPop );
     void printCoalEventTimes(std::ostream &stream);
     void printInmigrationEventTimes(std::ostream &stream);
-    std::pair<Pair, std::pair<double, double>> initPairProposalsNextEventTime(gsl_rng *rngGsl, double K);
-    std::pair<Pair, std::pair<double, double>> updatePairCurrentProposalsMap(int posNewNodeIdsGametes, double modelTimeNewNode,double K, double &logWeightDiff, std::pair<Pair, std::pair<double, double>> copyPairMinModelTime, State *currState, gsl_rng *rngGsl, bool normalize);
+    std::pair<Pair, ProposalDistribInfo> initPairProposalsNextEventTime(gsl_rng *rngGsl, double K);
+    std::pair<Pair, ProposalDistribInfo> updatePairCurrentProposalsMap(int posNewNodeIdsGametes, double modelTimeNewNode,double K, double &logWeightDiff, std::pair<Pair, ProposalDistribInfo> copyPairMinModelTime, State *currState, gsl_rng *rngGsl, bool normalize);
     
 private:
     static bool isNotPositive(long double d);
@@ -254,7 +254,7 @@ public:
     double proposeNextCoalEventTime( gsl_rng *random, int& idxLeftNodePop, int& idxRightNodePop, int& idxIncomingNode, double &logLik, double K);
     void  acceptNextCoalEventTime(gsl_rng *random, double receiverModelTime, int idxReceiverPop, int idxIncomingPop, double K);
     Population* getCurrentPopulation();
-    std::pair<Pair, std::pair<double, double>> initPairProposalsNextEventTimePerPopulation(gsl_rng *rngGsl, double K);
+    std::pair<Pair, ProposalDistribInfo> initPairProposalsNextEventTimePerPopulation(gsl_rng *rngGsl, double K);
 
 };
 class StructuredCoalescentTree{

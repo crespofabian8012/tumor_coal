@@ -48,7 +48,33 @@ struct MyEqual {
         return (lhs.first == rhs.first)&&(lhs.second == rhs.second);
     }
 };
-using PairDoubleMap = std::unordered_map<Pair , std::pair<double, double>, boost::hash<Pair>, MyEqual<Pair> > ;
+//using PairDoubleMap = std::unordered_map<Pair , std::pair<double, double>, boost::hash<Pair>, MyEqual<Pair> > ;
+struct ProposalDistribInfo{
+    double timeProposal;
+    double creationTime;
+    double logIntegral;
+    double logLikAtProposal;
+    double cumlogIntegralUntilProposal;
+    
+    bool operator==(const ProposalDistribInfo &rhs) {
+        return std::tie(timeProposal, creationTime,logIntegral, logLikAtProposal,cumlogIntegralUntilProposal ) == std::tie(rhs.timeProposal, rhs.creationTime,rhs.logIntegral, rhs.logLikAtProposal,rhs.cumlogIntegralUntilProposal);
+    }
+
+    void swap(ProposalDistribInfo & other)
+    {
+        std::swap(timeProposal, other.timeProposal);
+        std::swap(creationTime, other.creationTime);
+        std::swap(logIntegral, other.logIntegral);
+        std::swap(logLikAtProposal, other.logLikAtProposal);
+        std::swap(cumlogIntegralUntilProposal, other.cumlogIntegralUntilProposal);
+    }
+
+    bool operator<(const ProposalDistribInfo &rhs) {
+        return std::tie(timeProposal, creationTime,logIntegral, logLikAtProposal,cumlogIntegralUntilProposal) < std::tie(rhs.timeProposal, rhs.creationTime,rhs.logIntegral, rhs.logLikAtProposal,rhs.cumlogIntegralUntilProposal);
+    }
+};
+//using PairInfoMap = std::unordered_map<Pair , std::tuple<double, double, double, double, double >, boost::hash<Pair>, MyEqual<Pair> > ;
+using PairInfoMap = std::unordered_map<Pair , ProposalDistribInfo, boost::hash<Pair>, MyEqual<Pair> > ;
 // SiteStr: information about a site
 typedef struct
 {

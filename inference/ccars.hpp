@@ -40,17 +40,20 @@ public:
     double pair_creation_time;
     double time_left_child;
     double time_right_child;
+    bool normalizedCLVs;
     
     double K = 0.8;
     Eigen::VectorXd oneMinusSumTermConcave;
     Eigen::VectorXd oneMinusSumTermConvex;
+    Eigen::VectorXd firstTermConcave;
+    Eigen::VectorXd firstTermConvex;
     int num_concave_sites ;
     int num_convex_sites ;
     
     GenotypeJCPairLogProposal( int numSites,
                               int numStates,double Torigin, double delta, double theta, double pair_creation_time,
                               double time_left_child,
-                              double time_right_child, const double* left_clv, const double* right_clv);
+                              double time_right_child, const double* left_clv, const double* right_clv,bool normalizedCLVs);
     
     GenotypeJCPairLogProposal(int numSites,
                               int numStates, double Torigin, double delta, double theta, double pair_creation_time,
@@ -111,7 +114,7 @@ public:
     void update_cumulative_from_pos(int pos);
     void update_intercepts_from_pos(int pos);
     void get_intercepts(Eigen::VectorXd &x_intercept, Eigen::VectorXd &hx_intercept);
-    
+    int get_point_position(double new_x);
     
 };
 class LowerHull {
@@ -193,6 +196,7 @@ public:
     double sample(gsl_rng *rng);
     void update_cumulative();
     int get_point_position(double new_x);
+    void init(LowerHull &lower_hull_concave, UpperHull &lower_hull_convex,   Eigen::VectorXd& x_temp,Eigen::VectorXd& hx_temp,Eigen::VectorXd& hpx_temp);
     
     
 };
@@ -222,10 +226,11 @@ public:
     CCARS(CCLogDensity* const log_density,const Eigen::VectorXd&  x, double xlb, double xrb, int max_points);
     
     std::vector<double> sample(gsl_rng *rng, unsigned N, CCLogDensity* const log_density) ;
-    double approximateIntegral(gsl_rng *rng,  double  max_number_internal_points);
+    double approximateLogIntegral(gsl_rng *rng,  double  max_number_internal_points);
     
     double sampleNewX(gsl_rng *rng,double x1, double x2, double y1, double y2, double m );
     void addPoint(double new_x, double hconcave_new_x, double hconvex_new_x, int pos_new_x);
     void addPoint(double new_x);
+    double sample(gsl_rng *rng,  double& y, double& cumArea);
 };
 #endif /* ccars_hpp */

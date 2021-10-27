@@ -52,7 +52,7 @@ class State{
     GenotypeErrorModel *gtError;
     long double theta;
     double logWeight;
-    std::pair<Pair, std::pair<double, double>> pairMinModelTime;
+    std::pair<Pair, ProposalDistribInfo> pairMinModelTime;
     
 public:
     //constructors
@@ -353,7 +353,7 @@ public:
     
     double likelihood_factor(std::unique_ptr<PartialTreeNode> root)const;
     
-    std::pair<Pair, std::pair<double, double>> initPairProposalsNextEventTime(gsl_rng *rngGsl, double K);
+    std::pair<Pair, ProposalDistribInfo> initPairProposalsNextEventTime(gsl_rng *rngGsl, double K);
     
     ~State();
 };

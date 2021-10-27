@@ -1047,7 +1047,7 @@ void Population::savePosteriorValues(){
     X->saveCurrentValue();
     
 }
-std::pair<Pair, std::pair<double, double>> Population::initPairProposalsNextEventTime(gsl_rng *rngGsl, double K){
+std::pair<Pair, ProposalDistribInfo> Population::initPairProposalsNextEventTime(gsl_rng *rngGsl, double K){
     
     assert(numActiveGametes > 1);
 
@@ -1062,9 +1062,9 @@ std::pair<Pair, std::pair<double, double>> Population::initPairProposalsNextEven
     double minKingmanTime = DOUBLE_INF;
     double proposalKingmanTime, proposalModelTime;
     Pair currPair;
-    std::pair<Pair, std::pair<double, double>> currEntry;
-    std::pair<Pair, std::pair<double, double>> winnerModelTime;
-    std::pair<Pair, std::pair<double, double>> winnerKingmanTime;
+    std::pair<Pair, ProposalDistribInfo> currEntry;
+    std::pair<Pair, ProposalDistribInfo> winnerModelTime;
+    std::pair<Pair, ProposalDistribInfo> winnerKingmanTime;
     
    
     for(std::vector<Pair>::iterator it = pairs.begin(), end = pairs.end(); it != end; ++it)
@@ -1072,7 +1072,15 @@ std::pair<Pair, std::pair<double, double>> Population::initPairProposalsNextEven
         currPair = *it;
         proposalKingmanTime =  Random::RandomExponential(1.0,0,  true, rngGsl,NULL );
         proposalModelTime = Population::GstandardTmodel(proposalKingmanTime, timeOriginSTD, delta, K);
-        currEntry = std::make_pair(currPair,std::make_pair(0.0, proposalModelTime));
+        
+        ProposalDistribInfo propInfo;
+        propInfo.creationTime = 0.0;
+        propInfo.timeProposal= proposalModelTime;
+        propInfo.logLikAtProposal = 0.0;
+        propInfo.cumlogIntegralUntilProposal = 0.0;
+        propInfo.logIntegral = 0.0;
+        
+        currEntry = std::make_pair(currPair,propInfo);
         if (proposalModelTime<minModeltime){
             
             winnerModelTime = currEntry;
@@ -1093,17 +1101,17 @@ std::pair<Pair, std::pair<double, double>> Population::initPairProposalsNextEven
     return winnerModelTime;
 
 }
-std::pair<Pair, std::pair<double, double>> Population::updatePairCurrentProposalsMap(int posNewNodeIdsGametes, double modelTimeNewNode,double K, double &logWeightDiff, std::pair<Pair, std::pair<double, double>> copyPairMinModelTime, State *currState,  gsl_rng *rngGsl, bool normalizeClv){
+std::pair<Pair, ProposalDistribInfo> Population::updatePairCurrentProposalsMap(int posNewNodeIdsGametes, double modelTimeNewNode,double K, double &logWeightDiff, std::pair<Pair, ProposalDistribInfo> copyPairMinModelTime, State *currState,  gsl_rng *rngGsl, bool normalizeClv){
     
     double waitingTimeKingman, proposalKingmanTime, proposalModelTime;
     double minModeltime = DOUBLE_INF;
     double currKingmanCoalTime = Population::FmodelTstandard(modelTimeNewNode, timeOriginSTD, delta, K);
-    std::pair<Pair, std::pair<double, double>>  pairMinModelTime;
+    std::pair<Pair, ProposalDistribInfo>  pairMinModelTime;
     int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
     double logLikNewHeight = 0.0;
     
     assert(pairCurrentProposals.size()== (numActiveGametes)*(numActiveGametes-1)/ 2.0 -1);
-    PairDoubleMap::iterator it = pairCurrentProposals.begin();
+    PairInfoMap::iterator it = pairCurrentProposals.begin();
     double lik_factor_newNode;
     while ( it != pairCurrentProposals.end()) {
         
@@ -1112,8 +1120,8 @@ std::pair<Pair, std::pair<double, double>> Population::updatePairCurrentProposal
         
         if (Utils::pairsIntersected(currPair, copyPairMinModelTime.first)){
             
-            double dropoutNodeProposalModelTime =   it->second.second;
-            double dropoutNodeModelTimeEntry =   it->second.first;
+            double dropoutNodeProposalModelTime =  it->second.timeProposal  ;
+            double dropoutNodeModelTimeEntry =   it->second.creationTime ;
             //numerator
             logWeightDiff +=   -log(theta)+log(numActiveGametes*(numActiveGametes-1)/ 2.0) +
                                 Population::LogLambda(dropoutNodeProposalModelTime, timeOriginSTD, delta,K)-
@@ -1150,8 +1158,8 @@ std::pair<Pair, std::pair<double, double>> Population::updatePairCurrentProposal
                 proposalKingmanTime = waitingTimeKingman + currKingmanCoalTime;
                 
                 proposalModelTime = Population::GstandardTmodel(proposalKingmanTime, timeOriginSTD, delta, K);
-                it->second.first = modelTimeNewNode;//creation time
-                it->second.second  = proposalModelTime;//new proposal time
+                it->second.creationTime    = modelTimeNewNode;//creation time
+                it->second.timeProposal  = proposalModelTime;//new proposal time
                 if (proposalModelTime<minModeltime){
                                     
                                     pairMinModelTime = *it;
@@ -1162,9 +1170,9 @@ std::pair<Pair, std::pair<double, double>> Population::updatePairCurrentProposal
         }
         else{
             //find the minimum proposal model time in the pairs that didnt dropout
-            if (it->second.second < minModeltime){
+            if (it->second.timeProposal < minModeltime){
                 
-                minModeltime = it->second.second;
+                minModeltime = it->second.timeProposal;
                 pairMinModelTime = *it;
             }
              it++;
@@ -1742,12 +1750,12 @@ void  PopulationSet::acceptNextCoalEventTime(gsl_rng *random, double receiverMod
     }
     
 }
-std::pair<Pair, std::pair<double, double>> PopulationSet::initPairProposalsNextEventTimePerPopulation(gsl_rng *rngGsl, double K){
+std::pair<Pair, ProposalDistribInfo> PopulationSet::initPairProposalsNextEventTimePerPopulation(gsl_rng *rngGsl, double K){
     
    
     Population *popI = getCurrentPopulation();
     
-    std::pair<Pair, std::pair<double, double>> pairMinModelTimeCurrPop;
+    std::pair<Pair, ProposalDistribInfo> pairMinModelTimeCurrPop;
     
     if (popI->numActiveGametes > 1)
         pairMinModelTimeCurrPop = popI->initPairProposalsNextEventTime(rngGsl, K);

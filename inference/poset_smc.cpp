@@ -158,7 +158,8 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             }
             else{//TSMC1
                 bool normalize = params.getProgramOptions().normalizeClv;
-                logWeightDiff =  result->proposalTSMC1(random, newHeight, logLikNewHeight, K, normalize);
+               
+                logWeightDiff =  result->proposalTSMC1( t, random, newHeight, logLikNewHeight, K, params.usePriorInSMC1, normalize);
                 
                 
             }

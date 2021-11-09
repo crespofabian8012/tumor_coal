@@ -99,6 +99,7 @@ void PartialTreeEdge::showPMatrix( unsigned int states, unsigned int rate_cats, 
                 printf("%+2.*f   ", float_precision, pmatrix[i*states_padded+j]);
             printf("\n");
         }
+        
         printf("\n");
     }
 }
@@ -107,12 +108,6 @@ void PartialTreeEdge::freeMatrix(){
     delete []pmatrix;
     
 }
-//PartialTreeEdge::~PartialTreeEdge() {
-//    manager->pmatrix_buffer.push(pmatrix);
-//    
-//    // pll_aligned_free(pmatrix);
-//    pmatrix = nullptr;
-//}
 
 PartialTreeNode::PartialTreeNode(PLLBufferManager *manager,
                                  std::shared_ptr<PartialTreeNode> const& leftChild,
@@ -388,16 +383,21 @@ void PartialTreeNode::showpClV(unsigned int states, unsigned int rate_cats, unsi
         for (j = 0; j < rate_cats; ++j)
         {
             printf("(");
-            for (k = 0; k < states-1; ++k)
+           // for (k = 0; k < states-1; ++k)
+             for (k = 0; k < states-1; ++k)
             {
-                prob = pclv2[i*rate_cats*states_padded + j*states_padded + k];
+               // prob = pclv2[i*rate_cats*states_padded + j*states_padded + k];
+                prob = pclv2[k];
+                //prob = pclv2[i*rate_cats*states_padded + j*states_padded + k];
                 //if (scale_buffer) PartialTreeNode::unscale(&prob, scale_buffer[i]);
                 printf("%.*f,", float_precision, prob);
             }
-            prob = pclv2[i*rate_cats*states_padded + j*states_padded + k];
+            prob = pclv2[k];
+            //prob = pclv2[i*rate_cats*states_padded + j*states_padded + k];
             //if (scale_buffer) PartialTreeNode::unscale(&prob, scale_buffer[i]);
             printf("%.*f)", float_precision, prob);
             if (j < rate_cats - 1) printf(",");
+            pclv2+= states;
         }
         printf("} ");
     }
@@ -410,7 +410,7 @@ void PartialTreeNode::buildCLV(int tip_id,int numberStates, pll_msa_t *msa, Geno
     auto clv_size = msa->length * numberStates;
     //auto clv_size = msa->length * numberStates*numberRateCats;
     //here we assume numberRateCats=1
-    double * pclv2 = pclv;
+    //double * pclv2 = pclv;
   
     
     auto seq = msa->sequence[tip_id];
@@ -422,37 +422,39 @@ void PartialTreeNode::buildCLV(int tip_id,int numberStates, pll_msa_t *msa, Geno
         auto charstate = (pll_state_t) seq[j];
         pll_state_t state = charmap ? charmap[(int) charstate] : charstate;
         
-        double sum_lh = gtErrorModel->computeStateErrorProbPT20(state, pclv2);
-        
+        double sum_lh = gtErrorModel->computeStateErrorProbPT20(state, pclv);
+       
         assert(sum_lh >0);
         if (normalize){
             
           
-            for (size_t k = 0; k < numberStates; ++k)
-                      pclv2[k] *= 1.0* numberStates /sum_lh;
+            for (size_t k = 0; k < numberStates; ++k){
+                      pclv[k] = pclv[k]  * (1.0* numberStates) /sum_lh;
+                      
+            }
             //with this , \sum_{i=1}^{numberStates} stat_prob * clv[i] = 1
          
             
         }
+       
+//                if (true)
+//                {
+//                      printf("state: %llu ", state);
+//                      printf("char: %c ", seq[j]);
+//                      for (size_t k = 0; k < numberStates; ++k)
+//                        printf("%lf ", pclv[k]);
+//                      printf("\n");
+////                    for (size_t k = 0; k < numberStates; ++k)
+////                      printf("%lf ", pclv2[k]);
+//                    printf("\n");
+//                 }
         
-        //        if (true)
-        //        {
-        //              printf("state: %llu ", state);
-        //              printf("char: %c ", seq[j]);
-        //              for (size_t k = 0; k < numberStates; ++k)
-        //                printf("%lf ", pclv[k]);
-        //              printf("\n");
-        //            for (size_t k = 0; k < numberStates; ++k)
-        //              printf("%lf ", pclv[k]);
-        //            printf("\n");
-        //         }
-        
-        pclv2 += numberStates;
+        pclv += numberStates;
         //  clvp += numberStates*numberRateCats;
     }
     
     //restore the pointer to the beginning
-    pclv2 -= clv_size;
+    pclv -= clv_size;
 }
 void  PartialTreeNode::unscale(double * prob, unsigned int times)
 {

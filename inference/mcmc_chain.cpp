@@ -2316,6 +2316,8 @@ long double  Chain::LogConditionalLikelihoodSequences(pll_msa_t * msa, char* New
                                      RATE_CATS, // unsigned  int  rate_cats
                                      inner_nodes_count, // unsigned  int   scale_buffers
                                      attributes );
+    
+    assert(partition);
    
     //pll_set_asc_bias_type(partition, 0);
     //pll_set_asc_bias_type(partition, PLL_ATTRIB_AB_LEWIS);// also could be PLL_ATTRIB_AB_FELSENSTEIN or PLL_ATTRIB_AB_STAMATAKIS

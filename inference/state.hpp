@@ -102,7 +102,7 @@ public:
     
     std::shared_ptr<PartialTreeNode> proposeNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight , double logLikNewNode, double* left_pmatrix, double* right_pmatrix, bool normalize);
     
-
+    
     template<typename... Ts>
     auto uniquePtrNewNode(int firstId, int secondId, size_t index_pop_new_node, double newNodeHeight, double logLikNewNode, bool normalizeClv){
         
@@ -165,81 +165,81 @@ public:
         };
         
         std::unique_ptr<PartialTreeNode, decltype(delPartialTreeNode)> parent(nullptr, delPartialTreeNode);
-    //    parent.reset(new PartialTreeNode(std::forward<Ts>(
-    //                                                      pll_buffer_manager, child_left, child_right,
-    //                                                      left_length, right_length,
-    //                                                      pmatrix_elements,
-    //                                                      "", newNodeHeight, clv_elements,
-    //                                                      scaler_size, partition->alignment(), nextAvailable,
-    //                                                      index_pop_new_node, nullptr, nullptr)...)) ;
+        //    parent.reset(new PartialTreeNode(std::forward<Ts>(
+        //                                                      pll_buffer_manager, child_left, child_right,
+        //                                                      left_length, right_length,
+        //                                                      pmatrix_elements,
+        //                                                      "", newNodeHeight, clv_elements,
+        //                                                      scaler_size, partition->alignment(), nextAvailable,
+        //                                                      index_pop_new_node, nullptr, nullptr)...)) ;
         
         
         parent.reset(new PartialTreeNode(
-                                                          pll_buffer_manager, child_left, child_right,
-                                                          left_length, right_length,
-                                                          pmatrix_elements,
-                                                          "", newNodeHeight, clv_elements,
-                                                          scaler_size, partition->alignment(), nextAvailable,
-                                                          index_pop_new_node, nullptr, nullptr)) ;
+                                         pll_buffer_manager, child_left, child_right,
+                                         left_length, right_length,
+                                         pmatrix_elements,
+                                         "", newNodeHeight, clv_elements,
+                                         scaler_size, partition->alignment(), nextAvailable,
+                                         index_pop_new_node, nullptr, nullptr)) ;
         const unsigned int matrix_indices[1] = {0};
         //Array params_indices holds the indices of rate matrices that will be used for each rate category. This array must be of size rate_cats
         
         const unsigned int param_indices[1] = {0};
         
         int left_edge_pmatrix_result;
-        if (normalizeClv){
-            
-            left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69_matrix_second_form( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
-                                                                                       1,
-                                                                                       p->attributes);
-            
-        }
-        else{
-//            left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
-//                                                                            1,
-//                                                                            p->attributes);
-
-         left_edge_pmatrix_result = pll_core_update_pmatrix(
-                                                               &parent->edge_l->pmatrix,//double **pmatrix,
-                                                               p->numberStates,// unsigned int states
-                                                               p->numberRateCats,//unsigned int rate_cats
-                                                               p->rates(),//const double *rates
-                                                               &parent->edge_l->length,//const double *branch_lengths
-                                                               matrix_indices,//const unsigned int *matrix_indices
-                                                               param_indices,//const unsigned int *param_indices
-                                                               p->propInvar(),//const double *prop_invar
-                                                               p->eigenVals(),//double *const *eigenvals
-                                                               p->eigenVecs(),//double *const *eigenvecs
-                                                               p->invEigenVecs(),//double *const *inv_eigenvecs
-                                                               1,//unsigned int count
-                                                               p->attributes);
-        }
+        //        if (normalizeClv){
+        //
+        //            left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69_matrix_second_form( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+        //                                                                                       1,
+        //                                                                                       p->attributes);
+        //
+        //        }
+        //        else{
+        //            left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
+        //                                                                            1,
+        //                                                                            p->attributes);
+        
+        left_edge_pmatrix_result = pll_core_update_pmatrix(
+                                                           &parent->edge_l->pmatrix,//double **pmatrix,
+                                                           p->numberStates,// unsigned int states
+                                                           p->numberRateCats,//unsigned int rate_cats
+                                                           p->rates(),//const double *rates
+                                                           &parent->edge_l->length,//const double *branch_lengths
+                                                           matrix_indices,//const unsigned int *matrix_indices
+                                                           param_indices,//const unsigned int *param_indices
+                                                           p->propInvar(),//const double *prop_invar
+                                                           p->eigenVals(),//double *const *eigenvals
+                                                           p->eigenVecs(),//double *const *eigenvecs
+                                                           p->invEigenVecs(),//double *const *inv_eigenvecs
+                                                           1,//unsigned int count
+                                                           p->attributes);
+        //}
         
         assert(left_edge_pmatrix_result == PLL_SUCCESS);
         int right_edge_pmatrix_result;
-        if (normalizeClv){
-                   
-                   right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69_matrix_second_form( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
-                   1,
-                   p->attributes);
-                   
-               }
-        else{
-//                   right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
-//                                                                              1,
-//                                                                              p->attributes);
+        //        if (normalizeClv){
+        //
+        //                   right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69_matrix_second_form( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
+        //                   1,
+        //                   p->attributes);
+        //
+        //               }
+        //        else{
+        //                   right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69( &parent->edge_r->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_r->length,matrix_indices, param_indices,
+        //                                                                              1,
+        //                                                                              p->attributes);
         
-                   right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
-                                                                &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
-                                                                p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
-        }
+        right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
+                                                            &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
+                                                            p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
+        // }
         assert(right_edge_pmatrix_result == PLL_SUCCESS);
         
         
         unsigned int sites= (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites);
         
         
-        pll_core_update_partial_ii(p->numberStates, sites,
+        pll_core_update_partial_ii_norm(p->numberStates, sites,
                                    p->numberRateCats, parent->pclv,
                                    parent->pscale_buffer,
                                    child_left->pclv,
@@ -248,7 +248,8 @@ public:
                                    parent->edge_r->pmatrix,
                                    child_left->pscale_buffer,
                                    child_right->pscale_buffer,
-                                   p->attributes//,normalizeClv
+                                   p->attributes//
+                                  ,normalizeClv
                                    );
         //    if (1)
         //        parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
@@ -311,7 +312,7 @@ public:
     }
     void increaseNextAvailable(){nextAvailable++;}
     
-
+    
     void moveNextIdEventForPopulation(int i, bool isCoal);
     
     void addNodeToPostorderByIndex(int idx);
@@ -334,7 +335,7 @@ public:
     
     //PostPost
     double  proposalPostPost(gsl_rng * random,  double &newHeight , double& logLikNewHeight, size_t numIncrementsPOSTPOST, double K);
-     double proposalCoalNodePostPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
+    double proposalCoalNodePostPost(gsl_rng * random, Population *chosenPop, double newNodeTime, double logLikNewHeight);
     double   proposalCoalMRCANodePostPost(gsl_rng * random, Population *inmigrantPop,Population *receiverPop, double newNodeHeight, double logLikNewHeight);
     unsigned int numberNonTrivialTrees();
     Population* getCurrentPopulation();
@@ -343,7 +344,7 @@ public:
     
     double  proposalPostPost1(gsl_rng * random,  double &newHeight , double& logLikNewHeight,size_t numIncrementsPOSTPOST, double K);
     
-    double   proposalTSMC1(gsl_rng * random,  double &newHeight , double& logLikNewHeight, double K,  bool normalize);
+    double   proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , double& logLikNewHeight, double K, bool usePriorSMC1, bool normalize);
     
     Eigen::ArrayXXd getLogLikelihoodGrid( double from, double to, size_t n);
     
@@ -353,7 +354,9 @@ public:
     
     double likelihood_factor(std::unique_ptr<PartialTreeNode> root)const;
     
-    std::pair<Pair, ProposalDistribInfo> initPairProposalsNextEventTime(gsl_rng *rngGsl, double K);
+    std::pair<Pair, ProposalDistribInfo> initPairProposalsNextEventTime(gsl_rng *rngGsl, bool normalizedCLV, double K);
+    
+    std::pair<Pair, ProposalDistribInfo> updatePairCurrentProposalsMap(int iter, int posNewNodeIdsGametes, double modelTimeNewNode,double K, double &logWeightDiff, std::pair<Pair, ProposalDistribInfo> copyPairMinModelTime,  gsl_rng *rngGsl, bool usePriorSMC1, bool normalizedCLV, Population* currPop);
     
     ~State();
 };

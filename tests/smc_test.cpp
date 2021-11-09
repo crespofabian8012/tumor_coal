@@ -13,14 +13,14 @@
 
 TEST_P(PosetSMCOnePopulationTest,  smcTest4tipsDelta100Theta1)
 {
-
+    
     std::string method =  posetSMC->getPosetSMCKernelName();
     std::string healthyTipLabel = "healthycell";
-      std::vector<double> coalTimes = pll_utils::getOrderedCoalTimesFromRootedTree(initialRootedTree, healthyTipLabel);
-      
-      double theta = true_theta;
+    std::vector<double> coalTimes = pll_utils::getOrderedCoalTimesFromRootedTree(initialRootedTree, healthyTipLabel);
+    
+    double theta = true_theta;
     psParams->trueCoalTimes = coalTimes;
-  
+    
     std::cout<< "\n\nRunning Sequential Monte Carlo(SMC)" << " with "<<smcOptions.num_particles <<" particles and "<< method << "....\n" << std::endl;
     smc->run_smc(*psParams);
     
@@ -108,7 +108,7 @@ TEST_P(PosetSMCOnePopulationTest,  smcTest4tipsDelta100Theta1)
     Eigen::Array<double, 1, Eigen::Dynamic> maxs = allCoalTimesScaledByTheta.colwise().maxCoeff();
     Eigen::Array<double, 1, Eigen::Dynamic> std_dev = ((allCoalTimesScaledByTheta.rowwise() - means.array()).square().colwise().sum()/(num_iter-2)).sqrt();
     
-  
+    
     transform(coalTimes.begin(), coalTimes.end(), coalTimes.begin(), [theta](double &c){ return c/theta; });
     for (size_t i=0; i<(num_iter-1); i++){
         
@@ -136,12 +136,12 @@ INSTANTIATE_TEST_SUITE_P(
                          PosetSMCOnePopulationTests,
                          PosetSMCOnePopulationTest,
                          ::testing::Values(
-                                      std::make_tuple("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0009_0001_n4.phylip", "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0009_n4.tre", 1000, SMCOptions::ResamplingScheme::STRATIFIED, PosetSMC::PosetSMCKernel::TSMC1, 1.0,100.0, false ),
-                                           std::make_tuple("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0006_0001_n15_theta1.phylip", "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0006_n15_theta1.tre", 1000, SMCOptions::ResamplingScheme::STRATIFIED, PosetSMC::PosetSMCKernel::TSMC1, 1.0,100.0, false ),
+                                           std::make_tuple("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0009_0001_n4.phylip", "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0009_n4.tre", 128, SMCOptions::ResamplingScheme::STRATIFIED, PosetSMC::PosetSMCKernel::TSMC1, 1.0,100.0, false ),
+                                           std::make_tuple("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0006_0001_n15_theta1.phylip", "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0006_n15_theta1.tre", 128, SMCOptions::ResamplingScheme::STRATIFIED, PosetSMC::PosetSMCKernel::TSMC1, 1.0,100.0, false ),
                                            
-                                           std::make_tuple("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0010_0001_n15.phylip", "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0010_n15.tre", 1000, SMCOptions::ResamplingScheme::STRATIFIED, PosetSMC::PosetSMCKernel::TSMC1, 2.5,100.0, false ),
+                                           std::make_tuple("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0010_0001_n15.phylip", "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Scaled_physical_time_0002_0010_n15.tre", 128, SMCOptions::ResamplingScheme::STRATIFIED, PosetSMC::PosetSMCKernel::TSMC1, 2.5,100.0, false ),
                                            
-                                            std::make_tuple("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0001_0001.phylip", "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Model_time_0002_0001.tre", 1000, SMCOptions::ResamplingScheme::STRATIFIED, PosetSMC::PosetSMCKernel::TSMC1, 2.5,100.0, false )
+                                           std::make_tuple("/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/true_hap_0002_0001_0001.phylip", "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/trees_Model_time_0002_0001.tre", 128, SMCOptions::ResamplingScheme::STRATIFIED, PosetSMC::PosetSMCKernel::TSMC1, 2.5,100.0, false )
                                            ));
 //the order of the parameters in the tuple is inputPhylipPath,
 //inputPhylipTree, num_partcicles, resampling_scheme, smc_method,

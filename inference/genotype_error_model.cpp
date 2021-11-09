@@ -316,6 +316,8 @@ double GenotypeErrorModel::computeStateErrorProbPT20(pll_state_t state,
     while (tstate && (ctz = PLL_STATE_CTZ(tstate)) < states)
        {
          state_id = state_id ?  state_id + ctz + 1 : ctz;
+        
+         //std::cout<< "state_id" << state_id << std::endl;
          tstate >>= ctz + 1;
          sum_lh = 0.;
 

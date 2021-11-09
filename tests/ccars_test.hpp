@@ -19,12 +19,10 @@ extern "C"
 class CCLogDensity;
 class CCARS;
 class CCARSTest : public ::testing::Test {
- protected:
-
-
+protected:
     CCARSTest();
     ~CCARSTest() override;
-
+    
     void SetUp() override;
     
     CCLogDensity *log_density;

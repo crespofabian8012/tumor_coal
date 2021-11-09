@@ -82,14 +82,15 @@ TEST_F(CCARSTest, testVectorRatiosBoundedAreas) {
     
     EXPECT_EQ(ccars->ratioAreas.array().size(),4);
     
+    // EXPECT_THAT(ccars->ratioAreas.array(), ElementsAre(0.019270623266065989, 0.31254407054894262, 0.36353122737784105,2.1571866872996335));
     EXPECT_THAT(ccars->ratioAreas.array(), ElementsAre(0.019086131794748606, 0.18719234905408222, -0.13787903499436588,0.57437822955348861));
 }
 TEST_F(CCARSTest, includeNewPointAtEnd) {
     
     double new_x = 0.0272760822140008;
     double new_hx = log_density->h_concave(new_x)+log_density->h_convex(new_x);
-   
-    double ratioAreasBefore = exp(logSumExp(ccars->lower_hull.cumulative)-logSumExp(ccars->upper_hull.cumulative));
+    
+    double ratioAreasBefore = exp(CCARS::logSumExp(ccars->lower_hull.cumulative)-CCARS::logSumExp(ccars->upper_hull.cumulative));
     ccars->addPoint(new_x);
     
     EXPECT_EQ(ccars->upper_hull.x.array().size(),7);
@@ -108,18 +109,22 @@ TEST_F(CCARSTest, includeNewPointAtEnd) {
     
     EXPECT_THAT(ccars->lower_hull.hpx.array(), ElementsAre(-3.8337406739668243, -18.160605858662478, -18.148671388936297, -45.870869566077403,-45.869406648321572, -942.33951894189704,-942.33951894189704));
     
-    EXPECT_THAT(ccars->ratioAreas.array(), ElementsAre(0.019086131794748606, 0.18719234905408222, -0.13787903499436588,0.0030979766534886197, -0.0028372623437868255,0.44677597881797565 ));
-   
-    double ratioAreasAfter = exp(logSumExp(ccars->lower_hull.cumulative)-logSumExp(ccars->upper_hull.cumulative));
+    // EXPECT_THAT(ccars->ratioAreas.array(), ElementsAre(0.019270623266065989, 0.31254407054894262, 0.36353122737784105,0.058644703503666129, 0.059177335150383925,2.1145898943844408 ));
+    
+    EXPECT_THAT(ccars->ratioAreas.array(), ElementsAre(0.019086131794748606, 0.18719234905408222, -0.13787903499436588,0.0030979766534886197, -0.0028372623437868255, 0.44677597881797565));
+    
+
+  // double  ratioAreasAfter = (ccars->upper_hull.cumulative.array()- ccars->lower_hull.cumulative.array()).abs();
+    double ratioAreasAfter = exp(CCARS::logSumExp(ccars->lower_hull.cumulative)-CCARS::logSumExp(ccars->upper_hull.cumulative));
     EXPECT_EQ(ratioAreasAfter, 0.80333808289619424);
     EXPECT_GT(ratioAreasAfter, ratioAreasBefore);
 }
 TEST_F(CCARSTest, includeNewPointAtBegining) {
     
     double new_x = 0.006578;
-   // double new_hx = log_density->h_concave(new_x)+log_density->h_convex(new_x);
- 
-    double ratioAreasBefore = exp(logSumExp(ccars->lower_hull.cumulative)-logSumExp(ccars->upper_hull.cumulative));
+    // double new_hx = log_density->h_concave(new_x)+log_density->h_convex(new_x);
+    
+    double ratioAreasBefore = exp(CCARS::logSumExp(ccars->lower_hull.cumulative)-CCARS::logSumExp(ccars->upper_hull.cumulative));
     ccars->addPoint(new_x);
     
     EXPECT_EQ(ccars->upper_hull.x.array().size(),7);
@@ -127,14 +132,22 @@ TEST_F(CCARSTest, includeNewPointAtBegining) {
     EXPECT_EQ(ccars->lower_hull.x.array().size(),7);
     
     
-    double ratioAreasAfter = exp(logSumExp(ccars->lower_hull.cumulative)-logSumExp(ccars->upper_hull.cumulative));
+    double ratioAreasAfter = exp(CCARS::logSumExp(ccars->lower_hull.cumulative)-CCARS::logSumExp(ccars->upper_hull.cumulative));
     EXPECT_EQ(ratioAreasAfter, 0.76343761060252147);
     EXPECT_GT(ratioAreasAfter, ratioAreasBefore);
 }
 TEST_F(CCARSTest, testApproximateIntegral) {
-
+    
     double log_integral = ccars->approximateLogIntegral(random, 15);
-    EXPECT_EQ(exp(log_integral),   0.0306713170724892895117);
+    
+    GNUPlotter plotter;
+    size_t numPoints= 50;
+    ccars->plot( plotter, numPoints, 0, -1,  -2);
+         
+        
+    EXPECT_EQ(exp(log_integral),   0.0308182888249286738498);
+    //EXPECT_EQ(exp(log_integral),   0.0306713170724892895117);
+    //EXPECT_EQ(log_integral,   -231.18128155148102);
     
     
 }

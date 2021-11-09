@@ -123,7 +123,7 @@ long double  pll_utils::LogConditionalLikelihoodSequencesRootedTree(pll_msa_t * 
                                      RATE_CATS,
                                      inner_nodes_count,
                                      attributes);
-    
+    assert(partition);
     //pll_set_asc_bias_type(partition, PLL_ATTRIB_AB_LEWIS);
     
     //static unsigned int invar_weights[STATES] = { 50, 40, 60, 20 };
@@ -306,6 +306,7 @@ long double  pll_utils::LogConditionalLikelihoodSequences(pll_msa_t * msa, char*
                                      RATE_CATS,
                                      inner_nodes_count,
                                      attributes);
+    assert(partition);
     
     //pll_set_asc_bias_type(partition, PLL_ATTRIB_AB_LEWIS);
     

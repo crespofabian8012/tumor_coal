@@ -714,8 +714,8 @@ int pll_core_update_pmatrix_16x16_jc69_matrix_second_form(double ** pmatrix,
 //#endif
 //
                 double exptm1 = expm1(t);
-                double a = 1 + 15.0/16.0 * exptm1;
-                double b = -exptm1/16.0;
+                double a = 1 - 15.0/16.0 * exptm1;
+                double b = exptm1/16.0;
                 
 
                 size_t size = states*states;
@@ -735,7 +735,7 @@ int pll_core_update_pmatrix_16x16_jc69_matrix_second_form(double ** pmatrix,
 }
 
 
-void pll_core_update_partial_ii2(unsigned int states,
+void pll_core_update_partial_ii_norm(unsigned int states,
                                  unsigned int sites,
                                  unsigned int rate_cats,
                                  double * parent_clv,
@@ -875,6 +875,7 @@ void pll_core_update_partial_ii2(unsigned int states,
                 lmat += states;
                 rmat += states;
             }
+            assert(sum_lh>0.0);
             if (normalize)
             {
                 for (i = 0; i < states; ++i){

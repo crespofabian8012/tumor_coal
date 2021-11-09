@@ -23,7 +23,7 @@ State::State(PosetSMCParams &smcParams, gsl_rng *random):
 pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition), num_sites(smcParams.num_sites)
 {
     
-   
+    
     topHeightModelTime =0.0;
     topHeightScaledByTheta = 0.0;
     logWeight = 0.0;
@@ -49,18 +49,18 @@ pll_buffer_manager(smcParams.pll_buffer_manager),partition(smcParams.partition),
     populationSet->initListPossibleMigrations();
     populationSet->initPopulationsCoalescentEvents();
     
-
+    
     initForest(smcParams.sampleSize, smcParams.msa->getNonConstRawPtr(), smcParams.positions,  smcParams.getProgramOptions());
     nextAvailable = smcParams.sampleSize-1;
     
     if (smcParams.usePriorInSMC1){
-       pairMinModelTime = populationSet->initPairProposalsNextEventTimePerPopulation(random, smcParams.getProgramOptions().K);
+        pairMinModelTime = populationSet->initPairProposalsNextEventTimePerPopulation(random, smcParams.getProgramOptions().K);
     }
     else{
-      pairMinModelTime = initPairProposalsNextEventTime(random, smcParams.getProgramOptions().K);
+        pairMinModelTime = initPairProposalsNextEventTime(random, smcParams.getProgramOptions().normalizeClv, smcParams.getProgramOptions().K);
     }
     
-
+    
     //    double K= smcParams.getProgramOptions().K;
     //       populationSet->sampleEventTimesScaledByProportion( random, K,smcParams.getProgramOptions().noisy);
     //      populationSet->resetNumActiveGametesCounter();
@@ -78,16 +78,16 @@ State::State(const State &original):pll_buffer_manager(original.pll_buffer_manag
     gtError = new GenotypeErrorModel(*(original.gtError));
     
     //populationSet= std::move(original.populationSet);
-   // gtError = std::move(original.gtError);
+    // gtError = std::move(original.gtError);
     
-//    idsNextCoalEvents = original.idsNextCoalEvents;
-//    idsNextInmigrationEvents = original.idsNextInmigrationEvents;
+    //    idsNextCoalEvents = original.idsNextCoalEvents;
+    //    idsNextInmigrationEvents = original.idsNextInmigrationEvents;
     
     //idsNextCoalEvents = std::move(original.idsNextCoalEvents);
     //idsNextInmigrationEvents = std::move( original.idsNextInmigrationEvents);
     
     roots = original.roots;
-   postorder  = original.postorder;
+    postorder  = original.postorder;
     coalEventTimesScaledByTheta = original.coalEventTimesScaledByTheta;
     
     //roots = std::move(original.roots);
@@ -149,19 +149,19 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         CumSumNodes[i] = CumSumNodes[i - 1] + pop->sampleSize;
     }
     
-     auto delLeavePartialTreeNode = [](PartialTreeNode* pTreeNode)
-           {
-               PLLBufferManager *manager = pTreeNode->getManager();
-               manager->clv_buffer.push(pTreeNode->pclv);
-               manager->scale_buffer_buffer.push(pTreeNode->pscale_buffer);
-               
-               pTreeNode->pclv = nullptr;
-               pTreeNode->pscale_buffer = nullptr;
-            
-               delete pTreeNode;
-           };
+    auto delLeavePartialTreeNode = [](PartialTreeNode* pTreeNode)
+    {
+        PLLBufferManager *manager = pTreeNode->getManager();
+        manager->clv_buffer.push(pTreeNode->pclv);
+        manager->scale_buffer_buffer.push(pTreeNode->pscale_buffer);
         
- 
+        pTreeNode->pclv = nullptr;
+        pTreeNode->pscale_buffer = nullptr;
+        
+        delete pTreeNode;
+    };
+    
+    
     for(size_t i=0; i< positions.size();++i)
     {
         
@@ -177,9 +177,9 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         ? sites_alloc * reference_partition->numberRateCats
         : sites_alloc;
         std::shared_ptr<PartialTreeNode> p( new PartialTreeNode(pll_buffer_manager,
-                                                                            nullptr, nullptr,0.0, 0.0, 0, msa->label[i], 0.0, clv_num_elements,
-                                                                            scaler_size, reference_partition->alignment(), i, 0, nullptr, nullptr), delLeavePartialTreeNode);
-      
+                                                                nullptr, nullptr,0.0, 0.0, 0, msa->label[i], 0.0, clv_num_elements,
+                                                                scaler_size, reference_partition->alignment(), i, 0, nullptr, nullptr), delLeavePartialTreeNode);
+        
         //delete (p->pclv);
         //delete (p->pscale_buffer);
         // auto clv_elem = reference_partition->numberSites * reference_partition->numberStates;
@@ -370,9 +370,10 @@ std::shared_ptr<PartialTreeNode> State::connect(int firstId, int secondId, size_
                           p->getPartition());
     
     
-    // std::cout << "log lik of parent node "<<  " is "<< parent->ln_likelihood<< std::endl;
+     if (1)
+           parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
     
-    if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
+    if(isnan(parent->ln_likelihood) || isinf(-1*parent->ln_likelihood)){
         
         std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
         
@@ -416,7 +417,7 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     std::shared_ptr<PartialTreeNode> child_left = roots[idxFirstID];
     std::shared_ptr<PartialTreeNode> child_right = roots[idxSecondId];
     
-
+    
     double left_length = newNodeHeight - child_left->height;
     double right_length = newNodeHeight - child_right->height;
     
@@ -436,24 +437,22 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     // unsigned int scale_buffer_size = scaler_size * sizeof(double);
     
     auto delPartialTreeNode = [](PartialTreeNode* pTreeNode)
-       {
-           PLLBufferManager *manager = pTreeNode->getManager();
-           manager->clv_buffer.push(pTreeNode->pclv);
-           manager->scale_buffer_buffer.push(pTreeNode->pscale_buffer);
-           
-           pTreeNode->pclv = nullptr;
-           pTreeNode->pscale_buffer = nullptr;
-           
-           manager->pmatrix_buffer.push(pTreeNode->edge_l->pmatrix);
-           manager->pmatrix_buffer.push(pTreeNode->edge_r->pmatrix);
-           
-           // pll_aligned_free(pmatrix);
-           pTreeNode->edge_l->pmatrix = nullptr;
-           pTreeNode->edge_r->pmatrix = nullptr;
-           delete pTreeNode;
-       };
-    
-
+    {
+        PLLBufferManager *manager = pTreeNode->getManager();
+        manager->clv_buffer.push(pTreeNode->pclv);
+        manager->scale_buffer_buffer.push(pTreeNode->pscale_buffer);
+        
+        pTreeNode->pclv = nullptr;
+        pTreeNode->pscale_buffer = nullptr;
+        
+        manager->pmatrix_buffer.push(pTreeNode->edge_l->pmatrix);
+        manager->pmatrix_buffer.push(pTreeNode->edge_r->pmatrix);
+        
+        // pll_aligned_free(pmatrix);
+        pTreeNode->edge_l->pmatrix = nullptr;
+        pTreeNode->edge_r->pmatrix = nullptr;
+        delete pTreeNode;
+    };
     
     std::shared_ptr<PartialTreeNode> parent( new PartialTreeNode(
                                                                  pll_buffer_manager, child_left, child_right,
@@ -472,59 +471,39 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
     
     int left_edge_pmatrix_result;
     
-    //    left_edge_pmatrix_result= pll_core_update_pmatrix2( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices, p->eigenVals(), p->eigenVecs(),  p->invEigenVecs(), 1,  p->attributes);
-    //
-    //      parent->edge_l->showPMatrix( p->numberStates, p->numberRateCats, p->statesPadded,  3);
-    //    if (left_pmatrix!= nullptr && abs(left_length - right_length) < 1e-20 ){
-    //
-    //
-    //           parent->edge_l->pmatrix = pmatrix;
-    //           parent->edge_r->pmatrix = pmatrix;
-    //
-    //          // memcpy(parent->edge_l->pmatrix, pmatrix, pmatrix_elements * sizeof(double));
-    //          // memcpy(parent->edge_r->pmatrix, pmatrix, pmatrix_elements * sizeof(double));
-    //    }
+ 
     if (left_pmatrix == nullptr){
-     if (normalize)
-         left_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69_matrix_second_form( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
-         1,
-         p->attributes);
-    
-    else{
-         left_edge_pmatrix_result = pll_core_update_pmatrix(
-                                                                          &parent->edge_l->pmatrix,//double **pmatrix,
-                                                                          p->numberStates,// unsigned int states
-                                                                          p->numberRateCats,//unsigned int rate_cats
-                                                                          p->rates(),//const double *rates
-                                                                          &parent->edge_l->length,//const double *branch_lengths
-                                                                          matrix_indices,//const unsigned int *matrix_indices
-                                                                          param_indices,//const unsigned int *param_indices
-                                                                          p->propInvar(),//const double *prop_invar
-                                                                          p->eigenVals(),//double *const *eigenvals
-                                                                          p->eigenVecs(),//double *const *eigenvecs
-                                                                          p->invEigenVecs(),//double *const *inv_eigenvecs
-                                                                          1,//unsigned int count
-                                                                          p->attributes);
-               
-         }
-        //parent->edge_l->showPMatrix( p->numberStates, p->numberRateCats, p->statesPadded,  3);
+  
+        left_edge_pmatrix_result = pll_core_update_pmatrix(
+                                                           &parent->edge_l->pmatrix,//double **pmatrix,
+                                                           p->numberStates,// unsigned int states
+                                                           p->numberRateCats,//unsigned int rate_cats
+                                                           p->rates(),//const double *rates
+                                                           &parent->edge_l->length,//const double *branch_lengths
+                                                           matrix_indices,//const unsigned int *matrix_indices
+                                                           param_indices,//const unsigned int *param_indices
+                                                           p->propInvar(),//const double *prop_invar
+                                                           p->eigenVals(),//double *const *eigenvals
+                                                           p->eigenVecs(),//double *const *eigenvecs
+                                                           p->invEigenVecs(),//double *const *inv_eigenvecs
+                                                           1,//unsigned int count
+                                                           p->attributes);
+        
+
+//           parent->edge_l->showPMatrix( p->numberStates, p->numberRateCats, p->statesPadded,  3);
+                          
     }
     if (right_pmatrix == nullptr){
         int right_edge_pmatrix_result;
-        if (normalize)
-             right_edge_pmatrix_result= pll_core_update_pmatrix_16x16_jc69_matrix_second_form( &parent->edge_l->pmatrix, p->numberStates,p->numberRateCats, p->rates(),  &parent->edge_l->length,matrix_indices, param_indices,
-             1,
-             p->attributes);
-        
-        else{
-            right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
-                                                                     &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
-                                                                     p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
-        }
+      
+        right_edge_pmatrix_result = pll_core_update_pmatrix(&parent->edge_r->pmatrix, p->numberStates,     p->numberRateCats, p->rates(),
+                                                            &parent->edge_r->length, matrix_indices, param_indices, p->propInvar(),
+                                                            p->eigenVals(), p->eigenVecs(), p->invEigenVecs(), 1, p->attributes);
+        //   }
         assert(right_edge_pmatrix_result == PLL_SUCCESS);
         // parent->edge_r->showPMatrix( p->numberStates, p->numberRateCats, p->statesPadded,  3);
     }
- 
+    
     unsigned int sites= (p->ascBiasCorrection() ? p->numberSites + p->numberStates : p->numberSites);
     
     if (0){
@@ -534,52 +513,33 @@ std::shared_ptr<PartialTreeNode> State::proposeNewNode(int firstId, int secondId
         child_right-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
     }
     
-        pll_core_update_partial_ii(p->numberStates, sites,
-                                   p->numberRateCats, parent->pclv,
-                                   parent->pscale_buffer,
-                                   child_left->pclv,
-                                   child_right->pclv,
-                                   parent->edge_l->pmatrix,
-                                   parent->edge_r->pmatrix,
-                                   child_left->pscale_buffer,
-                                   child_right->pscale_buffer,
-                                   p->attributes);
-    //    if (0)
-    //        parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
+    pll_core_update_partial_ii_norm(p->numberStates, sites,
+                               p->numberRateCats, parent->pclv,
+                               parent->pscale_buffer,
+                               child_left->pclv,
+                               child_right->pclv,
+                               parent->edge_l->pmatrix,
+                               parent->edge_r->pmatrix,
+                               child_left->pscale_buffer,
+                               child_right->pscale_buffer,
+                               p->attributes,
+                                    normalize);
+       if (0)
+           parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
     
     parent->ln_likelihood =
     compute_ln_likelihood(parent->pclv,
-                      parent->pscale_buffer,
-                      p->getPartition());
+                          parent->pscale_buffer,
+                          p->getPartition());
     
-   // std::cout << parent->ln_likelihood << std::endl;
-//    pll_core_update_partial_ii2(p->numberStates, sites,
-//                                p->numberRateCats, parent->pclv,
-//                                parent->pscale_buffer,
-//                                child_left->pclv,
-//                                child_right->pclv,
-//                                parent->edge_l->pmatrix,
-//                                parent->edge_r->pmatrix,
-//                                child_left->pscale_buffer,
-//                                child_right->pscale_buffer,
-//                                p->attributes,
-//                                normalize);
-//    parent->ln_likelihood =
-//        compute_ln_likelihood(parent->pclv,
-//                          parent->pscale_buffer,
-//                          p->getPartition());
-//
-//
-//    std::cout << parent->ln_likelihood << std::endl;
+   
     
     if (0)
         parent-> showpClV(p->numberStates, p->numberRateCats, p->statesPadded, sites, 3);
     
     std::vector<double> result(num_sites);
     
-    double termGorurTeh = Utils::computeGorurTehLogLik(sites,  p->numberStates, 1.0, left_length, right_length,child_left->pclv,child_right->pclv, result);
-    
-    if(isnan(parent->ln_likelihood) || isinf(parent->ln_likelihood)){
+    if(isnan(parent->ln_likelihood) || isinf(-1*parent->ln_likelihood)){
         
         std::cout << "Error: log lik  "<<  " is "<< parent->ln_likelihood<< std::endl;
     }
@@ -695,31 +655,31 @@ double State::compute_ln_likelihood(std::vector<double> &clv, std::vector<unsign
                                     const Partition *p) {
     const unsigned int parameter_indices[1] = {0};
     
-    //    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
-    //                                                 clv.data(), scale_buffer.data(),
-    //                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
-    double result=  pll_core_root_loglikelihood(
-                                                p->numberStates, p->numberSites, p->numberRateCats,
-                                                
-                                                clv.data(), scale_buffer.data(),
-                                                
-                                                p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
-                                                p->invariant(), parameter_indices, nullptr, p->attributes);
+        double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
+                                                     clv.data(), scale_buffer.data(),
+                                                     p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
+//    double result=  pll_core_root_loglikelihood(
+//                                                p->numberStates, p->numberSites, p->numberRateCats,
+//
+//                                                clv.data(), scale_buffer.data(),
+//
+//                                                p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
+//                                                p->invariant(), parameter_indices, nullptr, p->attributes);
     return result;
 }
 double State::compute_ln_likelihood(double *pclv, unsigned int *pscale_buffer,
                                     const Partition *p) {
     const unsigned int parameter_indices[1] = {0};
-    //    double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
-    //                                                 pclv, pscale_buffer,
-    //                                                 p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
-    double result=  pll_core_root_loglikelihood(
-                                                p->numberStates, p->numberSites, p->numberRateCats,
-                                                
-                                                pclv, pscale_buffer,
-                                                
-                                                p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
-                                                p->invariant(), parameter_indices, nullptr, p->attributes);
+        double result = pll_core_root_loglikelihood2(  p->numberStates, p->numberSites, p->numberRateCats,
+                                                     pclv, pscale_buffer,
+                                                     p->frequencies(), p->rateWeights(), p->patternWeights(), parameter_indices,  nullptr, p->attributes);
+//    double result=  pll_core_root_loglikelihood(
+//                                                p->numberStates, p->numberSites, p->numberRateCats,
+//
+//                                                pclv, pscale_buffer,
+//
+//                                                p->frequencies(), p->rateWeights(), p->patternWeights(), p->propInvar(),
+//                                                p->invariant(), parameter_indices, nullptr, p->attributes);
     return result;
 }
 
@@ -890,11 +850,11 @@ double   State::proposalPriorPost(gsl_rng * random, Population *leftNodePop,Popu
     
     if (leftNodePop->index == rightNodePop->index){
         //const Partition *p =partition;
-//        unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
-//        const unsigned int matrix_indices[2] = {0,1};
-//        const unsigned int param_indices[2] = {0,1};
-//        double * left_pmatrix;
-//        double * right_pmatrix;
+        //        unsigned int pmatrix_elements = p->numberStates * p->numberStates  * p->numberRateCats;
+        //        const unsigned int matrix_indices[2] = {0,1};
+        //        const unsigned int param_indices[2] = {0,1};
+        //        double * left_pmatrix;
+        //        double * right_pmatrix;
         if (iteration ==1){//the same pmatrix for every pair
             
             // left_pmatrix = (double *)pll_aligned_alloc(pmatrix_elements * sizeof(double), p->alignment()); //(double *)std::malloc(pmatrix_elements*sizeof(double));
@@ -1025,7 +985,7 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
         logLik[i] = nodeProposals[i]->ln_likelihood;
         logRatio[i] = nodeProposals[i]->likelihood_factor();
         
-     
+        
         if (logLik[i]>maxlogLik)
         {
             maxlogLik = logLik[i];
@@ -1043,28 +1003,28 @@ double   State::proposalCoalNodePriorPost(gsl_rng * random, Population *chosenPo
     unsigned int pos;
     //double logSumNormLik = Utils::normalize(logLik, normlogLik);
     double logSumNormRatios = Utils::normalize(logRatio, normlogRatio);
-   // posLik = Random::randomDiscreteFromProbabilityVector(random, &normlogLik[0], normlogLik.size());
+    // posLik = Random::randomDiscreteFromProbabilityVector(random, &normlogLik[0], normlogLik.size());
     posRatios = Random::randomDiscreteFromProbabilityVector(random, &normlogRatio[0], normlogRatio.size());
     
-   // if (posLik != posRatios){
-        
-        //        std::cout<< "posLik " << posLik<< " norm logLik " << normlogLik[posLik] << std::endl;
-        //        std::cout<<"parent "<< nodeProposals[posLik]->index<<  " left " << nodeProposals[posLik]->getIndexLeftChild() << " right " << nodeProposals[posLik]->getIndexRightChild() <<std::endl;
-        //        std::cout<< "max loglik pair " <<  nodeProposals[posMaxLik]->getIndexLeftChild() << " second " << nodeProposals[posMaxLik]->getIndexRightChild() <<std::endl;
-        //
-        //
-        //        std::cout<< "posRatios " << posRatios<< " norm logRatio " <<normlogRatio[posRatios] << std::endl;
-        //        std::cout<<"parent "<< nodeProposals[posRatios]->index<< " left " << nodeProposals[posRatios]->getIndexLeftChild() << " right " << nodeProposals[posRatios]->getIndexRightChild() <<std::endl;
-        //        std::cout<< "max logRatio pair " << nodeProposals[posMaxRatio]->getIndexLeftChild() << " second " << nodeProposals[posMaxRatio]->getIndexRightChild() <<std::endl;
-        //        std::cout<< "\n";
-   // }
+    // if (posLik != posRatios){
+    
+    //        std::cout<< "posLik " << posLik<< " norm logLik " << normlogLik[posLik] << std::endl;
+    //        std::cout<<"parent "<< nodeProposals[posLik]->index<<  " left " << nodeProposals[posLik]->getIndexLeftChild() << " right " << nodeProposals[posLik]->getIndexRightChild() <<std::endl;
+    //        std::cout<< "max loglik pair " <<  nodeProposals[posMaxLik]->getIndexLeftChild() << " second " << nodeProposals[posMaxLik]->getIndexRightChild() <<std::endl;
+    //
+    //
+    //        std::cout<< "posRatios " << posRatios<< " norm logRatio " <<normlogRatio[posRatios] << std::endl;
+    //        std::cout<<"parent "<< nodeProposals[posRatios]->index<< " left " << nodeProposals[posRatios]->getIndexLeftChild() << " right " << nodeProposals[posRatios]->getIndexRightChild() <<std::endl;
+    //        std::cout<< "max logRatio pair " << nodeProposals[posMaxRatio]->getIndexLeftChild() << " second " << nodeProposals[posMaxRatio]->getIndexRightChild() <<std::endl;
+    //        std::cout<< "\n";
+    // }
     
     pos = posRatios;
-  
+    
     logWeightDiff = logSumNormRatios;
     assert(!isnan(logWeightDiff) && !isinf(logWeightDiff));
     //logWeight = logWeight+ logWeightDiff;
-
+    
     
     idxFirst = allPairs[pos]. first;//first idx inside the list of active gametes of the chosen pop
     idxSecond = allPairs[pos]. second;//second idx inside the list of active gametes of the chosen pop
@@ -1232,19 +1192,15 @@ double   State::proposalPostPost1(gsl_rng * random,  double &newHeight , double&
     setTopHeightScaledByTheta(newHeight);
     return logWeightDiff;
 }
-double   State::proposalTSMC1(gsl_rng * random,  double &newHeight , double& logLikNewHeight, double K, bool normalize){
+double   State::proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , double& logLikNewHeight, double K, bool usePriorInSMC1, bool normalizedCLV){
     
     int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
     double logWeightDiff = 0.0;
     double pairModelTimeEntry, pairLifeModelTime;
     double  newNodeHeight = 0.0, newNodeHeightModelTime= 0.0;
     double logPrior = 0.0;
-    
-   // int idxReceiverPop,  idxIncomingPop, idxIncomingNode;
-    
+
     Population * currPop = populationSet->getCurrentPopulation();
-    //std::set<std::pair<int, int>> allCoalPairs = PosetSMC::getCombinations(currPop->numActiveGametes);
-   // int numberPairs = allCoalPairs.size();
     
     idxFirst = pairMinModelTime.first.first;
     idxSecond = pairMinModelTime.first.second;
@@ -1260,33 +1216,62 @@ double   State::proposalTSMC1(gsl_rng * random,  double &newHeight , double& log
     
     pairModelTimeEntry = pairModelTimes.creationTime * currPop->x;
     pairLifeModelTime = newNodeHeightModelTime- pairModelTimeEntry;
-    std::shared_ptr<PartialTreeNode> newNode = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logPrior, nullptr, nullptr, normalize );
-    
-    
+    std::shared_ptr<PartialTreeNode> newNode = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logPrior, nullptr, nullptr, !usePriorInSMC1 );
     
     double logLikFactor = newNode->likelihood_factor();
     logWeightDiff+= logLikFactor;
     
-
-    //logWeightDiff-= logLikFactor;
-
+    if (1){
+          
+          std::cout << "winner pair, left " << idxFirstRoot<< " right "<< idxSecondRoot << std::endl;
+         std::cout << "proposed time " << newNodeHeight<< std::endl;
+          std::cout << "log weight diff  after log Fels lik " << logWeightDiff<< std::endl;
+          
+      }
+    
     double diffPreviousCoalModelTime= newNodeHeightModelTime - currPop->currentModelTime*currPop->x  ;
     diffPreviousCoalModelTime= newNodeHeightModelTime - pairModelTimeEntry  ;
-    //denominator
-    logWeightDiff-= -Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)+ Population::FmodelTstandard(pairModelTimeEntry, currPop->timeOriginSTD, currPop->delta,K);
     
+    //denominator: log proposal distribution
+    if (usePriorInSMC1){
+        logWeightDiff-= -Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)+ Population::FmodelTstandard(pairModelTimeEntry, currPop->timeOriginSTD, currPop->delta,K);
+        
+    }
+    else{
+            
+        logWeightDiff -= log(exp(pairModelTimes.logLikAtProposal-pairModelTimes.logIntegral));
+        std::cout << "denominator  " << pairModelTimes.logLikAtProposal-pairModelTimes.logIntegral<< std::endl;
+        
+        std::cout << "other denominator  " << -Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)+ Population::FmodelTstandard(pairModelTimeEntry, currPop->timeOriginSTD, currPop->delta,K)<< std::endl;
+    }
+    
+    if (1){
+           
+           
+           std::cout << "log weight diff  after  " << logWeightDiff<< std::endl;
+           
+       }
     //numerator
     size_t numActiveGametes = currPop->numActiveGametes;
     logWeightDiff+=  -log(currPop->theta)+log(numActiveGametes*(numActiveGametes-1)/ 2.0) +
-                     Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
-                      (numActiveGametes*(numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
+    Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
+    (numActiveGametes*(numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
     
     std::pair<Pair,ProposalDistribInfo>  copyPairMinModelTime = std::make_pair(pairMinModelTime.first, pairMinModelTime.second);
-   
+    
     currPop->pairCurrentProposals.erase(pairMinModelTime.first);
-
+    
+    
+    assert(!isnan(logWeightDiff));
+    assert(!isinf(-1*logWeightDiff));
     //update pairs with their proposals
-     pairMinModelTime = currPop->updatePairCurrentProposalsMap(idxFirst, newNodeHeightModelTime, K, logWeightDiff,  copyPairMinModelTime, this, random,  normalize);
+    if (1){
+        
+        
+        std::cout << "log weight diff  before " << logWeightDiff<< std::endl;
+        
+    }
+    pairMinModelTime = updatePairCurrentProposalsMap(iter, idxFirst, newNodeHeightModelTime, K, logWeightDiff,  copyPairMinModelTime,  random,  usePriorInSMC1, normalizedCLV, currPop);
     
     increaseNextAvailable();
     updateIndexesActiveGametes( idxFirst, idxSecond,  currPop->index, currPop->index,  newNode->index, newNode->index_population);
@@ -1298,20 +1283,20 @@ double   State::proposalTSMC1(gsl_rng * random,  double &newHeight , double& log
     
     assert(newNode->number_leaves_cluster>1);
     addRoot(newNode);
-        
+    
     currPop->numActiveGametes= currPop->numActiveGametes-1;
     newHeight = newNodeHeight;
     setTopHeightScaledByTheta(newHeight);
     
     if (0){
-    
         std::cout << "pair left " << newNode->getIndexLeftChild()<< " right " << newNode->getIndexRightChild() << std::endl;
         std::cout << "new node scaled height " << newHeight<< std::endl;
-        std::cout << "log weight diff " << logWeightDiff<< std::endl;
 
+        std::cout << "log weight diff after " << logWeightDiff<< std::endl;
+        
     }
     
-
+    
     return logWeightDiff;
 }
 double  State::proposalPriorPrior(gsl_rng * random, Population *leftNodePop,Population *rightNodePop, double newNodeHeight, double logLikNewHeight){
@@ -1713,7 +1698,7 @@ PairListDouble State::evalLogLikRatioGridPerIncrement( double from, double to, s
     std::vector<double> logRatio(numberProposals, 0.0);
     std::vector<double> normlogRatio(numberProposals, 0.0);
     
-  
+    
     size_t i = 0;
     //std::vector<pairs> allPairs(numberProposals);
     std::string lab;
@@ -1755,112 +1740,115 @@ PairListDouble State::evalLogLikRatioGridPerIncrement( double from, double to, s
     
     return std::make_pair(increments,logLikWeightIncrements);
 }
-std::pair<Pair, ProposalDistribInfo> State::initPairProposalsNextEventTime(gsl_rng *rngGsl, double K){
+std::pair<Pair, ProposalDistribInfo> State::initPairProposalsNextEventTime(gsl_rng *rngGsl, bool normalizedCLV
+                                                                           , double K){
     
-     int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
     Population *popI = populationSet->getCurrentPopulation();
-     
-    //std::pair<Pair, std::pair<double, double>> pairMinModelTimeCurrPop;
-    
+   
     assert(popI->numActiveGametes > 1);
-
+    
     std::vector<Pair > pairs= PosetSMC::getCombinationsRandomOrder(popI->numActiveGametes);
     
     auto rd = std::random_device {};
     auto rng = std::default_random_engine { rd() };
- 
+    
     std::shuffle(std::begin(pairs), std::end(pairs), rng);
     
     double minModeltime = DOUBLE_INF;
-    //double minKingmanTime = DOUBLE_INF;
-    //double proposalKingmanTime;
     double proposalModelTime;
     Pair currPair;
     std::pair<Pair, ProposalDistribInfo> currEntry;
     std::pair<Pair, ProposalDistribInfo> winnerModelTime;
-   
     
-    int max_internal_points = 20;
-   
+    int max_internal_points = 50;
+    
     double currModeltime = popI->currentModelTime;
     if (currModeltime== 0.0)
         currModeltime = 1e-10;
     double torigin = 0.999*popI->timeOriginSTD;
-    double interPoint1 = currModeltime+ Random::randomUniformFromGsl2(rngGsl)*(torigin-currModeltime);
-    interPoint1 = 0.0120;
-    double interPoint2 =currModeltime+ Random::randomUniformFromGsl2(rngGsl)*(torigin-currModeltime);
-    interPoint2 = 0.0256;
-    std::vector<double>  x = {currModeltime, interPoint1,interPoint2, torigin};
+    double interPoint1;
+    double interPoint2 ;
+
     
-    size_t numPoints= 50;
-    Eigen::VectorXd xserieEigen = Eigen::VectorXd::LinSpaced(numPoints,currModeltime,torigin);
-    
-    std::vector<double> xseries(xserieEigen.data(),xserieEigen.data()+ xserieEigen.size() );
-   
+    GNUPlotter plotter;
     size_t pair_idx=0;
-    Eigen::VectorXd xEigen = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(x.data(), x.size());
-    //std::sort(xEigen.data(),xEigen.data()+xEigen.size());
-  
-    bool normalizedCLVs = true;
-    //GNUPlotter plotter;
+
     std::vector<double> sampledIncrementsPerPair(pairs.size());
     double lastSampledX = 0.0;
     double lastSampledY = 0.0;
-    double cumArea = 0.0;
+    double logComplArea = 0.0;
+    bool doPlots = false;
+    if (doPlots){
+        
+         GNUPlotter plotter;
+        
+    }
+        
     for(std::vector<Pair>::iterator it = pairs.begin(), end = pairs.end(); it != end; ++it)
     {
         currPair = *it;
         idxFirst = currPair. first;
         idxSecond = currPair. second;
-                   
+        
         idxFirstRoot = popI->idsActiveGametes[idxFirst];
         idxSecondRoot = popI->idsActiveGametes[idxSecond];
-                   
+        
         int idxFirstID = getNodeIdxById(idxFirstRoot);
         int idxSecondId = getNodeIdxById(idxSecondRoot);
-       
-        CCLogDensity *log_density =
-           new GenotypeJCPairLogProposal(partition->numberSites, partition->numberStates, popI->timeOriginSTD, popI->delta, popI->theta, currModeltime,
-                                                                roots[idxFirstID]->height,
-                                         roots[idxSecondId]->height, roots[idxFirstID]->pclv, roots[idxSecondId]->pclv, normalizedCLVs);
         
-//        Eigen::VectorXd yserieEigenConcave = log_density->h_concave(xserieEigen);
-//        Eigen::VectorXd yserieEigenConvex = log_density->h_convex(xserieEigen);
-//        Eigen::VectorXd yserieEigenFull= yserieEigenConcave+yserieEigenConvex;
-//
-//        Eigen::VectorXd derivativeEigenConcave = log_density->h_prime_concave(xserieEigen);
-//        Eigen::VectorXd derivativeEigenConvex = log_density->h_prime_convex(xserieEigen);
-//
-//        std::vector<double> yseriesConcave(yserieEigenConcave.data(),yserieEigenConcave.data()+ yserieEigenConcave.size());
-//        std::vector<double> yseriesConvex(yserieEigenConvex.data(),yserieEigenConvex.data()+ yserieEigenConvex.size());
-//        std::vector<double> yseriesFull(yserieEigenFull.data(),yserieEigenFull.data()+ yserieEigenFull.size());
-//
-//        std::vector<double> derivativeConcave(derivativeEigenConcave.data(),derivativeEigenConcave.data()+ derivativeEigenConcave.size());
-//        std::vector<double> derivativeConvex(derivativeEigenConvex.data(),derivativeEigenConvex.data()+ derivativeEigenConvex.size());
-//
-//        plotter.plot2dSerie(xseries,  yseriesConcave, true, "concave_part.png","concave part" );
-//        plotter.plot2dSerie(xseries,  yseriesConvex, true, "convex_part.png","convex part" );
-//        plotter.plot2dSerie(xseries,  yseriesFull, true, "log_lik.png","log lik" );
-//
-//        plotter.plot2dSerie(xseries,  derivativeConcave, true, "derivative_concave_part.png","derivative concave part" );
-//        plotter.plot2dSerie(xseries,  derivativeConvex, true, "derivative_convex_part.png","derivative convex part" );
-//
+        //interPoint1 = currModeltime+ Random::randomUniformFromGsl2(rngGsl)*(torigin-currModeltime);
+        
+        interPoint1 = currModeltime + 0.05*(torigin-currModeltime);
+        //interPoint2 =currModeltime+ Random::randomUniformFromGsl2(rngGsl)*(torigin-currModeltime);
+        interPoint2 = currModeltime + 0.75*(torigin-currModeltime);
+    
+        interPoint1 = currModeltime + 0.01*(torigin-currModeltime);
+        std::vector<double> x = {currModeltime, interPoint1, interPoint2, torigin};
+        
+        Eigen::VectorXd xEigen = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(x.data(), x.size());
+        CCLogDensity *log_density =
+        new GenotypeJCPairLogProposal(partition->numberSites, partition->numberStates, popI->timeOriginSTD, popI->delta, popI->theta, currModeltime,
+                                      roots[idxFirstID]->height,
+                                      roots[idxSecondId]->height, roots[idxFirstID]->pclv, roots[idxSecondId]->pclv, normalizedCLV);
+        
+        if (doPlots){
+                         //GNUPlotter plotter;
+                         size_t numPoints= 50;
+                         log_density->plot(plotter, numPoints, 0, idxFirstID,  idxSecondId );
+        }
+       
         CCARS *ccars = new CCARS(log_density, xEigen, currModeltime, torigin,  max_internal_points);
         lastSampledX = 0.0;
         lastSampledY = 0.0;
-        double cumArea = 0.0;
-        double logAreaIntegral = ccars->approximateLogIntegral(rngGsl, max_internal_points);
-        lastSampledX = ccars->sample(rngGsl, lastSampledY, cumArea);
+        logComplArea = 0.0;
         
+       // std::cout << "approximating integral for pair " << std::to_string(idxFirstID)+ ", "+ std::to_string(idxSecondId)<< std::endl;
+        double logAreaIntegral = ccars->approximateLogIntegral(rngGsl, max_internal_points);
+        
+        if (doPlots){
+                   //GNUPlotter plotter;
+                   size_t numPoints= 50;
+                  ccars->plot( plotter, numPoints, 0, idxFirstID,  idxSecondId);
+        
+               }
+        lastSampledX = ccars->sample(rngGsl, lastSampledY, logComplArea);
+        
+        if(logComplArea >logAreaIntegral){
+            std::cout << " Pair: ( " <<idxFirst << " ,"<< idxSecond << ")" << std::endl;
+            std::cout << "log comp Area= " <<logComplArea << std::endl;
+            std::cout << " logAreaIntegral= " << logAreaIntegral << std::endl;
+            logAreaIntegral  = logComplArea;
+        }
         sampledIncrementsPerPair[pair_idx] =lastSampledX;
         pair_idx++;
-
+        
         proposalModelTime = lastSampledX;
         ProposalDistribInfo proposalInfo;
         proposalInfo.creationTime  = currModeltime;
         proposalInfo.logIntegral = logAreaIntegral;
         proposalInfo.timeProposal = lastSampledX;
-        proposalInfo.cumlogIntegralUntilProposal = cumArea;
+        proposalInfo.logComplementArea = logComplArea;
         proposalInfo.logLikAtProposal = lastSampledY;
         
         currEntry = std::make_pair(currPair,proposalInfo);
@@ -1872,12 +1860,150 @@ std::pair<Pair, ProposalDistribInfo> State::initPairProposalsNextEventTime(gsl_r
         
         popI->pairCurrentProposals.insert(currEntry);
     }
- 
-   // std::cout <<" pair min Kingman time " << winnerKingmanTime.first.first << " , "<< winnerKingmanTime.first.second  << std::endl;
-   // std::cout <<" pair min Model time " << winnerModelTime.first.first << " , "<< winnerModelTime.first.second << std::endl;
-   // std::cout <<" min Model time " << winnerModelTime.second.second << std::endl;
+    
     return winnerModelTime;
+}
+std::pair<Pair, ProposalDistribInfo> State::updatePairCurrentProposalsMap(int iter, int posNewNodeIdsGametes, double modelTimeNewNode,double K, double &logWeightDiff, std::pair<Pair, ProposalDistribInfo> copyPairMinModelTime,   gsl_rng *rngGsl, bool usePriorInSMC1, bool normalizedCLV, Population* currPop){
+    
+    double waitingTimeKingman, proposalKingmanTime, proposalModelTime;
+    double minModeltime = DOUBLE_INF;
+    double currKingmanCoalTime = Population::FmodelTstandard(modelTimeNewNode, currPop->timeOriginSTD, currPop->delta, K);
+    std::pair<Pair, ProposalDistribInfo>  pairMinModelTime;
+    int idxFirst, idxSecond, idxFirstRoot, idxSecondRoot;
+    double logLikNewHeight = 0.0;
+    int max_internal_points = 50;
+    bool doPlots = false;
+//    if (doPlots)
+//        GNUPlotter plotter;
+    
+    double torigin  = 0.999*currPop->timeOriginSTD;
+    assert(currPop->pairCurrentProposals.size()== (currPop->numActiveGametes)*(currPop->numActiveGametes-1)/ 2.0 -1);
+    PairInfoMap::iterator it = currPop->pairCurrentProposals.begin();
+    double lik_factor_newNode;
+    
+    
+    while ( it != currPop->pairCurrentProposals.end()) {
+        
+        auto currPair = it->first;
 
+        
+        if (Utils::pairsIntersected(currPair, copyPairMinModelTime.first)){
+            
+            double dropoutNodeProposalModelTime =  it->second.timeProposal  ;
+            double dropoutNodeModelTimeEntry =   it->second.creationTime ;
+            //numerator
+            logWeightDiff +=   -log(theta)+log(currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0) +
+            Population::LogLambda(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K)-
+            (currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K) ;
+            
+            //denominator
+            if (usePriorInSMC1){
+                logWeightDiff -= -Population::FmodelTstandard(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K)+ Population::FmodelTstandard(dropoutNodeModelTimeEntry, currPop->timeOriginSTD, currPop->delta,K);
+            }
+            else{
+                logWeightDiff -=  log(exp(it->second.logComplementArea-it->second.logIntegral));
+            }
+            idxFirst = currPair.first;
+            idxSecond = currPair.second;
+            
+            idxFirstRoot = currPop->idsActiveGametes[idxFirst];
+            idxSecondRoot = currPop->idsActiveGametes[idxSecond];
+            
+            assert(idxFirstRoot != idxSecondRoot);
+            
+            int idxFirstID = getNodeIdxById(idxFirstRoot);
+            int idxSecondId = getNodeIdxById(idxSecondRoot);
+            
+//            logLikNewHeight = 0.0;
+//
+//            auto newNode =  uniquePtrNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, dropoutNodeProposalModelTime, logLikNewHeight, !usePriorInSMC1 );
+//
+//            lik_factor_newNode = newNode->likelihood_factor();
+//
+//            if (lik_factor_newNode > -1e10){
+//                //logWeightDiff -= lik_factor_newNode;
+//            }
+//            else{
+//                std::cout << "log lik factor -inf for pair "<< currPair.first << " , " << currPair.second << std::endl;
+//                std::cout <<lik_factor_newNode << std::endl;
+//            }
+            //only erase the pairs related with the last position of idsActiveGametes(the other ones will be updated)
+            if (currPair.first == copyPairMinModelTime.first.second  || currPair.second ==copyPairMinModelTime.first.second)
+                it = currPop->pairCurrentProposals.erase(it);
+            else{
+                if (usePriorInSMC1){
+                    waitingTimeKingman =  Random::RandomExponential(1.0,0,  true, rngGsl,NULL );
+                    proposalKingmanTime = waitingTimeKingman + currKingmanCoalTime;
+                    
+                    proposalModelTime = Population::GstandardTmodel(proposalKingmanTime, currPop->timeOriginSTD, currPop->delta, K);
+                    
+                }
+                else{
+                    
+                    double interPoint1 =modelTimeNewNode + 0.05*(torigin-modelTimeNewNode);
+                    
+                    double interPoint2 =modelTimeNewNode + 0.75*(torigin-modelTimeNewNode);
+                    
+                    interPoint2 =modelTimeNewNode + 0.01*(torigin-modelTimeNewNode);
+                    
+                    std::vector<double>  x = {modelTimeNewNode, interPoint2, torigin};
+                    
+                    Eigen::VectorXd xEigen = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(x.data(), x.size());
+                    
+                    CCLogDensity *log_density =
+                    new GenotypeJCPairLogProposal(partition->numberSites, partition->numberStates, currPop->timeOriginSTD, currPop->delta,theta, modelTimeNewNode,
+                                                  roots[idxFirstID]->height,
+                                                  roots[idxSecondId]->height, roots[idxFirstID]->pclv, roots[idxSecondId]->pclv, normalizedCLV);
+                    
+                    if (doPlots){
+                                      GNUPlotter plotter;
+                                      size_t numPoints= 50;
+                                      log_density->plot(plotter, numPoints, iter,  idxFirstID,  idxSecondId );
+                     }
+                    
+    
+                    CCARS *ccars = new CCARS(log_density, xEigen, modelTimeNewNode, torigin,  max_internal_points);
+                    double lastSampledX = 0.0;
+                    double lastSampledY = 0.0;
+                    double complementArea = 0.0;
+                    double logAreaIntegral = ccars->approximateLogIntegral(rngGsl, max_internal_points);
+                    
+                    if (doPlots){
+                               GNUPlotter plotter;
+                               size_t numPoints= 50;
+                              ccars->plot( plotter, numPoints, iter,  idxFirstID,  idxSecondId);
+                    
+                           }
+                    lastSampledX = ccars->sample(rngGsl, lastSampledY, complementArea);
+                    it->second.creationTime    = modelTimeNewNode;//creation time
+                    it->second.timeProposal  = lastSampledX;//new proposal time
+            
+                    it->second.logIntegral = logAreaIntegral;
+                    it->second.timeProposal = lastSampledX;
+                    it->second.logComplementArea = complementArea;
+                    it->second.logLikAtProposal = lastSampledY;
+                }
+               
+                if (it->second.timeProposal <minModeltime){
+                    
+                    pairMinModelTime = *it;
+                    minModeltime = it->second.timeProposal ;
+                }
+                it++;
+            }
+        }
+        else{
+            //find the minimum proposal model time in the pairs that didnt dropout
+            if (it->second.timeProposal < minModeltime){
+                
+                minModeltime = it->second.timeProposal;
+                pairMinModelTime = *it;
+            }
+            it++;
+        }
+    }
+    assert(currPop->pairCurrentProposals.size()== (currPop->numActiveGametes-1)*(currPop->numActiveGametes-2)/ 2.0);
+    return pairMinModelTime;
 }
 State::~State(){
 }

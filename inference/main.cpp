@@ -164,10 +164,6 @@ int main(int argc, char* argv[] )
     printProgramHeader();
     setDefaultOptions(programOptions, mcmcOptions);
     
-   // inputGenotypeFilePhylipPath = "";
-
-    bool doPlots = false;
-    
     std::vector<StructuredCoalescentTree *> structuredCoalTrees;
     std::vector<pll_rtree_t *> trueTrees;
     std::vector<long double> trueThetas;
@@ -184,7 +180,6 @@ int main(int argc, char* argv[] )
     //    /* set file dirs and names */
     InitFilesPathsOptions(filePaths, programOptions);
     
-    
     pll_msa_t *msa;
     
     fileNameFasta = filePaths.inputGenotypeFileFasta;
@@ -198,7 +193,6 @@ int main(int argc, char* argv[] )
     //    programOptions.numCells = programOptions.TotalNumSequences;
     //
     //    programOptions.TotalTumorSequences=programOptions.TotalNumSequences-1;
-    
     
     fileNamePhylip =filePaths.inputGenotypeFilePhylip;
     msa = pll_phylip_load(fileNamePhylip, PLL_FALSE);
@@ -317,13 +311,40 @@ int main(int argc, char* argv[] )
                             timeOriginSTDs,
                             {1.0},
                             coalTimesModelTimePerPopulation);
-    psParams.doPriorPost= true;
+    psParams.doPriorPost= false;
     psParams.doFixedEventimes= false;
+    psParams.usePriorInSMC1 = true;
+    bool normalizedCLVs = false;
+    
     
     size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
     PosetSMC posetSMC(programOptions.numClones,  num_iter, false);
     
     posetSMC.kernelType = PosetSMC::PosetSMCKernel::TSMC1;
+
+    
+    if (posetSMC.kernelType== PosetSMC::PosetSMCKernel::TSMC1){
+        
+        if (!(psParams.usePriorInSMC1)){
+            
+            if (normalizedCLVs){
+                programOptions.normalizeLeavesClv =true;
+                programOptions.normalizeClv =true;
+                
+                
+            }
+            else{
+                programOptions.normalizeLeavesClv =false;
+                programOptions.normalizeClv =false;
+                
+            }
+        }
+        else{
+            programOptions.normalizeLeavesClv =false;
+            programOptions.normalizeClv =false;
+            
+        }
+    }
     
     //  smc options
     SMCOptions smcOptions;
@@ -340,6 +361,7 @@ int main(int argc, char* argv[] )
     smcOptions.track_population = false;
     smcOptions.init();
     smcOptions.debug = true;
+    
     
     PMCMCOptions pmcmc_options(22441453521, 10000);
     pmcmc_options.burn_in = 1000;
@@ -388,7 +410,7 @@ int main(int argc, char* argv[] )
     }
     else if(method == PMMH){
         //Particle Marginal Metropolis-Hastings
-        smcOptions.num_particles = 500;
+        smcOptions.num_particles = 128;
         ConditionalSMC<State, PosetSMCParams> csmc(posetSMC, smcOptions);
          BDCoalModelRandomWalkProposal rw_param_proposal(priorParams, programOptions.numClones, programOptions.TotalNumSequences,
                                                     msaWrapper.getLength(),
@@ -401,8 +423,8 @@ int main(int argc, char* argv[] )
           double logZ = csmc.get_log_marginal_likelihood();
           std::cout << logZ << std::endl; // logZ at true params
 
-          PMCMCOptions pmcmc_options(346575392, 10000);
-          pmcmc_options.burn_in = 1000;
+          PMCMCOptions pmcmc_options(346575392, 1000);
+          pmcmc_options.burn_in = 100;
          
           ParticleMMH<State, PosetSMCParams> pmmh(pmcmc_options, csmc, rw_param_proposal);
           pmmh.run();

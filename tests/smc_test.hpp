@@ -82,7 +82,7 @@ public:
         struct timeval tv;
         gettimeofday(&tv,0);
         seed = tv.tv_sec + tv.tv_usec;
-       // smcOptions.main_seed = seed;
+        // smcOptions.main_seed = seed;
         
         const char* input_path;
         const std::string config_file = "/Users/faustofabiancrespofernandez/Downloads/tumor_coal_last_last/tumor_coal/data/input_data/parametersMCMC.txt";
@@ -165,7 +165,7 @@ public:
         std::vector<int> positions(programOptions.TotalTumorSequences);
         std::iota( std::begin( positions ), std::end( positions ), 1 );
         
-
+        
         //std::random_shuffle( positions.begin(), positions.end());
         
         GenotypeErrorModel *gtErrorModel= new GenotypeErrorModel("GT20", 0.0, 0.0, 16);
@@ -189,7 +189,7 @@ public:
         std::vector<double> deltas  = {std::get<6>(GetParam())};
         std::vector<double> timeOriginSTDs = { TscaledByTheta/true_theta };
         std::vector<std::vector<double>> coalTimesModelTimePerPopulation;
-         
+        
         const double theta = true_theta;
         transform(coalTimes.begin(), coalTimes.end(), coalTimes.begin(), [theta](double &c){ return c/theta; });
         
@@ -197,11 +197,11 @@ public:
         
         
         psParams = new  PosetSMCParams(programOptions.numClones, programOptions.TotalNumSequences,  sampleSizes,programOptions.numSites, msaWrapper, partition, pll_buffer_manager, positions, programOptions, gtErrorModel,
-                                true_theta,
-                                deltas,
-                                timeOriginSTDs,
-                                {1.0},
-                                coalTimesModelTimePerPopulation);
+                                       true_theta,
+                                       deltas,
+                                       timeOriginSTDs,
+                                       {1.0},
+                                       coalTimesModelTimePerPopulation);
         psParams->doPriorPost = true;
         psParams->doFixedEventimes = false;
         psParams->usePriorInSMC1 = false;
@@ -219,7 +219,7 @@ public:
                 if (normalizedCLVs){
                     programOptions.normalizeLeavesClv =true;
                     programOptions.normalizeClv =true;
-                     
+                    
                     
                 }
                 else{
@@ -228,9 +228,14 @@ public:
                     
                 }
             }
+            else{
+                programOptions.normalizeLeavesClv =false;
+                programOptions.normalizeClv =false;
+                
+            }
         }
-            
-            
+        
+        
         smcOptions.init();
         smcOptions.debug = true;
         
@@ -238,16 +243,16 @@ public:
     }
     
     ~PosetSMCOnePopulationTest() override {
-      //  pll_msa_destroy(msa);
-      //  pll_rtree_destroy(initialRootedTree,NULL);
+        //  pll_msa_destroy(msa);
+        //  pll_rtree_destroy(initialRootedTree,NULL);
     }
-  
+    
     //    void SetUp() override {
     //
     //
     //    }
     
-   
+    
     
     char *fileNameFasta ;//= argv[2];
     char *fileNamePhylip;

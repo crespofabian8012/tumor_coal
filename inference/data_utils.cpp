@@ -1272,10 +1272,21 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                                                0, //int statesPadded
                                                false, false, false, false, false, false);
             
-            
-            treeLikList[dataSetNum] = new TreeLikelihood(*(partitionList[pos]), *(treesList[dataSetNum]),  *(msaList[pos]), gtNoError)
+//            partitionList.emplace_back(
+//                                       treesList[dataSetNum]->numTips(),// numberTips
+//            treesList[dataSetNum]->numInner(),//unsigned  int  clvBuffers
+//            16,// model->states,//numberStates
+//            (unsigned int)(msaList[pos]->getLength()),//unsigned  int  sites
+//            1,//unsigned  int numberRateMatrices
+//            treesList[dataSetNum]->numBranches(), // unsigned int probMatrices
+//            RATE_CATS,//RATE_CATS, // unsigned  int  numberRateCats
+//            treesList[dataSetNum]->numInner(), // unsigned  int numberScaleBuffers
+//            0, //int statesPadded
+//            false, false, false, false, false, false);
+//
+           treeLikList[dataSetNum] = new TreeLikelihood(*(partitionList[pos]), *(treesList[dataSetNum]),  *(msaList[pos]), gtNoError)
             ;
-            
+
             
             double logLikGenotypes = treeLikList[pos]->computeRootLogLikelihood();
             

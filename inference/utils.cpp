@@ -1231,6 +1231,7 @@ double Utils::computeGorurTehLogLik(int numSites, int numStates, double rate, do
     
     return logh;
 }
+
 //double Utils::concaveConvexARS(double a, double b, LogDensity* const log_density, int numSamples, double rn[numSamples], bool isLogConcave ){
 //    
 //    double result = 0;

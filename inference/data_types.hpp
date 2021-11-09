@@ -54,10 +54,10 @@ struct ProposalDistribInfo{
     double creationTime;
     double logIntegral;
     double logLikAtProposal;
-    double cumlogIntegralUntilProposal;
+    double logComplementArea;
     
     bool operator==(const ProposalDistribInfo &rhs) {
-        return std::tie(timeProposal, creationTime,logIntegral, logLikAtProposal,cumlogIntegralUntilProposal ) == std::tie(rhs.timeProposal, rhs.creationTime,rhs.logIntegral, rhs.logLikAtProposal,rhs.cumlogIntegralUntilProposal);
+        return std::tie(timeProposal, creationTime,logIntegral, logLikAtProposal,logComplementArea ) == std::tie(rhs.timeProposal, rhs.creationTime,rhs.logIntegral, rhs.logLikAtProposal,rhs.logComplementArea);
     }
 
     void swap(ProposalDistribInfo & other)
@@ -66,11 +66,11 @@ struct ProposalDistribInfo{
         std::swap(creationTime, other.creationTime);
         std::swap(logIntegral, other.logIntegral);
         std::swap(logLikAtProposal, other.logLikAtProposal);
-        std::swap(cumlogIntegralUntilProposal, other.cumlogIntegralUntilProposal);
+        std::swap(logComplementArea, other.logComplementArea);
     }
 
     bool operator<(const ProposalDistribInfo &rhs) {
-        return std::tie(timeProposal, creationTime,logIntegral, logLikAtProposal,cumlogIntegralUntilProposal) < std::tie(rhs.timeProposal, rhs.creationTime,rhs.logIntegral, rhs.logLikAtProposal,rhs.cumlogIntegralUntilProposal);
+        return std::tie(timeProposal, creationTime,logIntegral, logLikAtProposal,logComplementArea) < std::tie(rhs.timeProposal, rhs.creationTime,rhs.logIntegral, rhs.logLikAtProposal,rhs.logComplementArea);
     }
 };
 //using PairInfoMap = std::unordered_map<Pair , std::tuple<double, double, double, double, double >, boost::hash<Pair>, MyEqual<Pair> > ;

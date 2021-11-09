@@ -57,7 +57,7 @@ int pll_core_update_pmatrix2(double ** pmatrix,
                              double * const * inv_eigenvecs,
                              unsigned int count,
                              unsigned int attrib);
-void pll_core_update_partial_ii2(unsigned int states,
+void pll_core_update_partial_ii_norm(unsigned int states,
                                  unsigned int sites,
                                  unsigned int rate_cats,
                                  double * parent_clv,

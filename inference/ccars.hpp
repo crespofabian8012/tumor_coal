@@ -13,7 +13,7 @@
 #include <Eigen/Dense>
 
 using namespace std;
-
+class GNUPlotter;
 class CCLogDensity {
     
 public:
@@ -27,6 +27,7 @@ public:
     virtual double h_convex(double x) = 0;
     virtual double h_prime_concave(double x) = 0;
     virtual double h_prime_convex(double x) = 0;
+    virtual void plot(GNUPlotter &plotter, int num_grid_points,int iter,  int idxFirstID, int idxSecondId )= 0;
 };
 
 class GenotypeJCPairLogProposal : public CCLogDensity {
@@ -70,6 +71,9 @@ public:
     double h_convex(double x);
     double h_prime_concave(double x);
     double h_prime_convex(double x);
+    
+    void plot(GNUPlotter &plotter, int num_grid_points,int iter, int idxFirstID, int idxSecondId );
+    Eigen::VectorXd  minus_lambda(const Eigen::VectorXd& x);
 };
 struct HullSegment {
 public:
@@ -228,9 +232,14 @@ public:
     std::vector<double> sample(gsl_rng *rng, unsigned N, CCLogDensity* const log_density) ;
     double approximateLogIntegral(gsl_rng *rng,  double  max_number_internal_points);
     
-    double sampleNewX(gsl_rng *rng,double x1, double x2, double y1, double y2, double m );
+    double sampleNewX(gsl_rng *rng,double x1, double x2, double y1, double y2, double m, double &logCumArea );
     void addPoint(double new_x, double hconcave_new_x, double hconvex_new_x, int pos_new_x);
     void addPoint(double new_x);
-    double sample(gsl_rng *rng,  double& y, double& cumArea);
+    double sample(gsl_rng *rng,  double& y, double& logComplementArea);
+    
+    static  double logSumExp(const Eigen::VectorXd& values);
+    static double logSumExp(double u, double v);
+    static double logDiffExp(double u, double v);
+    void plot( GNUPlotter &plotter, int num_grid_points,int iter,  int idxFirstID, int idxSecondId);
 };
 #endif /* ccars_hpp */

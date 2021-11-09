@@ -27,15 +27,15 @@
 
 //#include <libpll/pll_tree.h>
 extern "C"
-{
+    {
 #include <libpll/pll_msa.h> //for pllmod_msa_empirical_frequencies
 #include <libpll/pll_tree.h>
 #include <libpll/pllmod_util.h>
 #include <libpll/pllmod_common.h>
 #include <libpll/pllmod_algorithm.h>
 #include <libpll/pll.h>
-
-}
+    
+    }
 
 #include "data_types.hpp"
 #include "data_utils.hpp"
@@ -69,36 +69,36 @@ int main(int argc, char *argv[])
     ("s", po::value<int>(), "number of sites[mandatory]")
     ("command", po::value<std::string>(), "command to execute")
     ("subargs", po::value<std::vector<std::string> >(), "Arguments for command");
-
+    
     
     po::positional_options_description pos;
     pos.add("command", 1).
-        add("subargs", -1);
-
+    add("subargs", -1);
+    
     po::variables_map vm;
-
+    
     po::parsed_options parsed = po::command_line_parser(argc, argv).
-        options(global).
-        positional(pos).
-        allow_unregistered().
-        run();
-
+    options(global).
+    positional(pos).
+    allow_unregistered().
+    run();
+    
     po::store(parsed, vm);
-     
+    
     
     vector<int> CloneNameBegin, CloneSampleSizeBegin, ClonePopSizeBegin;
     vector<double> CloneBirthRateBegin, CloneDeathRateBegin, CloneTimeOriginInput;
     double freq[4]; // stationary distribution of CTMC over {A,C,G,T}
     double Mij[4][4]; // transition probability matrix of CTMC over {A,C,G,T}
     double Eij[4][4]; // error probability
-
+    
     double TotalBirthRate, TotalDeathRate;
     int TotalN;
-
+    
     FILE    *input_file;
     /* Default settings */
     Initialize( Eij, Mij, freq,  programOptions );
-   char* input_path;
+    char* input_path;
     if (argc <= 2)
         input_path = argv[1];
     else{
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     }
     
     // 1. call function to parse the input file
-
+    
     if ((input_file = freopen(input_path, "r", stdin)) != NULL)
     {
         ReadParametersFromFile(programOptions, filePaths, CloneNameBegin, CloneSampleSizeBegin, ClonePopSizeBegin, CloneBirthRateBegin, CloneDeathRateBegin, CloneTimeOriginInput,Mij,freq);
@@ -120,34 +120,34 @@ int main(int argc, char *argv[])
     
     //allocate random generators
     std::vector<gsl_rng *> rngGslvector(programOptions.numDataSets);
-      // std::vector<const gsl_rng * > randomGenerators(programOptions.numDataSets);
+    // std::vector<const gsl_rng * > randomGenerators(programOptions.numDataSets);
     Random::allocateListRandomNumbersGenerators(rngGslvector);
     std::vector<boost::mt19937 *> rngBoostvector = Random::allocateListRandomNumbersGeneratorsBoost(programOptions.numDataSets);
-
+    
     // 2. create and initialize data structures
     
     vector<Population *> populations;
     InitListClones(populations, programOptions.numClones, programOptions.noisy, CloneNameBegin, CloneSampleSizeBegin, CloneBirthRateBegin,  CloneDeathRateBegin, ClonePopSizeBegin, CloneTimeOriginInput, programOptions.TotalNumSequences, NO, programOptions,  rngGslvector);
     InitNumberNodes(TotalBirthRate, TotalDeathRate, TotalN, populations, programOptions);
     ListClonesAccordingTimeToOrigin(populations, programOptions.numClones);
-
+    
     /* set file dirs and names */
     InitFilesPathsOptions(filePaths, programOptions);
     InitFiles(files);
-   
+    
     // 3. call function to simulate the data and
     // 4.output the files
     printSimulatorProgramHeader();
     float start = clock();
     SimulateData(programOptions, CloneNameBegin, CloneSampleSizeBegin, ClonePopSizeBegin,
-                    populations,
-                    filePaths,
-                    files,
-                    freq,
-                    Mij,
-                    Eij,
-                    rngGslvector,
-                    rngBoostvector);
+                 populations,
+                 filePaths,
+                 files,
+                 freq,
+                 Mij,
+                 Eij,
+                 rngGslvector,
+                 rngBoostvector);
     
     // 5. deallocate the memory
     for (auto ptr : populations)
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
         delete ptr;
     }
     populations.clear();
-
+    
     // 6. output messages
     if(programOptions.doPrintSeparateReplicates == NO){
         if (programOptions.doPrintTrees == YES  )

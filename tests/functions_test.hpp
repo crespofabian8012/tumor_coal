@@ -17,15 +17,11 @@ extern "C"
 //#include "gtest/internal/gtest-internal.h"
 class Population;
 class PopulationTest : public ::testing::Test {
- protected:
-
-
+protected:
     PopulationTest();
     ~PopulationTest() override;
     
     void SetUp() override;
-
-
     Population *pop;
     double K= 0.8;
     gsl_rng * random;

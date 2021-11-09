@@ -24,21 +24,22 @@ Partition::Partition(unsigned int numberTips,
                      bool avx512=false,
                      bool  asc=false,
                      bool tipPatternCompression=false):
-numberTips(numberTips),
-clvBuffers(clvBuffers),
-numberStates(numberStates),
-numberSites(numberSites),
-numberRateMatrices(numberRateMatrices),
-probMatrices(probMatrices),
-numberRateCats(numberRateCats),
-numberScaleBuffers(numberScaleBuffers),
-statesPadded(statesPadded),
-sse(sse),
-avx(avx),
-avx2(avx2),
-avx512(avx512),
-asc(asc),
-tipPatternCompression(tipPatternCompression)
+   partition(pll_partition_create(numberTips, clvBuffers, numberStates, numberSites, numberRateMatrices, probMatrices, numberRateCats, numberScaleBuffers, PLL_ATTRIB_ARCH_SSE), pll_partition_destroy),
+   numberTips(numberTips),
+   clvBuffers(clvBuffers),
+   numberStates(numberStates),
+   numberSites(numberSites),
+   numberRateMatrices(numberRateMatrices),
+   probMatrices(probMatrices),
+   numberRateCats(numberRateCats),
+   numberScaleBuffers(numberScaleBuffers),
+   statesPadded(statesPadded),
+   sse(sse),
+   avx(avx),
+   avx2(avx2),
+   avx512(avx512),
+   asc(asc),
+   tipPatternCompression(tipPatternCompression)
 {
     
     if (sse){
@@ -67,15 +68,14 @@ tipPatternCompression(tipPatternCompression)
     attributes &= ~PLL_ATTRIB_SITE_REPEATS;
     attributes &= ~PLL_ATTRIB_PATTERN_TIP;
     
-    partition =  pll_partition_create(numberTips, clvBuffers, numberStates, numberSites, numberRateMatrices, probMatrices, numberRateCats, numberScaleBuffers, attributes);
     
-    if(!partition)
+    if(partition==nullptr)
     {
-        printf("Fail creating partition \n");
-        //pll_partition_destroy(partition);
+        printf("ERROR creating pll_partition \n");
         exit(pll_errno);
         
     }
+    
     model = pllmod_util_model_info_genotype("GT16JC");
     sumtable = (double *)pll_aligned_alloc(partition->sites * partition->rate_cats * partition->states_padded * sizeof(double), partition->alignment);
     
@@ -98,6 +98,7 @@ Partition::Partition(pll_msa_t *msa,
                      bool avx512,
                      bool  asc,
                      bool tipPatternCompression):
+partition(pll_partition_create(msa->count, 0, numberStates, msa->length, 0, 0, numberRateCats, 0, PLL_ATTRIB_ARCH_SSE), pll_partition_destroy),
 numberStates(numberStates),
 numberRateCats(numberRateCats),
 statesPadded(statesPadded),
@@ -149,14 +150,13 @@ tipPatternCompression(tipPatternCompression)
     double rate_categories[1] = {0};
     
     //model =  Model(DataType::autodetect, "GT16JC");
-
+    
     model = pllmod_util_model_info_genotype("GT16JC");
- 
+    
     //assert(model->states ==numberStates);
     
     // double  rate_categories[number_states];
     // std::fill_n (rate_categories, number_states*(number_states-1) /2, 1);
-    
     
     //double rate_categories[1] = {1};
     pll_compute_gamma_cats(1, 1, rate_categories, PLL_GAMMA_RATES_MEAN);
@@ -164,14 +164,7 @@ tipPatternCompression(tipPatternCompression)
     
     //numberRateCats=4;
     numberRateCats=1;
-    partition = pll_partition_create(
-                                     msa->count,
-                                     0, // Don't allocate any inner CLV's.
-                                     numberStates, msa->length, subst_model_count,
-                                     0, // Don't allocate any pmatrices.
-                                     numberRateCats,
-                                     0, // Don't allocate any scale buffers.
-                                     PLL_ATTRIB_ARCH_SSE);
+    
     
     if(!partition)
     {
@@ -194,26 +187,12 @@ tipPatternCompression(tipPatternCompression)
     std::fill_n (genotype_frequencies, numberStates, 1.0/(numberStates));
     
     
-    pll_set_frequencies(partition, 0, genotype_frequencies);
-    pll_set_category_rates(partition, rate_categories);
-    pll_set_subst_params(partition, 0, subst_params);
+    pll_set_frequencies(partition.get(), 0, genotype_frequencies);
+    pll_set_category_rates(partition.get(), rate_categories);
+    pll_set_subst_params(partition.get(), 0, subst_params);
     
-    //   for (unsigned int i = 0; i < msa->count; i++) {
-    //
-    ////     if (pll_set_tip_states(partition, i, pll_map_gt10, msa->sequence[i]) != PLL_SUCCESS)
-    ////       std::vector<double> tmp_clv;
-    ////
-    ////        computeCLV(i, msa, gtError, tmp_clv);
-    ////
-    ////            reference_partition->initTipCLV(i, tmp_clv.data());
-    //       if (pll_set_tip_states(partition, i, pll_map_gt10, msa->sequence[i]) != PLL_SUCCESS)
-    //        {
-    //          fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
-    //          exit(pll_errno);
-    //        }
-    //    }
-    //
-    pll_update_eigen(partition, 0);
+
+    pll_update_eigen(partition.get(), 0);
     
     
     sumtable = (double *)pll_aligned_alloc(partition->sites * partition->rate_cats * partition->states_padded * sizeof(double), partition->alignment);
@@ -229,7 +208,7 @@ tipPatternCompression(tipPatternCompression)
 
 int  Partition::setTipStates(unsigned int tipClvIndex,std::string  sequence){
     
-    if (pll_set_tip_states(partition, tipClvIndex, pll_map_gt10, sequence.c_str()) != PLL_SUCCESS)
+    if (pll_set_tip_states(partition.get(), tipClvIndex, pll_map_gt10, sequence.c_str()) != PLL_SUCCESS)
     {
         fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
         exit(pll_errno);
@@ -240,7 +219,7 @@ int  Partition::setTipStates(unsigned int tipClvIndex,std::string  sequence){
 int  Partition::setTipStates(unsigned int tipClvIndex, char * sequence){
     
     
-    if (pll_set_tip_states(partition, tipClvIndex, pll_map_gt10, sequence) != PLL_SUCCESS)
+    if (pll_set_tip_states(partition.get(), tipClvIndex, pll_map_gt10, sequence) != PLL_SUCCESS)
     {
         fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
         exit(pll_errno);
@@ -250,7 +229,7 @@ int  Partition::setTipStates(unsigned int tipClvIndex, char * sequence){
 }
 int Partition::setTipCLV(unsigned int tipClvIndex, double * clv){
     
-    if (pll_set_tip_clv(partition, tipClvIndex,  clv, PLL_TRUE) != PLL_SUCCESS)
+    if (pll_set_tip_clv(partition.get(), tipClvIndex,  clv, PLL_TRUE) != PLL_SUCCESS)
     {
         fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
         exit(pll_errno);
@@ -261,7 +240,7 @@ int Partition::setTipCLV(unsigned int tipClvIndex, double * clv){
 }
 int Partition::initTipCLV(unsigned int tipClvIndex, double * clv)const{
     
-    if (pll_set_tip_clv(partition, tipClvIndex,  clv, PLL_TRUE) != PLL_SUCCESS)
+    if (pll_set_tip_clv(partition.get(), tipClvIndex,  clv, PLL_TRUE) != PLL_SUCCESS)
     {
         fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
         exit(pll_errno);
@@ -272,7 +251,7 @@ int Partition::initTipCLV(unsigned int tipClvIndex, double * clv)const{
 }
 void Partition::buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel, std::vector<double> &clv, bool normalize)const{
     
-   // auto clv_size = msa->length * numberStates;
+    // auto clv_size = msa->length * numberStates;
     //auto clv_size = msa->length * numberStates*numberRateCats;
     //here we assume numberRateCats=1
     auto clvp = clv.begin();
@@ -310,39 +289,39 @@ void Partition::buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtError
 
 void Partition::setPatternWeights( const unsigned int * patternWeights){
     
-    pll_set_pattern_weights(partition, patternWeights);
+    pll_set_pattern_weights(partition.get(), patternWeights);
     
 }
 
 void Partition::setSubstParams( unsigned int paramsIndex,
                                const double * params){
     
-    pll_set_subst_params(partition,  paramsIndex,params);
+    pll_set_subst_params(partition.get(),  paramsIndex,params);
     
 }
 
 void Partition::setFrequencies( unsigned int paramsIndex,
                                const double *frequencies){
     
-    pll_set_frequencies(partition,  paramsIndex ,  frequencies);
+    pll_set_frequencies(partition.get(),  paramsIndex ,  frequencies);
     
 }
 
 void Partition::setCategoryRates(const double *rates){
     
-    pll_set_category_rates(partition,  rates);
+    pll_set_category_rates(partition.get(),  rates);
     
 }
 
 void Partition::setCategoryWeights(const double *rateWeights){
     
-    pll_set_category_weights(partition,  rateWeights);
+    pll_set_category_weights(partition.get(),  rateWeights);
     
 }
 
 void Partition::updateEigen(unsigned int paramsIndex){
     
-    pll_update_eigen(partition,  paramsIndex);
+    pll_update_eigen(partition.get(),  paramsIndex);
     
 }
 
@@ -353,7 +332,7 @@ void Partition::updateProbMatrices(
                                    unsigned int count){
     
     
-    pll_update_prob_matrices(partition,
+    pll_update_prob_matrices(partition.get(),
                              paramsIndexes,
                              matrixIndexes,
                              branchLengths,
@@ -362,16 +341,16 @@ void Partition::updateProbMatrices(
 }
 
 void Partition::updateInvariantSites(){
-    pll_update_invariant_sites(partition);
+    pll_update_invariant_sites(partition.get());
 }
 
 void Partition::updateInvariantSitesProportion(int paramsIndex, double propInvar){
-    pll_update_invariant_sites_proportion(partition,paramsIndex, propInvar);
+    pll_update_invariant_sites_proportion(partition.get(),paramsIndex, propInvar);
 }
 
 void Partition::updatePartials(  pll_operation_t * operations,
                                unsigned int count){
-    pll_update_partials(partition,operations, count);
+    pll_update_partials(partition.get(),operations, count);
 }
 
 //    def updatePartials(operations: Operations) = pll_update_partials(self, operations.pll_operation, operations.count)
@@ -379,13 +358,13 @@ void Partition::updatePartials(  pll_operation_t * operations,
 double   Partition::computeRootLogLikelihood(int clvIndex, int  scalerIndex, unsigned int * freqsIndex, double * persiteLnL)
 {
     
-    double result= pll_compute_root_loglikelihood(partition,  clvIndex, scalerIndex, freqsIndex, persiteLnL);
+    double result= pll_compute_root_loglikelihood(partition.get(),  clvIndex, scalerIndex, freqsIndex, persiteLnL);
     return result;
 }
 //
 double  Partition::computeEdgeLogLikelihood(int parentCLVIndex, int parentScalerIndex, int childCLVIndex, int childScalerIndex, int matrixIndex, unsigned int* freqsIndex,double * persiteLnL){
     
-    double result= pll_compute_edge_loglikelihood(partition, parentCLVIndex, parentScalerIndex, childCLVIndex, childScalerIndex, matrixIndex, freqsIndex, persiteLnL);
+    double result= pll_compute_edge_loglikelihood(partition.get(), parentCLVIndex, parentScalerIndex, childCLVIndex, childScalerIndex, matrixIndex, freqsIndex, persiteLnL);
     return result;
     
 }
@@ -393,7 +372,7 @@ double  Partition::computeEdgeLogLikelihood(int parentCLVIndex, int parentScaler
 int  Partition::updateSumtable(unsigned int parentCLVIndex,unsigned int childCLVIndex,int parentScalerIndex, int childScalerIndex, const unsigned int *paramsIndexes)
 {
     
-    if (pll_update_sumtable(partition, parentCLVIndex, childCLVIndex,parentScalerIndex, childScalerIndex, paramsIndexes,sumtable) != PLL_SUCCESS)
+    if (pll_update_sumtable(partition.get(), parentCLVIndex, childCLVIndex,parentScalerIndex, childScalerIndex, paramsIndexes,sumtable) != PLL_SUCCESS)
     {
         fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
         exit(pll_errno);
@@ -406,7 +385,7 @@ int  Partition::updateSumtable(unsigned int parentCLVIndex,unsigned int childCLV
 int  Partition::computeLikelihoodDerivatives(int parentScalerIndex, int childScalerIndex, double branchLength, const unsigned int * paramsIndices, double * df, double * ddf){
     
     
-    if (pll_compute_likelihood_derivatives(partition, parentScalerIndex, childScalerIndex, branchLength, paramsIndices, sumtable, df, ddf) != PLL_SUCCESS)
+    if (pll_compute_likelihood_derivatives(partition.get(), parentScalerIndex, childScalerIndex, branchLength, paramsIndices, sumtable, df, ddf) != PLL_SUCCESS)
     {
         fprintf(stderr, "PLL error %d: %s\n", pll_errno, pll_errmsg);
         exit(pll_errno);
@@ -418,7 +397,7 @@ int  Partition::computeLikelihoodDerivatives(int parentScalerIndex, int childSca
 
 pll_partition_t * Partition::getPartition()const {
     
-    return partition;
+    return partition.get();
     
 }
 double* Partition::getCLV(int tipIndex)const {
@@ -477,3 +456,4 @@ void Partition::showEigenDecomp(unsigned int float_precision) const{
     
     
 }
+

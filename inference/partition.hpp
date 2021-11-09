@@ -27,32 +27,20 @@ extern "C"
     
     }
 
+auto deletePartition = [](pll_partition_t* p)
+  {
+    pll_partition_destroy(p);
+
+  };
 
 class Partition{
 private:
-    pll_partition_t * partition;
+    //pll_partition_t * partition;
+    std::unique_ptr<pll_partition_t, decltype(&pll_partition_destroy)>  partition;
     pllmod_subst_model_t* model;
-    Partition(){};
-    //    Partition(int numberTips,
-    //               int clvBuffers,
-    //               int numberStates,
-    //               int numberSites,
-    //               int numberRateMatrices,
-    //               int probMatrices,
-    //               int numberRateCats,
-    //               int numberScaleBuffers,
-    //               int statesPadded,
-    //               bool sse,
-    //               bool avx,
-    //               bool  avx2,
-    //               bool avx512,
-    //               bool  asc,
-    //               bool tipPatternCompression);
-    //
+    //Partition(){partition = nullptr;};
     
 public:
-    
-    
     unsigned int attributes;
     unsigned int numberTips;
     unsigned int clvBuffers;
@@ -97,44 +85,9 @@ public:
                          bool avx512=false,
                          bool  asc=false,
               bool tipPatternCompression=false);
-    //    static Partition& getInstance(int numberTips,
-    //                                  int clvBuffers,
-    //                                  int numberStates,
-    //                                  int numberSites,
-    //                                  int numberRateMatrices,
-    //                                  int probMatrices,
-    //                                  int numberRateCats,
-    //                                  int numberScaleBuffers,
-    //                                  int statesPadded,
-    //                                  bool sse,
-    //                                  bool avx,
-    //                                  bool  avx2,
-    //                                  bool avx512,
-    //                                  bool  asc,
-    //                                  bool tipPatternCompression)
-    //           {
-    //               static Partition   instance( numberTips,
-    //                                      clvBuffers,
-    //                                      numberStates,
-    //                                      numberSites,
-    //                                      numberRateMatrices,
-    //                                      probMatrices,
-    //                                      numberRateCats,
-    //                                      numberScaleBuffers,
-    //                                      statesPadded,
-    //                                      sse,
-    //                                      avx,
-    //                                      avx2,
-    //                                      avx512,
-    //                                      asc,
-    //                                      tipPatternCompression); // Guaranteed to be destroyed.
-    //                                     // Instantiated on first use.
-    //               return instance;
-    //           }
+  
     
-    
-    
-    Partition(Partition const&)               = delete;
+    Partition(const Partition &other)  = delete;
     void operator=(Partition const&)          = delete;
     // Partition(const Partition& original) ;
     //  Partition& operator=(const Partition &original) ;
@@ -159,11 +112,7 @@ public:
                             const unsigned int * matrixIndexes,
                             const double * branchLengths,
                             unsigned int count);
-    //void updateProbMatrices(
-    //     unsigned int * paramsIndexes,
-    //     unsigned int * matrixIndexes,
-    //     double * branchLengths,
-    //    unsigned int count);
+
     
     void updateInvariantSites();
     
@@ -223,9 +172,7 @@ public:
     {
         // if(sumtable)
         //         pll_aligned_free(sumtable);
-        
-        
-        pll_partition_destroy(partition);
+        //   pll_partition_destroy(partition.get());
         
     }
     

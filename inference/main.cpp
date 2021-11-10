@@ -410,7 +410,7 @@ int main(int argc, char* argv[] )
     }
     else if(method == PMMH){
         //Particle Marginal Metropolis-Hastings
-        smcOptions.num_particles = 128;
+        smcOptions.num_particles = 32;
         ConditionalSMC<State, PosetSMCParams> csmc(posetSMC, smcOptions);
          BDCoalModelRandomWalkProposal rw_param_proposal(priorParams, programOptions.numClones, programOptions.TotalNumSequences,
                                                     msaWrapper.getLength(),

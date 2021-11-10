@@ -111,7 +111,7 @@ public:
         //MSA msaWrapper(msa);
         if (!MSA::checkMSA(*msaWrapper)){
             
-            std::cout << "Error cheking the sequences alignment \n"<< std::endl;
+            std::cout << "Error checking the sequences alignment \n"<< std::endl;
         }
         
         programOptions.numClones = 1;
@@ -204,8 +204,8 @@ public:
                                        coalTimesModelTimePerPopulation);
         psParams->doPriorPost = true;
         psParams->doFixedEventimes = false;
-        psParams->usePriorInSMC1 = false;
-        bool normalizedCLVs = true;
+        psParams->usePriorInSMC1 = true;
+        bool normalizedCLVs = false;
         
         num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
         posetSMC = new PosetSMC(programOptions.numClones,  num_iter, doPlots);

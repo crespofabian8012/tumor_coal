@@ -35,7 +35,8 @@ auto deletePartition = [](pll_partition_t* p)
 
 class Partition{
 private:
-    //pll_partition_t * partition;
+    //pll_partition_t * partition_rawPtr;
+    std::shared_ptr<pll_partition_t> sharedptr_partition;
     std::unique_ptr<pll_partition_t, decltype(&pll_partition_destroy)>  partition;
     pllmod_subst_model_t* model;
     //Partition(){partition = nullptr;};
@@ -132,31 +133,31 @@ public:
     
     pll_partition_t * getPartition()const ;
     
-    int ascBiasCorrection() const{return partition->asc_bias_alloc; };
+    int ascBiasCorrection() const{return sharedptr_partition->asc_bias_alloc; };
     
-    unsigned int getStatesPadded() const{return partition->states_padded; };
+    unsigned int getStatesPadded() const{return sharedptr_partition->states_padded; };
     
     double* getCLV(int tipIndex) const;
     
-    double* rates() const{return partition->rates; };
+    double* rates() const{return sharedptr_partition->rates; };
     
-    double* propInvar() const{return partition->prop_invar; };
+    double* propInvar() const{return sharedptr_partition->prop_invar; };
     
-    double** eigenVals() const{return partition->eigenvals; };
+    double** eigenVals() const{return sharedptr_partition->eigenvals; };
     
-    double** eigenVecs() const{return partition->eigenvecs; };
+    double** eigenVecs() const{return sharedptr_partition->eigenvecs; };
     
-    double** invEigenVecs() const{return partition->inv_eigenvecs; };
+    double** invEigenVecs() const{return sharedptr_partition->inv_eigenvecs; };
     
-    double** frequencies() const{return partition->frequencies; };
+    double** frequencies() const{return sharedptr_partition->frequencies; };
     
-    double* rateWeights() const{return partition->rate_weights; };
+    double* rateWeights() const{return sharedptr_partition->rate_weights; };
     
-    unsigned int* patternWeights() const{return partition->pattern_weights; };
+    unsigned int* patternWeights() const{return sharedptr_partition->pattern_weights; };
     
-    size_t alignment() const{return partition->alignment; };
+    size_t alignment() const{return sharedptr_partition->alignment; };
     
-    int* invariant() const{return partition->invariant; };
+    int* invariant() const{return sharedptr_partition->invariant; };
     
     void buildCLV(int tip_id, pll_msa_t *msa, GenotypeErrorModel *gtErrorModel, std::vector<double> &clv, bool normalize)const ;
     

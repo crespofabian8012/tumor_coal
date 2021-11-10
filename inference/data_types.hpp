@@ -390,6 +390,12 @@ struct EnumClassHash
   }
 };
 
+typedef enum {
+            asc_none,
+            asc_lewis,
+            asc_felsenstein,
+            asc_stamatakis
+} asc_bias_t;
 typedef std::unordered_map<std::string,size_t> NameIdMap;
 
 #endif /* data_types_h */

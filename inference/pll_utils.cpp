@@ -932,8 +932,10 @@ void pll_utils::computeCoalTimesInsideNode(pll_rnode_t *node,std::string& health
         TreeNode *leftData =(TreeNode*)(node->left->data);
         TreeNode *rightData =(TreeNode*)(node->right->data);
         if (leftData && rightData){
-           if (abs((leftData->time +node->left->length)-(rightData->time +node->right->length ))> 0.000001)
-               std::cout << node->right->label << std::endl;
+            if (abs((leftData->time +node->left->length)-(rightData->time +node->right->length ))> 0.000001){
+               //std::cout << node->right->label << std::endl;
+                assert(healthyTipLabel.compare(node->right->label)==0);
+            }
             data->time = std::max(leftData->time +node->left->length, rightData->time +node->right->length );
             data->numberOfTipsSubTree = leftData-> numberOfTipsSubTree+ rightData-> numberOfTipsSubTree ;
             data->numberOfNodesSubTree =leftData->numberOfNodesSubTree +rightData->numberOfNodesSubTree+2;

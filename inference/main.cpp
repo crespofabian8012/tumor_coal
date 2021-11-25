@@ -24,6 +24,7 @@
 
 
 
+//#include <stan⁩/lib⁩/stan_math⁩/stan/math/prim/fun/Eigen.hpp>
 
 #include <iostream>
 #include <string>
@@ -58,6 +59,11 @@
 #include "ipmcmc.hpp"
 #include "pg.hpp"
 #include "pmmh.hpp"
+
+//#include "stan_model_1_population_JC_genotypes.hpp"
+
+
+
 
 extern "C"
     {
@@ -351,7 +357,7 @@ int main(int argc, char* argv[] )
     smcOptions.num_threads = 5;
     smcOptions.use_SPF = false;
     smcOptions.ess_threshold = 1;
-    smcOptions.num_particles = 1000;
+    smcOptions.num_particles = 100;
     smcOptions.resample_last_round = false;
     smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
     //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
@@ -410,7 +416,9 @@ int main(int argc, char* argv[] )
     }
     else if(method == PMMH){
         //Particle Marginal Metropolis-Hastings
-        smcOptions.num_particles = 32;
+        smcOptions.num_particles = 8;
+     
+        
         ConditionalSMC<State, PosetSMCParams> csmc(posetSMC, smcOptions);
          BDCoalModelRandomWalkProposal rw_param_proposal(priorParams, programOptions.numClones, programOptions.TotalNumSequences,
                                                     msaWrapper.getLength(),
@@ -423,7 +431,7 @@ int main(int argc, char* argv[] )
           double logZ = csmc.get_log_marginal_likelihood();
           std::cout << logZ << std::endl; // logZ at true params
 
-          PMCMCOptions pmcmc_options(346575392, 1000);
+          PMCMCOptions pmcmc_options(346575392, 200);
           pmcmc_options.burn_in = 100;
          
           ParticleMMH<State, PosetSMCParams> pmmh(pmcmc_options, csmc, rw_param_proposal);

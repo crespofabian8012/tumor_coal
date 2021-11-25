@@ -9,12 +9,11 @@
 
 
 #include "ccars.hpp"
-//#include "data_types.hpp"
+
 #include "data_utils.hpp"
 #include "gnu_plotter.hpp"
 
-//#include "random.h"
-//#include <Eigen/Core>
+
 #include "Eigen/Dense"
 #include "Eigen/Core"
 
@@ -49,7 +48,7 @@ double CCARS::logDiffExp(double u, double v) {
 }
 
 
-UpperHull::UpperHull(const Eigen::VectorXd& x_internals, const Eigen::VectorXd& hx_internals, const Eigen::VectorXd& hpx_internals, double _xlb, double _xrb, double hx_xlb, double hx_xrb,  double hpx_xlb, double hpx_xrb):
+UpperHull::UpperHull(const Eigen::VectorXd& x_internals, const Eigen::VectorXd& hx_internals, const Eigen::VectorXd& hpx_internals, double _xlb, double _xrb, double hx_xlb, double hx_xrb,  double hpx_xlb, double hpx_xrb, int max_points):
 hx_xlb(hx_xlb), hx_xrb(hx_xrb), hpx_xlb(hpx_xlb), hpx_xrb(hpx_xrb),
 x(x_internals), hx(hx_internals), tangents_slopes(hpx_internals)  {
     // x assumed sorted!
@@ -77,10 +76,11 @@ x(x_internals), hx(hx_internals), tangents_slopes(hpx_internals)  {
         segment.x = x_internals(i);
         segment.hx = hx_internals(i);
         segment.hpx = hpx_internals(i);
-        if (is_concave)
-            assert(segment.hpx <0 );
-        else
-            assert(segment.hpx >=0 );
+        
+//        if (is_concave)
+//            assert(segment.hpx <0 );
+//        else
+//            assert(segment.hpx >=0 );
         segments.push_back(segment);
     }
     // Update z and scum
@@ -347,7 +347,7 @@ int UpperHull::get_point_position(double new_x){
     return iter;
 }
 ///_____________________________________________________________________________________________
-LowerHull::LowerHull(const Eigen::VectorXd&  x,const  Eigen::VectorXd&  hx):x(x),hx(hx) {
+LowerHull::LowerHull(const Eigen::VectorXd&  x,const  Eigen::VectorXd&  hx, int max_points):x(x),hx(hx) {
     // x assumed sorted!
     
     n_points = x.size();
@@ -474,7 +474,7 @@ Eigen::VectorXd LowerHull::get_h_intercepts( const Eigen::VectorXd& x_intercepts
     return h_intercepts;
 }
 ///_____________________________________________________________________________________________
-CCUpperHull::CCUpperHull(UpperHull &upper_hull_concave, LowerHull &upper_hull_convex, double xlb, double xrb ) :
+CCUpperHull::CCUpperHull(UpperHull &upper_hull_concave, LowerHull &upper_hull_convex, double xlb, double xrb, int max_points ) :
 upper_hull_concave(&upper_hull_concave),
 upper_hull_convex(&upper_hull_convex),
 xlb(xlb),
@@ -625,7 +625,7 @@ int CCUpperHull::get_point_position(double new_x){
 }
 //___________________________________________________________________________
 
-CCLowerHull::CCLowerHull(LowerHull &lower_hull_concave, UpperHull &lower_hull_convex, double xlb, double xrb ):
+CCLowerHull::CCLowerHull(LowerHull &lower_hull_concave, UpperHull &lower_hull_convex, double xlb, double xrb, int max_points):
 lower_hull_concave(&lower_hull_concave),
 lower_hull_convex(&lower_hull_convex),
 xlb(xlb),
@@ -899,18 +899,17 @@ max_points(max_points)
     //                }
     //            }
     //
-    
-    
+
     // Create the hulls
-    upper_hull_concave = UpperHull(internal_points, hx_concave_internals, hpx_concave_internals, xlb, xrb, hx_concave(0), hx_concave(hx_concave.size()-1), hpx_concave(0), hpx_concave(hpx_concave.size()-1) );
-    lower_hull_concave = LowerHull(x, hx_concave);
+    upper_hull_concave = UpperHull(internal_points, hx_concave_internals, hpx_concave_internals, xlb, xrb, hx_concave(0), hx_concave(hx_concave.size()-1), hpx_concave(0), hpx_concave(hpx_concave.size()-1), max_points);
+    lower_hull_concave = LowerHull(x, hx_concave, max_points);
     
-    lower_hull_convex = UpperHull(internal_points, hx_convex(Eigen::seqN(1, num_points-2)), hpx_convex(Eigen::seqN(1, num_points-2)), xlb, xrb, hx_convex(0), hx_convex(hx_convex.size()-1), hpx_convex(0), hpx_convex(hpx_convex.size()-1)  );
-    upper_hull_convex = LowerHull(x, hx_convex);
+    lower_hull_convex = UpperHull(internal_points, hx_convex(Eigen::seqN(1, num_points-2)), hpx_convex(Eigen::seqN(1, num_points-2)), xlb, xrb, hx_convex(0), hx_convex(hx_convex.size()-1), hpx_convex(0), hpx_convex(hpx_convex.size()-1), max_points  );
+    upper_hull_convex = LowerHull(x, hx_convex, max_points);
     
-    upper_hull = CCUpperHull(upper_hull_concave, upper_hull_convex, xlb, xrb);
+    upper_hull = CCUpperHull(upper_hull_concave, upper_hull_convex, xlb, xrb,  max_points);
     
-    lower_hull = CCLowerHull(lower_hull_concave, lower_hull_convex, xlb, xrb);
+    lower_hull = CCLowerHull(lower_hull_concave, lower_hull_convex, xlb, xrb,  max_points);
     
     //ratio of bound areas
      Eigen::ArrayXd diff1= upper_hull.cumulative.array()-upper_hull.maxCumulative;
@@ -944,7 +943,6 @@ double CCARS::approximateLogIntegral(gsl_rng *rng,  double  max_number_tangent_p
     while(trials < max_number_tangent_points && exp(logSumExp(lower_hull.cumulative)-logSumExp(upper_hull.cumulative))< 0.999 )//exp(logSumExp(lower_hull.cumulative)-logSumExp(upper_hull.cumulative)) should be always be < 1
     {
         //choose a segment
-      
         current_num_tangent_points = upper_hull_concave.x.size();
         boundedArea.resize(current_num_tangent_points+1);
         absDiffAreas = (upper_hull.cumulative.array()-lower_hull.cumulative.array()).abs();
@@ -969,8 +967,7 @@ double CCARS::approximateLogIntegral(gsl_rng *rng,  double  max_number_tangent_p
 //        std::cout << "upper x \n" << upper_hull.x << std::endl;
         tmp = boundedArea.maxCoeff();
         
-        
-        
+    
         if (boundedArea(0)==tmp){
             //std::cout << " first segment " << std::endl;
             pos= 0;
@@ -994,8 +991,6 @@ double CCARS::approximateLogIntegral(gsl_rng *rng,  double  max_number_tangent_p
             i= 2*j;
             j= (upper_hull.x(i)< lower_hull.x(i))?1:0;
             
-//            std::cout << "upper_hull.hx(i) " << upper_hull.hx(i) << std::endl;
-//            std::cout << "upper_hull.x(i) " << upper_hull.x(i) << std::endl;
             
             double term1 = upper_hull.hx(i) -lower_hull.hpx(i-j)*(upper_hull.x(i)-lower_hull.x(i-j))-lower_hull.hx(i-j);
             double term2 = upper_hull.hpx(i+j-1)*(lower_hull.x(i)-upper_hull.x(i+j-1))+upper_hull.hx(i+j-1)-lower_hull.hx(i);
@@ -1035,11 +1030,7 @@ double CCARS::approximateLogIntegral(gsl_rng *rng,  double  max_number_tangent_p
             // std::cout << "point rejected " << std::endl;
              trials++;
         }
-
-        
     }
-    
-    
     //log of upper bound of the integral area
     //result = upper_hull.cumulative.sum();
     result = logSumExp(upper_hull.cumulative);
@@ -1151,6 +1142,7 @@ double CCARS::sample(gsl_rng *rng, double& y, double& logComplementArea){
         
         logcumArea = maxCumulative +log(cumulativeSum(j));
         logIntegral = maxCumulative +log(cumulativeSum(Eigen::last));
+        assert(!isnan(logIntegral));
         
         if (logcumArea <logIntegral)
            logComplementArea = CCARS::logDiffExp(logIntegral, logcumArea);
@@ -1201,7 +1193,6 @@ double CCARS::sample(gsl_rng *rng, double& y, double& logComplementArea){
             //double hconcave =log_density->h_concave(new_x);
             //double hconvex =log_density->h_convex(new_x);;
            // y = hconcave +hconvex;
-            //cumArea+= ;
             accepted = true;
             
         }
@@ -1264,7 +1255,6 @@ void CCARS::addPoint(double new_x, double hconcave_new_x, double hconvex_new_x, 
             
             lower_hull.add_segment(new_x, hconcave_new_x,dconcave,  hconvex_new_x, dconvex, pos_new_x);
             
-         
         }
         
     }
@@ -1278,8 +1268,6 @@ void CCARS::addPoint(double new_x, double hconcave_new_x, double hconvex_new_x, 
             
             lower_hull.add_segment(new_x, hconcave_new_x,dconcave,  hconvex_new_x, dconvex, pos_new_x);
             
-            
-            
         }
         else{
             
@@ -1292,7 +1280,6 @@ void CCARS::addPoint(double new_x, double hconcave_new_x, double hconvex_new_x, 
     
 }
 void CCARS::plot( GNUPlotter &plotter, int num_grid_points, int iter,  int idxFirstID, int idxSecondId){
-    
     
     
     Eigen::VectorXd xserieEigen = Eigen::VectorXd::LinSpaced(num_grid_points,xlb,xrb);
@@ -1377,10 +1364,10 @@ time_right_child(time_right_child), normalizedCLVs(normalizedCLVs)
             }
         }
         else{
-            std::cout << " sum_left*sum_right term site i "<< i <<" "<< sum_for_left_clv*sum_for_right_clv<< std::endl;
-            std::cout << " sum for site i " << i <<" "<<  sum_for_site<< std::endl;
-            std::cout << "one minus ratio for site i " << i <<" "<< 1- sum_for_site/(sum_for_left_clv*sum_for_right_clv) << std::endl;
-            std::cout << " coeff of exp site i " << i <<" "<<  sum_for_left_clv*sum_for_right_clv-sum_for_site<< std::endl;
+//            std::cout << " sum_left*sum_right term site i "<< i <<" "<< sum_for_left_clv*sum_for_right_clv<< std::endl;
+//            std::cout << " sum for site i " << i <<" "<<  sum_for_site<< std::endl;
+//            std::cout << "one minus ratio for site i " << i <<" "<< 1- sum_for_site/(sum_for_left_clv*sum_for_right_clv) << std::endl;
+//            std::cout << " coeff of exp site i " << i <<" "<<  sum_for_left_clv*sum_for_right_clv-sum_for_site<< std::endl;
             
             if (sum_for_site < sum_for_left_clv*sum_for_right_clv){
                 
@@ -1544,10 +1531,6 @@ Eigen::VectorXd  GenotypeJCPairLogProposal::minus_lambda(const Eigen::VectorXd& 
             return term;
        });
        
- 
-    
- 
-    
     return result;
 }
 double GenotypeJCPairLogProposal::h_convex(double x) {
@@ -1637,9 +1620,7 @@ double GenotypeJCPairLogProposal::h_prime_convex(double x) {
                     /(firstTermConvex.head(num_convex_sites).array() -term*oneMinusSumTermConvex.head(num_convex_sites).array() );
        // transformed = 2.0
        //      /(firstTermConvex.head(num_convex_sites).array()/(term*oneMinusSumTermConvex.head(num_convex_sites).array()) -1.0 );
-   
-        
-        
+
     }
     assert(transformed.size()==num_convex_sites);
     result+= transformed.sum();

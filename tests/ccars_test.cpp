@@ -116,7 +116,7 @@ TEST_F(CCARSTest, includeNewPointAtEnd) {
 
   // double  ratioAreasAfter = (ccars->upper_hull.cumulative.array()- ccars->lower_hull.cumulative.array()).abs();
     double ratioAreasAfter = exp(CCARS::logSumExp(ccars->lower_hull.cumulative)-CCARS::logSumExp(ccars->upper_hull.cumulative));
-    EXPECT_EQ(ratioAreasAfter, 0.80333808289619424);
+    EXPECT_FLOAT_EQ(ratioAreasAfter, 0.80333808289619424);
     EXPECT_GT(ratioAreasAfter, ratioAreasBefore);
 }
 TEST_F(CCARSTest, includeNewPointAtBegining) {
@@ -133,7 +133,7 @@ TEST_F(CCARSTest, includeNewPointAtBegining) {
     
     
     double ratioAreasAfter = exp(CCARS::logSumExp(ccars->lower_hull.cumulative)-CCARS::logSumExp(ccars->upper_hull.cumulative));
-    EXPECT_EQ(ratioAreasAfter, 0.76343761060252147);
+    EXPECT_FLOAT_EQ(ratioAreasAfter, 0.76343761060252147);
     EXPECT_GT(ratioAreasAfter, ratioAreasBefore);
 }
 TEST_F(CCARSTest, testApproximateIntegral) {
@@ -145,7 +145,7 @@ TEST_F(CCARSTest, testApproximateIntegral) {
     ccars->plot( plotter, numPoints, 0, -1,  -2);
          
         
-    EXPECT_EQ(exp(log_integral),   0.0308182888249286738498);
+    EXPECT_FLOAT_EQ(exp(log_integral),   0.0308182888249286738498);
     //EXPECT_EQ(exp(log_integral),   0.0306713170724892895117);
     //EXPECT_EQ(log_integral,   -231.18128155148102);
     

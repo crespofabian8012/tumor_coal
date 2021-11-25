@@ -52,6 +52,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
     double logLikNewHeight = 0.0;
     double logWeightDiff = 0.0;
     double currentLogWeight = result->getLogWeight();
+   
    // std::cout<< "current log weight " << currentLogWeight << std::endl;
     double newHeight = 0.0;
     double K = params.getProgramOptions().K;
@@ -84,7 +85,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                  plotter.plot2dSerie(pairIncrementsNormlogLik.first, pairIncrementsNormlogLik.second, labels, true,   fileNameIncrements, trueIncrement   );
             
                
-                labels.clear();
+                 labels.clear();
                  PairListListDouble pairIncrementsLogLiks = result->evalLogLikRatioGrid(from, to, n, labels);
                  std::string fileName = to_string(currPop->sampleSize)+"_iteration_"+to_string(t)+".png";
            
@@ -118,8 +119,8 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
                     logLikNewHeight  = -log(0.99999*currPop->timeOriginSTD - currPop->currentModelTime);
                     
                     logWeightDiff+=  -log(currPop->theta)+log(currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0) +
-                                Population::LogLambda(timeNextCoalEvent, currPop->timeOriginSTD, currPop->delta,0.8)-
-                                 (currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(currPop->currentModelTime, currPop->timeOriginSTD, currPop->delta,0.8)  ;
+                                Population::LogLambda(timeNextCoalEvent, currPop->timeOriginSTD, currPop->delta,K)-
+                                 (currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(currPop->currentModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
                      
                   
                 }
@@ -184,6 +185,7 @@ std::shared_ptr<State> PosetSMC::propose_next(gsl_rng *random, unsigned int t, c
             std::cout << " loglik new particle " << log_w << std::endl;
     }
     //std::cout<< "new log weight " << currentLogWeight +logWeightDiff << std::endl;
+     
     result->setLogWeight(currentLogWeight +logWeightDiff );
     log_w = currentLogWeight +logWeightDiff  ;
     return result;

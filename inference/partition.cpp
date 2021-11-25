@@ -163,7 +163,6 @@ tipPatternCompression(tipPatternCompression)
     double rate_categories[1] = {0};
     
 
-    //partition_rawPtr =pll_partition_create(msa->count, 0, numberStatesP, msa->length, 1, 0, numberRateCatsP, 0, attributes);
     
     //model =  Model(DataType::autodetect, "GT16JC");
     
@@ -221,7 +220,7 @@ tipPatternCompression(tipPatternCompression)
     if (!asc){
         /* Now let's set the log-likelihood proportion that
            invariant sites affect to 0.5 */
-        pll_update_invariant_sites_proportion(sharedptr_partition.get(), 0, 0.5);
+       // pll_update_invariant_sites_proportion(sharedptr_partition.get(), 0, 0.5);
 
     }
      

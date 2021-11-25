@@ -59,9 +59,10 @@ public:
     
     enum PosetSMCIncrementProposal {
           UNIF = 0,
-          EXP = 1
+          EXP = 1,
+          LBD_COAL = 2
       };
-    PosetSMCIncrementProposal incrementProposalDist = UNIF;
+    PosetSMCIncrementProposal incrementProposalDist ;
      PosetSMCKernel kernelType = PRIORPOST ;
     size_t numIncrementsPOSTPOST = 10;
     
@@ -83,6 +84,25 @@ public:
           case TSMC1:
                  result = "TSMC1";
                  break;
+           default:
+              result = "UNDEFINED";
+              break;
+         }
+        return result;
+    }
+    
+    std::string getPosetSMCPriorName() const{
+        std::string result;
+         switch(incrementProposalDist) {
+           case UNIF:
+                 result = "Uniform";
+                 break;
+           case EXP:
+                 result = "EXP";
+                 break;
+           case LBD_COAL:
+              result = "LBD_coalescent";
+               break;
            default:
               result = "UNDEFINED";
               break;

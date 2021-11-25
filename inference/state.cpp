@@ -185,10 +185,6 @@ void State::initForest( int sampleSize, pll_msa_t *msa, std::vector<int> &positi
         // auto clv_elem = reference_partition->numberSites * reference_partition->numberStates;
         p->buildCLV(i,reference_partition->numberStates,  msa, gtError,  programOptions.normalizeLeavesClv);
         
-        std::vector<unsigned  int> invSites(reference_partition->numberStates, 0);
-        
-        pll_count_invariant_sites(reference_partition->getPartition(),  invSites.data());
-        
         p->ln_likelihood = compute_ln_likelihood(p->pclv, nullptr, reference_partition->getPartition());
         
         logWeight +=p->ln_likelihood;
@@ -1216,12 +1212,14 @@ double   State::proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , d
     
     pairModelTimeEntry = pairModelTimes.creationTime * currPop->x;
     pairLifeModelTime = newNodeHeightModelTime- pairModelTimeEntry;
-    std::shared_ptr<PartialTreeNode> newNode = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logPrior, nullptr, nullptr, !usePriorInSMC1 );
+    std::shared_ptr<PartialTreeNode> newNode = proposeNewNode( idxFirstRoot,  idxSecondRoot, currPop->index, newNodeHeight, logPrior, nullptr, nullptr, normalizedCLV );
     
     double logLikFactor = newNode->likelihood_factor();
+    assert(logLikFactor!= DOUBLE_NEG_INF);
+    
     logWeightDiff+= logLikFactor;
     
-    if (1){
+    if (0){
           
           std::cout << "winner pair, left " << idxFirstRoot<< " right "<< idxSecondRoot << std::endl;
          std::cout << "proposed time " << newNodeHeight<< std::endl;
@@ -1240,16 +1238,13 @@ double   State::proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , d
     else{
             
         logWeightDiff -= log(exp(pairModelTimes.logLikAtProposal-pairModelTimes.logIntegral));
-        std::cout << "denominator  " << pairModelTimes.logLikAtProposal-pairModelTimes.logIntegral<< std::endl;
+        //std::cout << "denominator  " << pairModelTimes.logLikAtProposal-pairModelTimes.logIntegral<< std::endl;
         
-        std::cout << "other denominator  " << -Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)+ Population::FmodelTstandard(pairModelTimeEntry, currPop->timeOriginSTD, currPop->delta,K)<< std::endl;
+        //std::cout << "other denominator  " << -Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)+ Population::FmodelTstandard(pairModelTimeEntry, currPop->timeOriginSTD, currPop->delta,K)<< std::endl;
     }
     
-    if (1){
-           
-           
+    if (0){
            std::cout << "log weight diff  after  " << logWeightDiff<< std::endl;
-           
        }
     //numerator
     size_t numActiveGametes = currPop->numActiveGametes;
@@ -1257,6 +1252,10 @@ double   State::proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , d
     Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
     (numActiveGametes*(numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
     
+//    logWeightDiff+=  -log(currPop->theta) +
+//       Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
+//      Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
+//    
     std::pair<Pair,ProposalDistribInfo>  copyPairMinModelTime = std::make_pair(pairMinModelTime.first, pairMinModelTime.second);
     
     currPop->pairCurrentProposals.erase(pairMinModelTime.first);
@@ -1265,7 +1264,7 @@ double   State::proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , d
     assert(!isnan(logWeightDiff));
     assert(!isinf(-1*logWeightDiff));
     //update pairs with their proposals
-    if (1){
+    if (0){
         
         
         std::cout << "log weight diff  before " << logWeightDiff<< std::endl;
@@ -1295,7 +1294,8 @@ double   State::proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , d
         std::cout << "log weight diff after " << logWeightDiff<< std::endl;
         
     }
-    
+    if ( logWeightDiff< -1e10)
+       std::cout << "log weight diff after " << logWeightDiff<< std::endl;
     
     return logWeightDiff;
 }
@@ -1778,7 +1778,7 @@ std::pair<Pair, ProposalDistribInfo> State::initPairProposalsNextEventTime(gsl_r
     double lastSampledX = 0.0;
     double lastSampledY = 0.0;
     double logComplArea = 0.0;
-    bool doPlots = false;
+    bool doPlots = true;
     if (doPlots){
         
          GNUPlotter plotter;
@@ -1895,6 +1895,10 @@ std::pair<Pair, ProposalDistribInfo> State::updatePairCurrentProposalsMap(int it
             logWeightDiff +=   -log(theta)+log(currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0) +
             Population::LogLambda(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K)-
             (currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K) ;
+//
+//            logWeightDiff +=   -log(theta) +
+//            Population::LogLambda(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K)-
+//            Population::FmodelTstandard(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K) ;
             
             //denominator
             if (usePriorInSMC1){

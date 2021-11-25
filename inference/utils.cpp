@@ -975,8 +975,8 @@ void Utils::normalize(const std::vector<double> &log_weights, std::vector<double
         weights[i] = exp(log_weights[i] - log_norm);
         sum += weights[i];
     }
-    if (abs(sum - 1.0) > 1e-4) {
-        std::cout << "Error in normalization. Check that log_weights and log_norm are correctly calculated." << std::endl;
+    if (abs(sum - 1.0) > 0.1) {
+        std::cout << "Error in normalization(Utils::normalize function). Check that log_weights and log_norm are correctly calculated." << std::endl;
         std::cout << ceil(sum*100000)/100000.0 << " != 1.0" << std::endl;
         std::cout << "log_norm: " << log_norm << std::endl;
         exit(-1);

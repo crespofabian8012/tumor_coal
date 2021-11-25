@@ -1,3 +1,8 @@
+project(tumor_coal
+    VERSION 1.0.0
+    DESCRIPTION "Bayesian inference of singel cell tumor growth rates"
+    HOMEPAGE_URL "https://github.com/fabiancrespo8012/tumor_coal")
+
 link_directories(${CMAKE_SOURCE_DIR}/install/lib/)
 
 file( GLOB SRCS *.cpp *.hpp *.c *.h)

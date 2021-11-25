@@ -108,7 +108,7 @@ public:
     
     UpperHull() {}; // Default constructor
     
-    UpperHull(const Eigen::VectorXd& x,const Eigen::VectorXd& hx,const  Eigen::VectorXd& hpx, double _xlb, double _xrb, double hx_xlb, double hx_xrb, double hpx_xlb, double hpx_xrb) ;
+    UpperHull(const Eigen::VectorXd& x,const Eigen::VectorXd& hx,const  Eigen::VectorXd& hpx, double _xlb, double _xrb, double hx_xlb, double hx_xrb, double hpx_xlb, double hpx_xrb, int max_points) ;
     
     
     double get_hu(double x) ;
@@ -134,7 +134,7 @@ public:
     
     LowerHull() {}; // Default constructor
     
-    LowerHull(const Eigen::VectorXd&  x,const Eigen::VectorXd&  hx) ;
+    LowerHull(const Eigen::VectorXd&  x,const Eigen::VectorXd&  hx, int max_points) ;
     
     int get_point_position(double new_x);
     double get_slope(int segment_idx);
@@ -159,7 +159,7 @@ public:
     Eigen::VectorXd cumulative;
     CCUpperHull(){};
     
-    CCUpperHull(UpperHull &upper_hull_concave, LowerHull &upper_hull_convex, double xlb, double xrb );
+    CCUpperHull(UpperHull &upper_hull_concave, LowerHull &upper_hull_convex, double xlb, double xrb, int max_points );
     
     
     double get_hu(double x) ;
@@ -189,7 +189,7 @@ public:
     Eigen::VectorXd cumulative;
     CCLowerHull(){};
     
-    CCLowerHull(LowerHull &lower_hull_concave, UpperHull &lower_hull_convex, double xlb, double xrb );
+    CCLowerHull(LowerHull &lower_hull_concave, UpperHull &lower_hull_convex, double xlb, double xrb, int max_points );
     
     
     double get_hu(double x) ;

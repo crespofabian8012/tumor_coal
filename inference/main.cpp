@@ -24,7 +24,7 @@
 
 
 
-//#include <stan⁩/lib⁩/stan_math⁩/stan/math/prim/fun/Eigen.hpp>
+#include "stan_model_1_population_JC_genotypes.hpp"
 
 #include <iostream>
 #include <string>
@@ -60,7 +60,7 @@
 #include "pg.hpp"
 #include "pmmh.hpp"
 
-//#include "stan_model_1_population_JC_genotypes.hpp"
+
 
 
 
@@ -403,8 +403,8 @@ int main(int argc, char* argv[] )
         ParticleGibbs<State, PosetSMCParams> pg(pmcmc_options, csmc, param_proposal);
         
         pg.run();
-        vector<shared_ptr<PosetSMCParams> > &samples = pg.get_parameters();
-        //   compute the posterior mean for the first scaled hrowth rate
+        std::vector<shared_ptr<PosetSMCParams> > &samples = pg.get_parameters();
+        //   compute the posterior mean for the first scaled growth rate
         double mean = 0.0;
         size_t count = 0;
         for (size_t i = pmcmc_options.burn_in; i < samples.size(); i+=10) {
@@ -451,13 +451,18 @@ int main(int argc, char* argv[] )
     }
     else{
         //Particle Hamiltonian Monte Carlo
-        //TODO
+        //sample initial parameters Gammas, Ts, Thetas,
+        //run SMC to approximatee the distributions over
+        //topologies and branch lengths
+        //run HMC
+        int numIterCondictionalHMC = 2000;
+        int numTotalIter = 500;
         
         
     }
     /* clean memory*/
     
-   Random::freeListRandomNumbersGenerators(randomGenerators);
+    Random::freeListRandomNumbersGenerators(randomGenerators);
     trueTrees.clear();
     structuredCoalTrees.clear();
     trueThetas.clear();

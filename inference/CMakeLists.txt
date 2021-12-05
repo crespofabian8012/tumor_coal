@@ -1,12 +1,15 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++17 -stdlib=libc++ -D_REENTRANT -DBOOST_DISABLE_ASSERTS")
 
+set(HEADER_FILES ${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/stan⁩/lib⁩/stan_math⁩/stan/math/prim/fun/Eigen.hpp )
+include_directories(${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/stan⁩/lib⁩/stan_math⁩/stan/math/prim/fun/Eigen.hpp)
+
 include_directories(/usr/local/opt/llvm/include ${CMAKE_SOURCE_DIR}/install/include/
 /usr/local/include/
 /usr/local/include/gsl
 ${CMAKE_SOURCE_DIR}/install/include/stan/src/stan/
 ${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/
 ${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/sundials_5.7.0/include/
-${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/tbb_2020.3/include/
+${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/tbb/tbb_2020.3/include/
 ${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/eigen_3.3.9/include/
 ${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/stan⁩/lib⁩/stan_math⁩/stan/math/prim/fun/
 /usr/local/include/tbb/
@@ -99,7 +102,24 @@ set_package_properties(Threads PROPERTIES
         DESCRIPTION "POSIX-compatible system threading library."
         PURPOSE "Required to run multithreaded Stan tests."
         TYPE OPTIONAL)
-        
+    
+OPTION(USE_STAN "Use Stan Math" ON)
+if(USE_STAN)
+    message( "--Found STAN" )
+    add_definitions(-pthread -D_REENTRANT -DBOOST_DISABLE_ASSERTS -DUSE_STAN )
+    #set(STAN_LIBRARIES ${CMAKE_CURRENT_LIST_DIR}/install/include/stan/lib/stan_math/lib/tbb/libtbb.dylib)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/lib/stan_math)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/src/stan/io)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/src/stan/model)
+    set(Eigen3_FOUND true)
+    # use Eigen distribution from Stan Math
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/lib/stan_math/lib/boost_1.75.0)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/lib/stan_math/lib/eigen_3.3.9)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/lib/stan_math/lib/cpplint_1.4.5)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/lib/stan_math/lib/opencl_3.0.0)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/lib/stan_math/lib/sundials_5.7.0/include)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/install/include/stan/lib/stan_math/lib/tbb/tbb_2020.3/include)
+endif(USE_STAN)
 
 
 #find_package(Boost 1.67 COMPONENTS regex system filesystem unit_test_framework program_options REQUIRED)
@@ -120,6 +140,8 @@ endif()
 
 find_package(TBB REQUIRED)
 
+
+
 feature_summary(INCLUDE_QUIET_PACKAGES WHAT ALL
 FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
@@ -129,7 +151,10 @@ target_link_libraries(run  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${
     ${CMAKE_SOURCE_DIR}/install/lib/libsundials_nvecserial.a
     ${CMAKE_SOURCE_DIR}/install/lib/libsundials_kinsol.a
     ${CMAKE_SOURCE_DIR}/install/lib/libsundials_idas.a
-    ${CMAKE_SOURCE_DIR}/install/lib/libsundials_cvodes.a)
+    ${CMAKE_SOURCE_DIR}/install/lib/libsundials_cvodes.a
+    TBB::tbb
+    #${STAN_LIBRARIES}
+    )
 
 target_link_libraries(libTumorCoal
     ${Boost_LIBRARIES}  ${CMAKE_SOURCE_DIR}/install/lib/libpll_algorithm.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_optimize.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_tree.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_util.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_msa.a ${CMAKE_SOURCE_DIR}/install/lib/libpll_binary.a ${CMAKE_SOURCE_DIR}/install/lib/libpll.a ${Boost_LIBRARIES} Boost::date_time Boost::filesystem
@@ -138,7 +163,10 @@ target_link_libraries(libTumorCoal
     ${CMAKE_SOURCE_DIR}/install/lib/libsundials_nvecserial.a
     ${CMAKE_SOURCE_DIR}/install/lib/libsundials_kinsol.a
     ${CMAKE_SOURCE_DIR}/install/lib/libsundials_idas.a
-    ${CMAKE_SOURCE_DIR}/install/lib/libsundials_cvodes.a)
+    ${CMAKE_SOURCE_DIR}/install/lib/libsundials_cvodes.a
+    TBB::tbb
+    #${STAN_LIBRARIES}
+    )
 
 INSTALL(TARGETS run DESTINATION ${CMAKE_SOURCE_DIR}/)
 INSTALL(TARGETS libTumorCoal DESTINATION bin)

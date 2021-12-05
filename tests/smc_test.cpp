@@ -28,7 +28,7 @@ TEST_P(PosetSMCOnePopulationTest,  smcTest4tipsDelta100Theta1)
     if (posetSMC->kernelType== PosetSMC::PosetSMCKernel::PRIORPOST)
         std::cout<<"The proposal density for the increments is " << PriorPostIncrementDensity << std::endl;
     if (programOptions.normalizeClv){
-        std::cout<<"The clv vector will be normalized!" <<  std::endl;
+        std::cout<<"The clv vectors will be normalized!(inner product clv vector and stable proportion vector equals 1)" <<  std::endl;
 
     }
     

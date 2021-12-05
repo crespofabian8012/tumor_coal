@@ -1,7 +1,6 @@
 
-//#include <stan⁩/lib⁩/stan_math⁩/stan/math/prim/fun/Eigen.hpp>
-//#include <stan/math/prim/fun/Eigen.hpp>
-#include <stan/src/stan/model/model_header.hpp>
+
+#include <stan/model/model_header.hpp>
 
 namespace stan_model_1_population_JC_genotypes_model_namespace {
 

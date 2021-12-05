@@ -77,10 +77,10 @@ x(x_internals), hx(hx_internals), tangents_slopes(hpx_internals)  {
         segment.hx = hx_internals(i);
         segment.hpx = hpx_internals(i);
         
-//        if (is_concave)
-//            assert(segment.hpx <0 );
-//        else
-//            assert(segment.hpx >=0 );
+        if (is_concave)
+            assert(segment.hpx <0 );
+        else
+            assert(segment.hpx >=0 );
         segments.push_back(segment);
     }
     // Update z and scum

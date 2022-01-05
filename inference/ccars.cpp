@@ -1572,7 +1572,85 @@ double GenotypeJCPairLogProposal::h_convex(double x) {
     
     return result;
 }
-
+double GenotypeJCPairLogProposal::h_concave_Felsenstein(double x) {
+    std::vector<double> input = {x};
+    
+    double  result = 0.0;
+//    result+= -Population::FmodelTstandard(x, Torigin, delta, K)+ Population::FmodelTstandard(pair_creation_time, Torigin, delta,K);
+    
+    Eigen::VectorXd transformed;
+    if  (normalizedCLVs){
+        transformed = oneMinusSumTermConcave.head(num_concave_sites).unaryExpr([this,x](const double&  d) {
+            double term = 1.0-exp(-2*x+time_left_child+time_right_child)*d;
+            
+            if (term < 1e-20){
+                term = 1e-20;
+                std::cout<<"term 0 in h_concave for x= " << x << std::endl;
+            }
+            return log(term);
+        });
+    }
+    else {
+        transformed = firstTermConcave.head(num_concave_sites) -exp(-2*x+time_left_child+time_right_child)*oneMinusSumTermConcave.head(num_concave_sites);
+        
+        transformed.unaryExpr([]( double d) {
+            
+            if (d < 1e-20){
+                
+                std::cout<<"term 0 in h_convex for x= " <<  std::endl;
+                return log(1e-20);
+            }
+            else{
+                return log(d);
+                
+            }
+        });
+        
+    }
+    assert(transformed.size()==num_concave_sites);
+    result+= transformed.sum();
+    
+    return result;
+}
+double GenotypeJCPairLogProposal::h_convex_Felsenstein(double x) {
+    std::vector<double> input = {x};
+    
+    double  result = 0.0;
+    //    result+= -Population::FmodelTstandard(x, Torigin, delta, K)+ Population::FmodelTstandard(pair_creation_time, Torigin, delta,K);
+    
+    Eigen::VectorXd transformed;
+    if  (normalizedCLVs){
+        transformed= oneMinusSumTermConvex.head(num_convex_sites).unaryExpr([this,x](const double&  d) {
+            double term =1.0-exp(-2*x+time_left_child+time_right_child)*d;
+            if (term < 1e-20){
+                term = 1e-20;
+                std::cout<<"term 0 in h_convex for x= " << x << std::endl;
+            }
+            return log(term);
+        });
+    }
+    else{
+        transformed = firstTermConvex.head(num_convex_sites) -exp(-2*x+time_left_child+time_right_child)*oneMinusSumTermConvex.head(num_convex_sites);
+        
+        transformed.unaryExpr([]( double d) {
+            
+            if (d < 1e-20){
+                
+                std::cout<<"term 0 in h_convex for x= " <<  std::endl;
+                return log(1e-20);
+            }
+            else{
+                return log(d);
+                
+            }
+        });
+        
+    }
+    assert(transformed.size()==num_convex_sites);
+    result+= transformed.sum();
+    
+    return result;
+}
 double GenotypeJCPairLogProposal::h_prime_concave(double x) {
     std::vector<double> input = {x};
     double  result = 0.0;

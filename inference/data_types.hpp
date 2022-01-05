@@ -355,6 +355,7 @@ typedef struct {
     char  inputGenotypeFileFasta[500];
     char  inputGenotypeFilePhylip[500];
     char  likelihoodOuput[500];
+    char  tempInputStan[500];
 }FilePaths;
 
 
@@ -379,6 +380,7 @@ typedef struct {
     FilePath *fplog;
     FilePath *fpTreeOutput;
     FilePath *fpLikelihood;
+    FilePath *fpStanDump;
 }Files;
 
 struct EnumClassHash

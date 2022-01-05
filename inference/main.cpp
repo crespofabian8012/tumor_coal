@@ -25,10 +25,20 @@
 
 
 #include "stan_model_1_population_JC_genotypes.hpp"
+#include <stan/services/sample/hmc_nuts_diag_e_adapt.hpp>
+#include <stan/services/sample/hmc_nuts_dense_e.hpp>
+#include <stan/io/empty_var_context.hpp>
+#include <stan/callbacks/interrupt.hpp>
+#include <stan/callbacks/logger.hpp>
+#include <stan/callbacks/stream_logger.hpp>
+#include <stan/callbacks/stream_writer.hpp>
+#include <stan/callbacks/writer.hpp>
+#include <stan/io/dump.hpp>
 
 #include <iostream>
-#include <string>
+#include <fstream>
 
+#include <string>
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -59,10 +69,6 @@
 #include "ipmcmc.hpp"
 #include "pg.hpp"
 #include "pmmh.hpp"
-
-
-
-
 
 
 extern "C"
@@ -128,7 +134,7 @@ bool process_command_line(int argc, char** argv,
     return true;
 }
 
-
+using SMC_State_PosetSMCParams = SMC<State, PosetSMCParams>;
 int main(int argc, char* argv[] )
 {
     FILE *input_file;
@@ -170,6 +176,8 @@ int main(int argc, char* argv[] )
     printProgramHeader();
     setDefaultOptions(programOptions, mcmcOptions);
     
+    unsigned int random_seed = 64764894795;//= dynamic_cast<u_int_argument*>(parser.arg("random")->arg("seed"))->value();
+    
     std::vector<StructuredCoalescentTree *> structuredCoalTrees;
     std::vector<pll_rtree_t *> trueTrees;
     std::vector<long double> trueThetas;
@@ -184,7 +192,9 @@ int main(int argc, char* argv[] )
     
     //2. initialize data structures
     //    /* set file dirs and names */
+    Files files;
     InitFilesPathsOptions(filePaths, programOptions);
+    InitFiles(files);
     
     pll_msa_t *msa;
     
@@ -326,8 +336,8 @@ int main(int argc, char* argv[] )
     size_t num_iter = programOptions.TotalTumorSequences +programOptions.numClones-1;
     PosetSMC posetSMC(programOptions.numClones,  num_iter, false);
     
-    posetSMC.kernelType = PosetSMC::PosetSMCKernel::TSMC1;
-
+    posetSMC.kernelType =  PosetSMC::PosetSMCKernel::TSMC1;
+    posetSMC.incrementProposalDist = PosetSMC::PosetSMCIncrementProposal::LBD_COAL;
     
     if (posetSMC.kernelType== PosetSMC::PosetSMCKernel::TSMC1){
         
@@ -336,19 +346,21 @@ int main(int argc, char* argv[] )
             if (normalizedCLVs){
                 programOptions.normalizeLeavesClv =true;
                 programOptions.normalizeClv =true;
-                
-                
             }
             else{
                 programOptions.normalizeLeavesClv =false;
                 programOptions.normalizeClv =false;
-                
             }
         }
         else{
-            programOptions.normalizeLeavesClv =false;
-            programOptions.normalizeClv =false;
-            
+            if (normalizedCLVs){
+                programOptions.normalizeLeavesClv =true;
+                programOptions.normalizeClv =true;
+            }
+            else{
+                programOptions.normalizeLeavesClv =false;
+                programOptions.normalizeClv =false;
+            }
         }
     }
     
@@ -362,14 +374,14 @@ int main(int argc, char* argv[] )
     smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::MULTINOMIAL;
     //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::STRATIFIED;
     //smcOptions.resampling_scheme =  SMCOptions::ResamplingScheme::SYSTEMATIC;
-    //  smcOptions.main_seed = 346435;
-    // smcOptions.resampling_seed = 2345666;
+    //smcOptions.main_seed = 346435;
+    //smcOptions.resampling_seed = 2345666;
     smcOptions.track_population = false;
     smcOptions.init();
     smcOptions.debug = true;
     
     
-    PMCMCOptions pmcmc_options(22441453521, 10000);
+    PMCMCOptions pmcmc_options(random_seed, 10000);
     pmcmc_options.burn_in = 1000;
     
     BDCoalPriorParams priorParams(10, 1, programOptions.meanGenotypingError,
@@ -379,14 +391,12 @@ int main(int argc, char* argv[] )
                                   0.7, 0.7);
     
     //3. do inference
-    InferenceMethod method = PMMH;
+    InferenceMethod method = PHMC;
     
     if (method == IPMCMC){
         //Interactive PMCMC
         //TODO
         
-        
-    
     }
     else if(method == PARTICLEGIBBS){
         //Particle Gibbs
@@ -399,7 +409,7 @@ int main(int argc, char* argv[] )
                                              pll_buffer_manager,
                                              programOptions);
         
-
+        
         ParticleGibbs<State, PosetSMCParams> pg(pmcmc_options, csmc, param_proposal);
         
         pg.run();
@@ -417,46 +427,190 @@ int main(int argc, char* argv[] )
     else if(method == PMMH){
         //Particle Marginal Metropolis-Hastings
         smcOptions.num_particles = 8;
-     
         
         ConditionalSMC<State, PosetSMCParams> csmc(posetSMC, smcOptions);
-         BDCoalModelRandomWalkProposal rw_param_proposal(priorParams, programOptions.numClones, programOptions.TotalNumSequences,
-                                                    msaWrapper.getLength(),
-                                                    &msaWrapper,
-                                                    partition,
-                                                    pll_buffer_manager,
-                                                    programOptions);
+        BDCoalModelRandomWalkProposal rw_param_proposal(priorParams, programOptions.numClones, programOptions.TotalNumSequences,
+                                                        msaWrapper.getLength(),
+                                                        &msaWrapper,
+                                                        partition,
+                                                        pll_buffer_manager,
+                                                        programOptions);
         
-          csmc.initialize(psParams);
-          double logZ = csmc.get_log_marginal_likelihood();
-          std::cout << logZ << std::endl; // logZ at true params
-
-          PMCMCOptions pmcmc_options(346575392, 200);
-          pmcmc_options.burn_in = 100;
-         
-          ParticleMMH<State, PosetSMCParams> pmmh(pmcmc_options, csmc, rw_param_proposal);
-          pmmh.run();
-          vector<PosetSMCParams *> *samples = pmmh.get_parameters();
-          // compute the posterior mean for beta
-          double mean = 0.0;
-          size_t count = 0;
-          for (size_t i = pmcmc_options.burn_in; i < samples->size(); i+=10) {
-              mean += (*samples)[i]->populationDeltaTs[0];
-              count++;
-          }
-          mean /= count;
+        csmc.initialize(psParams);
+        double logZ = csmc.get_log_marginal_likelihood();
+        std::cout << logZ << std::endl; // logZ at true params
+        
+        PMCMCOptions pmcmc_options(random_seed, 200);
+        pmcmc_options.burn_in = 100;
+        
+        ParticleMMH<State, PosetSMCParams> pmmh(pmcmc_options, csmc, rw_param_proposal);
+        pmmh.run();
+        vector<PosetSMCParams *> *samples = pmmh.get_parameters();
+        // compute the posterior mean for beta
+        double mean = 0.0;
+        size_t count = 0;
+        for (size_t i = pmcmc_options.burn_in; i < samples->size(); i+=10) {
+            mean += (*samples)[i]->populationDeltaTs[0];
+            count++;
+        }
+        mean /= count;
         cout << mean << ", " << psParams.populationDeltaTs[0] << endl;
-        
-        
     }
     else{
         //Particle Hamiltonian Monte Carlo
-        //sample initial parameters Gammas, Ts, Thetas,
-        //run SMC to approximatee the distributions over
+        //1-sample initial parameters Gammas, Ts, Thetas,
+        //2-run SMC to approximate the distributions over
         //topologies and branch lengths
-        //run HMC
-        int numIterCondictionalHMC = 2000;
-        int numTotalIter = 500;
+        //3-run HMC
+        //4-if HMC not converged, then run SMC with the median parameter values of current HMC(got to  step 2)
+        
+        int numIterCondictionalHMC = 10;
+        int numTotalIter = 5;
+        std::stringstream model_log;
+        std::stringstream myfile;
+        
+        //auto filePath = File::getSpecialLocation (userHomeDirectory).getChildFile ("output250.R");
+        //myfile.open(filePath.getFullPathName.toRawUTF8());
+        
+        string outputfile     = "⁨‎output.R";
+        string diagnosticfile = "⁨‎diagnostic.R";
+        
+        PrepareTempFileInputStan(filePaths, programOptions, files, 0);
+        SMC_State_PosetSMCParams smc(posetSMC, smcOptions);
+        
+        //for (int i = 0; i < num_chains; ++i)
+        
+        for( size_t iter = 0; iter < numTotalIter; ++iter){
+            
+            smc.run_smc(psParams);
+            
+            //get the best tree topology
+            ParticlePopulation<State> *currenPop = smc.get_curr_population();
+            vector<shared_ptr<State>> *particles = currenPop->get_particles();
+            double   log_marginal = smc.get_log_marginal_likelihood();
+            std::cout << "Marginal likelihood "<< " " <<log_marginal <<std::endl;
+            
+            std::vector<RootedTree> bestTrees;
+            std::vector<long double> weights;
+            std::vector<long double> rootLogLiks;
+            
+            std::vector<double> *normalized_weights = currenPop->get_normalized_weights();
+            double max = -DOUBLE_INF;
+            shared_ptr<State> best_particle;
+            
+            Eigen::ArrayXXd allCoalTimesScaledByTheta(smcOptions.num_particles,num_iter-1);
+            for (size_t i= 0; i< smcOptions.num_particles; i++){
+                shared_ptr<State> currents = particles->at(i);
+                // std::cout << "Particle weight "<< i << " " <<(*normalized_weights)[i] <<std::endl;
+                assert(currents->getRoots().size() == 1);
+                weights.push_back((*normalized_weights)[i]);
+                rootLogLiks.push_back(currents->getRootAt(0)->ln_likelihood);
+                //std::cout << "Root loglik "<< i << " " <<currents->getRootAt(0)->ln_likelihood <<std::endl;
+                std::vector<double> sortedCoalTimes=currents->getCoalEventTimesScaledBytheta();
+                std::sort(sortedCoalTimes.begin(),sortedCoalTimes.end() );
+                allCoalTimesScaledByTheta.row(i) = Eigen::Map<Eigen::RowVectorXd>(sortedCoalTimes.data(),num_iter-1 );
+                //currents->printTreeChronologicalOrder(currents->getRoots()[0],std::cerr);
+                if ((*normalized_weights)[i] > max) {
+                    max = (*normalized_weights)[i]  ;
+                    best_particle = currents;
+                }
+            }
+            
+            std::cout << "Tree topology with the greater loglik: " <<"\n" << endl;
+            best_particle->printTree(best_particle->getRoots()[0], std::cerr);
+            std::string newick = best_particle->getNewick(best_particle->getRootAt(0));
+            bestTrees.emplace_back(RootedTree(newick, false));
+            // if the RF distance between of best tree of current iteration and the best tree of the pevious iteration
+            //is greater than 0 then run HMC
+            
+            PrepareTempFileInputStan(filePaths, programOptions, files, iter);
+            
+            //save info to a file files.fpStanDump->path
+            fstream stan_input_stream (files.fpStanDump->path, std::fstream::out);
+            
+            //open the file files.fpStanDump->path
+            string line;
+            ifstream data_stream (files.fpStanDump->path, std::fstream::in);
+            if (data_stream.is_open())
+            {
+                //           while ( getline (data_stream,line) )
+                //           {
+                //             cout << line << '\n';
+                //           }
+                
+            }
+            
+            if (data_stream.rdstate() & std::ifstream::failbit) {
+                std::stringstream msg;
+                msg << "Can't open specified file, \"" << files.fpStanDump->path << "\"" << std::endl;
+                data_stream.close();
+                throw std::invalid_argument(msg.str());
+            }
+            stan::io::dump data_var_context(data_stream);
+            
+            data_stream.close();
+            
+            stan::callbacks::writer init_writer;
+            stan::callbacks::interrupt interrupt;
+            std::fstream output_stream(outputfile.c_str(),
+                                       std::fstream::out);
+            stan::callbacks::stream_writer sample_writer(output_stream, "# ");
+            
+            stan::callbacks::stream_writer info(std::cout);
+            stan::callbacks::stream_writer err(std::cout);
+            
+            std::fstream diagnostic_stream(diagnosticfile.c_str(),
+                                           std::fstream::out);
+            stan::callbacks::stream_writer diagnostic_writer(diagnostic_stream, "# ");
+            stan::io::empty_var_context context;
+            //stan::io::dump metric_context(get_var_context(metric_file->value()));
+            
+            stan::callbacks::stream_logger logger(std::cout, std::cout, std::cout,std::cerr, std::cerr);
+            stan_model model(data_var_context, random_seed, &std::cout);
+            
+            unsigned int chain = 1;
+            double init_radius = 0;
+            int num_warmup = numIterCondictionalHMC / 2;
+            int num_samples = numIterCondictionalHMC / 2;
+            int num_thin = 1;
+            bool save_warmup = true;
+            int refresh = 0;
+            double stepsize = 0.1;
+            double stepsize_jitter = 0;
+            int max_depth = 8;
+            double delta = .1;
+            double gamma = .1;
+            double kappa = .1;
+            double t0 = .1;
+            unsigned int init_buffer = 50;
+            unsigned int term_buffer = 50;
+            unsigned int window = 100;
+            int return_code;
+            
+            return_code = stan::services::sample::hmc_nuts_diag_e_adapt(
+                                                                        model, context, random_seed, chain, init_radius, num_warmup, num_samples,
+                                                                        num_thin, save_warmup, refresh, stepsize, stepsize_jitter, max_depth,
+                                                                        delta, gamma, kappa, t0, init_buffer, term_buffer, window, interrupt,
+                                                                        logger, init_writer, sample_writer, diagnostic_writer);
+            
+            //draw   psParams.theta
+            //         psParams.deltas,
+            //          psParams.timeOriginSTDs from conditional posterior
+            
+            int num_output_lines = (num_warmup + num_samples) / num_thin;
+            std::vector<std::string> init_values;
+//            init_values = init_writer.string_values();
+//            std::vector<std::vector<std::string> > parameter_names;
+//            parameter_names = sample_writer.;
+//            std::vector<std::vector<double> > parameter_values;
+//            parameter_values = sample_writer.vector_double_values();
+            //        std::vector<std::vector<std::string> > diagnostic_names;
+            //        diagnostic_names = diagnostic_writer.vector_string_values();
+            //        std::vector<std::vector<double> > diagnostic_values;
+            //        diagnostic_values = diagnostic_writer.vector_double_values();
+            
+            
+        }
         
         
     }
@@ -474,8 +628,21 @@ int main(int argc, char* argv[] )
     pll_rtree_destroy(initialRootedTree,NULL);
     std::cout << "\nIf you need help type '-?' in the command line of the program\n"<<std::endl;
     
-
     return 0;
     
 }
+
+//stan::io::dump data_var_context(get_var_context(dynamic_cast<string_argument*>(parser.arg("data")->arg("file"))->value()));
+//
+//  std::fstream output_stream(dynamic_cast<string_argument*>(parser.arg("output")->arg("file"))->value().c_str(),
+//                             std::fstream::out);
+//  stan::callbacks::stream_writer sample_writer(output_stream, "# ");
+//
+//  std::fstream diagnostic_stream(dynamic_cast<string_argument*>(parser.arg("output")->arg("diagnostic_file"))->value().c_str(),
+//                                 std::fstream::out);
+//  stan::callbacks::stream_writer diagnostic_writer(diagnostic_stream, "# ");
+//
+//  unsigned int random_seed = dynamic_cast<u_int_argument*>(parser.arg("random")->arg("seed"))->value();
+
+
 

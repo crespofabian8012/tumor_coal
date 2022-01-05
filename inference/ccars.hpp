@@ -25,6 +25,8 @@ public:
     virtual Eigen::VectorXd h_prime_convex(const Eigen::VectorXd& x) = 0;
     virtual double h_concave(double x) = 0;
     virtual double h_convex(double x) = 0;
+    virtual double h_concave_Felsenstein(double x)= 0;
+    virtual double h_convex_Felsenstein(double x)= 0;
     virtual double h_prime_concave(double x) = 0;
     virtual double h_prime_convex(double x) = 0;
     virtual void plot(GNUPlotter &plotter, int num_grid_points,int iter,  int idxFirstID, int idxSecondId )= 0;
@@ -69,6 +71,8 @@ public:
     Eigen::VectorXd h_prime_convex(const Eigen::VectorXd& x);
     double h_concave(double x);
     double h_convex(double x);
+    double h_concave_Felsenstein(double x);
+    double h_convex_Felsenstein(double x);
     double h_prime_concave(double x);
     double h_prime_convex(double x);
     

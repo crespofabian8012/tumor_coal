@@ -124,6 +124,7 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
                                    const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, std::vector<Population*> populations, double numMU);
 
 void PrepareLikelihoodOutputFile(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
+void PrepareTempFileInputStan(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, int iter);
 
 void InitPopulationsCoalescentEvents( int numClones,  std::vector<Population *> &populations) ;
 

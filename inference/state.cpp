@@ -1219,8 +1219,20 @@ double   State::proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , d
     
     logWeightDiff+= logLikFactor;
     
-    if (0){
+    if (1){
+        
+        assert(idxFirstRoot != idxSecondRoot);
+                   
+        int idxFirstID = getNodeIdxById(idxFirstRoot);
+        int idxSecondId = getNodeIdxById(idxSecondRoot);
+        
+        CCLogDensity *log_density =
+             new GenotypeJCPairLogProposal(partition->numberSites, partition->numberStates, currPop->timeOriginSTD, currPop->delta, currPop->theta, pairModelTimeEntry,
+                                           roots[idxFirstID]->height,
+                                           roots[idxSecondId]->height, roots[idxFirstID]->pclv, roots[idxSecondId]->pclv, normalizedCLV);
           
+        double proposal_density =log_density->h_concave_Felsenstein(newNodeHeightModelTime)+ log_density->h_convex_Felsenstein(newNodeHeightModelTime);
+        
           std::cout << "winner pair, left " << idxFirstRoot<< " right "<< idxSecondRoot << std::endl;
          std::cout << "proposed time " << newNodeHeight<< std::endl;
           std::cout << "log weight diff  after log Fels lik " << logWeightDiff<< std::endl;
@@ -1247,14 +1259,14 @@ double   State::proposalTSMC1(int iter, gsl_rng * random,  double &newHeight , d
            std::cout << "log weight diff  after  " << logWeightDiff<< std::endl;
        }
     //numerator
-    size_t numActiveGametes = currPop->numActiveGametes;
-    logWeightDiff+=  -log(currPop->theta)+log(numActiveGametes*(numActiveGametes-1)/ 2.0) +
-    Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
-    (numActiveGametes*(numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
+//    size_t numActiveGametes = currPop->numActiveGametes;
+//    logWeightDiff+=  -log(currPop->theta)+log(numActiveGametes*(numActiveGametes-1)/ 2.0) +
+//    Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
+//    (numActiveGametes*(numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
     
-//    logWeightDiff+=  -log(currPop->theta) +
-//       Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
-//      Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)  ;
+    logWeightDiff+=  -log(currPop->theta) +
+       Population::LogLambda(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K)-
+      Population::FmodelTstandard(newNodeHeightModelTime, currPop->timeOriginSTD, currPop->delta,K);
 //    
     std::pair<Pair,ProposalDistribInfo>  copyPairMinModelTime = std::make_pair(pairMinModelTime.first, pairMinModelTime.second);
     
@@ -1892,13 +1904,13 @@ std::pair<Pair, ProposalDistribInfo> State::updatePairCurrentProposalsMap(int it
             double dropoutNodeProposalModelTime =  it->second.timeProposal  ;
             double dropoutNodeModelTimeEntry =   it->second.creationTime ;
             //numerator
-            logWeightDiff +=   -log(theta)+log(currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0) +
-            Population::LogLambda(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K)-
-            (currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K) ;
-//
-//            logWeightDiff +=   -log(theta) +
+//            logWeightDiff +=   -log(theta)+log(currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0) +
 //            Population::LogLambda(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K)-
-//            Population::FmodelTstandard(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K) ;
+//            (currPop->numActiveGametes*(currPop->numActiveGametes-1)/ 2.0)*Population::FmodelTstandard(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K) ;
+//
+            logWeightDiff +=   -log(theta) +
+            Population::LogLambda(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K)-
+            Population::FmodelTstandard(dropoutNodeProposalModelTime, currPop->timeOriginSTD, currPop->delta,K) ;
             
             //denominator
             if (usePriorInSMC1){

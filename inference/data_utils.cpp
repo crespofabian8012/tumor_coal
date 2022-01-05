@@ -803,6 +803,7 @@ void InitFilesPathsOptions( FilePaths &filePaths, ProgramOptions &programOptions
     strcpy(filePaths.treeFile, "trees");
     strcpy(filePaths.timesFile, "times");
     strcpy(filePaths.likelihoodOuput, "loglik_file");
+    strcpy(filePaths.tempInputStan, "stan_dump_file");
     if (strlen(filePaths.userTreeFile) == 0)
         strcpy(filePaths.userTreeFile, "usertree");
     if (strlen(filePaths.userGenomeFile) == 0)
@@ -853,6 +854,7 @@ void InitFiles(Files &files){
     files.fplog= new FilePath();
     files.fpTreeOutput= new FilePath();
     files.fpLikelihood = new FilePath();
+    files.fpStanDump= new FilePath();
     
     Utils::init_to_empty_str(files.fplog->path);
     Utils::init_to_empty_str(files.fpTrees->path);
@@ -872,7 +874,7 @@ void InitFiles(Files &files){
     Utils::init_to_empty_str(files.fpFullGenotypes->path);
     Utils::init_to_empty_str(files.fpTreeOutput->path);
     Utils::init_to_empty_str(files.fpLikelihood->path);
-    
+    Utils::init_to_empty_str(files.fpStanDump->path);
     
 }
 int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegin, std::vector<int> &CloneSampleSizeBegin,
@@ -2259,6 +2261,42 @@ void PrepareLikelihoodOutputFile(const FilePaths &filePaths, const ProgramOption
     
     
     if (openFile(&files.fpLikelihood->f, File) == -1)
+    {
+        fprintf (stderr, "Can't open \"%s\"\n", File);
+        exit(-1);
+    }
+    
+}
+/********************* PrepareTempFileInputStan **********************/
+/* Open file for writing temp file for stan input  */
+void PrepareTempFileInputStan(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, int iter){
+    
+    char File[MAX_NAME];
+    char dir[MAX_NAME];
+    /* contains the simulated tree in Newick format
+     */
+    if (boost::filesystem::exists( "Results"))
+        boost::filesystem::remove_all("Results");
+    boost::filesystem::create_directory("Results");
+    // mkdir("Results", S_IRWXU);
+    
+    /* Create "Results" folder (with type S_IRWXU (read, write and
+     execute)) */
+    //mkdir("Results",0);
+#ifdef MAC
+    strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
+#else
+    strcpy (dir, "Results/");
+#endif
+    //strcpy (resultsDir, dir);
+    
+    
+    sprintf(File,"%s/%s_%d.txt", filePaths.resultsDir, filePaths.tempInputStan, iter);
+    
+    strcpy (files.fpStanDump->path,File);
+    
+    
+    if (openFile(&files.fpStanDump->f, File) == -1)
     {
         fprintf (stderr, "Can't open \"%s\"\n", File);
         exit(-1);

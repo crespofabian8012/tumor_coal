@@ -7,6 +7,7 @@
 
 #include "ccars_test.hpp"
 #include "ccars.cpp"
+#include "partial_tree_node.hpp"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -151,3 +152,4 @@ TEST_F(CCARSTest, testApproximateIntegral) {
     
     
 }
+

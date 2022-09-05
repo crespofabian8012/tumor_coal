@@ -242,6 +242,7 @@ public:
     double varGenotypingError=0;
     bool normalizeClv=false;
     bool normalizeLeavesClv=false;
+    bool computeLikelihoods=false;
     //gsl_rng * r;
 };
 
@@ -324,44 +325,44 @@ public:
 };
 
 typedef struct {
-    char  SNVgenotypesFile[MAX_NAME];
-    char  SNVhaplotypesFile[MAX_NAME];
-    char  trueHaplotypesFile[MAX_NAME];
-    char  MLhaplotypesFile[MAX_NAME];
-    char  fullGenotypesFile[MAX_NAME];
-    char  fullHaplotypesFile[MAX_NAME];
-    char  CATGfile[MAX_NAME];
-    char  VCFfile[MAX_NAME];
-    char  logFile[MAX_NAME];
-    char  settingsFile[MAX_NAME];
-    char  userTreeFile[MAX_NAME];
-    char  treeFile[MAX_NAME];
-    char  timesFile[MAX_NAME];
-    char  userGenomeFile[MAX_NAME];
-    char  SNVgenotypesDir[MAX_NAME];
-    char  SNVhaplotypesDir[MAX_NAME];
-    char  trueHaplotypesDir[MAX_NAME];
-    char  MLhaplotypesDir[MAX_NAME];
-    char  fullGenotypesDir[MAX_NAME];
-    char  fullHaplotypesDir[MAX_NAME];
-    char  treeDir[MAX_NAME];
-    char  timesDir[MAX_NAME];
-    char  CATGdir[MAX_NAME];
-    char  VCFdir[MAX_NAME];
-    char  resultsDir[MAX_NAME];
-    char  dir[MAX_NAME];
-    char  File[MAX_NAME];
-    char  inputTreeFile[500];
-    char  inputGenotypeFileFasta[500];
-    char  inputGenotypeFilePhylip[500];
-    char  likelihoodOuput[500];
-    char  tempInputStan[500];
+    char  SNVgenotypesFile[1000];
+    char  SNVhaplotypesFile[1000];
+    char  trueHaplotypesFile[1000];
+    char  MLhaplotypesFile[1000];
+    char  fullGenotypesFile[1000];
+    char  fullHaplotypesFile[1000];
+    char  CATGfile[1000];
+    char  VCFfile[1000];
+    char  logFile[1000];
+    char  settingsFile[1000];
+    char  userTreeFile[1000];
+    char  treeFile[1000];
+    char  timesFile[1000];
+    char  userGenomeFile[1000];
+    char  SNVgenotypesDir[1000];
+    char  SNVhaplotypesDir[1000];
+    char  trueHaplotypesDir[1000];
+    char  MLhaplotypesDir[1000];
+    char  fullGenotypesDir[1000];
+    char  fullHaplotypesDir[1000];
+    char  treeDir[1000];
+    char  timesDir[1000];
+    char  CATGdir[1000];
+    char  VCFdir[1000];
+    char  resultsDir[1000];
+    char  dir[1000];
+    char  File[1000];
+    char  inputTreeFile[1000];
+    char  inputGenotypeFileFasta[1000];
+    char  inputGenotypeFilePhylip[1000];
+    char  likelihoodOuput[1000];
+    char  tempInputStan[1000];
 }FilePaths;
 
 
 typedef struct  {
     FILE *f;
-    char  path[MAX_NAME];
+    char  path[500];
 }FilePath;
 
 typedef struct {

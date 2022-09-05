@@ -131,6 +131,12 @@ int main(int argc, char *argv[])
     InitNumberNodes(TotalBirthRate, TotalDeathRate, TotalN, populations, programOptions);
     ListClonesAccordingTimeToOrigin(populations, programOptions.numClones);
     
+    if (populations.size()==0){
+        
+        fprintf (stderr, "\nERROR: The populations could not be created)");
+        Output::PrintUsage();
+    }
+    
     /* set file dirs and names */
     InitFilesPathsOptions(filePaths, programOptions);
     InitFiles(files);

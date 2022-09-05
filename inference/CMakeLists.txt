@@ -1,4 +1,4 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++17 -stdlib=libc++ -D_REENTRANT -DBOOST_DISABLE_ASSERTS")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++17 -stdlib=libc++ -D_REENTRANT -Denable-glibcxx-debug=ON -DBOOST_DISABLE_ASSERTS")
 
 set(HEADER_FILES ${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/stan⁩/lib⁩/stan_math⁩/stan/math/prim/fun/Eigen.hpp )
 include_directories(${CMAKE_SOURCE_DIR}/install/include/stan/lib/stan_math/lib/stan⁩/lib⁩/stan_math⁩/stan/math/prim/fun/Eigen.hpp)

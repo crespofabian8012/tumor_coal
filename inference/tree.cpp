@@ -12,6 +12,7 @@ RootedTree::RootedTree(const std::string &str, bool isFile ):pll_rooted_tree(Par
     
     if (!pll_rooted_tree){
         std::cout << "Error creating rooted tree from newick" << std:: endl;
+        
     }
     num_tips = pll_rooted_tree->tip_count;
     // setMissingBranchLengths();

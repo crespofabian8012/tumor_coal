@@ -13,7 +13,7 @@
 #define	PATERNAL                1
 #define BINARY                  0
 #define	DNA                     1
-#define    MAX_NAME             200
+#define    MAX_NAME            200
 #define    MAX_LINE                3500
 #define    MAX_GENOME              1000000
 

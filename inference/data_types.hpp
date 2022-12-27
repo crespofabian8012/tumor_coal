@@ -197,6 +197,8 @@ public:
     double deletionRate =0;
     int noisy = 1;
     double fixedADOrate =0 ;
+    double fixedADOrateMean =0 ;
+    double fixedADOrateVar =0 ;
     int doADOcell = 0;
     int doADOsite = 0;
     double nonISMRelMutRate = 0;
@@ -213,6 +215,8 @@ public:
     int simulateOnlyTwoTemplates = 0;
     double varAmplificationError = 0;
     double sequencingError = 0;
+    double meanSequencingError = 0;
+    double varSequencingError = 0;
     int rateVarCoverage = 0;
     double transformingBranchLength = 0;
     int rateVarAmongSites = 0;
@@ -240,9 +244,11 @@ public:
     int maxSampleSize;
     double meanGenotypingError= 0;
     double varGenotypingError=0;
+   
     bool normalizeClv=false;
     bool normalizeLeavesClv=false;
     bool computeLikelihoods=false;
+    int numSitesWholeGenome = 1000000;
     //gsl_rng * r;
 };
 
@@ -356,6 +362,7 @@ typedef struct {
     char  inputGenotypeFileFasta[1000];
     char  inputGenotypeFilePhylip[1000];
     char  likelihoodOuput[1000];
+    char  mutationOuput[1000];
     char  tempInputStan[1000];
 }FilePaths;
 
@@ -381,6 +388,7 @@ typedef struct {
     FilePath *fplog;
     FilePath *fpTreeOutput;
     FilePath *fpLikelihood;
+    FilePath *fpMutations;
     FilePath *fpStanDump;
 }Files;
 

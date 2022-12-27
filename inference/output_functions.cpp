@@ -468,7 +468,8 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
     {
         if (doPrintIUPAChaplotypes == YES)
                         {
-                            fprintf (fp,"%d %d\n",numCells +1, numSites);
+                           // fprintf (fp,"%d %d\n",numCells +1, numSites);
+                            fprintf (fp,"%d %d\n",numCells +1, numSNVs);
                             for (i=0; i<numCells; i++){
                                 p = nodes[i];
                                 /* print IUPAC haplotype */
@@ -480,8 +481,10 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
                                         else
                                             temp=p->cellName;
                                         fprintf (fp,"%-12s ", temp);
-                                        for (j=0; j<numSites; j++)
+                                        //for (j=0; j<numSites; j++)
+                                        for (j=0; j<numSNVs; j++){
                                             fprintf (fp, "%c", Utils::WhichIUPAC(p->maternalSequence[SNVsites[j]],p->paternalSequence[SNVsites[j]]));
+                                            }
                                         fprintf (fp,"\n");
                                         
                                     }

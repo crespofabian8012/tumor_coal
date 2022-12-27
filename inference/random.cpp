@@ -775,3 +775,6 @@ long double  Distributions::LogDirichletDensity(std::vector<long double> &propor
     logResult = logResult-lgamma(sum);
     return logResult;
 }
+double Distributions::PoissonPmf(const double k, const double lambda) {
+  return exp(k * log(lambda) - lgamma(k + 1.0) - lambda);
+}

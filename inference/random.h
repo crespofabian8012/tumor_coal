@@ -85,6 +85,7 @@ long double LogPowerLawDistibutionDensity(long double& value, long double& a, lo
 long double LogUniformDensity(long double& value, long double& from, long double& to);
 long double  LogDirichletDensity(std::vector<long double> &proportionsVector,  std::vector<long double> &concentrationVector, std::vector<long double> &dummy);
 long double LogBetaDensity(long double& value, long double& alpha, long double& beta);
+double PoissonPmf(const double k, const double lambda);
 
 };
 #endif /* random_h */

@@ -124,6 +124,9 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
                                    const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, std::vector<Population*> populations, double numMU);
 
 void PrepareLikelihoodOutputFile(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
+
+void PrepareMutationsOutputFile(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files);
+
 void PrepareTempFileInputStan(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, int iter);
 
 void InitPopulationsCoalescentEvents( int numClones,  std::vector<Population *> &populations) ;
@@ -132,6 +135,9 @@ void writeHeaderLikelihoodFile(const FilePaths &filePaths, const ProgramOptions 
 
 void writeLineLikelihoodFile( int  simulationNumber, const FilePaths &filePaths, const ProgramOptions    &programOptions,Files &files ,  std::vector<Population *> &populations,
      long double logLikCoalTree, long double logLikTrueSequences, long double logLikErrorSequences, double treeLength);
+
+void writeLineMutationsFile( int  simulationNumber, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files ,  std::vector<int> &numberOfSitesWithKMutations,
+int numberVariableSites, int numberSitesWholeGenome);
 
 void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGenome, int numSites, std::vector<SiteStr> &allSites, int doGeneticSignatures, double cumfreq[4], long double *triNucFreq, char **cellNames,
                        const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
@@ -211,6 +217,6 @@ void simulateTrees(int numberTrees,std::vector<StructuredCoalescentTree *> &stru
 void InitFiles(Files &files);
 void SetPopulationTimeOriginSTD(std::vector<Population *> &populations, int numClones, const gsl_rng* rngGsl, bool doEstimateTorigins);
 void InitNumberNodes( std::vector<Population *> &populations, ProgramOptions &programOptions);
-void computeStatisticsNumberMutations(std::vector<SiteStr> allSites, long double &meanMaternalMutationPerSite, long double &meanPaternalMutationPerSite);
+void computeStatisticsNumberMutations(std::vector<SiteStr> allSites, int  numberVariableSites, long double &meanMaternalMutationPerSite, long double &meanPaternalMutationPerSite);
 void SetPopulationParametersFromPriors(std::vector<Population *> &populations, int numClones,const gsl_rng* rngGsl, ProgramOptions &programOptions);
 #endif /* data_utils_hpp */

@@ -99,7 +99,9 @@ int main(int argc, char *argv[])
     /* Default settings */
     Initialize( Eij, Mij, freq,  programOptions );
     char* input_path;
-    if (argc <= 2)
+    
+ 
+    if (argc == 2)
         input_path = argv[1];
     else{
         fprintf (stderr, "\nERROR: No parameters specified (use command line or parameter file)");
@@ -145,6 +147,8 @@ int main(int argc, char *argv[])
     // 4.output the files
     printSimulatorProgramHeader();
     float start = clock();
+    std::string healthyTipLabel = "healthycell";
+    programOptions.healthyTipLabel = healthyTipLabel;
     SimulateData(programOptions, CloneNameBegin, CloneSampleSizeBegin, ClonePopSizeBegin,
                  populations,
                  filePaths,

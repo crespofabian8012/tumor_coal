@@ -185,6 +185,18 @@ static const double gt_rates_equal_sm[] = {  0, 0, 0, 1, 1, 1, 0, 0, 0,    /* AA
                                                                   1, 1,    /* CG */
                                                                      1 };  /* CT */
 
+/*                                       AA CC GG TT AC AG AT CG CT GT          */
+static const double gt_rates_equal_sm2[] = {  0, 0, 0, 2, 2, 2, 0, 0, 0,    /* AA */
+                                                0, 0, 2, 0, 0, 2, 2, 0,    /* CC */
+                                                   0, 0, 2, 0, 2, 0, 2,    /* GG */
+                                                      0, 0, 2, 0, 2, 2,    /* TT */
+                                                         1, 1, 1, 1, 0,    /* AC */
+                                                            1, 1, 0, 1,    /* AG */
+                                                               0, 1, 1,    /* AT */
+                                                                  1, 1,    /* CG */
+                                                                     1 };  /* CT */
+
+
 /*                                      AA CC GG TT AC AG AT CG CT GT          */
 static const double gt_rates_equal[] =  {   1, 1, 1, 1, 1, 1, 1, 1, 1,    /* AA */
                                                1, 1, 1, 1, 1, 1, 1, 1,    /* CC */
@@ -288,6 +300,7 @@ static int gt16_sym_rate_dna4[] =  {      0, 0, 0, 1, 2, 3, 0, 0, 0, 1, 2, 3, 0,
  * 16  = A/C = M  | 32  = A/G = R | 64   = A/T = W | 128 = C/G = S
  * 256 = C/T = Y  | 512 = G/T = K | 1023 = -/- = N                  */
 
+//const pll_state_t pll_map_gt10[256] =
 //const pll_state_t pll_map_gt10[256] =
 // {
 //   0,  0,   0,   0,  0,  0,  0,    0,    0,   0,  0,   0,  0,    0,    0,    0,

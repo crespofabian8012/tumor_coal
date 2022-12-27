@@ -60,6 +60,9 @@ struct Utils
     static  char WhichIUPAC (int allele1, int allele2);
     static  char *WhichGenotypeFromIUPAC (int  iupac);
     static  int WhichGenotypeChar (char nucleotide);
+    static int  WhichGenotypeIndex (int allele1, int allele2);
+    
+    static  void WhichMaternalPaternalIndex (int IUPACgenotypeIndex, int &allele1, int &allele2);
     static  char WhichNuc (int nucleotide);
     static  char WhichConsensusBinary (int allele1, int allele2);
     static  char WhichMut (int state);

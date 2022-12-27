@@ -506,9 +506,174 @@ int Utils::WhichGenotypeChar (char nucleotide)
         exit(-1);
     }
 }
+/********************* WhichGenotypeIndex ************************/
+/* Returns integer representation for character nucleotudes */
 
+int Utils::WhichGenotypeIndex (int allele1, int allele2)
+{
+
+   if (allele1 == 0)
+   {
+       if (allele2 == 0)        //AA
+           return (0);
+       else if (allele2 == 1)    //AC
+           return (4);
+       else if (allele2 == 2)    //AG
+           return (5);
+       else //if (allele2 == 3)    //AT
+           return (6);
+      
+   }
+   else if (allele1 == 1)
+   {
+       if (allele2 == 0)        //CA
+           return (10);
+       else if (allele2 == 1)    //CC
+           return (1);
+       else if (allele2 == 2)    //CG
+           return (7);
+       else //if (allele2 == 3)    //CT
+           return (8);
+   }
+   else if (allele1 == 2)
+   {
+       if (allele2 == 0)        //GA
+           return (11);
+       else if (allele2 == 1)    //GC
+           return (13);
+       else if (allele2 == 2)    //GG
+           return (2);
+       else //if (allele2 == 3)    //GT
+           return (9);
+      
+   }
+   else // if (allele1 == 3)
+   {
+       if (allele2 == 0)        //TA
+           return (12);
+       else if (allele2 == 1)    //TC
+           return (14);
+       else if (allele2 == 2)    //TG
+           return (15);
+       else //if (allele2 == 3)    //TT
+           return (3);
+   }
+   
+  
+}
+/********************* WhichGenotypeIndex ************************/
+/* Returns integer representation for character nucleotudes */
+
+void Utils::WhichMaternalPaternalIndex (int IUPACgenotypeIndex, int &allele1, int &allele2)
+{
+
+   if (IUPACgenotypeIndex == 0)
+   {
+       allele1 = 0;
+       allele2 = 0;
+       return;
+   }
+   else if (IUPACgenotypeIndex == 1)
+   {
+        allele1 = 1;
+        allele2 = 1;
+        return;
+   }
+   else if (IUPACgenotypeIndex == 2)
+   {
+         allele1 = 2;
+         allele2 = 2;
+         return;
+      
+   }
+  else if (IUPACgenotypeIndex == 3)
+     {
+          allele1 = 3;
+          allele2 = 3;
+          return;
+     }
+   else if (IUPACgenotypeIndex == 4)
+     {
+           allele1 = 0;
+           allele2 = 1;
+           return;
+        
+     }
+    else if (IUPACgenotypeIndex == 5)
+     {
+           allele1 = 0;
+           allele2 = 2;
+           return;
+     }
+     else if (IUPACgenotypeIndex == 6)
+     {
+           allele1 = 0;
+           allele2 = 3;
+           return;
+        
+     }
+     else if (IUPACgenotypeIndex == 7)
+     {
+           allele1 = 1;
+           allele2 = 2;
+           return;
+     }
+     else if (IUPACgenotypeIndex == 8)
+     {
+           allele1 = 1;
+           allele2 = 3;
+           return;
+        
+     }
+    else if (IUPACgenotypeIndex == 9)
+       {
+            allele1 = 2;
+            allele2 = 3;
+            return;
+       }
+     else if (IUPACgenotypeIndex == 10)
+       {
+             allele1 = 1;
+             allele2 = 0;
+             return;
+          
+       }
+      else if (IUPACgenotypeIndex == 11)
+       {
+         allele1 = 2;
+         allele2 = 0;
+         return;
+       }
+       else if (IUPACgenotypeIndex == 12)
+       {
+        allele1 = 3;
+        allele2 = 0;
+        return;
+          
+       }
+    else if (IUPACgenotypeIndex == 13)
+         {
+           allele1 = 2;
+           allele2 = 1;
+           return;
+         }
+    else if (IUPACgenotypeIndex == 14)
+         {
+          allele1 = 3;
+          allele2 = 1;
+        return;
+            
+         }
+   else // if (IUPACgenotypeIndex == 15)
+   {
+        allele1 = 3;
+        allele2 = 2;
+        return;
+   }
+   
+  
+}
 /********************* parameterMultiplierMCMCmove ************************/
-
 
 double Utils::parameterMultiplierMCMCmove (double lengthInterval)
 {

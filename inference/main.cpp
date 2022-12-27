@@ -239,7 +239,7 @@ int main(int argc, char* argv[] )
         exit(-1);
     }
     std::string healthyTipLabel = "healthycell";
-    programOptions.healthyTipLabel ="healthycell";
+    programOptions.healthyTipLabel = healthyTipLabel;
     
     //int sampleEvery = mcmcOptions.thinning;
     

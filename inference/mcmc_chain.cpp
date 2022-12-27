@@ -2224,7 +2224,7 @@ long double Chain::LogDensityCoalTimes(std::vector<long double> allEventsSorted,
 long double  Chain::LogConditionalLikelihoodSequences(pll_msa_t * msa, char* NewickString, ProgramOptions &programOptions, long double seqError,long double dropoutError)
 {
     
-    //pll_state_t pll_map_gt10_2[256];
+ 
     if (NewickString == NULL)
     {
         fprintf (stderr, "\nERROR: The newick representation of the tree cannot be empty\n\n");

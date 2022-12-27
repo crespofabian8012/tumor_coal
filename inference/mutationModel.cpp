@@ -31,6 +31,8 @@
 
 #include "random.h"
 
+#include "utils.hpp"
+
 using namespace Definitions;
 
 void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *seed,  std::vector<int> &DefaultModelSites, int numDefaultModelSites, std::vector<int> &AltModelSites, int numAltModelSites, long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet,  std::vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4], long double  mutationRate, const gsl_rng *randomGsl, boost::mt19937* rngBoost)
@@ -104,72 +106,23 @@ void SimulateISM (TreeNode *treeRoot, int genome, int doISMhaploid, long int *se
         }
     }
 }
+void SimulateGenotype (TreeNode *treeRoot, std::vector<int> numberOfSitesWithKMutations, int numberVariableSites, int doISMhaploid, long int *seed,  std::vector<int> &DefaultModelSites, int numDefaultModelSites, std::vector<int> &AltModelSites, int numAltModelSites, long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet,  std::vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4], long double  mutationRate, const gsl_rng *randomGsl, boost::mt19937* rngBoost)
+{
+   long double  cumBranchLength = 0;
 
-/************************************* SimulateMk2ForSite ***************************************/
-/* Simulates the nucleotide substitution process for a given site under Mk2 model (see Lewis 2001)
- with equal rates. 0 is the reference (healthy) allele */
-
-//void SimulateMk2forSite (TreeNode *p, int genome, int site, long int *seed, int doUserTree, int rateVarAmongSites, double altModelMutationRate, vector<SiteStr> &allSites, int ***data, int* numMU )
-//{
-//    double    probOfChange, uniform, branchLength;
-//    int     cell, anccell;
-//    
-//    if (p != NULL)
-//    {
-//        if (p->isOutgroup == NO)
-//        {
-//            cell = p->label;
-//            anccell = p->anc1->label;
-//            
-//            if (doUserTree == YES){
-//                branchLength = p->lengthModelUnits;//>branchLength;
-//                //                 branchLength = p->length;//>branchLength;
-//                
-//            }
-//            else
-//            {
-//                if (rateVarAmongSites == YES)
-//                    branchLength = altModelMutationRate * p->length * allSites[site].rateMultiplier;
-//                else
-//                    branchLength = altModelMutationRate * p->length;
-//            }
-//            
-//            probOfChange = 0.5 - 0.5 * exp (-2.0 * branchLength);
-//            
-//            uniform = RandomUniform(seed);
-//            if (uniform >= probOfChange) /* => no change */
-//                data[genome][cell][site] = data[genome][anccell][site];
-//            else /* => there will be change */
-//            {
-//                if (data[genome][anccell][site] == 0)
-//                    data[genome][cell][site] = 1;
-//                else
-//                    data[genome][cell][site] = 0;
-//                
-//                if (genome == MATERNAL)
-//                    allSites[site].numMutationsMaternal++;
-//                else if (genome == PATERNAL)
-//                    allSites[site].numMutationsPaternal++;
-//                allSites[site].numMutations++;
-//                numMU=numMU+1;
-//            }
-//        }
-//        SimulateMk2forSite (p->left,  genome, site, seed,  doUserTree,  rateVarAmongSites,  altModelMutationRate, allSites, data, numMU);
-//        SimulateMk2forSite (p->right, genome, site, seed,  doUserTree,  rateVarAmongSites,  altModelMutationRate, allSites, data, numMU);
-//    }
-//}
-
-/************************************* SimulateMk2 **********************************************/
-/* Simulates the nucleotide substitution process under the Mk2 model (see Lewis 2001),
- also called Cavender-Farris-Neyman CFN  model or Jukes-Cantor (1969) model for two alleles */
-
-//void SimulateMk2 (TreeNode *p, int genome, long int *seed, vector<int> &AltModelSites, int  numAltModelSites, int doUserTree, int rateVarAmongSites, double altModelMutationRate, vector<SiteStr> &allSites, int &numMU)
-//{
-//    int     i;
-//
-//    for (i=0; i<numAltModelSites; i++)
-//        SimulateMk2forSite (p, genome, AltModelSites[i], seed,  doUserTree,  rateVarAmongSites,  altModelMutationRate, allSites, numMU);
-//}
+   long double  uniform =0;
+   long double  ran=0;
+   int cumulativeNumberSites = 0;
+    
+   for (unsigned int i=1; i< numberOfSitesWithKMutations.size(); i++)
+    {
+        for (unsigned int j=cumulativeNumberSites; j< (cumulativeNumberSites+numberOfSitesWithKMutations[i]); j++)
+          SimulateISMGenotypeforSite(treeRoot, i, j, doISMhaploid, seed, totalTreeLength, allSites, numMU,cumMij, mutationRate, uniform, cumBranchLength,  ran, randomGsl,  rngBoost);
+        
+        cumulativeNumberSites+=numberOfSitesWithKMutations[i];
+    }
+    
+}
 
 /***************************** openFile*******************************/
 /* openFile*/
@@ -221,7 +174,7 @@ void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid,
             
             cumBranchLength = 0;
             
-            uniform = Random::RandomUniform(seed) * totalTreeLength;
+            uniform = Random::randomUniformFromGsl2(randomGsl) * totalTreeLength;
             
         }
         
@@ -277,7 +230,7 @@ void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid,
                 
             {
                 
-                ran = Random::RandomUniform(seed) * cumMij[ancstate][3];
+                ran = Random::randomUniformFromGsl2(randomGsl)  * cumMij[ancstate][3];
                 
                 for (j=0; j<4; j++)
                     
@@ -342,6 +295,136 @@ void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid,
     }
     
 }
+/********************************** SimulateISMGenotypeforSite ***********************************/
+void SimulateISMGenotypeforSite (TreeNode *p, int numberMutations, int site, int doISMhaploid, long int *seed, long double  scaledTotalTreeLength, std::vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4],long double  mutationRate, long double  &uniform, long double  &cumBranchLength, long double  &ran, const gsl_rng *randomGsl, boost::mt19937* rngBoost )
+{
+    
+    //    static long double     cumBranchLength, uniform, ran;
+    
+    int             cell, anccell, maternal_ancstate, paternal_ancstate, ancestral_genotype, newstate, maternal_newstate, paternal_newstate;
+    
+    
+    
+    if (p != NULL)
+        
+    {
+        
+        cell = p->label;
+        
+        
+        
+        if ( p->anc1 == NULL)
+            
+        {
+            
+            cumBranchLength = 0;
+            
+            uniform = Random::randomUniformFromGsl2(randomGsl) * scaledTotalTreeLength;
+            
+        }
+        
+        else
+            
+        {
+            
+            anccell = p->anc1->label;
+            
+             maternal_ancstate = p->anc1->maternalSequence[site];
+             paternal_ancstate = p->anc1->paternalSequence[site];
+            
+            maternal_newstate = maternal_ancstate;
+            paternal_newstate = paternal_ancstate;
+            
+            ancestral_genotype = Utils::WhichGenotypeIndex(maternal_ancstate, paternal_ancstate);
+            
+            //            cumBranchLength += p->length;// ->branchLength;
+            
+            cumBranchLength = cumBranchLength+ p->length*mutationRate;
+            
+            
+            
+            if ((cumBranchLength < uniform) || /* => there will be no change */
+                
+                (allSites[site].numMutations >= numberMutations))
+                
+            {
+                
+                
+                    
+                    p->maternalSequence[site]=p->anc1->maternalSequence[site];
+                
+                
+                    
+                    p->paternalSequence[site]=p->anc1->paternalSequence[site];
+                
+                
+                
+                p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site];
+                
+                p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site];
+                
+                p->numbersMutationsUnderSubtreePerSite[site]=p->anc1->numbersMutationsUnderSubtreePerSite[site];
+                
+            }
+            
+            else /* => there will be change */
+                
+            {
+                long double  row_Qij[16] = { 0.0 };
+                
+                
+                FillRowQGTJCSubstitutionMatrix ( row_Qij, ancestral_genotype);
+                //FillGenotypeGTJCSubstitutionMatrix(Qij, p->length, mutationRate, freq, maxEntry, maxPerRow);
+                
+                //ran = Random::randomUniformFromGsl2(randomGsl)  * cumMij[ancestral_genotype][3];
+                newstate = Random::ChooseUniformState(row_Qij, seed, true, randomGsl, rngBoost);
+                
+                Utils::WhichMaternalPaternalIndex (newstate, maternal_newstate, paternal_newstate);
+                
+
+                
+                if (maternal_ancstate != maternal_newstate){
+                    
+                    allSites[site].numMutationsMaternal++;
+                    
+                    p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site]+1;
+                    
+                    p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site];
+                    
+                    p->numbersMutationsUnderSubtreePerSite[site]=p->anc1->numbersMutationsUnderSubtreePerSite[site]+1;
+                        numMU++;
+                }
+                
+                else if (paternal_ancstate != paternal_newstate){
+                    
+                    allSites[site].numMutationsPaternal++;
+                    
+                    p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site];
+                    
+                    p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site]+1;
+                    
+                    p->numbersMutationsUnderSubtreePerSite[site]=p->anc1->numbersMutationsUnderSubtreePerSite[site]+1;
+                      numMU++;
+                    
+                }
+                
+                allSites[site].numMutations++;
+              
+                if (allSites[site].numMutations ==numberMutations)
+                    return;
+                  
+                
+            }
+            
+        }
+        
+        SimulateISMGenotypeforSite (p->left, numberMutations, site, doISMhaploid, seed,  scaledTotalTreeLength, allSites, numMU,cumMij,  mutationRate, uniform, cumBranchLength,  ran,  randomGsl,  rngBoost);
+        
+        SimulateISMGenotypeforSite (p->right, numberMutations, site, doISMhaploid, seed, scaledTotalTreeLength, allSites, numMU,cumMij,  mutationRate, uniform, cumBranchLength,  ran,  randomGsl,  rngBoost);
+        
+    }
+    
+}
 
 /********************************** SimulateISMForSite ***********************************/
 /*    Simulates a 0/1 mutation under an infinite sites model (ISM) for a given site. The branch
@@ -350,8 +433,7 @@ void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid,
  */
 void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, long double  totalTreeLength, std::vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4], long double  mutationRate, long double  &cumBranchLength, long double  &uniform, int &mutationAdded, const gsl_rng *randomGsl, boost::mt19937* rngBoost)
 {
-    //    static long double     cumBranchLength, uniform;
-    //    static long double     cumBranchLength, uniform;
+ 
     int             cell, anccell;
     //    if (*mutationAdded==YES)
     //        return;
@@ -370,15 +452,9 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
         else
         {
             anccell = p->anc1->label;
-            //            *cumBranchLength =*cumBranchLength+ p->length;// ->branchLength;
-            // *cumBranchLength =*cumBranchLength+ p->lengthModelUnits;// ->branchLength;
+           
             cumBranchLength = cumBranchLength+ p->length;
-            //            if ((*cumBranchLength < *uniform) || /* => there will be no change */
-            //                ((doISMhaploid == NO)  && (allSites[site].numMutations > 0))
-            //               ||
-            //               ((doISMhaploid == YES) && (genome == MATERNAL) && (allSites[site].numMutationsMaternal > 0)) ||
-            //              ((doISMhaploid == YES) && (genome == PATERNAL) && (allSites[site].numMutationsPaternal > 0))
-            //                )
+     
             if ((cumBranchLength < uniform) ||// (*mutationAdded==YES)/* => there will be no change */
                 ((doISMhaploid == NO)  && (allSites[site].numMutations > 0))  ||
                 ((doISMhaploid == YES) && (genome == MATERNAL) && (allSites[site].numMutationsMaternal > 0)) ||
@@ -414,23 +490,7 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
                     numMU=numMU+1;
                     mutationAdded=YES;
                 }
-                //                if (data[genome][anccell][site] == 0)
-                //                {
-                //                    data[genome][cell][site] = 1;
-                //                  if (genome == MATERNAL)
-                //                    { allSites[site].numMutationsMaternal++;
-                //                       }
-                //                    else // (genome == PATERNAL)
-                //                 { allSites[site].numMutationsPaternal++;
-                //                        }
-                //                    allSites[site].numMutations++;
-                //                    *numMU=*numMU+1;
-                //                    *mutationAdded=YES;
-                //                    return;
-                //
-                //
-                //
-                //                }
+            
                 else if (genome == MATERNAL && p->anc1->maternalSequence[site]==1)
                 {
                     
@@ -461,19 +521,11 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
                 
             }
         }
-        //        long double  goLeftFirst=RandomUniform(seed);
-        //        if(goLeftFirst < 0.5)
-        //        {
+      
         SimulateISMforSite (p->left, genome, site, doISMhaploid, seed, totalTreeLength, allSites, numMU, cumMij, mutationRate, cumBranchLength, uniform, mutationAdded, randomGsl, rngBoost);
         SimulateISMforSite (p->right, genome, site, doISMhaploid, seed,totalTreeLength, allSites, numMU,cumMij, mutationRate, cumBranchLength,  uniform, mutationAdded, randomGsl,  rngBoost);
         
-        //        }
-        //        else{
-        //            SimulateISMforSite (p->right, genome, site, doISMhaploid, seed, totalTreeLength, data, allSites, numMU, cumMij, mutationRate, cumBranchLength, uniform, mutationAdded);
-        //            SimulateISMforSite (p->left, genome, site, doISMhaploid, seed,totalTreeLength, data, allSites, numMU,cumMij, mutationRate, cumBranchLength,  uniform, mutationAdded);
-        //
-        //
-        //        }
+    
     }
 }
 /************************************* SimulateFiniteDNA **********************************************/
@@ -522,7 +574,34 @@ void SimulateFiniteDNA (TreeNode *p, int genome, long int *seed, int doJC, int d
         SimulateFiniteDNAforSite (p,  genome, AltModelSites[i], allSites,  seed,  rateVarAmongSites,  altModelMutationRate, numMU,  doJC,  doHKY,  doGTR,  doGTnR,    beta,    kappa,   freqR,   freqY,   freq,  Root,  Cijk, rngGsl, rngBoost);
     
 }
+/************************************* SimulateFiniteDNAGenotype **********************************************/
 
+
+void SimulateFiniteDNAGenotype (TreeNode *p, int genome, long int *seed, int doJC, int doHKY, int doGTR, int doGTnR, long double &freqR, long double   &freqY,  long double  &freqAG,  long double  &freqCT,  double  titv,  double  freq[4],  double  Mij[4][4], int numAltModelSites, std::vector<int> &AltModelSites, std::vector<SiteStr> &allSites,  int rateVarAmongSites, long double  altModelMutationRate, int &numMU,  double  Root[],  double  Cijk[], const gsl_rng *rngGsl, boost::mt19937* rngBoost)
+{
+    int     i, j;
+ 
+    long double  beta = 0, kappa = 0;
+    double  Qij[16];
+    double  mr;
+    
+        for (i=0; i<4; i++)
+            for (j=0; j<4; j++)
+                Qij[i*4+j] = Mij[i][j] / Mij[2][3] * freq[j];
+        mr=0;
+        for (i=0; i<4; i++)
+        {
+            Qij[i*4+i]=0;
+            Qij[i*4+i]=-(Qij[i*4]+Qij[i*4+1]+Qij[i*4+2]+Qij[i*4+3]);
+            mr-=freq[i]*Qij[i*4+i];
+        }
+        linalgebra::EigenREV(mr, Qij, Root, Cijk);
+   
+  
+    for (i=0; i<numAltModelSites; i++)
+        SimulateFiniteDNAforSite (p,  genome, AltModelSites[i], allSites,  seed,  rateVarAmongSites,  altModelMutationRate, numMU,  doJC,  doHKY,  doGTR,  doGTnR,    beta,    kappa,   freqR,   freqY,   freq,  Root,  Cijk, rngGsl, rngBoost);
+    
+}
 /*********************************** JC **************************************/
 /*    JC performs Jukes-Cantor 69 correction */
 /* Note that beta was set such that mean substitution rate will be 1.
@@ -542,7 +621,107 @@ void JCmodel (long double  Pij[4][4], long double  branchLength, long double  be
         }
     }
 }
+/*********************************** GTJC16 **************************************/
+void GTJCmodel (long double  Pij[16][16], long double  branchLength, long double  theta, double maxEntry, double  maxPerRow[16]  )
+{
+    int i, j;
+    
+    maxEntry = 0.0;
+    double exp_4_3 = exp(-4.0*branchLength*theta/3.0);
+    double exp_2_3 = exp(-2.0*branchLength*theta/3.0);
+    double b = (1.0/16.0)*exp_4_3*(exp_2_3 - 1)*(exp_2_3 -1);
+    
+    for (i=0; i<16; i++)
+    {
+        for (j=0; j<16; j++)
+        {
+  
+                Pij[i][j] = b;
+        }
+    }
+    double     c = (1.0/16.0)*(1-3*exp_4_3+2*exp_2_3);
+    double     a = (1.0/16.0)*exp_4_3*(exp_2_3 +3)*(exp_2_3 +3);
+    maxEntry = std::max(b,c);
+    
+    for(j=0; j<16; j++){
+          
+             i=j+1;
+             if (i== 5 || i== 6 || i== 7 || i== 11 || i== 12 || i== 13){
+               Pij[j][0]= c;
+              }
+          
+             if (i== 5 || i== 8 || i== 9 || i== 11 || i== 14 || i== 15){
+                Pij[j][1]= c;
 
+              }
+          
+             if (i== 6 || i== 8 || i== 10 || i== 12 || i== 14 || i== 16){
+                Pij[j][2]= c;
+              }
+          
+             if (i== 7 || i== 9 || i== 10 || i== 13 || i== 15 || i== 16){
+                Pij[j][3]= c;
+              }
+        
+             if (i== 1 || i== 2 || i== 6 || i== 7 || i== 14 || i== 15){
+                Pij[j][4]= c;
+              }
+           
+             if (i== 1 || i== 3 || i== 5 || i== 7 || i== 8 || i== 16){
+                Pij[j][5]= c;
+              
+              }
+            
+             if (i== 1 || i== 4 || i== 5 || i== 6 || i== 9 || i== 10){
+                Pij[j][6]= c;
+               
+              }
+       
+             if (i== 2 || i== 3 || i== 6 || i== 9 || i== 11 || i== 16){
+                Pij[j][7]= c;
+              }
+          
+             if (i== 2 || i== 4 || i== 7 || i== 8 || i== 10 || i== 11){
+                Pij[j][8]= c;
+     
+              }
+          
+             if (i== 3 || i== 4 || i== 7 || i== 9 || i== 12 || i== 14){
+                Pij[j][9]= c;
+              }
+            
+             if (i== 1 || i== 2 || i== 8 || i== 9 || i== 12 || i== 13){
+                Pij[j][10]= c;
+               
+              }
+         
+             if (i== 1 || i== 3 || i== 10 || i== 11 || i== 13 || i== 14){
+               Pij[j][11]= c;
+           
+              }
+           
+             if (i== 1 || i== 4 || i== 11 || i== 12 || i== 15 || i== 16){
+              Pij[j][12]= c;
+              
+              }
+          
+             if (i== 2 || i== 3 || i== 5 || i== 10 || i== 12 || i== 15){
+                Pij[j][13]= c;
+              
+              }
+          
+             if (i== 2 || i== 4 || i== 5 || i== 13 || i== 14 || i== 16){
+                Pij[j][14]= c;
+               
+              }
+        
+             if (i== 3 || i== 4 || i== 6 || i== 8 || i== 13 || i== 15){
+                Pij[j][15]= c;
+              }
+           Pij[j][j]= a;
+         }
+    
+}
 /*********************************** HKY **************************************/
 /*    HKY performs Hasegawa-Kishino-Yano 85 correction */
 
@@ -623,7 +802,172 @@ void FillSubstitutionMatrix (long double  ch_prob[4][4], long double  branchLeng
     else if (doGTnR == YES)
         GTRmodel (ch_prob, branchLength, Root,  Cijk);
 }
+/********************* FillGenotypeGTJCSubstitutionMatrix **********************/
 
+void FillGenotypeGTJCSubstitutionMatrix (long double  ch_prob[16][16], long double  branchLength, long double  theta,  double  freq[16], double maxEntry, double  maxPerRow[16] )
+{
+    int i, j;
+ 
+    if (branchLength<1e-6)
+    {
+        for (i=0; i<16; i++)
+        {
+            for (j=0; j<16; j++)
+            {
+                if (i == j)
+                    ch_prob[i][j] = 1.0;
+                else
+                    ch_prob[i][j] = 0.0;
+            }
+            maxPerRow[i]  = 0.0;
+        }
+        maxEntry = 0.0;
+    }
+    else
+        GTJCmodel (ch_prob,  branchLength,  theta,  maxEntry,   maxPerRow );
+    
+  
+}
+/********************* FillGenotypeSubstitutionMatrix **********************/
+
+void FillRowQGTJCSubstitutionMatrix (long double  row[16], int indexCurrentGenotype)
+{
+    
+    long double one_over_6 = 1.0 / 6.0;
+  
+    switch(indexCurrentGenotype){
+        case 0:
+          row[4] = one_over_6;
+          row[5] = one_over_6;
+          row[6] = one_over_6;
+          row[10] = one_over_6;
+          row[11] = one_over_6;
+          row[12] = one_over_6;
+          break;
+        case 1:
+          row[4] = one_over_6;
+          row[7] = one_over_6;
+          row[8] = one_over_6;
+          row[10] = one_over_6;
+          row[13] = one_over_6;
+          row[14] = one_over_6;
+          break;
+        case 2:
+          row[5] = one_over_6;
+          row[7] = one_over_6;
+          row[9] = one_over_6;
+          row[11] = one_over_6;
+          row[13] = one_over_6;
+          row[15] = one_over_6;
+          break;
+        case 3:
+          row[6] = one_over_6;
+          row[8] = one_over_6;
+          row[9] = one_over_6;
+          row[12] = one_over_6;
+          row[14] = one_over_6;
+          row[15] = one_over_6;
+          break;
+        case 4:
+          row[0] = one_over_6;
+          row[1] = one_over_6;
+          row[5] = one_over_6;
+          row[6] = one_over_6;
+          row[13] = one_over_6;
+          row[14] = one_over_6;
+          break;
+        case 5:
+          row[0] = one_over_6;
+          row[2] = one_over_6;
+          row[4] = one_over_6;
+          row[6] = one_over_6;
+          row[7] = one_over_6;
+          row[15] = one_over_6;
+          break;
+        case 6:
+          row[0] = one_over_6;
+          row[3] = one_over_6;
+          row[4] = one_over_6;
+          row[5] = one_over_6;
+          row[8] = one_over_6;
+          row[9] = one_over_6;
+          break;
+        case 7:
+          row[1] = one_over_6;
+          row[2] = one_over_6;
+          row[5] = one_over_6;
+          row[8] = one_over_6;
+          row[10] = one_over_6;
+          row[15] = one_over_6;
+          break;
+        case 8:
+          row[1] = one_over_6;
+          row[3] = one_over_6;
+          row[6] = one_over_6;
+          row[7] = one_over_6;
+          row[9] = one_over_6;
+          row[10] = one_over_6;
+          break;
+        case 9:
+          row[2] = one_over_6;
+          row[3] = one_over_6;
+          row[6] = one_over_6;
+          row[8] = one_over_6;
+          row[11] = one_over_6;
+          row[13] = one_over_6;
+          break;
+        case 10:
+          row[0] = one_over_6;
+          row[1] = one_over_6;
+          row[7] = one_over_6;
+          row[8] = one_over_6;
+          row[11] = one_over_6;
+          row[12] = one_over_6;
+          break;
+        case 11:
+          row[0] = one_over_6;
+          row[2] = one_over_6;
+          row[9] = one_over_6;
+          row[10] = one_over_6;
+          row[12] = one_over_6;
+          row[13] = one_over_6;
+          break;
+        case 12:
+          row[0] = one_over_6;
+          row[3] = one_over_6;
+          row[10] = one_over_6;
+          row[11] = one_over_6;
+          row[14] = one_over_6;
+          row[15] = one_over_6;
+          break;
+        case 13:
+          row[1] = one_over_6;
+          row[2] = one_over_6;
+          row[4] = one_over_6;
+          row[9] = one_over_6;
+          row[11] = one_over_6;
+          row[14] = one_over_6;
+          break;
+        case 14:
+          row[1] = one_over_6;
+          row[3] = one_over_6;
+          row[4] = one_over_6;
+          row[12] = one_over_6;
+          row[13] = one_over_6;
+          row[15] = one_over_6;
+          break;
+        case 15:
+          row[2] = one_over_6;
+          row[3] = one_over_6;
+          row[5] = one_over_6;
+          row[7] = one_over_6;
+          row[12] = one_over_6;
+          row[14] = one_over_6;
+          break;
+            
+    }
+
+}
 /************************************* SimulateFiniteDNAforSite **********************************************/
 /* Simulates JC, HKY, GTR or GTRnr for a given site */
 void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,std::vector<SiteStr> &allSites,  long int *seed, int rateVarAmongSites, long double  altModelMutationRate, int &numMU, int doJC, int doHKY, int doGTR, int doGTnR, long double  beta,  long double  kappa,  long double&  freqR,  long double&  freqY,  double  freq[4],  double  Root[],  double  Cijk[], const gsl_rng *randomGsl, boost::mt19937* rngBoost)
@@ -919,7 +1263,22 @@ void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rate
     }
     
 }
+/********************************** EvolveGenotypesOnTree ***********************************/
 
+void EvolveGenotypesOnTree (TreeNode *treeRoot,  std::vector<int> numberOfSitesWithKMutations, int numberVariableSites, long int *seed, int rateVarAmongSites, int numSites, std::vector<SiteStr> &allSites, int doGeneticSignatures, int alphaSites, int  propAltModelSites , int numDefaultModelSites, int numAltModelSites, std::vector<int> &DefaultModelSites, std::vector<int> &AltModelSites,  long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet, int  &numMU, long double  cumMij[4][4], int altModel, long double  mutationRate, int doUserTree, int doJC, int doHKY, int doGTR, int doGTnR, long double  freqR, long double  freqY, long double  freqAG, long double  freqCT, double  titv, double  freq[4], double  Mij[4][4],   double  Root[],  double  Cijk[],
+                     const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost  )
+{
+    
+        
+      long double  scaledTotalTreeLength = totalTreeLength * mutationRate;
+    
+        SimulateGenotype (treeRoot,  numberOfSitesWithKMutations,  numberVariableSites, NO, seed,
+                                        DefaultModelSites,numDefaultModelSites, AltModelSites,  numAltModelSites,  scaledTotalTreeLength ,  numISMmutations, numFixedMutations, numSNVmaternal,  doSimulateFixedNumMutations,  alphabet, allSites, numMU, cumMij, mutationRate, rngGsl,   rngBoost
+                                        );
+                
+   
+    
+}
 void EvolveCNLOHonTree (TreeNode *p, int genome,
                         int &numISMCNLOH,
                         std::vector<SiteStr> &allSites,
@@ -1205,9 +1564,10 @@ void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell
     // fixed ADO rate
     if (doADOcell == NO && doADOsite == NO)
         {
-    
+       
         alleleADOrateMean = 1.0 - sqrt (1.0 - fixedADOrate);
-
+        //alleleADOrateMean = fixedADOrate;
+            
             for (i=0; i<treeTips.size(); i++){
                 std::vector<double> v;
                 for (j=0; j<numSites; j++)
@@ -1288,11 +1648,12 @@ void addAllelicDropoutToTree( std::vector<TreeNode *> &treeTips,std::vector<Site
  a = 1 - sqrt(1-E)
 */
 
-void GenotypeError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError,  double varGenotypingError, double Eij[4][4], long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost)
+void GenotypeError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError,  double varGenotypingError, double genotypingError, double Eij[4][4], long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost)
     {
     size_t     i,j;
     TreeNode *tip;
-    double    genotypingError, alleleError;
+    //double    genotypingError;
+    double alleleError;
     long double *probs;
     long double  error_prob[4][4];
     FillErrorMatrix (error_prob, Eij);
@@ -1304,7 +1665,7 @@ void GenotypeError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allS
              tip = treeTips[i];
             for (j=0; j<numSites; j++)
                 {
-                genotypingError = Random::RandomBetaMeanVar(meanGenotypingError, varGenotypingError, seed,  true, rngGsl,   rngBoost);
+               // genotypingError = Random::RandomBetaMeanVar(meanGenotypingError, varGenotypingError, seed,  true, rngGsl,   rngBoost);
                 alleleError = 1.0 - sqrt (1.0 -  genotypingError);
 
                 if ( tip->maternalSequence[j] != ADO && tip->maternalSequence[j] != DELETION && Random::randomUniformFromGsl2(rngGsl) < alleleError)

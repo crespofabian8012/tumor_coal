@@ -1026,7 +1026,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     int        numCA = 0,numCNLOH = 0, numMIG = 0;
     int dataSetNum;
     long int seedFirst =  programOptions.seed;
-    int  numMU = 0, numDEL = 0, numProposedMU = 0, numFixedMutations = 0, numSNVmaternal = 0;
+    int  numMU = 0, numDEL = 0, numProposedMU = 0, numSNVmaternal = 0;
     programOptions.doUseObservedCellNames=NO;
     //int ***data;
     ValidateParameters(programOptions,CloneNameBegin , CloneSampleSizeBegin, ClonePopSizeBegin);
@@ -1050,6 +1050,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     int maxNumberAvgMutationsPerSite = 10;
     std::vector<double> poissonProbs(maxNumberAvgMutationsPerSite);
     std::vector<int> numberOfSitesWithKMutations(maxNumberAvgMutationsPerSite);
+    int cumNumVariableSites  = 0;
   
     for (dataSetNum = 0; dataSetNum < programOptions.numDataSets; dataSetNum++)// dataSetNum refers to a simulated tree number
     {
@@ -1232,6 +1233,8 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
               
               }
               while(numberVariableSites>programOptions.numSites);
+        
+        cumNumVariableSites += numberVariableSites;
         treesList[dataSetNum]= new RootedTree(files.fpTrees->path, true);
         
         long double logLikCoalTree=0;
@@ -1278,7 +1281,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                 allSites[i].numMutationsPaternal =0;
             }
             
-            InitializeGenomes (root, &(programOptions.seed), programOptions.alphabet, programOptions.doUserGenome,programOptions.numSites,  allSites, programOptions.doGeneticSignatures,cumfreq, triNucFreq, NULL,
+            InitializeGenomes (root, &(programOptions.seed), programOptions.alphabet, programOptions.doUserGenome, numberVariableSites,  allSites, programOptions.doGeneticSignatures,cumfreq, triNucFreq, NULL,
                                rngGslvector.at(dataSetNum),
                                rngBoost);
             
@@ -1545,7 +1548,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     
     std::cout << "\n The average number of mutations per dataset per site is  "<< cumNumMU/ (programOptions.numDataSets *programOptions.numSites)<< std::endl;
     
-    std::cout << "\n The average number of variable sites  is  "<< cumNumSNVs/ (programOptions.numDataSets)<< std::endl;
+    std::cout << "\n The average number of variable sites  is  "<< cumNumVariableSites/ (programOptions.numDataSets)<< std::endl;
     
     std::cout << "\n The average number of maternal mutations per  branch per site is  "<< cumNumMaternalMU/ (programOptions.numDataSets*programOptions.numSites*(2*(programOptions.TotalNumSequences+1)-2))<< std::endl;
     

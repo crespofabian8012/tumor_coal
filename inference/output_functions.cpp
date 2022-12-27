@@ -338,8 +338,10 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, 
                         else
                             temp=p->cellName;
                         fprintf (fp,"%-12s ", temp);
-                        for (j=0; j<numSites; j++)
+                        for (j=0; j<numSites; j++){
+                            
                             fprintf (fp, "%c", Utils::WhichIUPAC(p->maternalSequence[j],p->paternalSequence[j]));
+                        }
                         fprintf (fp,"\n");
                         
                     }

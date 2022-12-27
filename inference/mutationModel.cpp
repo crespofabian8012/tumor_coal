@@ -117,8 +117,10 @@ void SimulateGenotype (TreeNode *treeRoot, std::vector<int> numberOfSitesWithKMu
    for (unsigned int i=1; i< numberOfSitesWithKMutations.size(); i++)
     {
         for (unsigned int j=cumulativeNumberSites; j< (cumulativeNumberSites+numberOfSitesWithKMutations[i]); j++)
-          SimulateISMGenotypeforSite(treeRoot, i, j, doISMhaploid, seed, totalTreeLength, allSites, numMU,cumMij, mutationRate, uniform, cumBranchLength,  ran, randomGsl,  rngBoost);
-        
+        {
+            for (unsigned int k=1; k<= i; k++)
+              SimulateISMGenotypeforSite(treeRoot, 1, j, doISMhaploid, seed, totalTreeLength, allSites, numMU,cumMij, mutationRate, uniform, cumBranchLength,  ran, randomGsl,  rngBoost);
+        }
         cumulativeNumberSites+=numberOfSitesWithKMutations[i];
     }
     
@@ -319,7 +321,7 @@ void SimulateISMGenotypeforSite (TreeNode *p, int numberMutations, int site, int
             
             cumBranchLength = 0;
             
-            uniform = Random::randomUniformFromGsl2(randomGsl) * scaledTotalTreeLength;
+              uniform = Random::randomUniformFromGsl2(randomGsl) * scaledTotalTreeLength;
             
         }
         
@@ -387,6 +389,10 @@ void SimulateISMGenotypeforSite (TreeNode *p, int numberMutations, int site, int
                     
                     allSites[site].numMutationsMaternal++;
                     
+                    p->maternalSequence[site]= maternal_newstate;
+                                   
+                    p->paternalSequence[site]=p->anc1->paternalSequence[site];
+                    
                     p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site]+1;
                     
                     p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site];
@@ -398,6 +404,10 @@ void SimulateISMGenotypeforSite (TreeNode *p, int numberMutations, int site, int
                 else if (paternal_ancstate != paternal_newstate){
                     
                     allSites[site].numMutationsPaternal++;
+                    
+                    p->paternalSequence[site]= paternal_newstate;
+                                                     
+                    p->maternalSequence[site]=p->anc1->maternalSequence[site];
                     
                     p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site];
                     

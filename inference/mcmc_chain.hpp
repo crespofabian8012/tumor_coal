@@ -202,7 +202,7 @@ public:
     
     void AssignSequencesToPopulations( ProgramOptions& programOptions,
                                       int numNodes, int noisy,  int TotalNumSequences, int &numActiveGametes, int &nextAvailable,
-                                      int &labelNodes, char* SimulatePopulationObservedCellNames[], int doUseObservedCellNames, std::vector<int> &sampleSizes);
+                                      int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames, std::vector<int> &sampleSizes);
     
     void SetPopulationsBirthRate( long double  lambda);
     void GenerateEffectPopSizesFromPriors2( int noisy,     int doGenerateProportionsVector,const gsl_rng* randomGenerator);

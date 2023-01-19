@@ -34,6 +34,11 @@ void init_to_empty_str(char str[MAX_NAME])
     }
 }
 
+//TreeNode::TreeNode(const TreeNode& other): TreeNode(new TreeNode(*other.left.get())){
+//    
+//    
+//    
+//}
 TreeNode::TreeNode(int numSites):
 maternalSequence(numSites, 0),paternalSequence(numSites, 0),
 genotypeSequence(numSites, 0),numbersMutationsUnderSubtreePerSite(numSites, 0),

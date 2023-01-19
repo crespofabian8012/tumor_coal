@@ -35,7 +35,12 @@ class TreeNode
 {
 public:
     
-    TreeNode *left, *right, *anc1, *outgroup;
+    //TreeNode *left, *right;
+    //TreeNode *anc1, *outgroup;
+    
+    std::shared_ptr<TreeNode> left, right;
+    //std::weak_ptr<TreeNode> anc1, outgroup;
+    TreeNode * anc1, *outgroup;
     int         index, label, isOutgroup;
     long double      length, time,lengthModelUnits, timePUnits;
     long double      oldlength, oldtime, oldlengthModelUnits, oldtimePUnits;
@@ -60,19 +65,25 @@ public:
     int numberOfTipsSubTree;
     int numberOfNodesSubTree;
     std::vector<int> numberTipsByPopulation;
+    //TreeNode(): left(), right(){}
     TreeNode(int numSites);
+    //TreeNode(const TreeNode& other);
     void initNumberTipsVector(int numberClones);
     void resetNumberTipsVector(int numberClones);
     void initSequenceVectors(int size);
     ~TreeNode()
     {
-        delete left;
-        delete right;
-        delete anc1;
-        delete outgroup;
+        //delete left;
+        //delete right;
+        //delete anc1;
+        //delete outgroup;
     }
 };
 
 typedef TreeNode* pTreeNode;
-
+template <typename T>
+bool isNullWeakPointer(std::weak_ptr<T> const& weak) {
+    using wt = std::weak_ptr<T>;
+    return !weak.owner_before(wt{}) && !wt{}.owner_before(weak);
+}
 #endif /* tree_node_hpp */

@@ -437,13 +437,21 @@ int  Random::randomUniformIntegerInterval(const gsl_rng * r, int from, int to){
 void Random::allocateListRandomNumbersGenerators(std::vector< gsl_rng * > &vec)
 {
     const gsl_rng_type * T;
-    gsl_rng_env_setup();
+    //gsl_rng_env_setup();
     struct timeval tv; // Seed generation based on time
     unsigned long mySeed;
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 gen(rd()); // seed the generator
+    std::uniform_int_distribution<> distr(1, vec.size());
+    int temp;
+    long int seed = 183645922924;
     for(unsigned int i=0; i < vec.size(); i++)
     {
         gettimeofday(&tv,0);
-        mySeed = tv.tv_sec + tv.tv_usec;
+        temp = distr(gen) * Random::RandomUniform (&seed);
+        std::cout<<temp <<std::endl;
+        mySeed = temp*(temp % 10)*(tv.tv_sec) + (1-temp^2)*tv.tv_usec;
+        std::cout<<mySeed <<std::endl;
         //vec.at(i)= generateRandomObject(mySeed);
         T= gsl_rng_ranmar;
         vec.at(i) = gsl_rng_alloc (T);
@@ -730,6 +738,29 @@ long double Random::RandomBetaMeanVar(long double mean, long double var, long in
     
     
 }
+/********************* RandomBinomial ********************/
+/* Generates a random number from a Binomial distibution with sucess probabilty p
+    and n trials using the direct method (sum of Bernoulli variables).
+ */
+
+int Random::RandomBinomial (double prob, int numTrials,  bool useGSlgenerator, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost)
+    {
+    int i, sum;
+    sum = 0;
+        double U;
+    
+    for(i=0; i<numTrials; i++)
+        {
+            if (useGSlgenerator)
+                      U = randomUniformFromGsl2(rngGsl);
+                  else
+                      U = randomUniformBoost(rngBoost);
+        if(U < prob)
+            sum++;
+        }
+    return sum;
+    }
+
 /***************************** LogUniformDensity *******************************/
 /* Log Uniform distribution density */
 long double Distributions::LogUniformDensity(long double& value,  long double& from, long double& to)
@@ -777,4 +808,7 @@ long double  Distributions::LogDirichletDensity(std::vector<long double> &propor
 }
 double Distributions::PoissonPmf(const double k, const double lambda) {
   return exp(k * log(lambda) - lgamma(k + 1.0) - lambda);
+}
+double Distributions::BinomPmf(const int n, const int k,  const double x) {
+  return exp(lgamma(n + 1.0)-lgamma(k + 1.0)-lgamma(n-k + 1.0)+ k * log(x)  +(n-k)*log(1-x));
 }

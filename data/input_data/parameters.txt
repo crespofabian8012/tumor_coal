@@ -4,8 +4,8 @@
 
 [*** GLOBAL SETTINGS ***]
 [parameter values from priors (mandatory): 1:Yes, 0: NO]  q1
-[number of replicates per parameter values(mandatory)]	n3
-[number of sites] s30000
+[number of replicates per parameter values(mandatory)]	n100
+[number of sites whole genome] s100000
 
 [*** POPULATION GENETICS SETTINGS ***]
 [Haploid - Diploid (0-1) (mandatory)]	x2
@@ -76,7 +76,7 @@ c1
     							 	3 5 1 0
 
 [GENOTYPING PARAMETERS]
-[genotyping error; no reads] [G0.1 0.005] G0.0 0.0
+[genotyping error; no reads] G0.0001 0.0000005
 
 
 [NGS PARAMETERS]
@@ -86,12 +86,12 @@ c1
 
 [scWGA PARAMETERS]
 [mat/pat allelic imbalance] [I0.5]
-[fixed allelic dropout(ADO) from Beta distribution with mean and var] [D0.25 0.02] D0.0 0.0
+[fixed allelic dropout(ADO) from Beta distribution with mean and var] [D0.25 0.02] D0.00 0.00
 [ADO per cell from Beta distribution with mean and var] [X0.1 0.01]
-[ADO per site from Beta distribution with mean and var] [F0.1 0.01]
+[genotyping error per site from Beta distribution with mean and var] F0.1 0.01
 [haploid coverage] [R0.5]
 [amplification error] [A0.2 0.01 1] A0.0 0.0 1
-[sequencing error from Beta distribution with mean and var] [E0.1 0.005] E0.0 0.0
+[sequencing error from Beta distribution with mean and var] E0.1 0.005
 [doublet rate per cell] [B0.1]
 
 [used letters q n s  x  c  o t  k  # y  b  u d h j s m p w z f t  a r g  h v  I  D  x f R  A  E  B ]

@@ -92,28 +92,31 @@ void Output::WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int 
         {
             strcpy( p->cellName,"healthycell");
             strcpy( p->observedCellName,"healthycell");
+           
             fprintf (fpTrees, "healthycell:%10.9Lf",(p->anc1->time- p->time)*mutationRate);
         }
         else if (p->left == NULL && p->right == NULL)        /* tip of the tree */
         {
             snprintf(buffer, sizeof(buffer), "tip_i%05d_C%d_%d", p->index,p->indexOldClone,p->indexCurrentClone);
             strcpy( p->cellName,buffer);
+           
             fprintf (fpTrees, "tip_i%05d_C%d_%d:%10.9Lf", p->index,p->indexOldClone,p->indexCurrentClone,(p->anc1->time- p->time)*mutationRate);
             
         }
         else                                /* all ancester */
         {
             fprintf (fpTrees, "(");
-            WriteTree (p->left, mutationRate, fpTrees, doUseObservedCellNames);
+            WriteTree (p->left.get(), mutationRate, fpTrees, doUseObservedCellNames);
             if (p->right != NULL) // Miguel added this condition to consider an outgroup as this right node that is NULL (see add outgroup)
             {
                 fprintf (fpTrees, ",");
-                WriteTree (p->right, mutationRate, fpTrees, doUseObservedCellNames);
+                WriteTree (p->right.get(), mutationRate, fpTrees, doUseObservedCellNames);
             }
             if (p->anc1 !=NULL)
             {
                 snprintf(buffer, sizeof(buffer), "int_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
                 strcpy( p->cellName,buffer);
+                
                 fprintf (fpTrees, "):%10.9Lf", (p->anc1->time- p->time)*mutationRate);
             }
             if (p->anc1 ==NULL)  {
@@ -151,11 +154,11 @@ void Output::WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, c
         else                /* all ancester */
         {
             fprintf (fpTrees2, "(");
-            WriteTree2 (p->left, mutationRate, fpTrees2,  cellNames, indexCurrentCell, doUseObservedCellNames);
+            WriteTree2 (p->left.get(), mutationRate, fpTrees2,  cellNames, indexCurrentCell, doUseObservedCellNames);
             if (p->right != NULL) // Miguel added this condition to consider an outgroup as this right node that is NULL (see add outgroup)
             {
                 fprintf (fpTrees2, ",");
-                WriteTree2 (p->right, mutationRate, fpTrees2,  cellNames, indexCurrentCell, doUseObservedCellNames);
+                WriteTree2 (p->right.get(), mutationRate, fpTrees2,  cellNames, indexCurrentCell, doUseObservedCellNames);
             }
             if (p->anc1 != NULL)
             {
@@ -172,7 +175,7 @@ void Output::WriteTree2 ( TreeNode *p, double mutationRate, FILE    *fpTrees2, c
 /* Prints to timesfile a detailed description of
  the tree: nodes, times, branch lengths */
 
-void Output::PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector<TreeNode *> &nodes,  int thereisOutgroup)
+void Output::PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector<std::shared_ptr<TreeNode>> &nodes,  int thereisOutgroup)
 {
     /* there isn't recombination */
     fprintf (fpTimes, "\n\nDataset %d", replicate + 1);
@@ -187,7 +190,7 @@ void Output::PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std
 /* Prints to timesfile a detailed description of
  the tree: nodes, times, branch lengths */
 
-void Output::PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vector<TreeNode *> &nodes,  int thereisOutgroup)
+void Output::PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vector<std::shared_ptr<TreeNode>> &nodes,  int thereisOutgroup)
 {
     /* there isn't recombination */
     fprintf (fpTimes2, "\n\nDataset %d", replicate + 1);
@@ -202,7 +205,7 @@ void Output::PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  s
 /********************** ListTimes ************************/
 /* Writes a given tree description from ListTimes   */
 
-void Output::ListTimes (int j, double mutationRate, std::vector<TreeNode *> &nodes, FILE *fpTimes, int thereisOutgroup)
+void Output::ListTimes (int j, double mutationRate, std::vector<std::shared_ptr<TreeNode>> &nodes, FILE *fpTimes, int thereisOutgroup)
 {
     /* It does not list superfluous nodes */
     TreeNode  *p;
@@ -210,23 +213,23 @@ void Output::ListTimes (int j, double mutationRate, std::vector<TreeNode *> &nod
     
     do
     {
-        p = nodes[i];
+        p = nodes[i].get();
         
         if (p->isOutgroup == YES)     /* Outgroup */
             fprintf (fpTimes, "%13s   %4d   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.9Lf\n",
-                     "outgroup", Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits) * mutationRate);
+                     "outgroup", Label(p), p->index, Index(p->left.get()), Index(p->right.get()), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits) * mutationRate);
         
         else if (p->anc1 != NULL && p->left != NULL && p->right != NULL)        /* No MRCA, no tip (internal ancester) */
             fprintf (fpTimes, "%5s_C%dR%d(f)   %4d   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.9Lf\n",
-                     "int", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
+                     "int", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left.get()), Index(p->right.get()), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
         
         else if (p->anc1 != NULL && p->left == NULL && p->right == NULL)        /* tip */
             fprintf (fpTimes, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4Lf       %10.9Lf\n",
-                     "tip", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
+                     "tip", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left.get()), Index(p->right.get()), Index(p->anc1), p->timePUnits, p->anc1->timePUnits - p->timePUnits, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
         
         else if (p->nodeClass == 5 || (p->anc1 == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
             fprintf (fpTimes, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.4Lf      %10.4lf       %10.9lf\n",
-                     "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->timePUnits, 0.0, 0.0);
+                     "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left.get()), Index(p->right.get()), Index(p->anc1), p->timePUnits, 0.0, 0.0);
         
         else
             fprintf (fpTimes, "");
@@ -246,7 +249,7 @@ void Output::ListTimes (int j, double mutationRate, std::vector<TreeNode *> &nod
 /********************** ListTimes2 ************************/
 /* Writes a given tree description from ListTimes   */
 
-void Output::ListTimes2 (int j,  double mutationRate, std::vector<TreeNode *> &nodes,  FILE *fpTimes2, int thereisOutgroup)
+void Output::ListTimes2 (int j,  double mutationRate, std::vector<std::shared_ptr<TreeNode>> &nodes,  FILE *fpTimes2, int thereisOutgroup)
 {
     /* It does not list superfluous nodes */
     TreeNode  *p;
@@ -254,19 +257,19 @@ void Output::ListTimes2 (int j,  double mutationRate, std::vector<TreeNode *> &n
     
     do
     {
-        p = nodes[i];
+        p = nodes[i].get();
         if (p->isOutgroup == YES)     /* Outgroup */
             fprintf (fpTimes2, "%13s   %4d   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.9Lf\n",
-                     "outgroup", Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time) * mutationRate);
+                     "outgroup", Label(p), p->index, Index(p->left.get()), Index(p->right.get()), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time) * mutationRate);
         else if (p->anc1 != NULL && p->left != NULL && p->right != NULL)        /* No MRCA, no tip (internal ancester) */
             fprintf (fpTimes2, "%5s_C%dR%d(f)   %4d   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.9Lf\n",
-                     "int", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time)*mutationRate);
+                     "int", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left.get()), Index(p->right.get()), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time)*mutationRate);
         else if (p->anc1 != NULL && p->left == NULL && p->right == NULL)        /* tip */
             fprintf (fpTimes2, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9Lf       %10.9Lf\n",
-                     "tip", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time)*mutationRate);
+                     "tip", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left.get()), Index(p->right.get()), Index(p->anc1), p->time, p->anc1->time - p->time, (p->anc1->time - p->time)*mutationRate);
         else if (p->nodeClass == 5 || (p->anc1 == NULL && p->left != NULL && p->right != NULL))       /* root, MRCA */
             fprintf (fpTimes2, "%8s_C%dR%d   %4d   %4d  (%4d %4d %4d) |   %10.9Lf      %10.9lf       %10.9lf\n",
-                     "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left), Index(p->right), Index(p->anc1), p->time,0.0, 0.0);
+                     "root", p->indexOldClone, p->indexCurrentClone, Label(p), p->index, Index(p->left.get()), Index(p->right.get()), Index(p->anc1), p->time,0.0, 0.0);
         else
             fprintf (fpTimes2, "");
         i++;
@@ -307,14 +310,14 @@ int Output::Label (TreeNode *p)
 TreeNode * Output::getHealthyTip(TreeNode *treeRootInit)
 {
     if (treeRootInit !=NULL && treeRootInit->right!=NULL)
-        return treeRootInit->right;
+        return treeRootInit->right.get();
     else
         return NULL;
 }
 
 /***************************** PrintTrueFullHaplotypes *******************************/
 /* Prints observed/ML haplotypes for all sites (variable + invariable) to a file */
-void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName)
+void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName)
 {
     int         i, j;
     char *temp;
@@ -328,7 +331,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, 
         {
             fprintf (fp,"%d %d\n",numCells +1, numSites);
             for (i=0; i<numCells; i++){
-                p = nodes[i];
+                p = nodes[i].get();
                 /* print IUPAC haplotype */
                 if (p !=NULL){
                     
@@ -357,7 +360,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, 
         {
             fprintf (fp,"%d %d\n",2*(numCells+1), numSites);
             for (i=0; i<numCells; i++){
-                p = nodes[i];
+                p = nodes[i].get();
                 if (p !=NULL){
                     
                     if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -401,7 +404,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, 
         {
             for (i = 0; i < numCells; i++)
             {
-                p = nodes[i];
+                p = nodes[i].get();
                 
                 if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                     if (doUseObservedCellName == YES)
@@ -423,7 +426,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, 
             int numAddedTips=0;
             fprintf (fp,"%d %d\n",(numCells+1), numSites);
             for (i=0; i<numCells; i++){
-                p = nodes[i];
+                p = nodes[i].get();
                 if (p !=NULL){
                     
                     if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -458,7 +461,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, 
 
 /***************************** PrintSNVGenotypes *******************************/
 /* Prints variable genotypes  to a file */
-void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
+void Output::PrintSNVGenotypes (FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
                                 int numSNVs, std::vector<int> &SNVsites)
 {
     int         i, j;
@@ -470,10 +473,10 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
     {
         if (doPrintIUPAChaplotypes == YES)
                         {
-                           // fprintf (fp,"%d %d\n",numCells +1, numSites);
-                            fprintf (fp,"%d %d\n",numCells +1, numSNVs);
+                           
+                            fprintf (fp,"%d %d\n",numCells +1, numSites);
                             for (i=0; i<numCells; i++){
-                                p = nodes[i];
+                                p = nodes[i].get();
                                 /* print IUPAC haplotype */
                                 if (p !=NULL){
                                     
@@ -484,8 +487,9 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
                                             temp=p->cellName;
                                         fprintf (fp,"%-12s ", temp);
                                         //for (j=0; j<numSites; j++)
-                                        for (j=0; j<numSNVs; j++){
-                                            fprintf (fp, "%c", Utils::WhichIUPAC(p->maternalSequence[SNVsites[j]],p->paternalSequence[SNVsites[j]]));
+                                        for (j=0; j<numSites; j++){
+                                            //fprintf (fp, "%c", Utils::WhichIUPAC(p->maternalSequence[SNVsites[j]],p->paternalSequence[SNVsites[j]]));
+                                            fprintf (fp, "%c", Utils::WhichIUPAC(p->maternalSequence[j],p->paternalSequence[j]));
                                             }
                                         fprintf (fp,"\n");
                                         
@@ -494,15 +498,17 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
                             }
                             
                             fprintf (fp,"%-12s ", healthyTip->observedCellName);
-                            for (j=0; j<numSNVs; j++)
-                                fprintf (fp, "%c", Utils::WhichIUPAC(healthyTip->maternalSequence[SNVsites[j]],healthyTip->paternalSequence[SNVsites[j]]));
+                            for (j=0; j<numSites; j++){
+                                //fprintf (fp, "%c", Utils::WhichIUPAC(healthyTip->maternalSequence[SNVsites[j]],healthyTip->paternalSequence[SNVsites[j]]));
+                                fprintf (fp, "%c", Utils::WhichIUPAC(healthyTip->maternalSequence[j],healthyTip->paternalSequence[j]));
+                            }
                             fprintf (fp,"\n");
                         }
         else{
       // print maternal and paternal DNA haplotypes
-            fprintf (fp,"%d %d\n",2*(numCells+1), numSNVs);
+            fprintf (fp,"%d %d\n",2*(numCells+1), numSites);
             for (i=0; i<numCells; i++){
-                p = nodes[i];
+                p = nodes[i].get();
                 if (p !=NULL){
                     
                     if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -546,7 +552,7 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
         {
             for (i = 0; i < numCells; i++)
             {
-                p = nodes[i];
+                p = nodes[i].get();
                 
                 if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                     if (doUseObservedCellName == YES)
@@ -568,7 +574,7 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
             int numAddedTips=0;
             fprintf (fp,"%d %d\n",(numCells+1), numSites);
             for (i=0; i<numCells; i++){
-                p = nodes[i];
+                p = nodes[i].get();
                 if (p !=NULL){
                     
                     if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -598,7 +604,7 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
         }
     }
 }
-void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
+void Output::PrintFullGenotypes(FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
                         int numSNVs, std::vector<int> &SNVsites){
     
       int         i, j;
@@ -613,7 +619,7 @@ void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
                  {
                      fprintf (fp,"%d %d\n",numCells +1, numSites);
                      for (i=0; i<numCells; i++){
-                         p = nodes[i];
+                         p = nodes[i].get();
                          /* print IUPAC haplotype */
                          if (p !=NULL){
                              
@@ -640,7 +646,7 @@ void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
         // print maternal and paternal DNA haplotypes
               fprintf (fp,"%d %d\n",2*(numCells+1), numSites);
               for (i=0; i<numCells; i++){
-                  p = nodes[i];
+                  p = nodes[i].get();
                   if (p !=NULL){
                       
                       if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -684,7 +690,7 @@ void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
           {
               for (i = 0; i < numCells; i++)
               {
-                  p = nodes[i];
+                  p = nodes[i].get();
                   
                   if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                       if (doUseObservedCellName == YES)
@@ -706,7 +712,7 @@ void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode *> &nodes, TreeNo
               int numAddedTips=0;
               fprintf (fp,"%d %d\n",(numCells+1), numSites);
               for (i=0; i<numCells; i++){
-                  p = nodes[i];
+                  p = nodes[i].get();
                   if (p !=NULL){
                       
                       if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){

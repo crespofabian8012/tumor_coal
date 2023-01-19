@@ -38,19 +38,19 @@ namespace Output
  void WriteTree (TreeNode *p, double mutationRate, FILE    *fpTrees, int doUseObservedCellNames);
  void PrintTrees2(int replicate, TreeNode *treeRootInit,   FILE   *fpTrees2 , double mutationRate,char * ObservedCellNames[],int doUseObservedCellNames);
  void PrintTrees(int replicate, TreeNode *treeRootInit,   FILE  *fpTrees, double mutationRate, int doUseObservedCellNames);
- void PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector<TreeNode *> &nodes,  int thereisOutgroup);
- void PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vector<TreeNode *> &nodes,  int thereisOutgroup);
+ void PrintTimes(int replicate, FILE   *fpTimes, double mutationRate, std::vector<std::shared_ptr<TreeNode>> &nodes,  int thereisOutgroup);
+ void PrintTimes2(int replicate, FILE  *fpTimes2, double mutationRate,  std::vector<std::shared_ptr<TreeNode>> &nodes,  int thereisOutgroup);
 
- void PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName);
+ void PrintTrueFullHaplotypes (FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName);
 
-void PrintSNVGenotypes (FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
+void PrintSNVGenotypes (FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
                                 int numSNVs, std::vector<int> &SNVsites);
 
-void PrintFullGenotypes(FILE *fp, std::vector<TreeNode *> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
+void PrintFullGenotypes(FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
 int numSNVs, std::vector<int> &SNVsites);
 
- void ListTimes (int j, double mutationRate, std::vector<TreeNode *> &nodes, FILE *fpTimes, int thereisOutgroup);
- void ListTimes2 (int j,  double mutationRate, std::vector<TreeNode *> &nodes,  FILE *fpTimes2, int thereisOutgroup);
+ void ListTimes (int j, double mutationRate,std::vector<std::shared_ptr<TreeNode>> &nodes, FILE *fpTimes, int thereisOutgroup);
+ void ListTimes2 (int j,  double mutationRate, std::vector<std::shared_ptr<TreeNode>> &nodes,  FILE *fpTimes2, int thereisOutgroup);
  int Label (TreeNode *p);
  int Index (TreeNode *p);
  int Index (pll_rnode_t *p);

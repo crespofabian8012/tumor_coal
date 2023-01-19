@@ -19,7 +19,7 @@
  ################################################################################*/
 
 /*
- * simulator 
+ * simulator
  */
 #include <iostream>
 #include <string>
@@ -55,7 +55,7 @@ using namespace boost::program_options;
 
 int main(int argc, char *argv[])
 {
-    // default evolution model: JC
+    // default evolution model: GTJC16
     ProgramOptions programOptions;
     Files files;
     FilePaths filePaths;
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     Initialize( Eij, Mij, freq,  programOptions );
     char* input_path;
     
- 
+    
     if (argc == 2)
         input_path = argv[1];
     else{

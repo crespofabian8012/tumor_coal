@@ -664,13 +664,19 @@ void Utils::WhichMaternalPaternalIndex (int IUPACgenotypeIndex, int &allele1, in
         return;
             
          }
-   else // if (IUPACgenotypeIndex == 15)
+   else if (IUPACgenotypeIndex == 15)
    {
         allele1 = 3;
         allele2 = 2;
         return;
    }
-   
+   else{
+       
+       allele1 = -1;
+       allele2 = -1;
+       std::cout << "Invalid genotype code! "<<std::endl;
+       return;
+   }
   
 }
 /********************* parameterMultiplierMCMCmove ************************/

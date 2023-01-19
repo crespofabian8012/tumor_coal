@@ -251,25 +251,25 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 // programOptions.fixedADOrate =(double) argumentDouble;
                 
                 if (fscanf(stdin, "%lf %lf", &argumentDouble, &argumentDouble1) != 2)
-                               {
-                                   fprintf(stderr, "PARAMETER ERROR: Bad mean/var ADO error (%f ; %f)\n\n",argumentDouble, argumentDouble1);
-                                   Output::PrintUsage();
-                               }
+                {
+                    fprintf(stderr, "PARAMETER ERROR: Bad mean/var ADO error (%f ; %f)\n\n",argumentDouble, argumentDouble1);
+                    Output::PrintUsage();
+                }
                 programOptions.fixedADOrateMean= (double)argumentDouble;
                 programOptions.fixedADOrate =(double) argumentDouble;
                 programOptions.fixedADOrateVar= (double)argumentDouble1;
-                               
+                
                 if ( programOptions.fixedADOrateMean < 0 ||  programOptions.fixedADOrateMean > 1)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad mean for fixed ADO error rate(%f)\n\n",  programOptions.fixedADOrateMean);
-                                   Output::PrintUsage();
+                    Output::PrintUsage();
                 }
                 if ( programOptions.fixedADOrateVar < 0 || ( programOptions.fixedADOrateVar > 0 &&  programOptions.fixedADOrateVar >= ( programOptions.fixedADOrateMean * (1.0 -  programOptions.fixedADOrateMean))))
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad variance fixed ADO error rate(%f); it has to be < mean*(1-mean)\n\n",  programOptions.fixedADOrateMean);
-                                   Output::PrintUsage();
+                    Output::PrintUsage();
                 }
-                               
+                
                 break;
             case 'o':
                 if (fscanf(stdin, "%d", &argumentInt) < 0 )
@@ -493,7 +493,7 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 }
                 break;
             case 'E':
-             
+                
                 
                 programOptions.sequencingError= argumentDouble;
                 
@@ -505,11 +505,11 @@ void ReadParametersFromFile(ProgramOptions &programOptions, FilePaths &filePaths
                 programOptions.meanSequencingError= (double)argumentDouble;
                 programOptions.sequencingError =(double) argumentDouble;
                 programOptions.varSequencingError= (double)argumentDouble1;
-                                              
+                
                 if ( programOptions.meanSequencingError < 0 ||  programOptions.meanSequencingError > 1)
                 {
                     fprintf(stderr, "PARAMETER ERROR: Bad mean for fixed ADO error rate(%f)\n\n",  programOptions.fixedADOrateMean);
-                                                  Output::PrintUsage();
+                    Output::PrintUsage();
                 }
                 if ( programOptions.varSequencingError < 0 || ( programOptions.varSequencingError > 0 &&  programOptions.varSequencingError >= ( programOptions.meanSequencingError * (1.0 -  programOptions.meanSequencingError))))
                 {
@@ -931,7 +931,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
 
 {
     int i,j,z;
-    std::vector<TreeNode *> nodes;
+    std::vector<std::shared_ptr<TreeNode>> nodes;
     //char *newickString2;
     long double totalTreeLength;
     int    HEALTHY_ROOT, TUMOR_ROOT;
@@ -954,6 +954,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     long double *triNucFreq=NULL;
     double   cumNumSNVs = 0;
     double cumNumMU = 0;
+    double cumNumMUperSite = 0;
     long double cumNumMaternalMU = 0;
     long double cumNumPaternalMU = 0;
     double cumNumDEL = 0;
@@ -994,7 +995,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     
     
     std::vector<SiteStr> allSites(programOptions.numSites);
-
+    
     for (i=0; i< programOptions.numSites; i++)
     {
         allSites[i].alternateAlleles = new int[4];
@@ -1019,7 +1020,8 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     std::vector<double> varTimeGMRCA(programOptions.numDataSets);
     
     ////////////////////////////////////////////////////////////////////////////////////////////
-    TreeNode *init_root = new TreeNode(programOptions.numSites);
+    //TreeNode *init_root = new TreeNode(programOptions.numSites);
+    std::shared_ptr<TreeNode> init_root = std::make_shared<TreeNode>(programOptions.numSites);
     
     double cumNumCA = 0.0, meanNumCA = 0.0, cumNumMIG = 0.0, meanNumMIG = 0.0;
     double numEventsTot = 0.0, countTMRCA = 0.0,TMRCA = 0.0;
@@ -1027,6 +1029,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     int dataSetNum;
     long int seedFirst =  programOptions.seed;
     int  numMU = 0, numDEL = 0, numProposedMU = 0, numSNVmaternal = 0;
+    int maxNumberAvgMutationsPerSite = 30;
     programOptions.doUseObservedCellNames=NO;
     //int ***data;
     ValidateParameters(programOptions,CloneNameBegin , CloneSampleSizeBegin, ClonePopSizeBegin);
@@ -1040,6 +1043,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     PrepareLikelihoodOutputFile(filePaths, programOptions, files);
     PrepareMutationsOutputFile(filePaths, programOptions,files);
     writeHeaderLikelihoodFile(filePaths, programOptions,files, programOptions.numClones );
+    writeHeaderMutationsFile(filePaths, programOptions, files,  maxNumberAvgMutationsPerSite  );
     
     double totalTimeMRCAPUnits =0.0;
     double totalTimeMRCAModelTime = 0.0;
@@ -1047,11 +1051,14 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     double totalRootTimePUnits = 0.0;
     boost::random::mt19937 * rngBoost;
     
-    int maxNumberAvgMutationsPerSite = 10;
+    
     std::vector<double> poissonProbs(maxNumberAvgMutationsPerSite);
     std::vector<int> numberOfSitesWithKMutations(maxNumberAvgMutationsPerSite);
-    int cumNumVariableSites  = 0;
-  
+    int cumNumVariableSites = 0;
+    int totalSampleSize = 0;
+    int numberTimesVariableSitesPassedLimit = 0;
+    int totalNumberOfSeqErrors = 0;
+    
     for (dataSetNum = 0; dataSetNum < programOptions.numDataSets; dataSetNum++)// dataSetNum refers to a simulated tree number
     {
         
@@ -1059,13 +1066,13 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         
         if(programOptions.doSimulateFromPriors==YES){
             
-            SetPopulationParametersFromPriors( populations, programOptions.numClones,rngGslvector.at(dataSetNum), programOptions);
+            SetPopulationParametersFromPriors( populations, programOptions.numClones,rngGslvector.at(dataSetNum), programOptions, totalSampleSize);
             
         }
-         if (programOptions.fixedADOrateMean > 0 || programOptions.doADOcell == YES || programOptions.doADOsite == YES)
-         {
-               programOptions.fixedADOrate = Random::RandomBetaMeanVar(programOptions.fixedADOrateMean , programOptions.fixedADOrateVar , &(programOptions.seed), true, rngGslvector.at(dataSetNum),   rngBoost);
-         }
+        if (programOptions.fixedADOrateMean > 0 || programOptions.doADOcell == YES || programOptions.doADOsite == YES)
+        {
+            programOptions.fixedADOrate = Random::RandomBetaMeanVar(programOptions.fixedADOrateMean , programOptions.fixedADOrateVar , &(programOptions.seed), true, rngGslvector.at(dataSetNum),   rngBoost);
+        }
         if ( programOptions.meanGenotypingError > 0){
             
             programOptions.genotypingError = Random::RandomBetaMeanVar( programOptions.meanGenotypingError,  programOptions.varGenotypingError, &(programOptions.seed),  true, rngGslvector.at(dataSetNum),  rngBoost);
@@ -1073,12 +1080,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         }
         SetPopulationTimeOriginSTD(populations, programOptions.numClones, rngGslvector.at(dataSetNum), programOptions.doEstimateTimesOriginClones);
         InitNumberNodes( populations, programOptions);
-        //        programOptions.meanADOsite = 0.1;
-        //        programOptions.varADOsite=0.01;
-        //        programOptions.meanADOcell = 0.1;
-        //        programOptions.varADOcell=0.01;
-        //        programOptions.meanGenotypingError= 0.01;
-        //        programOptions.varGenotypingError=0.001;
+        
         
         InitListPossibleMigrations(populations, programOptions.numClones);
         InitPopulationsCoalescentEvents( programOptions.numClones,  populations);
@@ -1087,8 +1089,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         
         if (programOptions.doPrintSeparateReplicates == YES)
             PrepareSeparateFiles(0, 1, dataSetNum,  filePaths, programOptions, files, populations);
-        /* Reorganize seed per replicate */
-        //seed = seedFirst+dataSetNum+10;
+        
         numCA = numMU = numDEL = numProposedMU = TMRCA = numSNVmaternal = 0;
         
         programOptions.seed = seedFirst + dataSetNum * 1000;
@@ -1111,7 +1112,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         if (programOptions.noisy > 1)
             std::cout << "\n>> Start coalescent tree .. " << std::endl;
         
-        TreeNode *root = MakeCoalescenceTree2 (&programOptions.seed, populations,
+        std::shared_ptr<TreeNode> root = MakeCoalescenceTree2 (&programOptions.seed, populations,
                                                programOptions.numNodes,
                                                programOptions.numClones,
                                                programOptions,
@@ -1124,7 +1125,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                                                numEventsTot,
                                                nodes,
                                                treeTips,
-                                               init_root,
+                                               init_root.get(),
                                                programOptions.K,
                                                rngGslvector.at(dataSetNum),
                                                rngBoost
@@ -1146,36 +1147,31 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         varEvent[dataSetNum] = numCA + numMIG;
         // counterTime = counterTime + counterTimeInit;
         
-        /*************** output files *************/
-        //newickString2=NULL;
-        // newickString2 = toNewickString2 ( root, programOptions.mutationRate,     programOptions.doUseObservedCellNames);
-        // printf("\n newick = %s  \n", newickString2);
         
-       
         
-//        std::vector<SiteStr> allSites(numberVariableSites);
-//
-//        for (i=0; i< numberVariableSites; i++)
-//        {
-//            allSites[i].alternateAlleles = new int[4];
-//            if (!allSites[i].alternateAlleles)
-//            {
-//                fprintf (stderr, "Could not allocate the allSites[i].alternateAlleles[] structure\n");
-//                exit (-1);
-//            }
-//        }
-//
-//        std::vector<int> SNVsites(programOptions.numSites);
-//        std::vector<int> SFS(programOptions.numSites);
-//        std::vector<int> variantSites(programOptions.numSites);
-//        std::vector<int> DefaultModelSites(programOptions.numSites);
-//        std::vector<int> AltModelSites(programOptions.numSites);
+        //        std::vector<SiteStr> allSites(numberVariableSites);
+        //
+        //        for (i=0; i< numberVariableSites; i++)
+        //        {
+        //            allSites[i].alternateAlleles = new int[4];
+        //            if (!allSites[i].alternateAlleles)
+        //            {
+        //                fprintf (stderr, "Could not allocate the allSites[i].alternateAlleles[] structure\n");
+        //                exit (-1);
+        //            }
+        //        }
+        //
+        //        std::vector<int> SNVsites(programOptions.numSites);
+        //        std::vector<int> SFS(programOptions.numSites);
+        //        std::vector<int> variantSites(programOptions.numSites);
+        //        std::vector<int> DefaultModelSites(programOptions.numSites);
+        //        std::vector<int> AltModelSites(programOptions.numSites);
         
         if (programOptions.doPrintTrees == YES)
         {
             
-            Output::PrintTrees(dataSetNum, root, files.fpTrees->f, programOptions.mutationRate, programOptions.doUseObservedCellNames);
-            Output::PrintTrees2(dataSetNum, root, files.fpTrees2->f, programOptions.mutationRate, NULL, NO);
+            Output::PrintTrees(dataSetNum, root.get(), files.fpTrees->f, programOptions.mutationRate, programOptions.doUseObservedCellNames);
+            Output::PrintTrees2(dataSetNum, root.get(), files.fpTrees2->f, programOptions.mutationRate, NULL, NO);
         }
         if (programOptions.doPrintTimes == YES)
         {
@@ -1195,44 +1191,59 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             fclose(files.fpTimes2->f);
         }
         
-          totalTreeLength = SumBranches(root->left, programOptions.mutationRate, programOptions.healthyTipLabel);
-               double lambda_param_poisson = totalTreeLength * programOptions.mutationRate;
-               int numberVariableSites = 0;
-              double scale = 1;
-              int numberSitesWholeGenome;
-              double cumProbab = 0.0;
-              do{
-                  numberVariableSites = 0;
-                  if (scale<1.0){
-                     // programOptions.mutationRate = boost::math::gamma_q_inv(1.0-(1.0*numberVariableSites)/programOptions.numSitesWholeGenome, 11);
-                      fprintf (stderr, "\n scale %f", scale);
-                  }
-                  
-               for (unsigned int p = 1; p < maxNumberAvgMutationsPerSite; p++){
-                         
-                        poissonProbs[p] = Distributions::PoissonPmf(p, lambda_param_poisson);
-                        cumProbab+= poissonProbs[p];
-                        
-                      
-                     }
-                  if (cumProbab*programOptions.numSitesWholeGenome >programOptions.numSites){
-                      double temp = 1.0*programOptions.numSites / cumProbab;
-                      numberSitesWholeGenome = (int) temp;
-                  }
-                  else
-                      numberSitesWholeGenome = programOptions.numSitesWholeGenome;
-                 for (unsigned int p = 1; p < maxNumberAvgMutationsPerSite; p++){
-                     
-                   
-                    numberOfSitesWithKMutations[p] = (int)(poissonProbs[p]* numberSitesWholeGenome);
-                    numberVariableSites += numberOfSitesWithKMutations[p] ;
-                  
-                 }
-               numberOfSitesWithKMutations[0] =   (int)(Distributions::PoissonPmf(0, lambda_param_poisson)* numberSitesWholeGenome);
-              numberOfSitesWithKMutations[0] = numberSitesWholeGenome-numberVariableSites;
-              
-              }
-              while(numberVariableSites>programOptions.numSites);
+        char * newick =  toNewickString2 (root->left.get(), programOptions.mutationRate, false);
+        
+        //std::cout << newick<< std::endl;
+        
+        free(newick);
+        double sum = 0.0;
+        totalTreeLength = SumBranches(root->left.get(), programOptions.mutationRate, programOptions.healthyTipLabel, sum);
+        double lambda_param_poisson = totalTreeLength * programOptions.mutationRate;
+        // std::cout << "totalTreeLength " << totalTreeLength<< std::endl;
+        //std::cout << " scaled total tree length " << lambda_param_poisson<< std::endl;
+        // std::cout << "scaled truncal branch " << root->left->length*programOptions.mutationRate<< std::endl;
+        int numberVariableSites = 0;
+        
+        
+        
+        double cumProbab = 0.0;
+        
+        numberVariableSites = 0;
+        std::fill(numberOfSitesWithKMutations.begin(), numberOfSitesWithKMutations.end(), 0);
+      
+        for (unsigned int p = 0; p < maxNumberAvgMutationsPerSite; p++){
+            
+            poissonProbs[p] = Distributions::PoissonPmf(p, lambda_param_poisson);
+            if (p>1)
+                cumProbab+= poissonProbs[p];
+            
+            
+        }
+        
+        int cumNumberSites = 0;
+        double cumProb = 0.0;
+        for (unsigned int p = 0; p < maxNumberAvgMutationsPerSite; p++){
+            
+            
+            numberOfSitesWithKMutations[p] =  Random::RandomBinomial(poissonProbs[p]/ (1.0-cumProb), (programOptions.numSitesWholeGenome-cumNumberSites), true, rngGslvector.at(dataSetNum),  rngBoost);
+            
+            
+            if (p> 0)
+                numberVariableSites += numberOfSitesWithKMutations[p] ;
+            
+            if ((cumNumberSites + numberOfSitesWithKMutations[p]) >= programOptions.numSitesWholeGenome){
+                numberOfSitesWithKMutations[p] = programOptions.numSitesWholeGenome -cumNumberSites;
+                break;
+            }
+            if (p==(maxNumberAvgMutationsPerSite-1) && (cumNumberSites + numberOfSitesWithKMutations[p])< programOptions.numSitesWholeGenome ){
+                
+                numberOfSitesWithKMutations[p] = programOptions.numSitesWholeGenome- cumNumberSites ;
+                
+            }
+            cumNumberSites+= numberOfSitesWithKMutations[p];
+            cumProb+= poissonProbs[p];
+            
+        }
         
         cumNumVariableSites += numberVariableSites;
         treesList[dataSetNum]= new RootedTree(files.fpTrees->path, true);
@@ -1254,11 +1265,9 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             fprintf (stderr, "\n\tNumber of migration events     =   %d", numMIG);
         }
         
-       
+        
         cumNumMUperTree=0;
         
-        //free(newickString2);
-        //newickString2=NULL;
         
         for (z = 0; z < programOptions.MutationAssignNum; z++)
         {
@@ -1281,31 +1290,27 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                 allSites[i].numMutationsPaternal =0;
             }
             
-            InitializeGenomes (root, &(programOptions.seed), programOptions.alphabet, programOptions.doUserGenome, numberVariableSites,  allSites, programOptions.doGeneticSignatures,cumfreq, triNucFreq, NULL,
+            InitializeGenomes (root.get(), &(programOptions.seed), programOptions.alphabet, programOptions.doUserGenome, numberVariableSites,  allSites, programOptions.doGeneticSignatures,cumfreq, triNucFreq, NULL,
                                rngGslvector.at(dataSetNum),
                                rngBoost);
             
             HEALTHY_ROOT=root->label;
             TUMOR_ROOT=root->label;
             
-            //if (SNPrate > 0)
-            //           AddGermlineVariation (treeRootInit[0], &(programOptions.seed),  programOptions.numSites, SNPrate, allSites, programOptions.alphabet,  data,   HEALTHY_ROOT, cumMij );
             
-             EvolveGenotypesOnTree (root,  numberOfSitesWithKMutations,  numberVariableSites, &(programOptions.seed), programOptions.rateVarAmongSites,  programOptions.numSites,  allSites, programOptions.doGeneticSignatures, programOptions.alphaSites, programOptions.propAltModelSites ,  numDefaultModelSites, numAltModelSites, DefaultModelSites, AltModelSites,  totalTreeLength , numISMmutations, programOptions.numFixedMutations, numSNVmaternal,  programOptions.doSimulateFixedNumMutations,  programOptions.alphabet,  numMU, cumMij,  programOptions.altModel, programOptions.mutationRate, programOptions.doUserTree,  programOptions.doJC,  programOptions.doHKY,  programOptions.doGTR,
-             programOptions.doGTnR,  freqR,  freqY,
-                                    freqAG, freqCT, programOptions.titv, freq, Mij ,   Root,  Cijk, rngGslvector.at(dataSetNum),   rngBoost );
-          
+            
+            EvolveGenotypesOnTree (root->left.get(), totalSampleSize, numberOfSitesWithKMutations,  numberVariableSites, &(programOptions.seed), programOptions.rateVarAmongSites,  programOptions.numSites,  allSites, programOptions.doGeneticSignatures, programOptions.alphaSites, programOptions.propAltModelSites ,  numDefaultModelSites, numAltModelSites, DefaultModelSites, AltModelSites,  totalTreeLength , numISMmutations, programOptions.numFixedMutations, numSNVmaternal,  programOptions.doSimulateFixedNumMutations,  programOptions.alphabet,  numMU, cumMij,  programOptions.altModel, programOptions.mutationRate, programOptions.doUserTree,  programOptions.doJC,  programOptions.doHKY,  programOptions.doGTR,
+                                   programOptions.doGTnR,  freqR,  freqY,
+                                   freqAG, freqCT, programOptions.titv, freq, Mij ,   Root,  Cijk, rngGslvector.at(dataSetNum),   rngBoost );
+            
             writeLineMutationsFile( dataSetNum, filePaths,   programOptions, files ,  numberOfSitesWithKMutations,
-                                                   numberVariableSites,  numberSitesWholeGenome);
+                                   numberVariableSites,  programOptions.numSitesWholeGenome);
             
             
-//            EvolveSitesOnTree (root, MATERNAL, &(programOptions.seed), programOptions.rateVarAmongSites,  programOptions.numSites,  allSites, programOptions.doGeneticSignatures, programOptions.alphaSites, programOptions.propAltModelSites ,  numDefaultModelSites, numAltModelSites, DefaultModelSites, AltModelSites,  totalTreeLength , numISMmutations, programOptions.numFixedMutations, numSNVmaternal,  programOptions.doSimulateFixedNumMutations,  programOptions.alphabet,  numMU, cumMij,  programOptions.altModel, programOptions.altModelMutationRate, programOptions.doUserTree,  programOptions.doJC,  programOptions.doHKY,  programOptions.doGTR,
-//                               programOptions.doGTnR,  freqR,  freqY,
-//                               freqAG, freqCT, programOptions.titv, freq, Mij ,   Root,  Cijk, rngGslvector.at(dataSetNum),   rngBoost);
-//            EvolveSitesOnTree (root, PATERNAL, &(programOptions.seed), programOptions.rateVarAmongSites,  programOptions.numSites,  allSites, programOptions.doGeneticSignatures, programOptions.alphaSites, programOptions.propAltModelSites ,  numDefaultModelSites, numAltModelSites, DefaultModelSites, AltModelSites,  totalTreeLength , numISMmutations, numFixedMutations, numSNVmaternal,  programOptions.doSimulateFixedNumMutations,  programOptions.alphabet,  numMU, cumMij,  programOptions.altModel, programOptions.altModelMutationRate, programOptions.doUserTree,  programOptions.doJC,  programOptions.doHKY,  programOptions.doGTR,
-//                               programOptions.doGTnR,  freqR,  freqY,
-//                               freqAG, freqCT, programOptions.titv, freq, Mij,   Root,  Cijk, rngGslvector.at(dataSetNum),   rngBoost );
             cumNumMU += numMU;
+            cumNumMUperSite += (1.0*numMU) / numberVariableSites;
+             std::cout <<  " numberVariableSites "<< numberVariableSites<< std::endl;
+            std::cout <<  "(1.0*numMU) / numberVariableSites "<< (1.0*numMU) / numberVariableSites<< std::endl;
             cumNumMUSq += pow(numMU,2);
             
             computeStatisticsNumberMutations(allSites, numberVariableSites, numMaternalMU, numPaternalMU);
@@ -1316,21 +1321,21 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             
             
             if (programOptions.doPrintSeparateReplicates == YES)
-                PrepareSeparateFilesGenotypes(1, dataSetNum, z,
-                                              filePaths, programOptions,files, populations, 1.0*numMU/numberVariableSites );
+                PrepareSeparateFilesTrueGenotypes(1, dataSetNum, z,
+                                                  filePaths, programOptions,files, populations,   (1.0*numMU) / numberVariableSites,  numberVariableSites );
             
             if (programOptions.CNLOHrate > 0)
             {
                 /* evolve maternal CN_LOH */
                 if (programOptions.noisy > 2){
                     std::cout << "\n>> Evolving maternal CN_LOH ... "<<std::endl;
-                    EvolveCNLOHonTree (root, MATERNAL, numISMCNLOH, allSites, numberVariableSites, &(programOptions.seed), programOptions.CNLOHrate,  programOptions.mutationRate,  totalTreeLength, cumCNLOHbranchLength,  rngGslvector.at(dataSetNum),  rngBoost );
+                    EvolveCNLOHonTree (root->left.get(), MATERNAL, numISMCNLOH, allSites, numberVariableSites, &(programOptions.seed), programOptions.CNLOHrate,  programOptions.mutationRate,  totalTreeLength, cumCNLOHbranchLength,  rngGslvector.at(dataSetNum),  rngBoost );
                 }
                 
                 /* evolve paternal CN_LOH  */
                 if (programOptions.noisy > 2){
                     std::cout << "\n>> Evolving paternal CN_LOH ... " <<std::endl;
-                    EvolveCNLOHonTree (root, PATERNAL, numISMCNLOH, allSites, numberVariableSites, &(programOptions.seed),  programOptions.CNLOHrate,  programOptions.mutationRate,  totalTreeLength, cumCNLOHbranchLength,  rngGslvector.at(dataSetNum),  rngBoost );
+                    EvolveCNLOHonTree (root->left.get(), PATERNAL, numISMCNLOH, allSites, numberVariableSites, &(programOptions.seed),  programOptions.CNLOHrate,  programOptions.mutationRate,  totalTreeLength, cumCNLOHbranchLength,  rngGslvector.at(dataSetNum),  rngBoost );
                 }
                 
                 cumNumCNLOH += numCNLOH;
@@ -1342,13 +1347,13 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                 /* evolve maternal deletions */
                 if (programOptions.noisy > 2)
                     std::cout <<"\n>> Evolving maternal deletions ... "<< std::endl;
-                EvolveDeletionsOnTree (root, MATERNAL, allSites, numISMdeletions, numberVariableSites,   totalTreeLength, programOptions.mutationRate, programOptions.deletionRate, numDEL,  &(programOptions.seed), rngGslvector.at(dataSetNum),  rngBoost);
+                EvolveDeletionsOnTree (root->left.get(), MATERNAL, allSites, numISMdeletions, numberVariableSites,   totalTreeLength, programOptions.mutationRate, programOptions.deletionRate, numDEL,  &(programOptions.seed), rngGslvector.at(dataSetNum),  rngBoost);
                 
                 /* evolve paternal deletions  */
                 if (programOptions.noisy > 2)
                     std::cout << "\n>> Evolving paternal deletions ... "<< std::endl;
                 
-                EvolveDeletionsOnTree (root, PATERNAL, allSites, numISMdeletions, numberVariableSites,   totalTreeLength, programOptions.mutationRate, programOptions.deletionRate, numDEL,  &(programOptions.seed), rngGslvector.at(dataSetNum),  rngBoost);
+                EvolveDeletionsOnTree (root->left.get(), PATERNAL, allSites, numISMdeletions, numberVariableSites,   totalTreeLength, programOptions.mutationRate, programOptions.deletionRate, numDEL,  &(programOptions.seed), rngGslvector.at(dataSetNum),  rngBoost);
                 
                 
                 cumNumDEL += numDEL;
@@ -1356,7 +1361,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             }
             
             
-            numSNVs = countTrueVariants (nodes, numberVariableSites, programOptions.numCells, root, allSites, variantSites, SNVsites );
+            numSNVs = countTrueVariants (nodes, numberVariableSites, programOptions.numCells, root.get(), allSites, variantSites, SNVsites );
             
             cumNumSNVs+=numSNVs;
             
@@ -1365,7 +1370,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpTrueHaplotypes->f, "[#%d]\n", z+1);
                 //
-                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes->f,  nodes, root , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
+                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes->f,  nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
             }
             
             
@@ -1382,8 +1387,10 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                 fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
             int pos = (dataSetNum)*programOptions.MutationAssignNum+z;
             assert(pos>=0);
-            msaList[pos] = new MSA( pll_phylip_parse_interleaved(phylip_file_true));
-            
+            if (numberVariableSites>0)
+                msaList[pos] = new MSA( pll_phylip_parse_interleaved(phylip_file_true));
+            else
+                msaList[pos] = nullptr;
             
             /* compute true likelihoods: coalescent tree and sequence likelihoods*/
             
@@ -1391,43 +1398,43 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             GenotypeErrorModel gtNoError("GT20", 0.0, 0.0, 16);
             
             if  (programOptions.computeLikelihoods){
-            
-            
-            partitionList[pos] = new Partition(treesList[dataSetNum]->numTips(),// numberTips
-                                               treesList[dataSetNum]->numInner(),//unsigned  int  clvBuffers
-                                               16,// model->states,//numberStates
-                                               (unsigned int)(msaList[pos]->getLength()),//unsigned  int  sites
-                                               1,//unsigned  int numberRateMatrices
-                                               treesList[dataSetNum]->numBranches(), // unsigned int probMatrices
-                                               RATE_CATS,//RATE_CATS, // unsigned  int  numberRateCats
-                                               treesList[dataSetNum]->numInner(), // unsigned  int numberScaleBuffers
-                                               0, //int statesPadded
-                                               false, false, false, false, false, false);
-            
-//            partitionList.emplace_back(
-//                                       treesList[dataSetNum]->numTips(),// numberTips
-//            treesList[dataSetNum]->numInner(),//unsigned  int  clvBuffers
-//            16,// model->states,//numberStates
-//            (unsigned int)(msaList[pos]->getLength()),//unsigned  int  sites
-//            1,//unsigned  int numberRateMatrices
-//            treesList[dataSetNum]->numBranches(), // unsigned int probMatrices
-//            RATE_CATS,//RATE_CATS, // unsigned  int  numberRateCats
-//            treesList[dataSetNum]->numInner(), // unsigned  int numberScaleBuffers
-//            0, //int statesPadded
-//            false, false, false, false, false, false);
-
-           treeLikList[dataSetNum] = new TreeLikelihood(*(partitionList[pos]), *(treesList[dataSetNum]),  *(msaList[pos]), gtNoError)
-            ;
-
-             logLikGenotypes = treeLikList[pos]->computeRootLogLikelihood();
                 
-            // assert(!isnan(logLikGenotypes) && !isinf(logLikGenotypes));
-                      
-            if (programOptions.noisy >1)
-                          std::cout << "\n The sequences likelihood without errors is " << logLikGenotypes<< std::endl;
-            
+                
+                partitionList[pos] = new Partition(treesList[dataSetNum]->numTips(),// numberTips
+                                                   treesList[dataSetNum]->numInner(),//unsigned  int  clvBuffers
+                                                   16,// model->states,//numberStates
+                                                   (unsigned int)(msaList[pos]->getLength()),//unsigned  int  sites
+                                                   1,//unsigned  int numberRateMatrices
+                                                   treesList[dataSetNum]->numBranches(), // unsigned int probMatrices
+                                                   RATE_CATS,//RATE_CATS, // unsigned  int  numberRateCats
+                                                   treesList[dataSetNum]->numInner(), // unsigned  int numberScaleBuffers
+                                                   0, //int statesPadded
+                                                   false, false, false, false, false, false);
+                
+                //            partitionList.emplace_back(
+                //                                       treesList[dataSetNum]->numTips(),// numberTips
+                //            treesList[dataSetNum]->numInner(),//unsigned  int  clvBuffers
+                //            16,// model->states,//numberStates
+                //            (unsigned int)(msaList[pos]->getLength()),//unsigned  int  sites
+                //            1,//unsigned  int numberRateMatrices
+                //            treesList[dataSetNum]->numBranches(), // unsigned int probMatrices
+                //            RATE_CATS,//RATE_CATS, // unsigned  int  numberRateCats
+                //            treesList[dataSetNum]->numInner(), // unsigned  int numberScaleBuffers
+                //            0, //int statesPadded
+                //            false, false, false, false, false, false);
+                
+                treeLikList[dataSetNum] = new TreeLikelihood(*(partitionList[pos]), *(treesList[dataSetNum]),  *(msaList[pos]), gtNoError)
+                ;
+                
+                logLikGenotypes = treeLikList[pos]->computeRootLogLikelihood();
+                
+                // assert(!isnan(logLikGenotypes) && !isinf(logLikGenotypes));
+                
+                if (programOptions.noisy >1)
+                    std::cout << "\n The sequences likelihood without errors is " << logLikGenotypes<< std::endl;
+                
             }
-         
+            
             
             //            if (msaList[pos]==NULL )
             //                fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
@@ -1439,23 +1446,61 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                                 numberVariableSites, programOptions.fixedADOrate,  programOptions.meanADOcell, programOptions.varADOcell, programOptions.meanADOsite, programOptions.varADOsite, treeTips,   &(programOptions.seed), rngGslvector.at(dataSetNum),   rngBoost);
             }
             
+            std::vector<double> binomialProbabOfKSeqErrors(2*totalSampleSize);
+            std::vector<int> numberOfSitesWithKSequencingErrors(2*totalSampleSize);
+            int totalNumberSitesWithSeqErrors = 0;
+            double cumProbab = 0.0;
+            int cumNumberSitesWithSeqErrors = 0;
+            for (unsigned int p = 0; p < 2*totalSampleSize; p++){
+                binomialProbabOfKSeqErrors[p] = Distributions::BinomPmf(2*totalSampleSize,p,programOptions.meanGenotypingError);
+                
+                
+                //                numberOfSitesWithKSequencingErrors[p] =  Random::RandomBinomial(binomialProbabOfKSeqErrors[p]/ (1.0-cumProb), (numberVariableSites-cumNumberSitesWithSeqErrors), true, rngGslvector.at(dataSetNum),  rngBoost);
+                
+                cumProbab+= binomialProbabOfKSeqErrors[p];
+                cumNumberSitesWithSeqErrors+= numberOfSitesWithKSequencingErrors[p];
+                numberOfSitesWithKSequencingErrors[p] =
+                Random::RandomPoisson (programOptions.numSitesWholeGenome*binomialProbabOfKSeqErrors[p], &(programOptions.seed), rngGslvector.at(dataSetNum),  rngBoost );
+                if (p>0)
+                    totalNumberSitesWithSeqErrors+=numberOfSitesWithKSequencingErrors[p];
+                
+                
+                //                if (cumNumberSitesWithSeqErrors >= numberVariableSites){
+                //                    numberOfSitesWithKMutations[p] = cumNumberSites - programOptions.numSitesWholeGenome;
+                //                    break;
+                //                }
+                //                if (p==(maxNumberAvgMutationsPerSite-1) && cumNumberSites< programOptions.numSitesWholeGenome ){
+                //
+                //                      numberOfSitesWithKMutations[p] = programOptions.numSitesWholeGenome- cumNumberSites ;
+                //
+                //                }
+                
+            }
+            int numberSeqErrorsAdded = 0;
             /* introduce errors directly in the genotypes */
-            if ( programOptions.meanGenotypingError > 0)
-                GenotypeError (treeTips, allSites,  programOptions.alphabet,  numberVariableSites,  programOptions.numCells, programOptions.meanGenotypingError , programOptions.varGenotypingError,  programOptions.genotypingError, Eij,  &(programOptions.seed),  rngGslvector.at(dataSetNum),  rngBoost);
+            if ( programOptions.meanGenotypingError > 0){
+                SequenceError (treeTips, allSites, programOptions.alphabet, numberVariableSites, programOptions.numCells,  programOptions.meanGenotypingError, totalSampleSize, numberOfSitesWithKSequencingErrors,  Eij, &(programOptions.seed),numberSeqErrorsAdded, rngGslvector.at(dataSetNum),  rngBoost);
+                
+                totalNumberOfSeqErrors+=numberSeqErrorsAdded;
+                //                GenotypeError (treeTips, allSites,  programOptions.alphabet,  numberVariableSites,  programOptions.numCells, programOptions.meanGenotypingError , programOptions.varGenotypingError,  programOptions.genotypingError, Eij,  &(programOptions.seed),  rngGslvector.at(dataSetNum),  rngBoost);
+                
+            }
             
-            
+            if (programOptions.doPrintSeparateReplicates == YES)
+                PrepareSeparateFilesGenotypes(1, dataSetNum, z,
+                                              filePaths, programOptions,files, populations, numMU, numberSeqErrorsAdded, numberVariableSites);
             
             if (programOptions.doPrintFullGenotypes == YES)
             {
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpFullGenotypes->f, "[#%d]\n", z+1);
-                Output::PrintFullGenotypes(files.fpFullGenotypes->f, nodes, root , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
+                Output::PrintFullGenotypes(files.fpFullGenotypes->f, nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
             }
-            if (programOptions.doPrintSNVgenotypes == YES && numSNVs > 0) /* we only print replicates with variation */
+            if (programOptions.doPrintSNVgenotypes == YES) /* we only print replicates with variation */
             {
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpSNVgenotypes->f, "[#%d]\n", z+1);
-                Output::PrintSNVGenotypes(files.fpSNVgenotypes->f, nodes, root , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
+                Output::PrintSNVGenotypes(files.fpSNVgenotypes->f, nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
             }
             
             if (programOptions.doPrintMLhaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
@@ -1496,42 +1541,43 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             
             
             if  (programOptions.computeLikelihoods){
-            pll_phylip_t * phylip_file_errors= pll_phylip_open(files.fpFullGenotypes->path,
-                                                               pll_map_phylip);
-            
-            if (!phylip_file_errors)
-                fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
-            
-            //            pll_msa_t *msa_errors =pll_phylip_parse_interleaved(phylip_file_errors);
-            //
-            //            if (!msa_errors)
-            //              fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
-            //
-            
-            
-            GenotypeErrorModel gtErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
-            
-            
-            
-            treeLikList[pos]->changeGenotypeErrorModel(&gtErrorModel);
-            
-            double logLikGenotypeErrors = treeLikList[pos]->computeRootLogLikelihood();
-            
-            if (programOptions.noisy >1)
-                std::cout << "\n The sequences likelihood with errors is " << logLikGenotypeErrors<< std::endl;
-            
-            writeLineLikelihoodFile( dataSetNum, filePaths, programOptions,files , populations,
-                                    logLikCoalTree,  logLikGenotypes,  logLikGenotypeErrors, totalTreeLength);
-            
-            pll_phylip_close(phylip_file_true);
-            pll_phylip_close(phylip_file_errors);
-            
+                pll_phylip_t * phylip_file_errors= pll_phylip_open(files.fpFullGenotypes->path,
+                                                                   pll_map_phylip);
+                
+                if (!phylip_file_errors)
+                    fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
+                
+                //            pll_msa_t *msa_errors =pll_phylip_parse_interleaved(phylip_file_errors);
+                //
+                //            if (!msa_errors)
+                //              fprintf (stderr, "\n ERROR: phylip file cannot be opened  to compute  Felsenstein likelihood!");
+                //
+                
+                
+                GenotypeErrorModel gtErrorModel("GT20", programOptions.meanGenotypingError,  1.0 - sqrt (1.0 - programOptions.fixedADOrate), 16);
+                
+                
+                treeLikList[pos]->changeGenotypeErrorModel(&gtErrorModel);
+                
+                double logLikGenotypeErrors = treeLikList[pos]->computeRootLogLikelihood();
+                
+                if (programOptions.noisy >1)
+                    std::cout << "\n The sequences likelihood with errors is " << logLikGenotypeErrors<< std::endl;
+                
+                writeLineLikelihoodFile( dataSetNum, filePaths, programOptions,files , populations,
+                                        logLikCoalTree,  logLikGenotypes,  logLikGenotypeErrors, totalTreeLength);
+                
+                pll_phylip_close(phylip_file_true);
+                pll_phylip_close(phylip_file_errors);
+                
             }
-          
+            
             
         }/* end of mutation simulation process */
+        nodes.clear();
+        treeTips.clear();
         
-   
+        
         
     }
     
@@ -1546,13 +1592,19 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     
     std::cout << "\n The average number of mutations per dataset is  "<< cumNumMU/ programOptions.numDataSets<< std::endl;
     
-    std::cout << "\n The average number of mutations per dataset per site is  "<< cumNumMU/ (programOptions.numDataSets *programOptions.numSites)<< std::endl;
+    std::cout << "\n The average number of mutations per dataset per total number of sites is  "<< cumNumMU/ (programOptions.numDataSets *programOptions.numSites)<< std::endl;
     
-    std::cout << "\n The average number of variable sites  is  "<< cumNumVariableSites/ (programOptions.numDataSets)<< std::endl;
+    std::cout << "\n The average number of mutations per dataset per variable site is  "<< cumNumMUperSite/ (programOptions.numDataSets)<< std::endl;
+    
+    std::cout << "\n The average number of variable sites  is  "<< (1.0*cumNumVariableSites)/ (programOptions.numDataSets)<< std::endl;
     
     std::cout << "\n The average number of maternal mutations per  branch per site is  "<< cumNumMaternalMU/ (programOptions.numDataSets*programOptions.numSites*(2*(programOptions.TotalNumSequences+1)-2))<< std::endl;
     
     std::cout << "\n The average number of paternal mutations per  branch per site is  "<< cumNumPaternalMU/ (programOptions.numDataSets*programOptions.numSites*(2*(programOptions.TotalNumSequences+1)-2))<< std::endl;
+    
+    std::cout << "\n The  number of times variables sites  greater than limit was  "<< numberTimesVariableSitesPassedLimit<< std::endl;
+    
+    std::cout << "\n The  average number of seq errors "<< (1.0*totalNumberOfSeqErrors)/(programOptions.numDataSets) << std::endl;
     
     fclose(files.fpLikelihood->f);
     fclose(files.fpMutations->f);
@@ -1562,7 +1614,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     {
         free( allSites[i].alternateAlleles);
     }
-
+    
     
     
     for (auto ptr : partitionList)
@@ -1577,10 +1629,10 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     }
     treesList.clear();
     
-
+    
     treeLikList.clear();
     
-  
+    
     
     return 0;
 }
@@ -1603,8 +1655,6 @@ void ValidateParameters(ProgramOptions &programOptions,
     }
     for (int j = 0; j < programOptions.numClones; j++)
     {
-        // Checking
-        //  if (numClones <  CloneNameBegin[j] )
         if (programOptions.numClones <  CloneNameBegin[j] )
         {
             fprintf (stderr, "PARAMETER ERROR: Clon (%d) is higher than the number of clones (%d). (d)\n\n",  CloneNameBegin[j], programOptions.numClones);
@@ -1685,10 +1735,10 @@ void InitNumberNodes( std::vector<Population *> &populations, ProgramOptions &pr
     
     programOptions.numCells = programOptions.TotalNumSequences;
 }
-void SetPopulationParametersFromPriors(std::vector<Population *> &populations, int numClones,const gsl_rng* rngGsl, ProgramOptions &programOptions){
+void SetPopulationParametersFromPriors(std::vector<Population *> &populations, int numClones,const gsl_rng* rngGsl, ProgramOptions &programOptions, int& totalSampleSize){
     
     Population *p;
-    programOptions.mutationRate=Random::RandomExponential(100, NULL, true, rngGsl, NULL);
+    programOptions.mutationRate=Random::RandomExponential(1, NULL, true, rngGsl, NULL);
     unsigned int  total_sample = 0;
     for (size_t i = 0; i < numClones; ++i) {
         p = populations[i];
@@ -1696,7 +1746,7 @@ void SetPopulationParametersFromPriors(std::vector<Population *> &populations, i
         p->sampleSize = Random::randomUniformIntegerInterval(rngGsl, programOptions.minSampleSize, maxSampleSize );
         p->numGametes = p->sampleSize;
         p->numActiveGametes = p->sampleSize;
-        p->delta = Random::RandomExponential(0.01, NULL, true, rngGsl, NULL);
+        p->delta = Random::RandomExponential(0.02, NULL, true, rngGsl, NULL);
         
         total_sample+= p->sampleSize;
     }
@@ -1705,6 +1755,7 @@ void SetPopulationParametersFromPriors(std::vector<Population *> &populations, i
         p->x  =  p->sampleSize / (1.0*total_sample);
         p->theta =  programOptions.mutationRate;
     }
+    totalSampleSize =total_sample;
 }
 /********************** resetMigrationsList ************************/
 /* reset list of migrations*/
@@ -1732,7 +1783,7 @@ Population* ChooseFatherPopulation(std::vector<Population*> &populations, int nu
         pij = ProbabilityCloneiFromClonej2(PopChild, p, populations, numClones, K);
         
         if (noisy>1){
-        std::cout<<  "\n the probability that  population with order  "<<p->order << " is the source of population with order "<< PopChild->order << " is " << pij<< std::endl;
+            std::cout<<  "\n the probability that  population with order  "<<p->order << " is the source of population with order "<< PopChild->order << " is " << pij<< std::endl;
         }
         cumProb[j - PopChild->order] = cumProb[j - 1 - PopChild->order] + pij;
         
@@ -1759,14 +1810,15 @@ Population* ChooseFatherPopulation(std::vector<Population*> &populations, int nu
 }
 /********************** AssignCurrentSequencesToPopulation************************/
 /* assign current sequences to  population  */
-void AssignCurrentSequencesToPopulation(std::vector<Population *> &populations, std::vector<TreeNode*> &nodes,
+void AssignCurrentSequencesToPopulation(std::vector<Population *> &populations, std::vector<std::shared_ptr<TreeNode>> &nodes,
                                         ProgramOptions &programOptions,
                                         int numClones, int numNodes, int noisy,  int TotalNumSequences,
                                         int &numActiveGametes, int &nextAvailable,
                                         int &labelNodes, char* ObservedCellNames[], int doUseObservedCellNames)
 {
     Population *pop;
-    TreeNode *p;
+    std::shared_ptr<TreeNode> p;
+    //TreeNode *p;
     int i, j;
     double currentSampleSize;
     numActiveGametes = 0;
@@ -1855,19 +1907,7 @@ void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  i
         cumPopulPart[k] = cumPopulPart[k - 1] + 1.0 / (popI->numActiveGametes);
     
     
-    //    for (k = 0; k < numClones; k++)
-    //    {
-    //        pop = *(populations + k);
-    //        w = w + (pop->numActiveGametes);
-    //        //fprintf (stderr, "\nClone %d with %d gametes. w=%d ", k, pop->numActiveGametes, w);
-    //    }
-    //    if (w != numActiveGametes)
-    //    {
-    //        fprintf (stderr, "\nError. The sum of partial active gametes is different to the total number of gametes, w %d != numActiveGametes %d. In Coalescence.", w, numActiveGametes);
-    //        exit (-1);
-    //    }
     random = Random::randomUniformFromGsl2(rngGsl);
-    //fprintf (stderr, "\nran = %lf ", ran);
     *firstInd = bbinClones(random, cumPopulPart, popI->numActiveGametes)-1;
     
     
@@ -1892,11 +1932,11 @@ void ChooseRandomIndividual(int *firstInd,   int numClones, Population *popI,  i
 
 /********************** MakeCoalescenceEvent************************/
 /*  choose 2  active individuals  to make coalescent  */
-void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *popI, std::vector<TreeNode *> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
+void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *popI, std::vector<std::shared_ptr<TreeNode>> &nodes, int numClones, long int* seed, int noisy,   int &numActiveGametes, int &nextAvailable,
                           int &labelNodes, double &currentTime, int &numNodes, const gsl_rng * rngGsl)
 {
-
-    TreeNode  *p, *q, *r;
+    
+    std::shared_ptr<TreeNode>  p, q, r;
     int firstInd, secondInd=0, newInd=0;
     int choosePairIndividuals = YES;
     
@@ -1921,16 +1961,16 @@ void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *pop
     // link the nodes
     r->left = p;
     r->right = q;
-    p->anc1 = r;
-    q->anc1 = r;
+    p->anc1 = r.get();
+    q->anc1 = r.get();
     r->time = currentTime;
     
     assert(popI->x > 0);
     //if (popI->order == numClones-1)//oldest population or only one population and order=0
-     //   r->timePUnits = currentTime;
+    //   r->timePUnits = currentTime;
     //else
-        r->timePUnits = currentTime * (popI->x);
-
+    r->timePUnits = currentTime * (popI->x);
+    
     if (noisy > 1)
         fprintf (stderr, "\t|\tCurrentTime (input units) = %Lf", r->timePUnits);
     /* readjust active nodes */
@@ -1939,7 +1979,7 @@ void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *pop
     popI->idsActiveGametes[secondInd] = popI->idsActiveGametes[popI->numActiveGametes - 1];;
     numActiveGametes = numActiveGametes - 1; /* less 1 active node */
     
-
+    
     //update list ids nodes
     // popI->idsGametes[popI->numGametes] = newInd;
     popI->numGametes = popI->numGametes +1;
@@ -1966,14 +2006,14 @@ void MakeCoalescenceEvent(std::vector<Population*> &populations, Population *pop
         
     }
 }
-/********************** BuildTree************************/
+/********************** BuildCoalTree************************/
 /*  build tree */
-TreeNode *BuildTree(std::vector<Population* > &populations,
+std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
                     Population *CurrentPop,
                     long int *seed,
                     ProgramOptions &programOptions,
-                    std::vector<TreeNode *> &nodes,
-                    std::vector<TreeNode *> &treeTips,
+                    std::vector<std::shared_ptr<TreeNode>> &nodes,
+                    std::vector<TreeNode *> &treeTips,//vector to be filled
                     TreeNode *tumour_mrca,
                     int &nextAvailable,
                     int &newInd,
@@ -1984,8 +2024,11 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
     int i, j;
     int indexCurrentTip;
     int  foundSuperflousNode;
-    TreeNode *p, *q, *r;
-    TreeNode *treeRootInit;
+    TreeNode *p, *q;
+    TreeNode * r;
+
+    std::shared_ptr<TreeNode> treeRootInit;
+    //TreeNode *treeRootInit;
     /********** BUILDING TREES ***********/
     if (programOptions.noisy > 1)
     {
@@ -2001,7 +2044,7 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
         foundSuperflousNode = NO;
         for (i = 0; i < nextAvailable; i++) // available all the nodes
         {
-            p = nodes[i];
+            p = nodes[i].get();
             
             //fprintf (stderr, "\n\np->index = %d", p->index);
             
@@ -2026,11 +2069,12 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
             {
                 // this is a superflous node and can be removed(this superfluos nodes are the MRCA nodes of the demes
                 foundSuperflousNode = YES;
-                q = p->left;
+                q = p->left.get();
+       
                 r = p->anc1;
-                if (p->anc1->left == p)  // p->anc up, p->left down, total: up and down for left
+                if ((r->left).get() == p)  // p->anc up, p->left down, total: up and down for left
                 {
-                    r->left = q;
+                    r->left =  p->left;//q;
                     q->anc1 = r;
                     p->left = NULL;
                     p->anc1 = NULL;
@@ -2039,7 +2083,7 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
                 }
                 else
                 {
-                    r->right = q;
+                    r->right = p->left;//q;
                     q->anc1 = r;
                     p->left = NULL;
                     p->anc1 = NULL;
@@ -2052,22 +2096,23 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
             {
                 // this is a superflous node and can be removed
                 foundSuperflousNode = YES;
-                q = p->right;
+                q = p->right.get();
+                
                 r = p->anc1;
-                if (p->anc1->left == p)
+                if ((r->left).get() == p)
                 {
-                    r->left = q;
+                    r->left = p->right;//q;
                     q->anc1 = r;
                     p->right = NULL;
-                    p->anc1 = NULL;
+                    p->anc1 =   NULL;
                     //connectNodes(q, r->right, r);
                 }
                 else
                 {
-                    r->right = q;
+                    r->right = p->right;//q;
                     q->anc1 = r;
                     p->right = NULL;
-                    p->anc1 = NULL;
+                    p->anc1 =  NULL;
                     //connectNodes(r->left, q, r);
                 }
                 
@@ -2089,25 +2134,27 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
             {
                 // Seems to be the last coalescent event among sequences with non-ancestral material
                 // it is not superfluous, we just remove it
-                p->left->anc1 = NULL;
+                p->left->anc1 =  NULL;
                 //fprintf (stderr, "\n - this is a superflous node and can be removed (3)");
             }
-            else if (p->left == NULL && p->right != NULL && p->anc1 == NULL)
+            else if (p->left == NULL && p->right != NULL &&  p->anc1 == NULL)
             {
                 // not clear what this node could be doing, but we will remove it anyway
                 fprintf (stderr, "strange\n");
                 p->left = NULL;
-                p->right->anc1 = NULL;
+                p->right->anc1 =  NULL;
                 //fprintf (stderr, "\n - this is a superflous node and can be removed (4)");
             }
             else
             {
+              
                 fprintf (stderr, "You should not be here, I think\n");
-                fprintf (stderr, "%d %d-- %d %d %d\n", Output::Index(p), j, Output::Index(p->left), Output::Index(p->right), Output::Index(p->anc1));
+                fprintf (stderr, "%d %d-- %d %d %d\n", Output::Index(p), j, Output::Index(p->left.get()), Output::Index(p->right.get()), Output::Index(p->anc1));
             }
             if (p->anc1 != NULL)
             {//update length field
                 
+             
                 //   p->length = p->anc1->time- p->time;
                 p->length = (p->anc1->timePUnits- p->timePUnits);// * programOptions.mutationRate;
                 p->lengthModelUnits = (p->anc1->time- p->time);
@@ -2120,24 +2167,24 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
     
     /* about the MRCA */
     newInd=nextAvailable-1;
-    p = nodes[newInd];
+    p = nodes[newInd].get();
     //p = *nodes + *newInd; /* because the last one event is the last coalescence */
-   
+    
     
     if (programOptions.thereisOutgroup == NO)
     {
         //p = *nodes + *newInd;
-        p = nodes[newInd];
+        p = nodes[newInd].get();
         p->nodeClass = 5;
         tumour_mrca = p;
         //*treeRootInit = p;
         //treeRootInit[0] = p;
         p->anc1 = NULL;
-        treeRootInit = tumour_mrca;
+        treeRootInit = nodes[newInd];//tumour_mrca;
     }
     if (programOptions.thereisOutgroup == YES && programOptions.outgroupSelection > 0)  /*** Root and outgroup ***/
     {
-        p = nodes[newInd]; // MRCA
+        p = nodes[newInd].get(); // MRCA
         p->nodeClass = 4;
         
         if (programOptions.noisy > 1)
@@ -2157,13 +2204,14 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
             Output::PrintUsage();
         }
         //TreeNode* healthyRoot = *nodes + *nextAvailable;
-        TreeNode* healthyRoot = nodes[nextAvailable];
+        int idxHealthyRoot = nextAvailable;
+        TreeNode* healthyRoot = nodes[idxHealthyRoot].get();
         healthyRoot->index = nextAvailable;
         healthyRoot->label = labelNodes;
         labelNodes=labelNodes+1;
-        healthyRoot->left = p;//coalTreeMRCA;
+        healthyRoot->left = nodes[newInd];//p;//coalTreeMRCA;
         //        coalTreeMRCA->anc = healthyRoot;
-        p->anc1 = healthyRoot;
+        p->anc1 = nodes[nextAvailable].get();//healthyRoot;
         
         // healthyRoot->timePUnits = p->timePUnits * healthyRoot->effectPopSize;
         healthyRoot->nodeClass = 5;
@@ -2185,10 +2233,10 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
         healthyRoot->timePUnits = currentTime * CurrentPop->x;
         
         //fprintf (stderr, "\n Time of the healthy root %Lf\n",  healthyRoot->timePUnits);
-        
-        p->length = (p->anc1->timePUnits- p->timePUnits) ;//* programOptions.mutationRate;
+        TreeNode * ancestor = p->anc1;
+        p->length = (ancestor->timePUnits- p->timePUnits) ;//* programOptions.mutationRate;
         //*mutationRate;
-        p->lengthModelUnits = (p->anc1->time- p->time);
+        p->lengthModelUnits = (ancestor->time- p->time);
         //*mutationRate;
         
         healthyRoot->length = 0;
@@ -2199,15 +2247,15 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
         //
         //        /* connect the healthy ancestral cell with the tip healthy cell*/
         
-        TreeNode* healthyTip = nodes[nextAvailable];
+        TreeNode* healthyTip = nodes[nextAvailable].get();
         healthyTip->left = NULL;
         healthyTip->right = NULL;
         
         
         //connectNodes(NULL, NULL, healthyTip);
         
-        healthyTip->anc1 = healthyRoot;
-        healthyRoot->right = healthyTip;
+        healthyTip->anc1 = nodes[idxHealthyRoot].get(); //healthyRoot;
+        healthyRoot->right = nodes[nextAvailable];//healthyTip;
         
         double  healthyTipBranchLengthRatio = Random::randomUniformFromGsl2(rngGsl);
         
@@ -2219,7 +2267,7 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
         
         healthyTip->isOutgroup= YES;
         
-        treeRootInit = healthyRoot;
+        treeRootInit = nodes[idxHealthyRoot];//healthyRoot;
         
     }
     
@@ -2231,7 +2279,7 @@ TreeNode *BuildTree(std::vector<Population* > &populations,
     else
         intLabel = programOptions.TotalNumSequences;
     
-    RelabelNodes(treeRootInit, intLabel);
+    RelabelNodes(treeRootInit.get(), intLabel);
     
     return treeRootInit;
 }
@@ -2255,21 +2303,21 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
     strcpy (dir, "Results/");
 #endif
     //strcpy (resultsDir, dir);
-   std::stringstream ss;
+    std::stringstream ss;
     Population *popI;
-      for( size_t i = 0 ; i < populations.size(); i++)
-      {
-          popI = populations[i];
-          ss << std::fixed << std::setprecision(2) <<"G" << i << "=" << popI->delta << "_";
-          ss << "T" << i << "=" << popI->timeOriginSTD << "_";
-          ss << "n" << i << "=" << popI->sampleSize << "_";
-          ss << "m" << i << "=" << popI->theta << "_";
-          ss << "x" << i << "=" << popI->x;
-          ss << "_";
-          
-      }
+    for( size_t i = 0 ; i < populations.size(); i++)
+    {
+        popI = populations[i];
+        ss << std::fixed << std::setprecision(2) <<"G" << i << "=" << popI->delta << "_";
+        ss << "T" << i << "=" << popI->timeOriginSTD << "_";
+        ss << "n" << i << "=" << popI->sampleSize << "_";
+        ss << "m" << i << "=" << popI->theta << "_";
+        ss << "x" << i << "=" << popI->x;
+        ss << "_";
+        
+    }
     ss << "m=" << populations[0]->theta;
-   
+    
     if (programOptions.doPrintTrees == YES)
     {
         if (programOptions.doSimulateData ==YES)
@@ -2292,12 +2340,12 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
             if (programOptions.doSimulateFromPriors==YES){
                 
                 if (populations.size()==1){
-            sprintf(File,"%s/%s/%s_model_time_G=%.3Lf_T=%.3Lf_theta=%.3Lf_e=%.3f_d=%.3f_n=%d_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,programOptions.genotypingError,programOptions.fixedADOrate, populations[0]->sampleSize, paramSetNumber+1, replicate+1);
+                    sprintf(File,"%s/%s/%s_model_time_G=%.3Lf_T=%.3Lf_theta=%.5Lf_e=%.3f_d=%.3f_n=%d_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,programOptions.genotypingError,programOptions.fixedADOrate, populations[0]->sampleSize, paramSetNumber+1, replicate+1);
                 }
                 else{
                     
                     std::string s = ss.str();
-            //sprintf(File,"%s/%s/%s_%s_e=%.3f_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,"trees",programOptions.seqErrorRate, paramSetNumber+1, replicate+1);
+                    //sprintf(File,"%s/%s/%s_%s_e=%.3f_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,"trees",programOptions.seqErrorRate, paramSetNumber+1, replicate+1);
                     
                     sprintf(File,"%s/%s/%s_model_time_%s_e=%.3f_d=%.3f_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,s.c_str(),programOptions.genotypingError,programOptions.fixedADOrate, paramSetNumber+1, replicate+1);
                     
@@ -2324,15 +2372,15 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
             
             if (programOptions.doSimulateFromPriors==YES){
                 
-                if (populations.size()==1){ sprintf(File,"%s/%s/%s_physical_time_G=%.3Lf_T=%.3Lf_theta=%.3Lf_e=%.3f_d=%.3f_n=%d_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,programOptions.genotypingError, programOptions.fixedADOrate, populations[0]->sampleSize, paramSetNumber+1, replicate+1);
+                if (populations.size()==1){ sprintf(File,"%s/%s/%s_physical_time_G=%.3Lf_T=%.3Lf_theta=%.5Lf_e=%.3f_d=%.3f_n=%d_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,programOptions.genotypingError, programOptions.fixedADOrate, populations[0]->sampleSize, paramSetNumber+1, replicate+1);
                 }
                 else{
-                                   
-                         std::string s = ss.str();
-                           sprintf(File,"%s/%s/%s_physical_time_%s_e=%.3f_d=%.3f_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,s.c_str(), programOptions.genotypingError, programOptions.fixedADOrate,  paramSetNumber+1, replicate+1);
-                                   
-                        }
-               
+                    
+                    std::string s = ss.str();
+                    sprintf(File,"%s/%s/%s_physical_time_%s_e=%.3f_d=%.3f_%04d_%04d.tre", filePaths.resultsDir, filePaths.treeDir, filePaths.treeFile,s.c_str(), programOptions.genotypingError, programOptions.fixedADOrate,  paramSetNumber+1, replicate+1);
+                    
+                }
+                
             }
         }
         else
@@ -2369,14 +2417,14 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
             
             if (programOptions.doSimulateFromPriors==YES){
                 
-                if (populations.size()==1){ sprintf(File,"%s/%s/%s_model_time_G=%.3Lf_T=%.3Lf_theta=%.3Lf_e=%.3f_d=%.3f_n=%d_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,programOptions.genotypingError,programOptions.fixedADOrate, populations[0]->sampleSize, paramSetNumber+1, replicate+1);
+                if (populations.size()==1){ sprintf(File,"%s/%s/%s_model_time_G=%.3Lf_T=%.3Lf_theta=%.5Lf_e=%.3f_d=%.3f_n=%d_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,programOptions.genotypingError,programOptions.fixedADOrate, populations[0]->sampleSize, paramSetNumber+1, replicate+1);
                 }
-               else{
-                                               
+                else{
+                    
                     std::string s = ss.str();
                     sprintf(File,"%s/%s/%s_model_time_%s_e=%.3f_d=%.3f_%04d_%04d.tre", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile,s.c_str(), programOptions.genotypingError,programOptions.fixedADOrate, paramSetNumber+1, replicate+1);
-                                               
-                        }
+                    
+                }
             }
         }
         else
@@ -2399,14 +2447,14 @@ void PrepareSeparateFiles(int ChainNumber, int paramSetNumber, int replicate,con
             if (programOptions.doSimulateFromPriors==YES){
                 
                 if (populations.size()==1)
-                { sprintf(File,"%s/%s/%s_physical_time_Gamma=%.3Lf_T=%.3Lf_theta=%.3Lf_e=%.3f_d=%.3f_n=%d_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta, programOptions.genotypingError, programOptions.fixedADOrate, populations[0]->sampleSize, paramSetNumber+1, replicate+1);
+                { sprintf(File,"%s/%s/%s_physical_time_Gamma=%.3Lf_T=%.3Lf_theta=%.5Lf_e=%.3f_d=%.3f_n=%d_%04d_%04d.txt", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta, programOptions.genotypingError, programOptions.fixedADOrate, populations[0]->sampleSize, paramSetNumber+1, replicate+1);
                 }
                 else{
-                                                            
+                    
                     std::string s = ss.str();
                     sprintf(File,"%s/%s/%s_physical_time_%s_e=%.3f_d=%.3f_%04d_%04d.tre", filePaths.resultsDir, filePaths.timesDir, filePaths.timesFile,s.c_str(), programOptions.genotypingError, programOptions.fixedADOrate, paramSetNumber+1, replicate+1);
-                                                            
-                    }
+                    
+                }
             }
         }
         else
@@ -2471,7 +2519,7 @@ void PrepareMutationsOutputFile(const FilePaths &filePaths, const ProgramOptions
     char dir[MAX_NAME];
     /* contains the simulated tree in Newick format
      */
-  
+    
     // mkdir("Results", S_IRWXU);
     
     /* Create "Results" folder (with type S_IRWXU (read, write and
@@ -2622,64 +2670,149 @@ void writeLineLikelihoodFile( int  simulationNumber, const FilePaths &filePaths,
     if (simulationNumber <= programOptions.numDataSets -1)
         fprintf (files.fpLikelihood->f, "\n");
 }
+void writeHeaderMutationsFile(const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, int maxNumberAvgMutationsPerSite )
+{
+    std::string paramName;
+    std::time_t timeNow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    
+    fprintf (files.fpMutations->f, "#Tumor_coal\t");
+    fprintf (files.fpMutations->f, "#Generated %s\t\n", std::ctime(&timeNow));
+    
+    fprintf (files.fpMutations->f, "sim\t");
+    fprintf (files.fpMutations->f, "total_number_sites\t");
+    fprintf (files.fpMutations->f, "number_variable_sites\t");
+    
+    for (unsigned int i = 0; i < maxNumberAvgMutationsPerSite; ++i){
+        
+        paramName =  "#sites_" + std::to_string(i) ;
+        fprintf (files.fpMutations->f, "%s\t", paramName.c_str());
+        
+        
+    }
+    
+    fprintf (files.fpMutations->f, "\n");
+}
 void writeLineMutationsFile( int  simulationNumber, const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files ,  std::vector<int> &numberOfSitesWithKMutations,
-                             int numberVariableSites, int numberSitesWholeGenome
-                             )
+                            int numberVariableSites, int numberSitesWholeGenome
+                            )
 {
     
     std::string paramName;
-
-    
     fprintf (files.fpMutations->f, "%4d\t", simulationNumber);
     fprintf (files.fpMutations->f, "%2d\t", numberSitesWholeGenome);
-    fprintf (files.fpMutations->f, "%2d\t", numberSitesWholeGenome-numberVariableSites);
     fprintf (files.fpMutations->f, "%2d\t", numberVariableSites);
     
-
-   
+    
+    
     
     for (unsigned int i = 0; i < numberOfSitesWithKMutations.size(); ++i){
         
-       
+        
         fprintf (files.fpMutations->f, "%3d\t", numberOfSitesWithKMutations[i]);
-
+        
     }
     if (simulationNumber <= programOptions.numDataSets -1)
         fprintf (files.fpMutations->f, "\n");
 }
-/********************* PrepareSeparateFilesGenotypes **********************/
-/* Open individual genotypes files to output results */
-void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationAssignNum,
-                                   const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, std::vector<Population*> populations, double numMUperSite)
+/* Open individual true genotypes files to output results */
+void PrepareSeparateFilesTrueGenotypes(int paramSetNumber, int TreeNum,int MutationAssignNum,
+                                       const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, std::vector<Population*> populations, double numMUperSite, int numVariableSites)
 {
     char File[1000];
     char dir[1000];
     /* contains the simulated tree in Newick format
      */
     
-    //mkdir("Results", S_IRWXU); /* Create "Results" folder (with type S_IRWXU (read, write and execute)) */
-    //mkdir("Results",0);
+    
 #ifdef MAC
     strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
 #else
     strcpy (dir, "Results/");
 #endif
-    //strcpy (resultsDir, dir);
+    
     std::stringstream ss;
-       Population *popI;
-         for( size_t i = 0 ; i < populations.size(); i++)
-         {
-             popI = populations[i];
-             ss << std::fixed << std::setprecision(2) <<"G" << i << "=" << popI->delta << "_";
-             ss << "T" << i << "=" << popI->timeOriginSTD << "_";
-             ss << "n" << i << "=" << popI->sampleSize << "_";
-             ss << "m" << i << "=" << popI->theta << "_";;
-             ss << "x" << i << "=" << popI->x ;
-             if (i!= populations.size()-1){
-                 
-                 ss << "_";
-             }
-         }
+    Population *popI;
+    for( size_t i = 0 ; i < populations.size(); i++)
+    {
+        popI = populations[i];
+        ss << std::fixed << std::setprecision(2) <<"G" << i << "=" << popI->delta << "_";
+        ss << "T" << i << "=" << popI->timeOriginSTD << "_";
+        ss << "n" << i << "=" << popI->sampleSize << "_";
+        ss << "m" << i << "=" << popI->theta << "_";;
+        ss << "x" << i << "=" << popI->x ;
+        if (i!= populations.size()-1){
+            
+            ss << "_";
+        }
+    }
+    std::string s = ss.str();
+    if (programOptions.doSimulateData == YES){
+        
+        /* contains reference haplotypes (before errors)  for every cell */
+        if (programOptions.doPrintTrueHaplotypes == YES)
+        {
+            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.trueHaplotypesDir);
+            mkdir(File,S_IRWXU);
+            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.trueHaplotypesDir, filePaths.trueHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
+            
+            
+            if (programOptions.doSimulateFromPriors==YES){
+                
+                if (populations.size()==1){
+                    
+                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_n=%d_nMU=%04f_nS=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.trueHaplotypesDir, filePaths.trueHaplotypesFile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,populations[0]->sampleSize, numMUperSite, numVariableSites, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                }
+                else{
+                    
+                    sprintf(File,"%s/%s/%s_%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.trueHaplotypesDir, filePaths.trueHaplotypesFile, s.c_str(), paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    
+                }
+            }
+            // sprintf(File,"%s/%s/%s.%04d", resultsDir, trueHaplotypesDir, trueHaplotypesFile, replicate+1);
+            //if ((*fpTrueHaplotypes = fopen(File, "w")) == NULL)
+            strcpy (files.fpTrueHaplotypes->path,File);
+            if (openFile(&files.fpTrueHaplotypes->f, File) == -1)
+            {
+                fprintf (stderr, "Can't open \"%s\"\n", File);
+                exit(-1);
+            }
+        }
+        
+    }
+    
+}
+/********************* PrepareSeparateFilesGenotypes **********************/
+/* Open individual genotypes files to output results */
+void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationAssignNum,
+                                   const FilePaths &filePaths, const ProgramOptions &programOptions,Files &files, std::vector<Population*> populations, int numMU, int numSeqErrors, int numVariableSites)
+{
+    char File[1000];
+    char dir[1000];
+    /* contains the simulated tree in Newick format
+     */
+    
+    
+#ifdef MAC
+    strcpy (dir, ":Results:"); /* Copy the string in char variable dir = Results (char), is different mac vs windows */
+#else
+    strcpy (dir, "Results/");
+#endif
+    
+    std::stringstream ss;
+    Population *popI;
+    for( size_t i = 0 ; i < populations.size(); i++)
+    {
+        popI = populations[i];
+        ss << std::fixed << std::setprecision(2) <<"G" << i << "=" << popI->delta << "_";
+        ss << "T" << i << "=" << popI->timeOriginSTD << "_";
+        ss << "n" << i << "=" << popI->sampleSize << "_";
+        ss << "m" << i << "=" << popI->theta << "_";;
+        ss << "x" << i << "=" << popI->x ;
+        if (i!= populations.size()-1){
+            
+            ss << "_";
+        }
+    }
     std::string s = ss.str();
     if (programOptions.doSimulateData == YES)
     {
@@ -2695,26 +2828,26 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
                 
                 if (programOptions.fixedADOrate > 0 && programOptions.doADOcell == NO && programOptions.doADOsite == NO){
                     
-                     if (populations.size()==1){
-                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_d=%.3f_e=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta, numMUperSite,populations[0]->sampleSize, programOptions.fixedADOrate, programOptions.genotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                     }
-                     else{
-                          
-                         sprintf(File,"%s/%s/%s_%s_nMU=%.3f_d=%.3f_e=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile,s.c_str(),numMUperSite,programOptions.fixedADOrate,programOptions.genotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                     }
+                    if (populations.size()==1){
+                        sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_d=%.3f_e=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta, numMU, numVariableSites, populations[0]->sampleSize, programOptions.fixedADOrate, programOptions.genotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    }
+                    else{
+                        
+                        sprintf(File,"%s/%s/%s_%s_nMU=%d_nS=%d_d=%.3f_e=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile,s.c_str(),numMU,numVariableSites, programOptions.fixedADOrate,programOptions.genotypingError,numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    }
                     
                 }
                 /* variable ADO rate*/
                 else{
                     
                     if (populations.size()==1){
-                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_mADOc=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                    
+                        sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_mADOc=%.3f_mSeqE=%.3f_vSeqE=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU, numVariableSites, populations[0]->sampleSize,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        
                     }
                     else{
                         
-                        sprintf(File,"%s/%s/%s_%s_nMU=%.3f_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile,s.c_str(),numMUperSite,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                                           
+                        sprintf(File,"%s/%s/%s_%s_nMU=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVgenotypesDir, filePaths.SNVgenotypesFile,s.c_str(),numMU,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        
                         
                     }
                     
@@ -2748,25 +2881,25 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
                 if (programOptions.fixedADOrate > 0 && programOptions.doADOcell == NO && programOptions.doADOsite == NO){
                     
                     if (populations.size()==1){
-                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_d=%.3f_e=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize,programOptions.fixedADOrate,programOptions.genotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_d=%.3f_e=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU,numVariableSites, populations[0]->sampleSize,programOptions.fixedADOrate,programOptions.genotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                     }
                     else{
                         
-                        sprintf(File,"%s/%s/%s_%s_nMU=%.3f_d=%.3f_e=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile,s.c_str(),numMUperSite,programOptions.fixedADOrate,programOptions.genotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        sprintf(File,"%s/%s/%s_%s_nMU=%d_nS=%d_d=%.3f_e=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile,s.c_str(),numMU,numVariableSites, programOptions.fixedADOrate,programOptions.genotypingError,numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                         
                     }
                     
                 }
                 /* variable ADO rate*/
                 else{
-                     if (populations.size()==1){
-                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir,filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                     }
-                     else{
-                         
-                         sprintf(File,"%s/%s/%s_%s_nMU=%.3f_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir,filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile, s.c_str(),numMUperSite,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                         
-                     }
+                    if (populations.size()==1){
+                        sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir,filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU,numVariableSites, populations[0]->sampleSize,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    }
+                    else{
+                        
+                        sprintf(File,"%s/%s/%s_%s_nMU=%d_nS=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.5f_vSeqE=%.3f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir,filePaths.SNVhaplotypesDir, filePaths.SNVhaplotypesFile, s.c_str(), numMU, numVariableSites, programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        
+                    }
                 }
                 
             }
@@ -2780,35 +2913,7 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             }
         }
         
-        /* contains reference haplotypes (before errors)  for every cell */
-        if (programOptions.doPrintTrueHaplotypes == YES)
-        {
-            sprintf(File,"%s/%s", filePaths.resultsDir, filePaths.trueHaplotypesDir);
-            mkdir(File,S_IRWXU);
-            sprintf(File,"%s/%s/%s_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.trueHaplotypesDir, filePaths.trueHaplotypesFile, paramSetNumber+1, TreeNum+1, MutationAssignNum +1);
-            
-            
-            if (programOptions.doSimulateFromPriors==YES){
-                
-                if (populations.size()==1){
-                
-                sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.trueHaplotypesDir, filePaths.trueHaplotypesFile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                }
-                else{
-                    
-                    sprintf(File,"%s/%s/%s_%s_nMU=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.trueHaplotypesDir, filePaths.trueHaplotypesFile, s.c_str(),numMUperSite, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                    
-                }
-            }
-            // sprintf(File,"%s/%s/%s.%04d", resultsDir, trueHaplotypesDir, trueHaplotypesFile, replicate+1);
-            //if ((*fpTrueHaplotypes = fopen(File, "w")) == NULL)
-            strcpy (files.fpTrueHaplotypes->path,File);
-            if (openFile(&files.fpTrueHaplotypes->f, File) == -1)
-            {
-                fprintf (stderr, "Can't open \"%s\"\n", File);
-                exit(-1);
-            }
-        }
+        
         
         /* contains ML haplotypes  for every cell */
         if (programOptions.doPrintMLhaplotypes == YES)
@@ -2820,10 +2925,10 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             // if ((*fpMLhaplotypes = fopen(File, "w")) == NULL)
             if (programOptions.doSimulateFromPriors==YES){
                 if (populations.size()==1){
-                sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.MLhaplotypesDir, filePaths.MLhaplotypesFile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.MLhaplotypesDir, filePaths.MLhaplotypesFile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU, numVariableSites, populations[0]->sampleSize, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                 }
                 else{
-                    sprintf(File,"%s/%s/%s_%s_nMU=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.MLhaplotypesDir, filePaths.MLhaplotypesFile, s.c_str(),numMUperSite, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    sprintf(File,"%s/%s/%s_%s_nMU=%d_nS=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.MLhaplotypesDir, filePaths.MLhaplotypesFile, s.c_str(),numMU,numVariableSites,  paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                     
                 }
             }
@@ -2851,12 +2956,12 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
                 if (programOptions.fixedADOrate > 0 && programOptions.doADOcell == NO && programOptions.doADOsite == NO){
                     
                     if (populations.size()==1){
-                    
-                    sprintf(File,"%s/%s/%s_Delta=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_d=%.3f_e=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullGenotypesDir, filePaths.fullGenotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize,programOptions.fixedADOrate,programOptions.genotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        
+                        sprintf(File,"%s/%s/%s_Delta=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_d=%.3f_e=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullGenotypesDir, filePaths.fullGenotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU,numVariableSites, populations[0]->sampleSize,programOptions.fixedADOrate,programOptions.genotypingError,numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                     }
                     else{
                         
-                         sprintf(File,"%s/%s/%s_%s_nMU=%.3f_d=%.3f_e=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullGenotypesDir, filePaths.fullGenotypesFile,s.c_str(),numMUperSite,programOptions.fixedADOrate,programOptions.genotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        sprintf(File,"%s/%s/%s_%s_nMU=%d_nS=%d_d=%.3f_e=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullGenotypesDir, filePaths.fullGenotypesFile,s.c_str(),numMU,numVariableSites, programOptions.fixedADOrate,programOptions.genotypingError,numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                         
                     }
                     
@@ -2865,10 +2970,10 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
                 else{
                     
                     if (populations.size()==1){
-                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir,filePaths.fullGenotypesDir, filePaths.fullGenotypesFile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir,filePaths.fullGenotypesDir, filePaths.fullGenotypesFile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU,numVariableSites, populations[0]->sampleSize,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError,numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                     }
                     else{
-                        sprintf(File,"%s/%s/%s_%s_nMU=%.3f_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir,filePaths.fullGenotypesDir, filePaths.fullGenotypesFile, s.c_str(),numMUperSite,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        sprintf(File,"%s/%s/%s_%s_nMU=%d_nS=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir,filePaths.fullGenotypesDir, filePaths.fullGenotypesFile, s.c_str(),numMU, numVariableSites, programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                         
                     }
                 }
@@ -2897,11 +3002,11 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
                 if (programOptions.fixedADOrate > 0 && programOptions.doADOcell == NO && programOptions.doADOsite == NO){
                     
                     if (populations.size()==1){
-                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_d=%.3f_e=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize,programOptions.fixedADOrate, programOptions.genotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_d=%.3f_e=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU,numVariableSites, populations[0]->sampleSize,programOptions.fixedADOrate, programOptions.genotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                     }
                     else{
                         
-                        sprintf(File,"%s/%s/%s_%s_nMU=%.3f_fADO=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile,s.c_str(),numMUperSite,programOptions.fixedADOrate,programOptions.meanGenotypingError,programOptions.varGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        sprintf(File,"%s/%s/%s_%s_nMU=%d_nS=%d_fADO=%.3f_mSeqE=%.3f_vSeqE=%.5f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile,s.c_str(),numMU,numVariableSites, programOptions.fixedADOrate,programOptions.meanGenotypingError,programOptions.varGenotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                     }
                     
                 }
@@ -2909,12 +3014,12 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
                 else{
                     
                     if (populations.size()==1){
-                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                    
+                        sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_nS=%d_n=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.5f_vSeqE=%.3f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile,populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU,numVariableSites, populations[0]->sampleSize,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        
                     }
                     else{
-                        sprintf(File,"%s/%s/%s_%s_nMU=%.3f_mADOc=%.3f_vADOc=%.3f_mSeqE=%.3f_vSeqE=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile,s.c_str(),numMUperSite,programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                                          
+                        sprintf(File,"%s/%s/%s_%s_nMU=%d_nS=%d_mADOc=%.3f_vADOc=%.3f_mSeqE=%.5f_vSeqE=%.3f_nSeq=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.fullHaplotypesDir, filePaths.fullHaplotypesFile,s.c_str(),numMU,numVariableSites, programOptions.meanADOcell,programOptions.varADOcell,programOptions.meanGenotypingError,programOptions.varGenotypingError,numSeqErrors, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                        
                         
                     }
                 }
@@ -2940,11 +3045,11 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             if (programOptions.doSimulateFromPriors==YES){
                 
                 if (populations.size()==1){
-                
-                sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.VCFdir, filePaths.VCFfile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    
+                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_n=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.VCFdir, filePaths.VCFfile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU,populations[0]->sampleSize, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                 }
                 else{
-                    sprintf(File,"%s/%s/%s_%s_nMU=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.VCFdir, filePaths.VCFfile, s.c_str(),numMUperSite, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    sprintf(File,"%s/%s/%s_%s_nMU=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.VCFdir, filePaths.VCFfile, s.c_str(),numMU, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
                     
                 }
             }
@@ -2967,13 +3072,13 @@ void PrepareSeparateFilesGenotypes(int paramSetNumber, int TreeNum,int MutationA
             
             if (programOptions.doSimulateFromPriors==YES){
                 
-               if (populations.size()==1){
-                sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.3Lf_nMU=%.3f_n=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.CATGdir, filePaths.CATGfile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMUperSite,populations[0]->sampleSize, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-               }
-               else{
-                   sprintf(File,"%s/%s/%s_%s_nMU=%.3f_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.CATGdir, filePaths.CATGfile, s.c_str(),numMUperSite, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
-                   
-               }
+                if (populations.size()==1){
+                    sprintf(File,"%s/%s/%s_G=%.3Lf_T=%.3Lf_theta=%.5Lf_nMU=%d_n=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.CATGdir, filePaths.CATGfile, populations[0]->delta,populations[0]->timeOriginSTD, populations[0]->theta,numMU,populations[0]->sampleSize, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                }
+                else{
+                    sprintf(File,"%s/%s/%s_%s_nMU=%d_%04d_%04d_%04d.txt", filePaths.resultsDir, filePaths.CATGdir, filePaths.CATGfile, s.c_str(),numMU, paramSetNumber+1,  TreeNum+1, MutationAssignNum +1);
+                    
+                }
             }
             
             
@@ -3040,6 +3145,7 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
             }
             else
             {
+               
                 anccell = p->anc1->label;
                 for (site=0; site<numSites; site++)
                 {
@@ -3061,33 +3167,31 @@ void InitializeGenomes (TreeNode *p, long int *seed,  int alphabet, int doUserGe
             //
             //            }
         }
-        InitializeGenomes (p->left, seed,   alphabet,  doUserGenome,  numSites, allSites,  doGeneticSignatures,  cumfreq,triNucFreq, cellNames, randomGsl, rngBoost);
-        InitializeGenomes (p->right, seed,  alphabet,  doUserGenome,  numSites, allSites,  doGeneticSignatures,  cumfreq,triNucFreq, cellNames, randomGsl, rngBoost);
+        InitializeGenomes (p->left.get(), seed,   alphabet,  doUserGenome,  numSites, allSites,  doGeneticSignatures,  cumfreq,triNucFreq, cellNames, randomGsl, rngBoost);
+        InitializeGenomes (p->right.get(), seed,  alphabet,  doUserGenome,  numSites, allSites,  doGeneticSignatures,  cumfreq,triNucFreq, cellNames, randomGsl, rngBoost);
     }
 }
 
 
 /* Returns the sum of the branch lengths for a given tree */
-double SumBranches (TreeNode *p, double mutationRate, std::string &healthyTipLabel)
+double SumBranches (TreeNode *p, double mutationRate, std::string &healthyTipLabel, double &sum)
 {
-    static double sum;
     
     if (p != NULL)
     {
+        
         if (p->anc1 == NULL)
             sum = 0;
         else{
-            //sum += (p->anc1->time- p->time)* mutationRate;//p->lengthModelUnits;
+            
+          
             sum += p->length;
-            //            sum += p->length;
+         
         }
-        //            sum += p->lengthModelUnits;//length;
-        //if (p->left!=NULL && strlen(p->left->cellName) > 0 && std::strcmp(p->left->cellName, healthyTipLabel.c_str())==0){
-            SumBranches (p->left,  mutationRate, healthyTipLabel);
-        //}
-        //if (p->right!=NULL && strlen(p->right->cellName) > 0 && std::strcmp(p->right->cellName, healthyTipLabel.c_str())==0){
-            SumBranches (p->right,   mutationRate, healthyTipLabel);
-        //}
+   
+        SumBranches (p->left.get(),  mutationRate, healthyTipLabel, sum);
+        SumBranches (p->right.get(),   mutationRate, healthyTipLabel, sum);
+        
         
     }
     
@@ -3096,7 +3200,7 @@ double SumBranches (TreeNode *p, double mutationRate, std::string &healthyTipLab
 /************************* MakeCoalescenceTree2 ************************/
 /* Builds a genealogy under the structured  ' */ /* this function go by events CA, MIG, CONV */
 
-TreeNode *MakeCoalescenceTree2 (long int *seed, std::vector<Population *> &populations,
+std::shared_ptr<TreeNode> MakeCoalescenceTree2 (long int *seed, std::vector<Population *> &populations,
                                 int &numNodes,
                                 int numClones,
                                 ProgramOptions &programOptions,
@@ -3107,9 +3211,9 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, std::vector<Population *> &popul
                                 int  &numMIG,
                                 int  &numCA,
                                 double &numEventsTot,
-                                std::vector<TreeNode *> &nodes, // empty vector
-                                std::vector<TreeNode *> &treeTips,
-                                TreeNode    *treeRootInit,
+                                std::vector<std::shared_ptr<TreeNode>> &nodes, // empty vector
+                                std::vector<TreeNode*> &treeTips,
+                                TreeNode* treeRootInit,
                                 long double K,
                                 const gsl_rng* randomGsl,
                                 boost::mt19937* rngBoost
@@ -3120,7 +3224,7 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, std::vector<Population *> &popul
     isMigration, whichClone, currentNumberAliveClones;
     int     labelNodes;
     double    currentTime, eventTime;
-    TreeNode  *p;
+    
     int     *numParcialActiveGametes;
     int         *fromClone;
     int         ThisCloneNumber, ThisOriginCloneNumber;
@@ -3163,8 +3267,8 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, std::vector<Population *> &popul
     nodes.clear();
     for (i = 0; i < numNodes; i++)
     {
-        p = new TreeNode(programOptions.numSites);
-        nodes.push_back(p);
+        //p = new TreeNode(programOptions.numSites);
+        nodes.emplace_back(std::make_shared<TreeNode>(programOptions.numSites));
     }
     AssignCurrentSequencesToPopulation(populations, nodes, programOptions, numClones, numNodes, programOptions.noisy, programOptions.TotalNumSequences, numActiveGametes,  nextAvailable,
                                        labelNodes, NULL, NO);
@@ -3205,7 +3309,7 @@ TreeNode *MakeCoalescenceTree2 (long int *seed, std::vector<Population *> &popul
         i = i + 1;
     }
     //BuildTree also updates the length field of nodes
-    TreeNode *root = BuildTree(populations,
+    std::shared_ptr<TreeNode>  root = BuildCoalTree(populations,
                                currentPop,
                                seed,
                                programOptions,
@@ -3244,7 +3348,7 @@ void SimulatePopulation( Population *popI, std::vector<Population*> &populations
                         int  &numMIG,
                         int  &numCA,
                         double &numEventsTot,
-                        std::vector<TreeNode *> &nodes,
+                        std::vector<std::shared_ptr<TreeNode>> &nodes,
                         int &nextAvailable,
                         int &numActiveGametes,
                         int &labelNodes,
@@ -3346,7 +3450,7 @@ void SimulatePopulation( Population *popI, std::vector<Population*> &populations
                 incomingPop = popI->immigrantsPopOrderedByModelTime[indexNextMigration].second;
                 
                 //r->indexOldClone = incommingPop->index;
-                p = nodes[incomingPop->nodeIdAncestorMRCA];
+                p = nodes[incomingPop->nodeIdAncestorMRCA].get();
                 
                 if (programOptions.noisy >1)
                     std::cout << "\n The incoming population "<< incomingPop->order << " to  population "<< popI->order << " with node "<< p->index<< " and time " <<  p->timePUnits << std::endl;
@@ -3394,7 +3498,7 @@ void SimulatePopulation( Population *popI, std::vector<Population*> &populations
                 if (popI->order < numClones - 1) // do not do it for the last clone
                 {
                     newInd = nextAvailable;
-                    r = nodes[newInd];    /* new ancestor */
+                    r = nodes[newInd].get();    /* new ancestor */
                     r->index = nextAvailable;
                     r->label = labelNodes;
                     labelNodes=labelNodes+1;
@@ -3407,21 +3511,21 @@ void SimulatePopulation( Population *popI, std::vector<Population*> &populations
                     
                     firstInd = nextAvailable - 1;
                     //p = nodes + activeGametes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
-                    p = nodes[firstInd]; // descendant node (previously generated node, nextAvailable - 1)
+                    p = nodes[firstInd].get(); // descendant node (previously generated node, nextAvailable - 1)
                     // link the nodes
-                    r->left = p;
+                    r->left = nodes[firstInd];//p;
                     r->right = NULL;
-                    p->anc1 = r;
+                    p->anc1 = nodes[newInd].get();//r;
                     r->time = currentTime;
                     
-                   // if (popI->order == numClones-1)//oldest population
+                    // if (popI->order == numClones-1)//oldest population
                     //{
-                   //     r->timePUnits = currentTime ;
-                   // }
+                    //     r->timePUnits = currentTime ;
+                    // }
                     
-                   // else{
-                        r->timePUnits = currentTime * popI->x;
-                        
+                    // else{
+                    r->timePUnits = currentTime * popI->x;
+                    
                     //}
                     popI->MRCA = p;
                     
@@ -3451,7 +3555,7 @@ void SimulatePopulation( Population *popI, std::vector<Population*> &populations
                 }
                 else  {//origin of oldest pop reached
                     popI->nodeIdAncestorMRCA=nextAvailable-1;//for the last population, nodeIdAncesterMRCA is the MRCA instead of ancester of MRCA
-                    r = nodes[nextAvailable-1];//popI->idsActiveGametes[0]
+                    r = nodes[nextAvailable-1].get();//popI->idsActiveGametes[0]
                     r->indexOldClone = r->indexCurrentClone = popI->index;
                     r->orderCurrentClone = popI->order;
                     popI->MRCA= r;
@@ -3479,8 +3583,8 @@ void RelabelNodes(TreeNode *p, int &intLabel)
 {
     if (p != NULL)
     {
-        RelabelNodes (p->left, intLabel);
-        RelabelNodes (p->right, intLabel);
+        RelabelNodes (p->left.get(), intLabel);
+        RelabelNodes (p->right.get(), intLabel);
         /*RelabelNodes (p->outgroup);*/
         if (p->left == NULL && p->right == NULL) /* is tip */
         {
@@ -3534,12 +3638,14 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
             //else{
             if  (doUseObservedCellNames == YES)
             {
+            
                 if (asprintf(&newickString,   "%s:%10.9Lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate)<0)
                     return NULL;
                 //snprintf(newickString,  size,  "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
                 return newickString;
             }
             else{
+            
                 if (asprintf(&newickString,   "%s:%10.9Lf",  p->cellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate)<0)
                     return NULL;
                 //snprintf(newickString,  size,  "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
@@ -3553,7 +3659,7 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
             // fprintf (fpTrees2, "(");
             if ( p->left != NULL  )
             {
-                left = toNewickString2 (p->left, mutationRate,   doUseObservedCellNames);
+                left = toNewickString2 (p->left.get(), mutationRate,   doUseObservedCellNames);
                 //right = toNewickString2 (p->right, mutationRate,   cellNames);
                 //snprintf(newickString, size, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate );
                 //                free(left);
@@ -3564,7 +3670,7 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
             }
             if ( p->right != NULL  )
             {
-                right = toNewickString2 (p->right, mutationRate,   doUseObservedCellNames);
+                right = toNewickString2 (p->right.get(), mutationRate,   doUseObservedCellNames);
                 //                snprintf(newickString, size, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate );
                 //                free(left);
                 //                left = NULL;
@@ -3572,12 +3678,14 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
                 //                right=NULL;
                 //                return newickString;
             }
+           
             outgroup =toNewickString2 (p->outgroup, mutationRate,   doUseObservedCellNames);
             if(left!= NULL && right!= NULL && p->anc1 != NULL)
             {
                 snprintf(buffer, sizeof(buffer), "int_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
                 strcpy( p->cellName,buffer);
                 
+               
                 if (asprintf(&newickString, "(%s,%s):%10.9Lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate )<0)
                     return NULL;
                 //snprintf(newickString, size, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate );
@@ -3932,7 +4040,7 @@ void computeUnfoldedISMSFS(int numSites,std::vector<SiteStr> &allSites,int numSN
         //}
     }
 }
-int countTrueVariants (std::vector<TreeNode *> &nodes,  int numSites, int numCells, TreeNode *HEALTHY_ROOT, std::vector<SiteStr> &allSites, std::vector<int> &variantSites, std::vector<int> &SNVsites )
+int countTrueVariants (std::vector<std::shared_ptr<TreeNode> > &nodes,  int numSites, int numCells, TreeNode *HEALTHY_ROOT, std::vector<SiteStr> &allSites, std::vector<int> &variantSites, std::vector<int> &SNVsites )
 {
     int        cell, site;
     int        nVariants = 0;
@@ -3943,7 +4051,7 @@ int countTrueVariants (std::vector<TreeNode *> &nodes,  int numSites, int numCel
     {   isVariant=NO;
         numberDiff=0;
         for (cell=0; cell<numCells; cell++)
-        {    p= nodes.at(cell);
+        {    p= nodes.at(cell).get();
             if (p->maternalSequence[site] != Definitions::DELETION && p->maternalSequence[site] != HEALTHY_ROOT->maternalSequence[site])
             {
                 isVariant=YES;
@@ -3969,7 +4077,7 @@ void computeStatisticsNumberMutations(std::vector<SiteStr> allSites, int numberV
     
     long double maternalTotal=0.0;
     long double paternalTotal=0.0;
-
+    
     
     for(size_t i =0; i< numberVariableSites;++i){
         

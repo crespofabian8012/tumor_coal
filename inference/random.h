@@ -46,7 +46,7 @@ namespace Random
     long double  RandomLogNormal( long double  mean, long double  dispersion, long int *seed);
     void  RandomDirichlet2 (long double  *vectorGamma, int vectorSize, long double  *outputVector, long int *seed);
     int RandomPoisson (long double  lambda, long int *seed,const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
-    int RandomBinomial (long double  prob, int numTrials, long int *seed);
+    int RandomBinomial (double prob, int numTrials,  bool useGSlgenerator, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
     int RandomUniformTo (int max, long int *seed,bool useGSlgenerator,const gsl_rng* rngGsl, boost::mt19937* rngBoost);
     long double  RandomLogUniform( long double  from, long double  to,  bool useGSlgenerator, const gsl_rng * rngGsl,  boost::mt19937* rngBoost);
     void  RandomDirichlet (long double  s, int vectorSize, std::vector<double> &outputVector, long int *seed,const gsl_rng *randomGsl, boost::mt19937* rngBoost);
@@ -86,7 +86,7 @@ long double LogUniformDensity(long double& value, long double& from, long double
 long double  LogDirichletDensity(std::vector<long double> &proportionsVector,  std::vector<long double> &concentrationVector, std::vector<long double> &dummy);
 long double LogBetaDensity(long double& value, long double& alpha, long double& beta);
 double PoissonPmf(const double k, const double lambda);
-
+double BinomPmf(const int n, const int k,  const double x);
 };
 #endif /* random_h */
 

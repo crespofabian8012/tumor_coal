@@ -41,8 +41,11 @@ void SimulateISMDNAforSite (TreeNode *p, int genome, int site, int doISMhaploid,
 void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, long double  totalTreeLength, std::vector<SiteStr> &allSites, int &numMU, long double  cumMij[4][4], long double  mutationRate,  long double  &cumBranchLength, long double  &uniform, int &mutationAdded,const  gsl_rng *randomGsl, boost::mt19937* rngBoost);
 
 
-void SimulateISMGenotypeforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, long double  totalTreeLength, std::vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4],long double  mutationRate, long double  &uniform, long double  &cumBranchLength, long double  &ran, const gsl_rng *randomGsl, boost::mt19937* rngBoost );
+void SimulateISMGenotypeforSite (TreeNode *p, int genome, int site, int doISMhaploid, long int *seed, long double  totalTreeLength, std::vector<SiteStr> &allSites, int  &numMU, long double  cumMij[4][4],long double  mutationRate, long double  &uniform, long double  &cumBranchLength, long double  &ran, const gsl_rng *randomGsl, boost::mt19937* rngBoost, bool &added );
 
+void GetTreeDepthFirstSearchOrder (TreeNode *p, long double  mutationRate, int &nextAvailableIndex, std::vector<TreeNode *> &dfs, std::vector<long double> &cumSumScaledBranchLengths,  std::vector<long double> &scaledBranchLengths,  double &cumScaledTreeLength, long double scaledTotalTreeLength);
+
+void PlaceMutation(TreeNode *p, int site, std::vector<SiteStr> &allSites, long int *seed, const gsl_rng *randomGsl, boost::mt19937* rngBoost);
 //void SimulateMk2 (TreeNode *p, int genome, long int *seed, vector<int> &AltModelSites, int  numAltModelSites, int doUserTree, int rateVarAmongSites, long double  altModelMutationRate, vector<SiteStr> &allSites, int &numMU);
 
 //void SimulateMk2forSite (TreeNode *p, int genome, int site, long int *seed, int doUserTree, int rateVarAmongSites, long double  altModelMutationRate, vector<SiteStr> &allSites, int &numMU );
@@ -52,7 +55,7 @@ void AllocateCellStructure(CellStr* cell, int numCells, int numSites);
 
 void EvolveSitesOnTree (TreeNode *treeRoot, int genome, long int *seed, int rateVarAmongSites, int numSites, std::vector<SiteStr> &allSites, int doGeneticSignatures, int alphaSites, int  propAltModelSites , int numDefaultModelSites, int numAltModelSites, std::vector<int> &DefaultModelSites, std::vector<int> &AltModelSites,  long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet, int  &numMU, long double  cumMij[4][4], int altModel, long double  altModelMutationRate, int doUserTree, int doJC, int doHKY, int doGTR, int doGTnR, long double  freqR, long double  freqY, long double  freqAG, long double  freqCT, double  titv, double  freq[4], double  Mij[4][4],   double  Root[],  double  Cijk[], const gsl_rng *randomGsl, boost::mt19937* rngBoost);
 
-void EvolveGenotypesOnTree (TreeNode *treeRoot,   std::vector<int> numberOfSitesWithKMutations, int numberVariableSites, long int *seed, int rateVarAmongSites, int numSites, std::vector<SiteStr> &allSites, int doGeneticSignatures, int alphaSites, int  propAltModelSites , int numDefaultModelSites, int numAltModelSites, std::vector<int> &DefaultModelSites, std::vector<int> &AltModelSites,  long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet, int  &numMU, long double  cumMij[4][4], int altModel, long double  altModelMutationRate, int doUserTree, int doJC, int doHKY, int doGTR, int doGTnR, long double  freqR, long double  freqY, long double  freqAG, long double  freqCT, double  titv, double  freq[4], double  Mij[4][4],   double  Root[],  double  Cijk[],
+void EvolveGenotypesOnTree (TreeNode *treeRoot, int totalSampleSize,  std::vector<int> numberOfSitesWithKMutations, int numberVariableSites, long int *seed, int rateVarAmongSites, int numSites, std::vector<SiteStr> &allSites, int doGeneticSignatures, int alphaSites, int  propAltModelSites , int numDefaultModelSites, int numAltModelSites, std::vector<int> &DefaultModelSites, std::vector<int> &AltModelSites,  long double  totalTreeLength , int &numISMmutations, int numFixedMutations, int numSNVmaternal, int doSimulateFixedNumMutations,  int alphabet, int  &numMU, long double  cumMij[4][4], int altModel, long double  altModelMutationRate, int doUserTree, int doJC, int doHKY, int doGTR, int doGTnR, long double  freqR, long double  freqY, long double  freqAG, long double  freqCT, double  titv, double  freq[4], double  Mij[4][4],   double  Root[],  double  Cijk[],
                             const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost  );
 
 //void SimulateFiniteDNAforSite (TreeNode *p, int genome, int site,vector<SiteStr> &allSites,  long int *seed, int rateVarAmongSites, long double  altModelMutationRate, int &numMU, int doJC, int doHKY, int doGTR, int doGTnR, long double  beta,  long double  kappa, long double  freqR, long double  freqY, long double  freq[4],  double  Root[],  double  Cijk[]);
@@ -66,6 +69,7 @@ void FillGenotypeGTJCSubstitutionMatrix (long double  ch_prob[16][16], long doub
 
 void FillRowQGTJCSubstitutionMatrix ( long double  row[16], int indexCurrentGenotype);
 
+int GetNewGenotypeIdx ( int indexCurrentGenotype, int selectedIdx);
 void JCmodel (long double  Pij[4][4], long double  branchLength, long double  beta);
 void HKYmodel (long double  Pij[4][4], long double  branchLength, long double  kappa, long double  freqR, long double  freqY, long double  beta,  double  freq[4]);
 void GTRmodel (long double  Pij[4][4], long double  branchLength,  double  Root[],  double  Cijk[]);
@@ -90,5 +94,7 @@ void FillErrorMatrix (long double  error_prob[4][4], double Eij[4][4]);
 
 void GenotypeError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError,  double varGenotypingError, double genotypingError, double Eij[4][4], long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
 
+
+void SequenceError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError, int sampleSize, std::vector<int> numberOfSitesWithKSequencingErrors, double Eij[4][4], long int *seed, int &numberSeqErrorsAdded, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
 //static void AddGermlineVariation (TreeNode *treeRoot,long int *seed, int numSites, long double  SNPrate, std::vector<SiteStr> &allSites, int alphabet, int HEALTHY_ROOT, long double  cumMij[4][4]);
 #endif /* mutationModel_h */

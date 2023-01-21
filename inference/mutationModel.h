@@ -45,7 +45,7 @@ void SimulateISMGenotypeforSite (TreeNode *p, int genome, int site, int doISMhap
 
 void GetTreeDepthFirstSearchOrder (TreeNode *p, long double  mutationRate, int &nextAvailableIndex, std::vector<TreeNode *> &dfs, std::vector<long double> &cumSumScaledBranchLengths,  std::vector<long double> &scaledBranchLengths,  double &cumScaledTreeLength, long double scaledTotalTreeLength);
 
-void PlaceMutation(TreeNode *p, int site, std::vector<SiteStr> &allSites, long int *seed, const gsl_rng *randomGsl, boost::mt19937* rngBoost);
+void PlaceMutationsOnBranchOnSite(TreeNode *p, int site, int numMutations, int  &numMU, std::vector<SiteStr> &allSites, long int *seed, const gsl_rng *randomGsl, boost::mt19937* rngBoost);
 //void SimulateMk2 (TreeNode *p, int genome, long int *seed, vector<int> &AltModelSites, int  numAltModelSites, int doUserTree, int rateVarAmongSites, long double  altModelMutationRate, vector<SiteStr> &allSites, int &numMU);
 
 //void SimulateMk2forSite (TreeNode *p, int genome, int site, long int *seed, int doUserTree, int rateVarAmongSites, long double  altModelMutationRate, vector<SiteStr> &allSites, int &numMU );

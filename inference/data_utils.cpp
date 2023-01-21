@@ -1029,7 +1029,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
     int dataSetNum;
     long int seedFirst =  programOptions.seed;
     int  numMU = 0, numDEL = 0, numProposedMU = 0, numSNVmaternal = 0;
-    int maxNumberAvgMutationsPerSite = 30;
+    int maxNumberAvgMutationsPerSite = 100;
     programOptions.doUseObservedCellNames=NO;
     //int ***data;
     ValidateParameters(programOptions,CloneNameBegin , CloneSampleSizeBegin, ClonePopSizeBegin);
@@ -1191,17 +1191,18 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             fclose(files.fpTimes2->f);
         }
         
-        char * newick =  toNewickString2 (root->left.get(), programOptions.mutationRate, false);
+        //char * newick =  toNewickString2 (root->left.get(), programOptions.mutationRate, false);
         
         //std::cout << newick<< std::endl;
         
-        free(newick);
+        //free(newick);
         double sum = 0.0;
         totalTreeLength = SumBranches(root->left.get(), programOptions.mutationRate, programOptions.healthyTipLabel, sum);
         double lambda_param_poisson = totalTreeLength * programOptions.mutationRate;
-        // std::cout << "totalTreeLength " << totalTreeLength<< std::endl;
-        //std::cout << " scaled total tree length " << lambda_param_poisson<< std::endl;
-        // std::cout << "scaled truncal branch " << root->left->length*programOptions.mutationRate<< std::endl;
+        std::cout << "totalTreeLength " << totalTreeLength<< std::endl;
+        std::cout << " scaled total tree length " << lambda_param_poisson<< std::endl;
+        std::cout << "scaled truncal branch " << root->left->length*programOptions.mutationRate<< std::endl;
+        std::cout << "scaled mutation rate " << programOptions.mutationRate<< std::endl;
         int numberVariableSites = 0;
         
         
@@ -1370,7 +1371,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpTrueHaplotypes->f, "[#%d]\n", z+1);
                 //
-                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes->f,  nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
+                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes->f,  treeTips, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
             }
             
             
@@ -1494,13 +1495,13 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             {
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpFullGenotypes->f, "[#%d]\n", z+1);
-                Output::PrintFullGenotypes(files.fpFullGenotypes->f, nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
+                Output::PrintFullGenotypes(files.fpFullGenotypes->f, treeTips, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
             }
             if (programOptions.doPrintSNVgenotypes == YES) /* we only print replicates with variation */
             {
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpSNVgenotypes->f, "[#%d]\n", z+1);
-                Output::PrintSNVGenotypes(files.fpSNVgenotypes->f, nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
+                Output::PrintSNVGenotypes(files.fpSNVgenotypes->f, treeTips, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
             }
             
             if (programOptions.doPrintMLhaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
@@ -1746,7 +1747,7 @@ void SetPopulationParametersFromPriors(std::vector<Population *> &populations, i
         p->sampleSize = Random::randomUniformIntegerInterval(rngGsl, programOptions.minSampleSize, maxSampleSize );
         p->numGametes = p->sampleSize;
         p->numActiveGametes = p->sampleSize;
-        p->delta = Random::RandomExponential(0.02, NULL, true, rngGsl, NULL);
+        p->delta = Random::RandomExponential(0.01, NULL, true, rngGsl, NULL);
         
         total_sample+= p->sampleSize;
     }

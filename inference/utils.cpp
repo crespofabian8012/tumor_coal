@@ -520,8 +520,10 @@ int Utils::WhichGenotypeIndex (int allele1, int allele2)
            return (4);
        else if (allele2 == 2)    //AG
            return (5);
-       else //if (allele2 == 3)    //AT
+       else if (allele2 == 3)    //AT
            return (6);
+       else
+           return -1;
       
    }
    else if (allele1 == 1)
@@ -532,8 +534,10 @@ int Utils::WhichGenotypeIndex (int allele1, int allele2)
            return (1);
        else if (allele2 == 2)    //CG
            return (7);
-       else //if (allele2 == 3)    //CT
+       else if (allele2 == 3)    //CT
            return (8);
+       else
+           return -1;
    }
    else if (allele1 == 2)
    {
@@ -543,8 +547,10 @@ int Utils::WhichGenotypeIndex (int allele1, int allele2)
            return (13);
        else if (allele2 == 2)    //GG
            return (2);
-       else //if (allele2 == 3)    //GT
+       else if (allele2 == 3)    //GT
            return (9);
+       else
+           return -1;
       
    }
    else // if (allele1 == 3)
@@ -555,8 +561,10 @@ int Utils::WhichGenotypeIndex (int allele1, int allele2)
            return (14);
        else if (allele2 == 2)    //TG
            return (15);
-       else //if (allele2 == 3)    //TT
+       else if (allele2 == 3)    //TT
            return (3);
+       else
+           return -1;
    }
    
   

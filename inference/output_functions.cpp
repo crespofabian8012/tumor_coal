@@ -317,7 +317,7 @@ TreeNode * Output::getHealthyTip(TreeNode *treeRootInit)
 
 /***************************** PrintTrueFullHaplotypes *******************************/
 /* Prints observed/ML haplotypes for all sites (variable + invariable) to a file */
-void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode*> &treeTips, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName)
+void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr            *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName)
 {
     int         i, j;
     char *temp;
@@ -331,7 +331,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode*> &treeTips
         {
             fprintf (fp,"%d %d\n",numCells +1, numSites);
             for (i=0; i<numCells; i++){
-                p = treeTips[i];
+                p = nodes[i].get();
                 /* print IUPAC haplotype */
                 if (p !=NULL){
                     
@@ -360,7 +360,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode*> &treeTips
         {
             fprintf (fp,"%d %d\n",2*(numCells+1), numSites);
             for (i=0; i<numCells; i++){
-                p = treeTips[i];
+                p = nodes[i].get();
                 if (p !=NULL){
                     
                     if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -404,7 +404,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode*> &treeTips
         {
             for (i = 0; i < numCells; i++)
             {
-                p = treeTips[i];
+                p = nodes[i].get();
                 
                 if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                     if (doUseObservedCellName == YES)
@@ -426,7 +426,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode*> &treeTips
             int numAddedTips=0;
             fprintf (fp,"%d %d\n",(numCells+1), numSites);
             for (i=0; i<numCells; i++){
-                p = treeTips[i];
+                p = nodes[i].get();
                 if (p !=NULL){
                     
                     if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -461,7 +461,7 @@ void Output::PrintTrueFullHaplotypes (FILE *fp, std::vector<TreeNode*> &treeTips
 
 /***************************** PrintSNVGenotypes *******************************/
 /* Prints variable genotypes  to a file */
-void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode*> &treeTips, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
+void Output::PrintSNVGenotypes (FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
                                 int numSNVs, std::vector<int> &SNVsites)
 {
     int         i, j;
@@ -476,7 +476,7 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode*> &treeTips, Tree
                            
                             fprintf (fp,"%d %d\n",numCells +1, numSites);
                             for (i=0; i<numCells; i++){
-                                p = treeTips[i];
+                                p = nodes[i].get();
                                 /* print IUPAC haplotype */
                                 if (p !=NULL){
                                     
@@ -508,7 +508,7 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode*> &treeTips, Tree
       // print maternal and paternal DNA haplotypes
             fprintf (fp,"%d %d\n",2*(numCells+1), numSites);
             for (i=0; i<numCells; i++){
-                p = treeTips[i];
+                p = nodes[i].get();
                 if (p !=NULL){
                     
                     if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -552,7 +552,7 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode*> &treeTips, Tree
         {
             for (i = 0; i < numCells; i++)
             {
-                p = treeTips[i];
+                p = nodes[i].get();
                 
                 if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                     if (doUseObservedCellName == YES)
@@ -574,7 +574,7 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode*> &treeTips, Tree
             int numAddedTips=0;
             fprintf (fp,"%d %d\n",(numCells+1), numSites);
             for (i=0; i<numCells; i++){
-                p = treeTips[i];
+                p = nodes[i].get();
                 if (p !=NULL){
                     
                     if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -604,7 +604,7 @@ void Output::PrintSNVGenotypes (FILE *fp, std::vector<TreeNode*> &treeTips, Tree
         }
     }
 }
-void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode*> &treeTips, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
+void Output::PrintFullGenotypes(FILE *fp, std::vector<std::shared_ptr<TreeNode>> &nodes, TreeNode* treeRoot, int numNodes, int doPrintIUPAChaplotypes, int doPrintAncestors, int numSites, int numCells, int alphabet, int doUserTree , int doNGS,   char **cellNames, CellStr    *cell, int        HEALTHY_ROOT, int TUMOR_ROOT , char *cellnames[], int doUseObservedCellName,
                         int numSNVs, std::vector<int> &SNVsites){
     
       int         i, j;
@@ -619,7 +619,7 @@ void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode*> &treeTips, Tree
                  {
                      fprintf (fp,"%d %d\n",numCells +1, numSites);
                      for (i=0; i<numCells; i++){
-                         p = treeTips[i];
+                         p = nodes[i].get();
                          /* print IUPAC haplotype */
                          if (p !=NULL){
                              
@@ -646,7 +646,7 @@ void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode*> &treeTips, Tree
         // print maternal and paternal DNA haplotypes
               fprintf (fp,"%d %d\n",2*(numCells+1), numSites);
               for (i=0; i<numCells; i++){
-                  p = treeTips[i];
+                  p = nodes[i].get();
                   if (p !=NULL){
                       
                       if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
@@ -690,7 +690,7 @@ void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode*> &treeTips, Tree
           {
               for (i = 0; i < numCells; i++)
               {
-                  p = treeTips[i];
+                  p = nodes[i].get();
                   
                   if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){
                       if (doUseObservedCellName == YES)
@@ -712,7 +712,7 @@ void Output::PrintFullGenotypes(FILE *fp, std::vector<TreeNode*> &treeTips, Tree
               int numAddedTips=0;
               fprintf (fp,"%d %d\n",(numCells+1), numSites);
               for (i=0; i<numCells; i++){
-                  p = treeTips[i];
+                  p = nodes[i].get();
                   if (p !=NULL){
                       
                       if (p->left==NULL && p->right ==NULL && p->anc1 !=NULL){

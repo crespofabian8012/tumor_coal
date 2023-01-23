@@ -85,16 +85,16 @@ void EvolveCNLOHonTree (TreeNode *p, int genome, int &numISMCNLOH,std::vector<Si
 
 void SimulateCNLOHforSite (TreeNode *p, int genome, int site,long int *seed,std::vector<SiteStr> &allSites,long double CNLOHrate, long double  &cumCNLOHbranchLength, long double totalTreeLength, long double mutationRate, int  &numCNLOH, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
 
-void AllelicDropout (int numCells,std::vector<SiteStr> &allSites, int doADOcell, int doADOsite, int numSites,long double fixedADOrate, long double meanADOcell, long double varADOcell, long double meanADOsite,long double varADOsite, std::vector<TreeNode *> &treeTips,    long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
+void AllelicDropout (int numCells,std::vector<SiteStr> &allSites, int doADOcell, int doADOsite, int numSites,long double fixedADOrate, long double meanADOcell, long double varADOcell, long double meanADOsite,long double varADOsite, std::vector<std::shared_ptr<TreeNode>> &nodes,    long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
 
-void addAllelicDropoutToTree( std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int numSites, std::vector<std::vector<double> > &alleleADOrate, long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost );
+void addAllelicDropoutToTree( int numCells, std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int numSites, std::vector<std::vector<double> > &alleleADOrate, long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost );
 
 void FillErrorMatrix (long double  error_prob[4][4], double Eij[4][4]);
 
 
-void GenotypeError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError,  double varGenotypingError, double genotypingError, double Eij[4][4], long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
+void GenotypeError (std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError,  double varGenotypingError, double genotypingError, double Eij[4][4], long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
 
 
-void SequenceError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError, int sampleSize, std::vector<int> numberOfSitesWithKSequencingErrors, double Eij[4][4], long int *seed, int &numberSeqErrorsAdded, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
+void SequenceError (std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError, int sampleSize, std::vector<int> numberOfSitesWithKSequencingErrors, double Eij[4][4], long int *seed, int &numberSeqErrorsAdded, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
 //static void AddGermlineVariation (TreeNode *treeRoot,long int *seed, int numSites, long double  SNPrate, std::vector<SiteStr> &allSites, int alphabet, int HEALTHY_ROOT, long double  cumMij[4][4]);
 #endif /* mutationModel_h */

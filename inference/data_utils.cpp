@@ -1191,11 +1191,11 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             fclose(files.fpTimes2->f);
         }
         
-        //char * newick =  toNewickString2 (root->left.get(), programOptions.mutationRate, false);
+        char * newick =  toNewickString2 (root->left.get(), programOptions.mutationRate, false);
         
-        //std::cout << newick<< std::endl;
+        std::cout << newick<< std::endl;
         
-        //free(newick);
+        free(newick);
         double sum = 0.0;
         totalTreeLength = SumBranches(root->left.get(), programOptions.mutationRate, programOptions.healthyTipLabel, sum);
         double lambda_param_poisson = totalTreeLength * programOptions.mutationRate;
@@ -1371,7 +1371,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpTrueHaplotypes->f, "[#%d]\n", z+1);
                 //
-                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes->f,  treeTips, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
+                Output::PrintTrueFullHaplotypes (files.fpTrueHaplotypes->f,  nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO);
             }
             
             
@@ -1444,7 +1444,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             if (programOptions.fixedADOrateMean > 0 || programOptions.doADOcell == YES || programOptions.doADOsite == YES)
             {
                 AllelicDropout (programOptions.TotalNumSequences, allSites,  programOptions.doADOcell,  programOptions.doADOsite,
-                                numberVariableSites, programOptions.fixedADOrate,  programOptions.meanADOcell, programOptions.varADOcell, programOptions.meanADOsite, programOptions.varADOsite, treeTips,   &(programOptions.seed), rngGslvector.at(dataSetNum),   rngBoost);
+                                numberVariableSites, programOptions.fixedADOrate,  programOptions.meanADOcell, programOptions.varADOcell, programOptions.meanADOsite, programOptions.varADOsite, nodes,   &(programOptions.seed), rngGslvector.at(dataSetNum),   rngBoost);
             }
             
             std::vector<double> binomialProbabOfKSeqErrors(2*totalSampleSize);
@@ -1480,7 +1480,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             int numberSeqErrorsAdded = 0;
             /* introduce errors directly in the genotypes */
             if ( programOptions.meanGenotypingError > 0){
-                SequenceError (treeTips, allSites, programOptions.alphabet, numberVariableSites, programOptions.numCells,  programOptions.meanGenotypingError, totalSampleSize, numberOfSitesWithKSequencingErrors,  Eij, &(programOptions.seed),numberSeqErrorsAdded, rngGslvector.at(dataSetNum),  rngBoost);
+                SequenceError (nodes, allSites, programOptions.alphabet, numberVariableSites, programOptions.numCells,  programOptions.meanGenotypingError, totalSampleSize, numberOfSitesWithKSequencingErrors,  Eij, &(programOptions.seed),numberSeqErrorsAdded, rngGslvector.at(dataSetNum),  rngBoost);
                 
                 totalNumberOfSeqErrors+=numberSeqErrorsAdded;
                 //                GenotypeError (treeTips, allSites,  programOptions.alphabet,  numberVariableSites,  programOptions.numCells, programOptions.meanGenotypingError , programOptions.varGenotypingError,  programOptions.genotypingError, Eij,  &(programOptions.seed),  rngGslvector.at(dataSetNum),  rngBoost);
@@ -1495,13 +1495,13 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             {
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpFullGenotypes->f, "[#%d]\n", z+1);
-                Output::PrintFullGenotypes(files.fpFullGenotypes->f, treeTips, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
+                Output::PrintFullGenotypes(files.fpFullGenotypes->f, nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
             }
             if (programOptions.doPrintSNVgenotypes == YES) /* we only print replicates with variation */
             {
                 if (programOptions.doPrintSeparateReplicates == NO)
                     fprintf (files.fpSNVgenotypes->f, "[#%d]\n", z+1);
-                Output::PrintSNVGenotypes(files.fpSNVgenotypes->f, treeTips, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
+                Output::PrintSNVGenotypes(files.fpSNVgenotypes->f, nodes, root.get() , programOptions.numNodes, programOptions.doPrintIUPAChaplotypes, programOptions.doPrintAncestors, numberVariableSites,  programOptions.numCells, programOptions.alphabet, programOptions.doUserTree,    programOptions.doNGS,   NULL, NULL, HEALTHY_ROOT, TUMOR_ROOT, NULL, NO,  numSNVs, SNVsites);
             }
             
             if (programOptions.doPrintMLhaplotypes ==YES && programOptions.doPrintSeparateReplicates == YES)
@@ -1739,7 +1739,7 @@ void InitNumberNodes( std::vector<Population *> &populations, ProgramOptions &pr
 void SetPopulationParametersFromPriors(std::vector<Population *> &populations, int numClones,const gsl_rng* rngGsl, ProgramOptions &programOptions, int& totalSampleSize){
     
     Population *p;
-    programOptions.mutationRate=Random::RandomExponential(1, NULL, true, rngGsl, NULL);
+    programOptions.mutationRate=Random::RandomExponential(0.01, NULL, true, rngGsl, NULL);
     unsigned int  total_sample = 0;
     for (size_t i = 0; i < numClones; ++i) {
         p = populations[i];
@@ -1747,7 +1747,7 @@ void SetPopulationParametersFromPriors(std::vector<Population *> &populations, i
         p->sampleSize = Random::randomUniformIntegerInterval(rngGsl, programOptions.minSampleSize, maxSampleSize );
         p->numGametes = p->sampleSize;
         p->numActiveGametes = p->sampleSize;
-        p->delta = Random::RandomExponential(0.01, NULL, true, rngGsl, NULL);
+        p->delta = Random::RandomExponential(0.02, NULL, true, rngGsl, NULL);
         
         total_sample+= p->sampleSize;
     }
@@ -2258,7 +2258,7 @@ std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
         healthyTip->anc1 = nodes[idxHealthyRoot].get(); //healthyRoot;
         healthyRoot->right = nodes[nextAvailable];//healthyTip;
         
-        double  healthyTipBranchLengthRatio = Random::randomUniformFromGsl2(rngGsl);
+        double  healthyTipBranchLengthRatio = 1.0;//Random::randomUniformFromGsl2(rngGsl);
         
         //we put the  time of healthy tip inside the tree root and 0
         healthyTip->time = healthyTipBranchLengthRatio * healthyRoot->time;
@@ -3618,7 +3618,7 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
     {
         if (p->isOutgroup == YES)     /* Outgroup */
         {
-            strcpy( p->cellName,"healthycell");
+            //strcpy( p->cellName,"healthycell");
             
             
             if (asprintf(&newickString,  "healthycell:%10.9Lf",  (p->anc1->timePUnits - p->timePUnits) * mutationRate)<0)
@@ -3629,67 +3629,49 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
         else if (p->left == NULL && p->right == NULL)   /* tip of the tree */
         {
             snprintf(buffer, sizeof(buffer), "tip_i%05d_C%d_%d", p->index,p->indexOldClone,p->indexCurrentClone);
-            strcpy( p->cellName,buffer);
-            //            if (p->isOutgroup == YES)     /* Outgroup */
-            //            {
-            //                //strcat(newickString, "healthycell:%10.9lf", (p->anc1->timePUnits - p->timePUnits) * mutationRate);
-            //                snprintf(newickString,  size,  "healthycell:%10.9lf",  (p->anc1->timePUnits - p->timePUnits) * mutationRate);
-            //                return newickString;
-            //            }
-            //else{
+            //strcpy( p->cellName,buffer);
+          
             if  (doUseObservedCellNames == YES)
             {
             
                 if (asprintf(&newickString,   "%s:%10.9Lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate)<0)
                     return NULL;
-                //snprintf(newickString,  size,  "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
+       
                 return newickString;
             }
             else{
             
                 if (asprintf(&newickString,   "%s:%10.9Lf",  p->cellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate)<0)
                     return NULL;
-                //snprintf(newickString,  size,  "%s:%10.9lf",  p->observedCellName, (p->anc1->timePUnits - p->timePUnits)*mutationRate);
-                
+               
                 return newickString;
             }
             //  }
         }
         else
         {
-            // fprintf (fpTrees2, "(");
+      
             if ( p->left != NULL  )
             {
                 left = toNewickString2 (p->left.get(), mutationRate,   doUseObservedCellNames);
-                //right = toNewickString2 (p->right, mutationRate,   cellNames);
-                //snprintf(newickString, size, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate );
-                //                free(left);
-                //                left = NULL;
-                //                free(right);
-                //                right=NULL;
-                //                return newickString;
+           
             }
             if ( p->right != NULL  )
             {
                 right = toNewickString2 (p->right.get(), mutationRate,   doUseObservedCellNames);
-                //                snprintf(newickString, size, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate );
-                //                free(left);
-                //                left = NULL;
-                //                free(right);
-                //                right=NULL;
-                //                return newickString;
+             
             }
            
             outgroup =toNewickString2 (p->outgroup, mutationRate,   doUseObservedCellNames);
             if(left!= NULL && right!= NULL && p->anc1 != NULL)
             {
                 snprintf(buffer, sizeof(buffer), "int_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
-                strcpy( p->cellName,buffer);
+                //strcpy( p->cellName,buffer);
                 
                
                 if (asprintf(&newickString, "(%s,%s):%10.9Lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate )<0)
                     return NULL;
-                //snprintf(newickString, size, "(%s,%s):%10.9lf", left, right,  (p->anc1->timePUnits - p->timePUnits)*mutationRate );
+              
                 free(left);
                 left = NULL;
                 free(right);
@@ -3700,19 +3682,16 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
             else if (left != NULL &&  right!= NULL  && p->anc1 == NULL)
             {
                 snprintf(buffer, sizeof(buffer), "root_i%05d_C%d_%d",  p->index,p->indexOldClone,p->indexCurrentClone);
-                strcpy( p->cellName,buffer);
-                // left = toNewickString2 (p->left, mutationRate,   cellNames);
-                //right = toNewickString2 (p->right, mutationRate,   cellNames);
+                //strcpy( p->cellName,buffer);
                 if (asprintf(&newickString,  "(%s,%s);", left, right)<0)
                     return NULL;
-                //snprintf(newickString, size, "(%s,%s);", left, outgroup);
+          
                 free(left);
                 left = NULL;
                 free(right);
                 right=NULL;
                 free(outgroup);
                 outgroup=NULL;
-                // return newickString;
             }
             return newickString;
         }
@@ -3850,7 +3829,7 @@ void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptio
     
     programOptions.K=0.8;
     programOptions.minSampleSize = 10;
-    programOptions.maxSampleSize = 100;
+    programOptions.maxSampleSize = 60;
 }
 /***************************** ReadMCMCParametersFromFile *******************************/
 /* Reads parameter values from the parameter file */

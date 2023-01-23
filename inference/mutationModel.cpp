@@ -116,6 +116,8 @@ void SimulateGenotype (TreeNode *treeRoot, std::vector<int> numberOfSitesWithKMu
     long double  uniform =0;
     unsigned int cumulativeNumberSites = 0;
     int nextAvailableIndex = 1;
+    int numberBackMutations = 0;
+    int idx;
     
     std::vector<TreeNode*> depthFirstSearchTree(2*totalSampleSize-1);
     std::vector<long double> cumSumScaledBranchLengths(2*totalSampleSize);
@@ -148,15 +150,19 @@ void SimulateGenotype (TreeNode *treeRoot, std::vector<int> numberOfSitesWithKMu
                 currentNumberMutationsPerBranch[idx-1]++;
                 branchIndexes.push_back(idx-1);
       
-                uniform = uniform * totalTreeLength;
           
             }
             int numMutationsCurrentSite = 0;
+            sort(branchIndexes.begin(), branchIndexes.end());
             for (unsigned int k=0; k< branchIndexes.size(); k++){
                 
-                int idx = branchIndexes[k];
+                idx = branchIndexes[k];
+                std::cout << "idx "<<idx << std::endl;
+                std::cout << "depthFirstSearchTree[idx]->cellName "<<depthFirstSearchTree[idx]->cellName << std::endl;
+                std::cout << "depthFirstSearchTree[idx]->anc1->cellName "<<depthFirstSearchTree[idx]->anc1->cellName << std::endl;
                 if (currentNumberMutationsPerBranch[idx]>1)
-                    std::cout << "site  "<< j << " with " << currentNumberMutationsPerBranch[idx]  <<  " mutations "<< std::endl;
+                    numberBackMutations++;
+              
                 if (currentNumberMutationsPerBranch[idx]>0){
                    PlaceMutationsOnBranchOnSite(depthFirstSearchTree[idx], j, currentNumberMutationsPerBranch[idx], numMU, allSites, seed, randomGsl, rngBoost);
                     numMutationsCurrentSite+= currentNumberMutationsPerBranch[idx];
@@ -170,16 +176,22 @@ void SimulateGenotype (TreeNode *treeRoot, std::vector<int> numberOfSitesWithKMu
         cumulativeNumberSites+= numberOfSitesWithKMutations[i];
        
     }
-//    std::cout << " Proportion of number of mutations Per Branch over total number of mutations "<<  std::endl;
-//    for (int i: totalNumberMutationsPerBranch)
-//        std::cout << 1.0* i/ numMU   << ' ';
-//
-//    std::cout << std::endl;
-//     std::cout << " Proportion of branch length over total tree length "<<  std::endl;
-//    for (long double  d: scaledBranchLengths)
-//           std::cout << d / (totalTreeLength)  << ' ';
-//
-//    std::cout << std::endl;
+      std::cout << "Total number of back mutations " << numberBackMutations <<  " mutations "<< std::endl;
+     
+    std::cout << " Proportion of number of mutations Per Branch over total number of mutations "<<  std::endl;
+    long double norm = 0.0;
+    long double diff = 0.0;
+    for (unsigned int i=0; i< totalNumberMutationsPerBranch.size(); i++){
+        diff = (1.0* totalNumberMutationsPerBranch[i]/ numMU) -(scaledBranchLengths[i]/totalTreeLength);
+        norm+= diff* diff;
+        
+    }
+     
+
+     std::cout << "L2 Norm of  Proportion of number of mutations Per Branch over total number of mutations minus Proportion of branch length over total tree length "<<  std::endl;
+   
+           std::cout << sqrt(norm) << std::endl;
+
 }
 
 /***************************** openFile*******************************/
@@ -519,6 +531,10 @@ void GetTreeDepthFirstSearchOrder (TreeNode *p, long double  mutationRate, int &
     {
         
         dfs[nextAvailableIndex-1] = p;
+        std::cout<<"p->cellName " << p->cellName << std::endl;
+        std::cout<<"p->isLeaf " << p->isLeaf << std::endl;
+        std::cout<<"p->anc1->cellName " << p->anc1->cellName<< std::endl;
+        std::cout<<"________________________" <<  std::endl;
         //scaledBranchLengths[nextAvailableIndex] = p->length*mutationRate;
         scaledBranchLengths[nextAvailableIndex-1] = p->length;
         //cumScaledTreeLength += p->length*mutationRate / scaledTotalTreeLength;
@@ -1802,7 +1818,7 @@ void SimulateDeletionforSite (TreeNode *p, int genome, int site, std::vector<Sit
  a = 1 - sqrt(1-A)
  */
 
-void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell, int doADOsite, int numSites,long double fixedADOrate, long double meanADOcell, long double varADOcell, long double meanADOsite,long double varADOsite, std::vector<TreeNode *> &treeTips,    long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost)
+void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell, int doADOsite, int numSites,long double fixedADOrate, long double meanADOcell, long double varADOcell, long double meanADOsite,long double varADOsite, std::vector<std::shared_ptr<TreeNode>> &nodes,    long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost)
 {
     int i,j;
     double alleleADOrateMean, alleleADOrateCell, alleleADOrateSite;
@@ -1818,7 +1834,7 @@ void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell
         alleleADOrateMean = 1.0 - sqrt (1.0 - fixedADOrate);
         //alleleADOrateMean = fixedADOrate;
         
-        for (i=0; i<treeTips.size(); i++){
+        for (i=0; i<numCells; i++){
             std::vector<double> v;
             for (j=0; j<numSites; j++)
                 v.push_back(alleleADOrateMean);
@@ -1829,7 +1845,7 @@ void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell
     }
     else // variable ADO rates
     {
-        for (i=0; i<treeTips.size(); i++)
+        for (i=0; i<numCells; i++)
         {
             std::vector<double> v;
             if (doADOcell == YES)
@@ -1851,18 +1867,18 @@ void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell
     }
     
     
-    addAllelicDropoutToTree(treeTips, allSites,  numSites, alleleADOrate, seed, rngGsl,  rngBoost );
+    addAllelicDropoutToTree(numCells, nodes, allSites,  numSites, alleleADOrate, seed, rngGsl,  rngBoost );
     
     
 }
 
-void addAllelicDropoutToTree( std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int numSites, std::vector<std::vector<double> > &alleleADOrate, long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost ){
+void addAllelicDropoutToTree( int numCells, std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int numSites, std::vector<std::vector<double> > &alleleADOrate, long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost ){
     
     TreeNode *tip;
     long double random;
-    for (size_t i=0; i<treeTips.size(); i++)//or numCells+1
+    for (size_t i=0; i<numCells; i++)//or numCells+1
     {
-        tip = treeTips[i];
+        tip = nodes[i].get();
         for (size_t  site=0; site<numSites; site++)
         {
             
@@ -1981,7 +1997,7 @@ void FillErrorMatrix (long double  error_prob[4][4], double Eij[4][4])
 /********************* SequenceError  ************************/
 
 
-void SequenceError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError, int sampleSize, std::vector<int> numberOfSitesWithKSequencingErrors, double Eij[4][4], long int *seed, int &numberSeqErrorsAdded, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost){
+void SequenceError (std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int alphabet, int numSites, int numCells,  double meanGenotypingError, int sampleSize, std::vector<int> numberOfSitesWithKSequencingErrors, double Eij[4][4], long int *seed, int &numberSeqErrorsAdded, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost){
     size_t     i, j, k;
     long double *probs;
     long double  error_prob[4][4];
@@ -2007,7 +2023,7 @@ void SequenceError (std::vector<TreeNode *> &treeTips,std::vector<SiteStr> &allS
             for (k=0; k<j; k++){
                 
                 int tipIndex = sample[k] / 2;
-                tip = treeTips[tipIndex];
+                tip = nodes[tipIndex].get();
                 
                 if (sample[k] % 2 == 0 ){
                     

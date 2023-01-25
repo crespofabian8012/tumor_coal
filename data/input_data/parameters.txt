@@ -4,7 +4,7 @@
 
 [*** GLOBAL SETTINGS ***]
 [parameter values from priors (mandatory): 1:Yes, 0: NO]  q1
-[number of replicates per parameter values(mandatory)]	n100
+[number of replicates per parameter values(mandatory)]	n1000
 [number of sites whole genome] s100000
 
 [*** POPULATION GENETICS SETTINGS ***]

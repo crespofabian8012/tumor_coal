@@ -131,7 +131,7 @@ void SimulateGenotype (TreeNode *treeRoot, std::vector<int> numberOfSitesWithKMu
     GetTreeDepthFirstSearchOrder (treeRoot,   mutationRate, nextAvailableIndex, depthFirstSearchTree, cumSumScaledBranchLengths, scaledBranchLengths,  cumScaledTreeLength, totalTreeLength);
     
     assert(abs(cumScaledTreeLength-1.0)< 0.000001);
-    //int bbinClones (long double dat, long double *v, int n)
+   
     for (unsigned int i=1; i< numberOfSitesWithKMutations.size(); i++)
     {
         size_t start_site_idx = cumulativeNumberSites;
@@ -146,25 +146,45 @@ void SimulateGenotype (TreeNode *treeRoot, std::vector<int> numberOfSitesWithKMu
         
                 uniform = Random::randomUniformFromGsl2(randomGsl);
                 int idx =  Population::bbinClones (uniform, &cumSumScaledBranchLengths[0],  cumSumScaledBranchLengths.size());
-                totalNumberMutationsPerBranch[idx-1]++;
-                currentNumberMutationsPerBranch[idx-1]++;
+//                 std::cout << "idx "<<idx-1 << std::endl;
+                totalNumberMutationsPerBranch[idx-1] = totalNumberMutationsPerBranch[idx-1]+1;
+                currentNumberMutationsPerBranch[idx-1]= currentNumberMutationsPerBranch[idx-1]+1;
                 branchIndexes.push_back(idx-1);
       
           
             }
+//           std::cout <<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"<<std::endl ;
+//
+//            std::cout << " currentNumberMutationsPerBranch "<<  std::endl;
+//                       for(int z: currentNumberMutationsPerBranch){
+//                            std::cout <<z << " " ;
+//                       }
+//            std::cout <<std::endl ;
+//            std::cout << " totalNumberMutationsPerBranch "<<  std::endl;
+//                       for(int z: totalNumberMutationsPerBranch){
+//                            std::cout <<z << " " ;
+//                       }
+//            std::cout <<std::endl ;
             int numMutationsCurrentSite = 0;
             sort(branchIndexes.begin(), branchIndexes.end());
+//            std::cout << " branchIndexes "<<  std::endl;
+//                      for(int z: branchIndexes){
+//                           std::cout <<z << " " ;
+//                      }
+//            std::cout <<std::endl ;
+//            std::cout <<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"<<std::endl ;
             for (unsigned int k=0; k< branchIndexes.size(); k++){
                 
                 idx = branchIndexes[k];
-                std::cout << "idx "<<idx << std::endl;
-                std::cout << "depthFirstSearchTree[idx]->cellName "<<depthFirstSearchTree[idx]->cellName << std::endl;
-                std::cout << "depthFirstSearchTree[idx]->anc1->cellName "<<depthFirstSearchTree[idx]->anc1->cellName << std::endl;
+//                std::cout << "idx "<<idx << std::endl;
+//                std::cout << "depthFirstSearchTree[idx]->cellName "<<depthFirstSearchTree[idx]->cellName << std::endl;
+//                std::cout << "depthFirstSearchTree[idx]->anc1->cellName "<<depthFirstSearchTree[idx]->anc1->cellName << std::endl;
                 if (currentNumberMutationsPerBranch[idx]>1)
                     numberBackMutations++;
               
                 if (currentNumberMutationsPerBranch[idx]>0){
                    PlaceMutationsOnBranchOnSite(depthFirstSearchTree[idx], j, currentNumberMutationsPerBranch[idx], numMU, allSites, seed, randomGsl, rngBoost);
+                    PropagateGenotypesForSiteAfterPositionInPreorder(idx, j, depthFirstSearchTree);
                     numMutationsCurrentSite+= currentNumberMutationsPerBranch[idx];
                     currentNumberMutationsPerBranch[idx] = 0;
                 }
@@ -172,13 +192,14 @@ void SimulateGenotype (TreeNode *treeRoot, std::vector<int> numberOfSitesWithKMu
                     break;
             }
             
+            
         }
         cumulativeNumberSites+= numberOfSitesWithKMutations[i];
        
     }
-      std::cout << "Total number of back mutations " << numberBackMutations <<  " mutations "<< std::endl;
+//      std::cout << "Total number of back mutations " << numberBackMutations <<  " mutations "<< std::endl;
      
-    std::cout << " Proportion of number of mutations Per Branch over total number of mutations "<<  std::endl;
+   
     long double norm = 0.0;
     long double diff = 0.0;
     for (unsigned int i=0; i< totalNumberMutationsPerBranch.size(); i++){
@@ -372,24 +393,21 @@ void SimulateISMGenotypeforSite (TreeNode *p, int numberMutations, int site, int
     
     int             cell, anccell, maternal_ancstate, paternal_ancstate, ancestral_genotype,  maternal_newstate, paternal_newstate;
     
-    if (added)
-        return;
+   
     
     if (p != NULL)
         
     {
         cell = p->label;
         
-        std::cout << " visited p->label "<<  p->label<< std::endl;
-        std::cout << " visited p->cellName "<<  p->cellName<< std::endl;
+   
         
         if ( p->anc1 == NULL)
             
         {
             // cumBranchLength = 0;
-            std::cout << " inside "<< cumBranchLength<< std::endl;
             //  uniform = Random::randomUniformFromGsl2(randomGsl) * scaledTotalTreeLength;
-            std::cout << " random unif 0 to totaltree*mutrate "<< uniform<< std::endl;
+        
         }
         else
             
@@ -407,7 +425,7 @@ void SimulateISMGenotypeforSite (TreeNode *p, int numberMutations, int site, int
             //            cumBranchLength += p->length;// ->branchLength;
             
             cumBranchLength = cumBranchLength+ p->length*mutationRate;
-            std::cout << " cumBranchLength "<< cumBranchLength<< std::endl;
+      
             //cumBranchLength = cumBranchLength+ p->length;
             
             
@@ -428,15 +446,18 @@ void SimulateISMGenotypeforSite (TreeNode *p, int numberMutations, int site, int
             else /* => there will be change */
                 
             {
-                PlaceMutationsOnBranchOnSite(p, site, 1, numMU, allSites, seed, randomGsl, rngBoost);
-                //this is wrong we have to put all mutations on the father node first
-                
-                added = true;
-                //numMU++;
-                std::cout << " p->label "<<  p->label<< std::endl;
-                std::cout << " p->cellName "<<  p->cellName<< std::endl;
-                if (added)
-                    return;
+                if (!added){
+                     PlaceMutationsOnBranchOnSite(p, site, 1, numMU, allSites, seed, randomGsl, rngBoost);
+                                   
+                    //this is wrong we have to put all mutations on the father node first
+                                   
+                                   
+                    added = true;
+                    //numMU++;
+                 
+                }
+               
+           
             }
             
         }
@@ -463,6 +484,7 @@ void PlaceMutationsOnBranchOnSite(TreeNode *p, int site, int numMutations,int  &
     current_paternal = paternal_ancstate;
     current_genotype = ancestral_genotype;
     
+
     for (unsigned int k=0; k< numMutations; k++){
         
         
@@ -471,6 +493,7 @@ void PlaceMutationsOnBranchOnSite(TreeNode *p, int site, int numMutations,int  &
          
          idx_genotype = GetNewGenotypeIdx ( current_genotype,  idx);
          Utils::WhichMaternalPaternalIndex (idx_genotype, current_maternal, current_paternal);
+
           numMU++;
     
     }
@@ -481,8 +504,7 @@ void PlaceMutationsOnBranchOnSite(TreeNode *p, int site, int numMutations,int  &
     
     if (maternal_ancstate != maternal_newstate){
              
-             //std::cout << " maternal_ancstate "<< maternal_ancstate<< std::endl;
-             //std::cout << " maternal_newstate "<< maternal_newstate<< std::endl;
+
              allSites[site].numMutationsMaternal++;
              
              p->numbersMaternalMutationsPerSite[site]=p->anc1->numbersMaternalMutationsPerSite[site]+1;
@@ -490,7 +512,7 @@ void PlaceMutationsOnBranchOnSite(TreeNode *p, int site, int numMutations,int  &
              p->numbersMutationsUnderSubtreePerSite[site]=p->anc1->numbersMutationsUnderSubtreePerSite[site]+1;
              
              allSites[site].numMutations++;
-             //std::cout << " added maternal  "<< std::endl;
+    
              
          }
     else{
@@ -499,9 +521,8 @@ void PlaceMutationsOnBranchOnSite(TreeNode *p, int site, int numMutations,int  &
          
     if (paternal_ancstate != paternal_newstate){
              
-             //std::cout << " paternal_ancstate "<< paternal_ancstate<< std::endl;
-             //std::cout << " paternal_newstate "<< paternal_newstate<< std::endl;
-             
+
+
              allSites[site].numMutationsPaternal++;
   
              p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site]+1;
@@ -509,19 +530,29 @@ void PlaceMutationsOnBranchOnSite(TreeNode *p, int site, int numMutations,int  &
              p->numbersMutationsUnderSubtreePerSite[site]=p->anc1->numbersMutationsUnderSubtreePerSite[site]+1;
              
              allSites[site].numMutations++;
-             //std::cout << " added paternal  "<< std::endl;
+
              
          }
     else{
         
         p->numbersPaternalMutationsPerSite[site]=p->anc1->numbersPaternalMutationsPerSite[site];
     }
-//         else{
-//             std::cout<< "no mut"<<std::endl;
-//
-//         }
+
     
     
+}
+void PropagateGenotypesForSiteAfterPositionInPreorder(int pos, int site, std::vector<TreeNode*> preorder){
+   
+   
+    TreeNode* p;
+    for (unsigned int k=(pos+1); k< preorder.size(); k++){
+        
+         p = preorder[k];
+         p->paternalSequence[site]=p->anc1->paternalSequence[site];
+         p->maternalSequence[site]=p->anc1->maternalSequence[site];
+        
+    }
+  
 }
 void GetTreeDepthFirstSearchOrder (TreeNode *p, long double  mutationRate, int &nextAvailableIndex, std::vector<TreeNode *> &dfs, std::vector<long double> &cumSumScaledBranchLengths,  std::vector<long double> &scaledBranchLengths,  double &cumScaledTreeLength, long double scaledTotalTreeLength)
 {
@@ -531,13 +562,9 @@ void GetTreeDepthFirstSearchOrder (TreeNode *p, long double  mutationRate, int &
     {
         
         dfs[nextAvailableIndex-1] = p;
-        std::cout<<"p->cellName " << p->cellName << std::endl;
-        std::cout<<"p->isLeaf " << p->isLeaf << std::endl;
-        std::cout<<"p->anc1->cellName " << p->anc1->cellName<< std::endl;
-        std::cout<<"________________________" <<  std::endl;
-        //scaledBranchLengths[nextAvailableIndex] = p->length*mutationRate;
+
         scaledBranchLengths[nextAvailableIndex-1] = p->length;
-        //cumScaledTreeLength += p->length*mutationRate / scaledTotalTreeLength;
+    
         cumScaledTreeLength += p->length / scaledTotalTreeLength;
         cumSumScaledBranchLengths[nextAvailableIndex]  = cumScaledTreeLength;
         nextAvailableIndex++;
@@ -558,8 +585,7 @@ void SimulateISMforSite (TreeNode *p, int genome, int site, int doISMhaploid, lo
 {
     
     int             cell, anccell;
-    //    if (*mutationAdded==YES)
-    //        return;
+
     if (p != NULL)
     {
         cell = p->label;

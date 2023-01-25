@@ -449,9 +449,9 @@ void Random::allocateListRandomNumbersGenerators(std::vector< gsl_rng * > &vec)
     {
         gettimeofday(&tv,0);
         temp = distr(gen) * Random::RandomUniform (&seed);
-        std::cout<<temp <<std::endl;
+       
         mySeed = temp*(temp % 10)*(tv.tv_sec) + (1-temp^2)*tv.tv_usec;
-        std::cout<<mySeed <<std::endl;
+       
         //vec.at(i)= generateRandomObject(mySeed);
         T= gsl_rng_ranmar;
         vec.at(i) = gsl_rng_alloc (T);

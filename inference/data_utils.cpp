@@ -747,9 +747,9 @@ void InitListClones(std::vector<Population *> &populations, int numClones, int v
         if (programOptions.doSimulateFromPriors==0)
             pop = new Population(ind, ord, timeOriginInput, sampleSize, totalSampleSize, popSize, totalPopulationSize, birthRate, deathRate, doEstimateTimesOriginClones);
         else{
-            sampleSize= Random::randomUniformIntegerInterval(rngGslvector[1], programOptions.minSampleSize, programOptions.maxSampleSize);
-            long double delta = Random::RandomExponential(1, NULL, true, rngGslvector[1], NULL);
-            long double theta =  Random::RandomExponential(1, NULL, true, rngGslvector[1], NULL);
+            sampleSize= Random::randomUniformIntegerInterval(rngGslvector[0], programOptions.minSampleSize, programOptions.maxSampleSize);
+            long double delta = Random::RandomExponential(1, NULL, true, rngGslvector[0], NULL);
+            long double theta =  Random::RandomExponential(1, NULL, true, rngGslvector[0], NULL);
             pop = new Population(ind, ord,sampleSize, delta, theta,   programOptions);
             
         }
@@ -1193,7 +1193,7 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
         
         char * newick =  toNewickString2 (root->left.get(), programOptions.mutationRate, false);
         
-        std::cout << newick<< std::endl;
+        //std::cout << newick<< std::endl;
         
         free(newick);
         double sum = 0.0;
@@ -1245,6 +1245,9 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             cumProb+= poissonProbs[p];
             
         }
+        
+//        numberOfSitesWithKMutations = {20, 10, 4, 2, 0, 0};
+//        numberVariableSites = 16;
         
         cumNumVariableSites += numberVariableSites;
         treesList[dataSetNum]= new RootedTree(files.fpTrees->path, true);
@@ -1303,6 +1306,13 @@ int SimulateData(ProgramOptions &programOptions, std::vector<int> &CloneNameBegi
             EvolveGenotypesOnTree (root->left.get(), totalSampleSize, numberOfSitesWithKMutations,  numberVariableSites, &(programOptions.seed), programOptions.rateVarAmongSites,  programOptions.numSites,  allSites, programOptions.doGeneticSignatures, programOptions.alphaSites, programOptions.propAltModelSites ,  numDefaultModelSites, numAltModelSites, DefaultModelSites, AltModelSites,  totalTreeLength , numISMmutations, programOptions.numFixedMutations, numSNVmaternal,  programOptions.doSimulateFixedNumMutations,  programOptions.alphabet,  numMU, cumMij,  programOptions.altModel, programOptions.mutationRate, programOptions.doUserTree,  programOptions.doJC,  programOptions.doHKY,  programOptions.doGTR,
                                    programOptions.doGTnR,  freqR,  freqY,
                                    freqAG, freqCT, programOptions.titv, freq, Mij ,   Root,  Cijk, rngGslvector.at(dataSetNum),   rngBoost );
+//            EvolveSitesOnTree (root->left.get(), MATERNAL, &(programOptions.seed), programOptions.rateVarAmongSites,  programOptions.numSites,  allSites, programOptions.doGeneticSignatures, programOptions.alphaSites, programOptions.propAltModelSites ,  numDefaultModelSites, numAltModelSites, DefaultModelSites, AltModelSites,  totalTreeLength , numISMmutations, programOptions.numFixedMutations, numSNVmaternal,  programOptions.doSimulateFixedNumMutations,  programOptions.alphabet,  numMU, cumMij,  programOptions.altModel, programOptions.mutationRate, programOptions.doUserTree,  programOptions.doJC,  programOptions.doHKY,  programOptions.doGTR,
+//            programOptions.doGTnR,  freqR,  freqY,
+//            freqAG, freqCT, programOptions.titv, freq, Mij ,   Root,  Cijk, rngGslvector.at(dataSetNum),   rngBoost );
+//            
+//            EvolveSitesOnTree (root->left.get(), PATERNAL, &(programOptions.seed), programOptions.rateVarAmongSites,  programOptions.numSites,  allSites, programOptions.doGeneticSignatures, programOptions.alphaSites, programOptions.propAltModelSites ,  numDefaultModelSites, numAltModelSites, DefaultModelSites, AltModelSites,  totalTreeLength , numISMmutations, programOptions.numFixedMutations, numSNVmaternal,  programOptions.doSimulateFixedNumMutations,  programOptions.alphabet,  numMU, cumMij,  programOptions.altModel, programOptions.mutationRate, programOptions.doUserTree,  programOptions.doJC,  programOptions.doHKY,  programOptions.doGTR,
+//            programOptions.doGTnR,  freqR,  freqY,
+//            freqAG, freqCT, programOptions.titv, freq, Mij ,   Root,  Cijk, rngGslvector.at(dataSetNum),   rngBoost  );
             
             writeLineMutationsFile( dataSetNum, filePaths,   programOptions, files ,  numberOfSitesWithKMutations,
                                    numberVariableSites,  programOptions.numSitesWholeGenome);
@@ -1739,7 +1749,7 @@ void InitNumberNodes( std::vector<Population *> &populations, ProgramOptions &pr
 void SetPopulationParametersFromPriors(std::vector<Population *> &populations, int numClones,const gsl_rng* rngGsl, ProgramOptions &programOptions, int& totalSampleSize){
     
     Population *p;
-    programOptions.mutationRate=Random::RandomExponential(0.01, NULL, true, rngGsl, NULL);
+    programOptions.mutationRate=Random::RandomExponential(1, NULL, true, rngGsl, NULL);
     unsigned int  total_sample = 0;
     for (size_t i = 0; i < numClones; ++i) {
         p = populations[i];
@@ -2052,13 +2062,11 @@ std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
             if (p->left == NULL && p->right == NULL && p->anc1 == NULL)
             {
                 // nothing to do with this node because it is not connected to anything
-                //fprintf (stderr, "\n * nothing to do with this node because it is not connected to anything");
+            
             }
             else if (p->left == NULL && p->right == NULL && p->anc1 != NULL)
             {
-                // (*treeTips)[indexCurrentTip]=p;
                 if(indexCurrentTip <  programOptions.TotalNumSequences){
-                    //treeTips[indexCurrentTip]=p;
                     treeTips.push_back(p);
                     indexCurrentTip++;
                 }
@@ -2079,8 +2087,6 @@ std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
                     q->anc1 = r;
                     p->left = NULL;
                     p->anc1 = NULL;
-                    
-                    //connectNodes(q, r->right, r);
                 }
                 else
                 {
@@ -2088,7 +2094,7 @@ std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
                     q->anc1 = r;
                     p->left = NULL;
                     p->anc1 = NULL;
-                    //connectNodes(r->left, q, r);
+                  
                 }
                 
                 //fprintf (stderr, "\n - this is a superflous node and can be removed (1)");
@@ -2106,7 +2112,7 @@ std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
                     q->anc1 = r;
                     p->right = NULL;
                     p->anc1 =   NULL;
-                    //connectNodes(q, r->right, r);
+
                 }
                 else
                 {
@@ -2114,20 +2120,20 @@ std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
                     q->anc1 = r;
                     p->right = NULL;
                     p->anc1 =  NULL;
-                    //connectNodes(r->left, q, r);
+                 
                 }
                 
                 //fprintf (stderr, "\n - this is a superflous node and can be removed (2)");
             }
             else if (p->left != NULL && p->right != NULL && p->anc1 != NULL)
             {
-                //connectNodes(p->left, p->right, p);
+    
                 // this is an internal node formed by a coalescence event, do not touch
                 //fprintf (stderr, "\n * this is an internal node formed by a coalescence event, do not touch");
             }
             else if (p->left != NULL && p->right != NULL && p->anc1 == NULL)
             {
-                //connectNodes(p->left, p->right, p);
+         
                 // this is the last (coalescence event) in the tree, MRCA
                 //fprintf (stderr, "\n * this is the last (coalescence event) in the tree, MRCA");
             }
@@ -2156,11 +2162,10 @@ std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
             {//update length field
                 
              
-                //   p->length = p->anc1->time- p->time;
-                p->length = (p->anc1->timePUnits- p->timePUnits);// * programOptions.mutationRate;
+              
+                p->length = (p->anc1->timePUnits- p->timePUnits);
                 p->lengthModelUnits = (p->anc1->time- p->time);
-                //*mutationRate;
-                //setLength(p);
+            
             }
         }
         //fprintf (stderr, "\n");
@@ -2169,7 +2174,7 @@ std::shared_ptr<TreeNode>  BuildCoalTree(std::vector<Population* > &populations,
     /* about the MRCA */
     newInd=nextAvailable-1;
     p = nodes[newInd].get();
-    //p = *nodes + *newInd; /* because the last one event is the last coalescence */
+    /* because the last one event is the last coalescence */
     
     
     if (programOptions.thereisOutgroup == NO)
@@ -3268,7 +3273,6 @@ std::shared_ptr<TreeNode> MakeCoalescenceTree2 (long int *seed, std::vector<Popu
     nodes.clear();
     for (i = 0; i < numNodes; i++)
     {
-        //p = new TreeNode(programOptions.numSites);
         nodes.emplace_back(std::make_shared<TreeNode>(programOptions.numSites));
     }
     AssignCurrentSequencesToPopulation(populations, nodes, programOptions, numClones, numNodes, programOptions.noisy, programOptions.TotalNumSequences, numActiveGametes,  nextAvailable,
@@ -3589,15 +3593,20 @@ void RelabelNodes(TreeNode *p, int &intLabel)
         /*RelabelNodes (p->outgroup);*/
         if (p->left == NULL && p->right == NULL) /* is tip */
         {
-            // p->label = intLabel++;
-            //  p->label = (*intLabel);
-            // *intLabel=*intLabel+1;
+//            std::cout << "__________________ "<<  std::endl;
+//            std::cout << "is Tip!!! "<<  std::endl;
+//            std::cout << p->cellName<<  std::endl;
+//            std::cout << "before "<< p->label<< std::endl;
             p->label = p->index ;
+//            std::cout << "after "<< p->label<< std::endl;
+            
         }
         else                  /* all ancester */
         {
-            //p->label = intLabel++;
+//             std::cout << "__________________ "<<  std::endl;
+//            std::cout << "before "<< p->label<< std::endl;
             p->label = intLabel;
+//            std::cout << "after "<< p->label<< std::endl;
             intLabel=intLabel+1;
         }
     }
@@ -3619,8 +3628,7 @@ char * toNewickString2 ( TreeNode *p, double mutationRate,     int doUseObserved
         if (p->isOutgroup == YES)     /* Outgroup */
         {
             //strcpy( p->cellName,"healthycell");
-            
-            
+        
             if (asprintf(&newickString,  "healthycell:%10.9Lf",  (p->anc1->timePUnits - p->timePUnits) * mutationRate)<0)
                 return NULL;
             
@@ -3829,7 +3837,7 @@ void Initialize( double (*Eij)[4], double (*Mij)[4], double *freq,  ProgramOptio
     
     programOptions.K=0.8;
     programOptions.minSampleSize = 10;
-    programOptions.maxSampleSize = 60;
+    programOptions.maxSampleSize = 100;
 }
 /***************************** ReadMCMCParametersFromFile *******************************/
 /* Reads parameter values from the parameter file */

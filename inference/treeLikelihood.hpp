@@ -62,10 +62,12 @@ public:
     ~TreeLikelihood()
     {
         //pll_msa_destroy(msa);
-        delete reference_partition;
         //delete rooted_tree;
-        delete rooted_tree;
-        delete msa;
+        
+        //delete reference_partition;
+        //delete rooted_tree;
+       // delete msa;
+        
         // pll_rtree_destroy (rooted_tree, NULL);
         
         free( branch_lengths);

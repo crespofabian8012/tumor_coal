@@ -86,9 +86,9 @@ void EvolveCNLOHonTree (TreeNode *p, int genome, int &numISMCNLOH,std::vector<Si
 
 void SimulateCNLOHforSite (TreeNode *p, int genome, int site,long int *seed,std::vector<SiteStr> &allSites,long double CNLOHrate, long double  &cumCNLOHbranchLength, long double totalTreeLength, long double mutationRate, int  &numCNLOH, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
 
-void AllelicDropout (int numCells,std::vector<SiteStr> &allSites, int doADOcell, int doADOsite, int numSites,long double fixedADOrate, long double meanADOcell, long double varADOcell, long double meanADOsite,long double varADOsite, std::vector<std::shared_ptr<TreeNode>> &nodes,    long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
+void AllelicDropout (int numCells,std::vector<SiteStr> &allSites, int doADOcell, int doADOsite, int numSites,int &totalNumberSitesWithADOErrors, long double fixedADOrate, long double meanADOcell, long double varADOcell, long double meanADOsite,long double varADOsite, std::vector<std::shared_ptr<TreeNode>> &nodes,    long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost);
 
-void addAllelicDropoutToTree( int numCells, std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int numSites, std::vector<std::vector<double> > &alleleADOrate, long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost );
+void addAllelicDropoutToTree( int numCells, std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int numSites, int &totalNumberSitesWithADOErrors, std::vector<std::vector<double> > &alleleADOrate, long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost );
 
 void FillErrorMatrix (long double  error_prob[4][4], double Eij[4][4]);
 

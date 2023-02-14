@@ -1844,7 +1844,7 @@ void SimulateDeletionforSite (TreeNode *p, int genome, int site, std::vector<Sit
  a = 1 - sqrt(1-A)
  */
 
-void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell, int doADOsite, int numSites,long double fixedADOrate, long double meanADOcell, long double varADOcell, long double meanADOsite,long double varADOsite, std::vector<std::shared_ptr<TreeNode>> &nodes,    long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost)
+void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell, int doADOsite, int numSites,int &totalNumberADOErrors, long double fixedADOrate, long double meanADOcell, long double varADOcell, long double meanADOsite,long double varADOsite, std::vector<std::shared_ptr<TreeNode>> &nodes,    long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost)
 {
     int i,j;
     double alleleADOrateMean, alleleADOrateCell, alleleADOrateSite;
@@ -1893,21 +1893,25 @@ void AllelicDropout (int numCells, std::vector<SiteStr> &allSites, int doADOcell
     }
     
     
-    addAllelicDropoutToTree(numCells, nodes, allSites,  numSites, alleleADOrate, seed, rngGsl,  rngBoost );
+    addAllelicDropoutToTree(numCells, nodes, allSites,  numSites, totalNumberADOErrors, alleleADOrate, seed, rngGsl,  rngBoost );
     
     
 }
 
-void addAllelicDropoutToTree( int numCells, std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int numSites, std::vector<std::vector<double> > &alleleADOrate, long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost ){
+void addAllelicDropoutToTree( int numCells, std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<SiteStr> &allSites, int numSites, int &totalNumberADOErrors, std::vector<std::vector<double> > &alleleADOrate, long int *seed, const gsl_rng *rngGsl,  boost::random::mt19937 * rngBoost ){
     
     TreeNode *tip;
     long double random;
-    for (size_t i=0; i<numCells; i++)//or numCells+1
+    bool hasADO= false;
+    std::vector<int> ADOErrorsPerSite(numSites);
+    for (size_t  site=0; site<numSites; site++)
+   
     {
-        tip = nodes[i].get();
-        for (size_t  site=0; site<numSites; site++)
+        hasADO = false;
+        
+        for (size_t i=0; i<numCells; i++)//or numCells+1
         {
-            
+            tip = nodes[i].get();
             if (tip->maternalSequence[site] != DELETION)
             {
                 random = Random::randomUniformFromGsl2(rngGsl);
@@ -1915,6 +1919,8 @@ void addAllelicDropoutToTree( int numCells, std::vector<std::shared_ptr<TreeNode
                 {
                     tip->maternalSequence[site] = ADO;
                     allSites[site].hasADO = YES;
+                    hasADO = true;
+                    
                 }
             }
             if (tip->paternalSequence[site] != DELETION)
@@ -1923,9 +1929,15 @@ void addAllelicDropoutToTree( int numCells, std::vector<std::shared_ptr<TreeNode
                 {
                     tip->paternalSequence[site] = ADO;
                     allSites[site].hasADO = YES;
+                    hasADO = true;
+                    
                 }
             }
+            if (hasADO)
+                ADOErrorsPerSite[site] = ADOErrorsPerSite[site]+1;
         }
+       
+       totalNumberADOErrors+= ADOErrorsPerSite[site];;
     }
 }
 
@@ -2033,7 +2045,7 @@ void SequenceError (std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<Si
     numberSeqErrorsAdded = 0;
     int newState = 0;
     int totalSumMutations = 0;
-    
+    bool hasSeqError = false;
     for (j=1; j<numberOfSitesWithKSequencingErrors.size(); j++)
     {
         totalSumMutations+= j*numberOfSitesWithKSequencingErrors[j];
@@ -2045,18 +2057,17 @@ void SequenceError (std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<Si
             std::sample(allMaternalPaternalIndexes.begin(), allMaternalPaternalIndexes.end(),
                         std::back_inserter(sample),
                         j, std::mt19937{std::random_device{}()});
-            
+            hasSeqError = false;
             for (k=0; k<j; k++){
-                
                 int tipIndex = sample[k] / 2;
                 tip = nodes[tipIndex].get();
-                
-                if (sample[k] % 2 == 0 ){
-                    
+                if (sample[k] % 2 == 0 )
+                {
                     if (tip->maternalSequence[j] != ADO && tip->maternalSequence[j] != DELETION){
                         probs = error_prob[tip->maternalSequence[j]];
                         newState = Random::ChooseUniformState (probs, seed, true, rngGsl, rngBoost);
                         if (newState!= tip->maternalSequence[j] ){
+                            hasSeqError = true;
                             numberSeqErrorsAdded++;
                         }
                         tip->maternalSequence[j] = newState;
@@ -2067,15 +2078,17 @@ void SequenceError (std::vector<std::shared_ptr<TreeNode>> &nodes,std::vector<Si
                         probs = error_prob[tip->paternalSequence[j]];
                         newState =  Random::ChooseUniformState (probs, seed, true, rngGsl, rngBoost);
                         if (newState!= tip->paternalSequence[j] ){
+                            hasSeqError = true;
                             numberSeqErrorsAdded++;
                         }
                         tip->maternalSequence[j] = newState;
                     }
-                }
-            }
-        }
+                 }
+             }//for (k=0; k<j; k++)
+            //if (hasSeqError)
+            //    numberSeqErrorsAdded++;
+         }//for (i=cumulativeNumberSites; i<(cumulativeNumberSites+numberOfSitesWithKSequencingErrors[j]); i++)
         cumulativeNumberSites+= numberOfSitesWithKSequencingErrors[j];
     }
-    
     // assert(numberSeqErrorsAdded==totalSumMutations);
 }

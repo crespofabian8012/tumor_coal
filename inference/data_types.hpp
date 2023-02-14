@@ -247,8 +247,8 @@ public:
    
     bool normalizeClv=false;
     bool normalizeLeavesClv=false;
-    bool computeLikelihoods=false;
-    int numSitesWholeGenome = 100000;
+    bool computeLikelihoods=true;
+    int numSitesWholeGenome = 1000000;
     //gsl_rng * r;
 };
 

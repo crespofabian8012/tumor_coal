@@ -1,4 +1,4 @@
-# Bayesian inference with the deterministic coalescent approximation to Limit Birth-Death coalescent
+# Simulator of  the deterministic  approximation to Limit Birth-Death coalescent. Also the Stan models with R scripts to perform inferrence.
 
 + Install [spf](https://github.com/junseonghwan/spf). 
 + Install [libpll library](https://github.com/xflouris/libpll). 

@@ -1041,7 +1041,7 @@ functions{
 
     coal_event_times_model_time_oldest_population=rep_vector(torigins_in_model_time_oldest_population[1]+1,total_sample_size-1);
 
-    // print("inside structured_coalescent_rng=",sample_sizes);
+ 
     for(i in 1:num_elements(sample_sizes)){
         int sample_size= sample_sizes[i];
         int current_sample_size= sample_size;
@@ -1068,12 +1068,12 @@ functions{
                                                                                                  K);
 
             }
-            //print("i=1 coal_event_times_model_time=", coal_event_times_model_time_oldest_population);
+      
             coal_event_times_model_time_oldest_population[1:(sample_size-1)] = (pop_sizes_proportion[i]/pop_sizes_proportion[N]) *
                                                      (coal_event_times_model_time_oldest_population[1:(sample_size-1)]);
             coal_event_times_model_time_oldest_population[sample_size]= torigins_in_model_time_oldest_population[i];
             current_pos = sample_size+1;
-            //print("coal_event_times_model_time_oldest_population=", coal_event_times_model_time_oldest_population);
+
             index_father_population=2;
         }
     }
@@ -1110,125 +1110,7 @@ functions{
     return(log_lik);
   }
 
-  int get_sample_size(vector sorted_coal_times, real MRCA_time_in_model_time_oldest_population, int[] number_of_tips_below, int[,] topology){
-      int result=0;
-      int pos = find(MRCA_time_in_model_time_oldest_population, sorted_coal_times);
-      //print("pos=", pos);
-      //print("MRCA_time_in_model_time_oldest_population=", MRCA_time_in_model_time_oldest_population);
 
-      if (pos >0 && pos<= num_elements(number_of_tips_below))
-         result = number_of_tips_below[topology[pos,1]];
-      return(result);
-  }
-  vector  compute_probab_vector(int total_sample_size, int number_candidate_MRCAs, vector candidate_time_MRCAs_in_model_time,
-                                vector candidate_time_MRCAs_in_model_time_oldest_population,
-                                matrix Q_coeff_hypoexponential, real delta, real torigin_in_model_time, int[] number_of_tips_below,
-                                vector sorted_coal_times_in_oldest_population_time,  int[,] topology) {
-      real cum_sum=0.0;
-      vector[number_candidate_MRCAs] result;
-     // print("candidate_time_MRCAs_in_model_time_oldest_population=",candidate_time_MRCAs_in_model_time_oldest_population);
-
-      for(j in 1:number_candidate_MRCAs){
-        int sample_size= get_sample_size(sorted_coal_times_in_oldest_population_time,  candidate_time_MRCAs_in_model_time_oldest_population[j],
-                         number_of_tips_below, topology);
-        int  size_sub_matrix= total_sample_size-sample_size+1;
-        matrix [(sample_size-1),(sample_size-1)]  Q;
-        real current_time = candidate_time_MRCAs_in_model_time[j];
-        // print("current_time=", current_time);
-        // print("sample_size=", sample_size);
-        // print("size_sub_matrix=", size_sub_matrix);
-        Q = Q_coeff_hypoexponential[size_sub_matrix:(total_sample_size-1), size_sub_matrix:(total_sample_size-1)];
-        //print("Q=", Q);
-        Q = matrix_exp(Q * current_time );
-        //print("Q exp=", Q);
-        //result[j] = 1 * Q[1,(sample_size-1)];
-        result[j] =  Q[1,(sample_size-1)];
-        //print("result[j]=", result[j]);
-        cum_sum = cum_sum + result[j];
-       // print("cum_sum=", cum_sum);
-     }
-    result = (1.0/cum_sum)*result;
-    return(result);
-  }
-  vector compute_branch_lengths_from_coal_times(int N, int[] map_internal_node_topology_row, int total_sample_size, int[] sample_sizes, vector coal_times_in_model_time_oldest_population, int[,] topology,
-              vector torigins_in_model_time_oldest_population){
-
-    vector[2*total_sample_size-2] branch_lengths= rep_vector(0,2*total_sample_size-2);
-    vector [total_sample_size-1] only_coal_times=rep_vector(0,total_sample_size-1);
-    //vector [rows(coal_times_in_model_time_oldest_population)] sorted_coal_times = sort_asc(coal_times_in_model_time_oldest_population);
-    int pos=1;
-    int left;
-    int right;
-    int idx_left;
-    int idx_right;
-    int cum_sample_size=0;
-    int cum_number_coal=0;
-    int first_position_coal_event=1;
-    int number_inmigrants[N]=rep_array(0,N);
-    int pos_next_torigin = 0;
-    int is_torigin=1;
-    int pos_torigin;
-    int current_pop=1;
-    only_coal_times = coal_times_in_model_time_oldest_population;
-    for(i in 1:N){
-         int j=1;
-         while(pos<=(total_sample_size-1) && coal_times_in_model_time_oldest_population[j]<torigins_in_model_time_oldest_population[i])
-         {
-             if (find(coal_times_in_model_time_oldest_population[j], torigins_in_model_time_oldest_population)==-1)
-             {
-                // print("pos=", pos);
-                 only_coal_times[pos]=coal_times_in_model_time_oldest_population[j];
-                 //print("only_coal_times[pos]=", only_coal_times[pos]);
-                 pos=pos+1;
-             }
-             j=j+1;
-         }
-    }
-
-    pos=1;
-    for(i in 1:(total_sample_size-1))
-    {
-        left=topology[i,2];
-        right=topology[i,3];
-
-        if (left <= total_sample_size){
-           //branch_lengths[pos]= coal_times_in_model_time_oldest_population[current_pop,j]
-            branch_lengths[pos] = only_coal_times[i];
-             pos+=1;
-        }
-        else{
-           idx_left= find_integer(left,  topology[1:(total_sample_size-1-1),1]);
-          // idx_left= map_internal_node_topology_row[left];
-           if (idx_left!=-1 && only_coal_times[i] -only_coal_times[idx_left] >0){
-               branch_lengths[pos] = only_coal_times[i]-only_coal_times[idx_left];
-               pos+=1;
-             }
-            else{
-                reject("the branch lengths must be positive");
-
-            }
-
-        }
-        if (right <= total_sample_size){
-           branch_lengths[pos] = only_coal_times[i];
-           pos+=1;
-        }
-        else{
-           idx_right= find_integer(right,  topology[1:(total_sample_size-1-1),1]);
-           //idx_right= map_internal_node_topology_row[right];
-           //print("idx_right=", idx_right);
-           if (idx_right!=-1 && only_coal_times[i] -only_coal_times[idx_right] >0){
-              branch_lengths[pos] = only_coal_times[i]-only_coal_times[idx_right];
-              pos+=1;
-           }
-           else{
-                reject("the branch lengths must be positive");
-
-            }
-        }
-    }
-    return(branch_lengths);
-  }
   int is_in(int pos,int[] pos_var) {
    
     for (p in 1:(size(pos_var))) {
@@ -1323,11 +1205,6 @@ transformed data{
          
          int shard_end = shard_begin + (total_sample_size*col_per_shards*16) -1;
          int begin_tip = 1;
-
-
-         //print("shard_begin=", shard_begin);
-         //print("shard_end=", shard_end);
-
          
 
          total_sample_size_topology_i[k] = rep_array(1, 16*col_per_shards*total_sample_size);
@@ -1346,15 +1223,13 @@ transformed data{
 
           int begin_site = begin_tip;
 
-          //print("begin_tip=", begin_tip);
-          //print("end_tip=", end_tip);
+          
 
           for( i in ((k-1)*col_per_shards+1):(k*col_per_shards) ) {//columns
                
               int end_site = begin_site  +16 -1 ;
 
-              //print("begin_site=", begin_site);
-              //print("end_site=", end_site);
+            
 
               if(i<=L){
 
@@ -1370,13 +1245,8 @@ transformed data{
                  }   
 
               }
-             // else if (i==(L+1)){//i==(L+1)
-                   
-                //   genotype_tip_partials_r[k, begin_site:end_site ] = e1;
-                
-
-             // }
-              else{//i>=(L+1)
+  
+              else{//i>(L+1)
 
 
                  genotype_tip_partials_r[k, begin_site:end_site ] = rep_array(1.0, 16);
@@ -1393,7 +1263,7 @@ transformed data{
 
     }
    
-    print("hhhhhhhooppp");
+    
 
     for( n in 1:total_sample_size ) {//rows
           genotype_partials_asc[n]= to_matrix(e1);
@@ -1421,9 +1291,7 @@ parameters{
   real<lower=0.0> theta;
 
   simplex[total_sample_size] simplex1;
-  //simplex[16] frequencies_genotypes;
-  //simplex[6] rates;
-}
+
 transformed parameters {
   //declarations
   positive_ordered[total_sample_size-1] coal_event_times_model_time_oldest_population;
@@ -1439,13 +1307,11 @@ model{
   real asc_correction;
   real log_lik_constant_site;
   real one_over_16 = 1.0/16.0;
-  //vector[16] left;
-  //vector[16] right;
+
   matrix[16,1] left;
   matrix[16,1] right;
   matrix[16,1] genotype_internal_partials_asc[total_sample_size]; //the last  column are needed to correct for the ASC
-  //vector[16] partials[total_sample_size,L];  // partial probabilities for the S tips and S-1 internal nodes
-  //matrix[16,1] partials[total_sample_size]; // partial probabilities for the S tips and S-1 internal nodes
+
 
   vector[16*16*number_branches] p_matrices_vector; // finite-time transition matrices for each branch
   matrix[16,16] p_matrices[number_branches]; // finite-time transition matrices for each branch

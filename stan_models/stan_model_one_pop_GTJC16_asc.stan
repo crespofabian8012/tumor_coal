@@ -350,330 +350,6 @@ functions{
        }
     return(result);
   }
-
-  vector get_candidate_time_MRCAs( real time_origin_in_oldest_population_time, vector sorted_coal_times_in_oldest_population_time,
-                   int[,] topology, int[] number_of_tips_below, int idx_first_coal_time_above_torigin){
-
-    real result;
-    int number_candidate_MRCAs=0;
-    int idx_left;
-    int idx_right;
-    int idx_left_below;
-    int idx_right_below;
-    int idx_MRCA;
-    int current_pos=1;
-    //int idx_first_coal_time_above_torigin=get_index_coal_time_above_MRCA_in_oldest_population_time_less_than( time_origin_in_oldest_population_time,  sorted_coal_times_in_oldest_population_time);
-    vector [idx_first_coal_time_above_torigin-1] indexes_candidate_MRCAs;
-    vector [idx_first_coal_time_above_torigin-1] coal_time_candidate_MRCAs;
-   // print("idx_first_coal_time_above_torigin=", idx_first_coal_time_above_torigin);
-
-
-    for(i in idx_first_coal_time_above_torigin:rows(sorted_coal_times_in_oldest_population_time)){
-                           idx_left= topology[i, 2];
-                           idx_right= topology[i, 3];
-                           idx_left_below = find_integer(idx_left , topology[1:(idx_first_coal_time_above_torigin-1),1]);
-                           idx_right_below = find_integer(idx_right , topology[1:(idx_first_coal_time_above_torigin-1),1]);
-
-                           if (idx_left_below!=-1 ){
-                              number_candidate_MRCAs=number_candidate_MRCAs+1;
-                              indexes_candidate_MRCAs[current_pos]=idx_left;
-                              coal_time_candidate_MRCAs[current_pos] =  sorted_coal_times_in_oldest_population_time[idx_left_below];
-                              current_pos=current_pos+1;
-                            }
-                            else{
-
-                               // if (number_of_tips_below[idx_left]>=1){
-                               //    number_candidate_MRCAs=number_candidate_MRCAs+1;
-                               //    indexes_candidate_MRCAs[current_pos]=idx_left;
-                               //    coal_time_candidate_MRCAs[current_pos] =  0.0;
-                               //    current_pos=current_pos+1;
-                               //
-                               // }
-                            }
-                          if (idx_right_below!=-1 ){
-                            number_candidate_MRCAs=number_candidate_MRCAs+1;
-                            indexes_candidate_MRCAs[current_pos]=idx_right ;
-                            coal_time_candidate_MRCAs[current_pos] = sorted_coal_times_in_oldest_population_time[idx_right_below];
-                            current_pos=current_pos+1;
-                           }
-                           else{
-
-                               // if (number_of_tips_below[idx_right]>=1){
-                               //    number_candidate_MRCAs=number_candidate_MRCAs+1;
-                               //    indexes_candidate_MRCAs[current_pos]=idx_right;
-                               //    coal_time_candidate_MRCAs[current_pos] =  0.0;
-                               //    current_pos=current_pos+1;
-                               //
-                               // }
-                            }
-                       }
-
-    //idx_MRCA = categorical_rng(rep_vector(1.0/number_candidate_MRCAs, number_candidate_MRCAs));
-    // print("number_candidate_MRCAs 2=", number_candidate_MRCAs);
-    // print("indexes_candidate_MRCAs 2=", indexes_candidate_MRCAs);
-    // print("coal_time_candidate_MRCAs 2=", coal_time_candidate_MRCAs);
-
-    return(coal_time_candidate_MRCAs);
-  }
-   real random_time_MRCA_below_time_origin(real value, real time_origin_in_oldest_population_time, vector sorted_coal_times_in_oldest_population_time,
-                   int[,] topology,int[] number_of_tips_below){
-
-                    real result;
-                    int number_candidate_MRCAs=0;
-                    int idx_left;
-                    int idx_right;
-                    int idx_left_below;
-                    int idx_right_below;
-                    int idx_MRCA;
-                    int current_pos=1;
-                    int idx_first_coal_time_above_torigin=get_index_coal_time_above_MRCA_in_oldest_population_time_less_than( time_origin_in_oldest_population_time,
-                                                          sorted_coal_times_in_oldest_population_time);
-                    //vector [idx_first_coal_time_above_torigin-1] coal_times_below_torigin=
-                    //segment(sorted_coal_times_in_oldest_population_time, 1, idx_first_coal_time_above_torigin-1);
-                    int indexes_nodes_below_torigin[idx_first_coal_time_above_torigin-1]  =topology[1:(idx_first_coal_time_above_torigin-1),1];
-                    vector [idx_first_coal_time_above_torigin-1] indexes_candidate_MRCAs;
-                    vector [idx_first_coal_time_above_torigin-1] coal_time_candidate_MRCAs;
-
-                    for(i in idx_first_coal_time_above_torigin:rows(sorted_coal_times_in_oldest_population_time)){
-                           idx_left= topology[i, 2];
-                           idx_right= topology[i, 3];
-                           idx_left_below = find_integer(idx_left , topology[1:(idx_first_coal_time_above_torigin-1),1]);
-                           idx_right_below = find_integer(idx_right , topology[1:(idx_first_coal_time_above_torigin-1),1]);
-
-                           if (idx_left_below!=-1 ){
-                              number_candidate_MRCAs=number_candidate_MRCAs+1;
-                              indexes_candidate_MRCAs[current_pos]=idx_left;
-                              coal_time_candidate_MRCAs[current_pos] =  sorted_coal_times_in_oldest_population_time[idx_left_below];
-                              current_pos=current_pos+1;
-                            }
-                            else{
-
-                               if (number_of_tips_below[idx_left]==1){
-                                  number_candidate_MRCAs=number_candidate_MRCAs+1;
-                                  indexes_candidate_MRCAs[current_pos]=idx_left;
-                                  coal_time_candidate_MRCAs[current_pos] =  0.0;
-                                  current_pos=current_pos+1;
-
-                               }
-                            }
-                          if (idx_right_below!=-1 ){
-                            number_candidate_MRCAs=number_candidate_MRCAs+1;
-                            indexes_candidate_MRCAs[current_pos]=idx_right ;
-                            coal_time_candidate_MRCAs[current_pos] = sorted_coal_times_in_oldest_population_time[idx_right_below];
-                            current_pos=current_pos+1;
-                           }
-                           else{
-
-                               if (number_of_tips_below[idx_right]==1){
-                                  number_candidate_MRCAs=number_candidate_MRCAs+1;
-                                  indexes_candidate_MRCAs[current_pos]=idx_right;
-                                  coal_time_candidate_MRCAs[current_pos] =  0.0;
-                                  current_pos=current_pos+1;
-
-                               }
-                            }
-                       }
-            // print("number_candidate_MRCAs=", number_candidate_MRCAs);
-            // print("indexes_candidate_MRCAs=", indexes_candidate_MRCAs);
-            // print("coal_time_candidate_MRCAs=", coal_time_candidate_MRCAs);
-
-            if (number_candidate_MRCAs >0)
-               result =- log(number_candidate_MRCAs);
-            else
-              reject("no candidate MRCAs!");
-
-            //print("result=", result);
-            return(result);
-          }
-  vector get_list_coal_times_in_oldest_population_time_below_time_origin(int idx_pop, int order, int total_sample_size,
-                       int number_internal_nodes_under_MRCA, real coal_time_MRCA_in_oldest_population,
-                       vector inmigrants_MRCA_times_in_model_time_oldest_population,
-                       real time_origin_in_oldest_population_time, vector sorted_coal_times_in_oldest_population_time,
-                       int[,] topology, int[] number_of_coalescent_times_below){
-    vector[rows(sorted_coal_times_in_oldest_population_time)] subtree_coal_times_below;
-    int idx;
-    int idx_subtree = find(coal_time_MRCA_in_oldest_population, sorted_coal_times_in_oldest_population_time);
-    int nodes_to_visit[idx_subtree];
-    int idx_MRCA;
-    int left_child;
-    int right_child;
-    real coal_time_above;
-    int pos_subtree_coal=1;
-    int pos_subtree=1;
-
-    //idx_subtree = find(coal_time_MRCA_in_oldest_population, sorted_coal_times_in_oldest_population_time);
-    nodes_to_visit[pos_subtree] = topology[idx_subtree, 1];
-    pos_subtree=pos_subtree+1;
-    //print("outside idx_subtree =", idx_subtree);
-    //print("outside nodes_to_visit=", nodes_to_visit);
-
-    while(idx_subtree>=1 &&  pos_subtree_coal <= number_internal_nodes_under_MRCA){
-      if (order > 1)
-      {
-          if (rows(inmigrants_MRCA_times_in_model_time_oldest_population) >0   &&
-               find(sorted_coal_times_in_oldest_population_time[idx_subtree], inmigrants_MRCA_times_in_model_time_oldest_population)== -1
-               && find_integer(topology[idx_subtree, 1],nodes_to_visit)!=-1)
-               {
-               subtree_coal_times_below[pos_subtree_coal]= sorted_coal_times_in_oldest_population_time[idx_subtree];
-               if ( topology[idx_subtree, 2] > total_sample_size){
-                  nodes_to_visit[pos_subtree] = topology[idx_subtree, 2];
-                  pos_subtree=pos_subtree+1;
-               }
-               if ( topology[idx_subtree, 3] > total_sample_size){
-                   nodes_to_visit[pos_subtree] = topology[idx_subtree, 3];
-                   pos_subtree=pos_subtree+1;
-               }
-               pos_subtree_coal= pos_subtree_coal+1;
-               }
-      }
-      else
-      {
-         if ( find_integer(topology[idx_subtree, 1],nodes_to_visit)!=-1)
-               {
-               subtree_coal_times_below[pos_subtree_coal]= sorted_coal_times_in_oldest_population_time[idx_subtree];
-                if ( topology[idx_subtree, 2] > total_sample_size){
-                  nodes_to_visit[pos_subtree] = topology[idx_subtree, 2];
-                  pos_subtree=pos_subtree+1;
-               }
-               if ( topology[idx_subtree, 3] > total_sample_size){
-                   nodes_to_visit[pos_subtree] = topology[idx_subtree, 3];
-                   pos_subtree=pos_subtree+1;
-               }
-               pos_subtree_coal= pos_subtree_coal+1;
-               }
-      }
-
-      //print("nodes_to_visit=", nodes_to_visit);
-      idx_subtree= idx_subtree-1;
-      }
-
-    //for(i in (pos_subtree):rows(sorted_coal_times_in_oldest_population_time))// padding
-    //   subtree_coal_times_below[i]=positive_infinity();
-
-    // print("subtree_coal_times_below=",segment(subtree_coal_times_below, 1, pos_subtree_coal-1));
-
-    //subtree_coal_times_below = sort_asc(subtree_coal_times_below);
-
-    return(sort_asc(segment(subtree_coal_times_below, 1, pos_subtree_coal-1)));
-  }
-    int[] get_tips_positions_below_time(int order, int number_tips_under_MRCA, real coal_time_MRCA_in_oldest_population,
-                     vector inmigrants_MRCA_times_in_model_time_oldest_population,
-                     real time_origin_in_oldest_population_time, vector sorted_coal_times_in_oldest_population_time,
-                     int[,] topology, int total_sample_size){
-
-    int result[total_sample_size];
-    int idx_left;
-    int idx_right;
-    int idx_subtree= find(coal_time_MRCA_in_oldest_population, sorted_coal_times_in_oldest_population_time);
-    int tips_positions[idx_subtree+1];
-    int nodes_to_visit[idx_subtree+1];
-    int idx_MRCA;
-    int left_child;
-    int right_child;
-    real coal_time_above;
-    int pos_subtree=1;
-    int indexes_nodes_below_torigin[idx_subtree-1] = topology[1:(idx_subtree-1),1];
-    int pos=1;
-
-    nodes_to_visit[pos_subtree] = topology[idx_subtree, 1];
-    pos_subtree=pos_subtree+1;
-
-    while(idx_subtree>=1 && pos <= number_tips_under_MRCA){
-      if (order > 1)
-      {
-          if (rows(inmigrants_MRCA_times_in_model_time_oldest_population) >0   &&
-               find(sorted_coal_times_in_oldest_population_time[idx_subtree], inmigrants_MRCA_times_in_model_time_oldest_population)== -1
-               && find_integer(topology[idx_subtree, 1],nodes_to_visit)!=-1)
-            {
-               if ( topology[idx_subtree, 2] > total_sample_size){
-                  nodes_to_visit[pos_subtree] = topology[idx_subtree, 2];
-                  pos_subtree=pos_subtree+1;
-               }
-               else{
-                  tips_positions[pos]=topology[idx_subtree, 2];
-                  pos=pos+1;
-               }
-               if ( topology[idx_subtree, 3] > total_sample_size){
-                   nodes_to_visit[pos_subtree] = topology[idx_subtree, 3];
-                   pos_subtree=pos_subtree+1;
-               }
-               else{
-                  tips_positions[pos]=topology[idx_subtree, 3];
-                  pos=pos+1;
-               }
-            }
-      }
-      else
-      {
-         if ( find_integer(topology[idx_subtree, 1],nodes_to_visit)!=-1)
-            {
-              if ( topology[idx_subtree, 2] > total_sample_size){
-                  nodes_to_visit[pos_subtree] = topology[idx_subtree, 2];
-                  pos_subtree=pos_subtree+1;
-               }
-               else{
-                  tips_positions[pos]=topology[idx_subtree, 2];
-                  pos=pos+1;
-               }
-               if ( topology[idx_subtree, 3] > total_sample_size){
-                   nodes_to_visit[pos_subtree] = topology[idx_subtree, 3];
-                   pos_subtree=pos_subtree+1;
-               }
-               else{
-                  tips_positions[pos]=topology[idx_subtree, 3];
-                  pos=pos+1;
-               }
-            }
-      }
-
-      //print("nodes_to_visit=", nodes_to_visit);
-      idx_subtree= idx_subtree-1;
-      //idx_subtree= max(idx_left, idx_right);
-    }
-    result= append_array(tips_positions[1:(pos-1)], rep_array(-1, total_sample_size-pos+1));
-    return(result);
-  }
-  vector get_torigins_of_inmigrant_populations(int pos,int order, int N, vector sorted_previous_torigins_in_model_time_oldest_population,
-                  vector torigins_in_model_time_oldest_population,
-                  int[] indexes_father_populations){
-
-      vector[order-1] result;
-      int k=1;
-      for(i in 1:N){
-         if (i!=pos){//an inmigrant is another population
-              if (indexes_father_populations[i]==pos){
-                   if (k>(order-1)){
-                     reject("index out bounds; found k=", k);
-                   }
-                  result[k]=torigins_in_model_time_oldest_population[i];
-             }
-             else{
-                if (k>(order-1)){
-                     reject("index out bounds; found k=", k);
-                   }
-               result[k]=-1.0;
-             }
-           k=k+1;
-         }
-      }
-     return(result);
-  }
-  int population_of_coalescent_event(real x, vector grouped_coalescent_times, vector cumulative_number_coal_times){
-     int i=1;
-     int result= -1;
-     int idx_population =1;
-     while ((i <= rows(grouped_coalescent_times)) && (grouped_coalescent_times[i] !=x)){
-          if (i==cumulative_number_coal_times[idx_population]){
-            idx_population = idx_population +1;
-          }
-          i=i+1;
-     }
-     if ((rows(grouped_coalescent_times)==0) || (i>rows(grouped_coalescent_times)))
-        result=-1;
-      else
-         result=idx_population;
-      return(result);
-  }
   real model_time_to_standard_time(real t,
          real torigin,
          real delta,
@@ -1046,126 +722,6 @@ functions{
     }
     return(log_lik);
   }
-
-  int get_sample_size(vector sorted_coal_times, real MRCA_time_in_model_time_oldest_population, int[] number_of_tips_below, int[,] topology){
-      int result=0;
-      int pos = find(MRCA_time_in_model_time_oldest_population, sorted_coal_times);
-      //print("pos=", pos);
-      //print("MRCA_time_in_model_time_oldest_population=", MRCA_time_in_model_time_oldest_population);
-
-      if (pos >0 && pos<= num_elements(number_of_tips_below))
-         result = number_of_tips_below[topology[pos,1]];
-      return(result);
-  }
-  vector  compute_probab_vector(int total_sample_size, int number_candidate_MRCAs, vector candidate_time_MRCAs_in_model_time,
-                                vector candidate_time_MRCAs_in_model_time_oldest_population,
-                                matrix Q_coeff_hypoexponential, real delta, real torigin_in_model_time, int[] number_of_tips_below,
-                                vector sorted_coal_times_in_oldest_population_time,  int[,] topology) {
-      real cum_sum=0.0;
-      vector[number_candidate_MRCAs] result;
-     // print("candidate_time_MRCAs_in_model_time_oldest_population=",candidate_time_MRCAs_in_model_time_oldest_population);
-
-      for(j in 1:number_candidate_MRCAs){
-        int sample_size= get_sample_size(sorted_coal_times_in_oldest_population_time,  candidate_time_MRCAs_in_model_time_oldest_population[j],
-                         number_of_tips_below, topology);
-        int  size_sub_matrix= total_sample_size-sample_size+1;
-        matrix [(sample_size-1),(sample_size-1)]  Q;
-        real current_time = candidate_time_MRCAs_in_model_time[j];
-        // print("current_time=", current_time);
-        // print("sample_size=", sample_size);
-        // print("size_sub_matrix=", size_sub_matrix);
-        Q = Q_coeff_hypoexponential[size_sub_matrix:(total_sample_size-1), size_sub_matrix:(total_sample_size-1)];
-        //print("Q=", Q);
-        Q = matrix_exp(Q * current_time );
-        //print("Q exp=", Q);
-        //result[j] = 1 * Q[1,(sample_size-1)];
-        result[j] =  Q[1,(sample_size-1)];
-        //print("result[j]=", result[j]);
-        cum_sum = cum_sum + result[j];
-       // print("cum_sum=", cum_sum);
-     }
-    result = (1.0/cum_sum)*result;
-    return(result);
-  }
-  vector compute_branch_lengths_from_coal_times(int N, int[] map_internal_node_topology_row, int total_sample_size, int[] sample_sizes, vector coal_times_in_model_time_oldest_population, int[,] topology,
-              vector torigins_in_model_time_oldest_population){
-
-    vector[2*total_sample_size-2] branch_lengths= rep_vector(0,2*total_sample_size-2);
-    vector [total_sample_size-1] only_coal_times=rep_vector(0,total_sample_size-1);
-    //vector [rows(coal_times_in_model_time_oldest_population)] sorted_coal_times = sort_asc(coal_times_in_model_time_oldest_population);
-    int pos=1;
-    int left;
-    int right;
-    int idx_left;
-    int idx_right;
-    int cum_sample_size=0;
-    int cum_number_coal=0;
-    int first_position_coal_event=1;
-    int number_inmigrants[N]=rep_array(0,N);
-    int pos_next_torigin = 0;
-    int is_torigin=1;
-    int pos_torigin;
-    int current_pop=1;
-    only_coal_times = coal_times_in_model_time_oldest_population;
-    for(i in 1:N){
-         int j=1;
-         while(pos<=(total_sample_size-1) && coal_times_in_model_time_oldest_population[j]<torigins_in_model_time_oldest_population[i])
-         {
-             if (find(coal_times_in_model_time_oldest_population[j], torigins_in_model_time_oldest_population)==-1)
-             {
-                // print("pos=", pos);
-                 only_coal_times[pos]=coal_times_in_model_time_oldest_population[j];
-                 //print("only_coal_times[pos]=", only_coal_times[pos]);
-                 pos=pos+1;
-             }
-             j=j+1;
-         }
-    }
-
-    pos=1;
-    for(i in 1:(total_sample_size-1))
-    {
-        left=topology[i,2];
-        right=topology[i,3];
-
-        if (left <= total_sample_size){
-           //branch_lengths[pos]= coal_times_in_model_time_oldest_population[current_pop,j]
-            branch_lengths[pos] = only_coal_times[i];
-             pos+=1;
-        }
-        else{
-           idx_left= find_integer(left,  topology[1:(total_sample_size-1-1),1]);
-          // idx_left= map_internal_node_topology_row[left];
-           if (idx_left!=-1 && only_coal_times[i] -only_coal_times[idx_left] >0){
-               branch_lengths[pos] = only_coal_times[i]-only_coal_times[idx_left];
-               pos+=1;
-             }
-            else{
-                reject("the branch lengths must be positive");
-
-            }
-
-        }
-        if (right <= total_sample_size){
-           branch_lengths[pos] = only_coal_times[i];
-           pos+=1;
-        }
-        else{
-           idx_right= find_integer(right,  topology[1:(total_sample_size-1-1),1]);
-           //idx_right= map_internal_node_topology_row[right];
-           //print("idx_right=", idx_right);
-           if (idx_right!=-1 && only_coal_times[i] -only_coal_times[idx_right] >0){
-              branch_lengths[pos] = only_coal_times[i]-only_coal_times[idx_right];
-              pos+=1;
-           }
-           else{
-                reject("the branch lengths must be positive");
-
-            }
-        }
-    }
-    return(branch_lengths);
-  }
   int is_in(int pos,int[] pos_var) {
    
     for (p in 1:(size(pos_var))) {
@@ -1253,12 +809,10 @@ transformed data{
           genotype_tip_partials[n]= rep_matrix(0.0, 16, L+16);
           tip_index = tip_association[n];
           for( i in 1:L ) {//columns
-                 //print("i=", i);
-                 //print("genotype_tipdata[tip_index,i]=",genotype_tipdata[tip_index,i]);
+        
                  if (genotype_tipdata[tip_index,i]!= 0){
                    genotype_tip_partials[n][1:16, i ] = tip_clv(genotype_tipdata[tip_index,i], seq_amp_error, allele_dropout_error);
-                   //print("tip_clv=",genotype_tip_partials[n][1:16, i ]);
-                   //print("sum=",sum(genotype_tip_partials[n][1:16, i ]));
+             
                  }
                  else{
                    genotype_tip_partials[n][1:16, i ]  = rep_vector(1.0, 16);
@@ -1266,16 +820,14 @@ transformed data{
                    
               
           }
-          //print("n=",n);
-          //print("genotype_tip_partials[n]=",genotype_tip_partials[n]);
+   
           for( i in (L+1):(L+16) ){
 
              genotype_tip_partials[n][1:16, i ]  = rep_vector(0.0, 16);
              genotype_tip_partials[n][i-L, i ]  = 1.0;
 
           }
-          //print("n=",n);
-          //print("genotype_tip_partials[n]=",genotype_tip_partials[n]);
+      
       }
 
 
@@ -1302,8 +854,6 @@ parameters{
   real<lower=0.0> theta;
 
   simplex[total_sample_size] simplex1;
-  //simplex[16] frequencies_genotypes;
-  //simplex[6] rates;
 }
 transformed parameters {
   //declarations
@@ -1319,8 +869,6 @@ model{
   real a_divide_by_3;
   real asc_correction;
   real sum_w;
-  #vector[16] left;
-  #vector[16] right;
   matrix[16,L+16] left;
   matrix[16,L+16] right;
   matrix[16,L+16] partials[L+16]; //the last  column are needed to correct for the ASC

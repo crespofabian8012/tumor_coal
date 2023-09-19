@@ -412,14 +412,6 @@ matrix[] calculate_gtr_p_matrices(vector freqs, vector rates, vector blens){
        }
        return(result);
   }
-   int get_index_coal_time_above_MRCA_in_oldest_population_time_less_than(real time_in_oldest_population_time, vector sorted_coal_times_in_oldest_population_time){
-    int idx;
-    idx=1;
-    while(idx <=rows(sorted_coal_times_in_oldest_population_time) && sorted_coal_times_in_oldest_population_time[idx]<time_in_oldest_population_time){
-            idx= idx+1;
-       }
-    return(idx);
-  }
   real model_time_to_standard_time(real t,
          real torigin,
          real delta,

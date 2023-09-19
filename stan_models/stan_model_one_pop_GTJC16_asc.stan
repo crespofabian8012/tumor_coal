@@ -318,38 +318,6 @@ functions{
        }
        return(result);
   }
-   int get_index_coal_time_above_MRCA_in_oldest_population_time_less_than(real time_in_oldest_population_time, vector sorted_coal_times_in_oldest_population_time){
-    int idx;
-    idx=1;
-    while(idx <=rows(sorted_coal_times_in_oldest_population_time) && sorted_coal_times_in_oldest_population_time[idx]<time_in_oldest_population_time){
-            idx= idx+1;
-       }
-    return(idx);
-  }
-  vector get_coal_times_in_oldest_population_time_less_than(real time_in_oldest_population_time, vector sorted_coal_times_in_oldest_population_time){
-
-    int idx = get_index_coal_time_above_MRCA_in_oldest_population_time_less_than( time_in_oldest_population_time,  sorted_coal_times_in_oldest_population_time);
-    vector[idx-1] result= segment(sorted_coal_times_in_oldest_population_time,1, idx-1);
-    return(result);
-  }
-
-  vector get_inter_coal_times_in_oldest_population_time_less_than(real time_in_oldest_population_time, vector sorted_coal_times_in_oldest_population_time){
-    vector[0] result;
-    int idx;
-    real inter_coal_time;
-    idx=1;
-    while(idx <=rows(sorted_coal_times_in_oldest_population_time) && sorted_coal_times_in_oldest_population_time[idx]<time_in_oldest_population_time){
-            if (idx==1){
-              inter_coal_time= sorted_coal_times_in_oldest_population_time[idx];
-            }
-            else{
-              inter_coal_time=sorted_coal_times_in_oldest_population_time[idx]-sorted_coal_times_in_oldest_population_time[idx-1];
-            }
-            result =append_row(result,sorted_coal_times_in_oldest_population_time[idx] );
-            idx= idx+1;
-       }
-    return(result);
-  }
   real model_time_to_standard_time(real t,
          real torigin,
          real delta,
@@ -598,8 +566,6 @@ functions{
     real last_event_time_before_migration=0.0;
 
 
-   //print("previous_torigins_in_model_time=",previous_torigins_in_model_time);
-
     alive_cells = sample_size;//alive_cells goes from sample_size downto 2
     for(j in 1:rows(padded_coalescent_times)){
       current_time = padded_coalescent_times[j];
@@ -654,7 +620,6 @@ functions{
 
     coal_event_times_model_time_oldest_population=rep_vector(torigins_in_model_time_oldest_population[1]+1,total_sample_size-1);
 
-    // print("inside structured_coalescent_rng=",sample_sizes);
     for(i in 1:num_elements(sample_sizes)){
         int sample_size= sample_sizes[i];
         int current_sample_size= sample_size;
@@ -664,7 +629,7 @@ functions{
             vector[sample_size-1] number_ancestors_sample;
             vector[sample_size-1] rate_exp;
             vector[sample_size-1] times;
-            //vector[sample_size-1] reverse_times;
+
             vector[sample_size-1] cum_sum_times;
 
             for(j in 2:sample_size){
@@ -681,12 +646,12 @@ functions{
                                                                                                  K);
 
             }
-            //print("i=1 coal_event_times_model_time=", coal_event_times_model_time_oldest_population);
+            
             coal_event_times_model_time_oldest_population[1:(sample_size-1)] = (pop_sizes_proportion[i]/pop_sizes_proportion[N]) *
                                                      (coal_event_times_model_time_oldest_population[1:(sample_size-1)]);
             coal_event_times_model_time_oldest_population[sample_size]= torigins_in_model_time_oldest_population[i];
             current_pos = sample_size+1;
-            //print("coal_event_times_model_time_oldest_population=", coal_event_times_model_time_oldest_population);
+
             index_father_population=2;
         }
     }
